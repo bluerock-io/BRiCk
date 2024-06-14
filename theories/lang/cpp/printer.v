@@ -367,7 +367,7 @@ Definition foo: string :=
 }".
 
 
-(* this example may not run correctly in emacs+proof general. runs fine in coqc or jscoq. *)
+(* this example may not run correctly in emacs+proof-general https://github.com/ProofGeneral/PG/issues/773 *)
  Example t1: (BS.of_string (newline++Stmt_printer 0 gcd_body))
      = "
 {
