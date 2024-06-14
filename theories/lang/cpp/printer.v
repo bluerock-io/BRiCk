@@ -279,19 +279,6 @@ Fixpoint Stmt_printer (current_indentation : nat) (s : Stmt) : string :=
       indent_str ++ "goto " ++ ident_printer label ++ ";"
   | Sunsupported _ => ""
   end.
-(*
-     = "
-{
-  while ((b) != (0))
-    {
-      unsigned int temp = (b);
-      b = (a) % (b);
-      a = (temp);
-    }
-  return (a);
-}"
-     : bs
-*)
 
 (* Example use: Uncomment to test pretty printer *)
 Locate Sreturn_val.
