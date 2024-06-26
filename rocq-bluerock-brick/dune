@@ -7,8 +7,6 @@
 
 (env
  (_
-  (binaries
-   (../scripts/dummy-gen.awk as dummy-gen))
   (coq
    (flags (:standard %{read-lines:../flags/coqc}))
    (coqdoc_flags %{read-lines:../flags/coqdoc}))))
