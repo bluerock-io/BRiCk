@@ -132,7 +132,7 @@ Definition default_initialize_body `{Σ : cpp_logic, σ : genv}
   | Tresult_unop _ _ | Tresult_binop _ _ _
   | Tresult_call _ _ | Tresult_member_call _ _ _
   | Tresult_member _ _ | Tresult_parenlist _ _ => ERROR "default initialization requires a runtime type, got unresolved type"
-  end%bs%I.
+  end%pstring%I.
 
 mlock
   Definition default_initialize `{Σ : cpp_logic, σ : genv} (tu : translation_unit)

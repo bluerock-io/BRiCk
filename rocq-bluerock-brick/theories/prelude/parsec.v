@@ -5,7 +5,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import bedrock.prelude.prelude.
-Require Import bedrock.prelude.bytestring.
+Require Import Stdlib.Strings.PrimString.
+Require Import Stdlib.Numbers.Cyclic.Int63.Uint63.
+Require Import bedrock.prelude.pstring.
 
 Require Export bedrock.upoly.upoly.
 Require Export bedrock.upoly.parsec.
@@ -16,47 +18,48 @@ Require Export bedrock.upoly.parsec.
 Import UPoly.
 Section char_parsec.
   Context {F : Type -> Type} {MR : MRet F} {FM : FMap F} {MB : MBind F}.
-  Notation M := (M bs F).
+  Notation STREAM := (Uint63.int * PrimString.string)%type.
+  Notation M := (M STREAM F).
+  Notation TKN := PrimString.char63.
 
-  #[global] Instance bs_next : Next bs Byte.byte := {|
-    next_token bs :=
-      match bs with
-      | BS.EmptyString => None
-      | BS.String x bs => Some (x, bs)
-      end
+  #[global] Instance bs_next : Next STREAM TKN := {|
+    next_token '(i, str) :=
+      if (i <? PrimString.length str)%uint63 then
+        Some (PrimString.get str i, ((i + 1)%uint63, str))
+      else None
   |}.
-  #[global] Instance bs_parse_string : ParseString bs bs := {|
-    parse_string :=
-      fix go str bs {struct str} :=
-        match str, bs with
-        | BS.EmptyString, _ => Some bs
-        | BS.String x str, BS.String y bs =>
-            if bool_decide (x = y) then
-              go str bs
-            else
-              None
-        | BS.String _ _, BS.EmptyString => None
+
+  #[global] Instance bs_parse_string : ParseString STREAM PrimString.string := {|
+    parse_string s '(i, str) :=
+      let slen := PrimString.length s in
+      if (slen <=? PrimString.length str - i)%uint63 then
+        match PrimString.compare s (PrimString.sub str i slen) with
+        | Eq => Some (i + slen, str)%uint63
+        | _ => None
         end
+      else
+        None
   |}.
 
-  Definition run_bs {T} (p : M T) (b : bs) : F (option (bs * T)) := run p b.
+  Definition run_bs {T} (p : M T) (b : STREAM) : F (option (STREAM * T)) := run p b.
 
-  Definition run_full_bs {T} (p : M T) (b : bs) : F (option T) := run_full p b.
+  Definition run_full_bs {T} (p : M T) (b : STREAM) : F (option T) := run_full p b.
 
-  Definition digit : M Byte.byte :=
-    char (fun x => bool_decide (Byte.to_N "0" ≤ Byte.to_N x ≤ Byte.to_N "9")%N).
+  Definition digit : M PrimString.char63 :=
+    char (fun x => (("0".(char63_wrap) ≤? x) && (x ≤? "9".(char63_wrap)))%char63%uint63).
 
-  Definition exact_bs (b : bs) : M unit :=
+  Definition exact_bs (b : PrimString.string) : M unit :=
     exact $ b.
 
-  Definition exact_char (b : Byte.byte) : M unit :=
+  Definition exact_char (b : PrimString.char63) : M unit :=
     fmap (fun _ => ()) $ char (fun b' => bool_decide (b = b')).
 
+  Import Stdlib.Strings.Ascii.
   Definition quoted {U V T} (pre : M U) (post : M V) (p : M T) : M T :=
     (fun _ x _ => x) <$> pre <*> p <*> post.
 
   Definition ws : M unit :=
-    const () <$> (star $ char (fun x => strings.Ascii.is_space $ Ascii.ascii_of_byte x)).
+    const () <$> (star $ char (fun x => is_space x)).
 
   Definition ignore_ws {T} (p : M T) : M T :=
     quoted ws ws p.
@@ -143,7 +146,8 @@ Section keyword_set.
   Context {Mbase : Type -> Type}.
   Context {RET : MRet Mbase} {FMAP : FMap Mbase}
     {AP : Ap Mbase} {MBIND : MBind Mbase}.
-  Notation M := (parsec.M@{Set _ _ _ _ _ _ _ _} bs Mbase).
+  Notation STREAM := (Uint63.int * PrimString.string)%type.
+  Notation M := (M@{Set _ _ _ _ _ _ _ _} STREAM Mbase).
 
   #[local] Fixpoint seqs_to {T} (tokenD : token -> M ()) (v : T) (m : list token) : M T :=
     match m with

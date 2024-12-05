@@ -112,7 +112,7 @@ Module ParserExpr (Import Lang : PARSER_LANG).
 
   Definition Edefault_init_expr (e : Expr) : Expr := e.
 
-  Definition Eunevaluated_var (var : bs) (t : type): Expr :=
+  Definition Eunevaluated_var (var : ident) (t : type): Expr :=
     Eunsupported ("Unevaluated variable: " ++ var) (Tref t).
 
   Definition Ecapture (qual : type_qualifiers) (fld : field_name.t parser_lang) (lambda : name) (capture_field_type : type) : Expr :=

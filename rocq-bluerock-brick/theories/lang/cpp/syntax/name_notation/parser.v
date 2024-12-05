@@ -6,13 +6,15 @@
  *)
 Require Import stdpp.prelude.
 Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.bytestring.
 Require Import bedrock.upoly.upoly.
 Require Import bedrock.upoly.option.
 Require Import bedrock.upoly.list.
 Require Import bedrock.prelude.parsec.
 Require Import bedrock.lang.cpp.syntax.core.
 Require Import bedrock.lang.cpp.syntax.types.
+Require Import Stdlib.Strings.PrimString.
+Require Import bedrock.prelude.pstring.
+Require Import Stdlib.Numbers.Cyclic.Int63.Uint63.
 
 
 (** ** A parser for C++ names.
@@ -22,11 +24,11 @@ Require Import bedrock.lang.cpp.syntax.types.
     some expressions.
  *)
 
-Definition ident_char (b : Byte.byte) : bool :=
-  let n := Byte.to_N b in
-  bool_decide ((Reduce (Byte.to_N "a") ≤ n ≤ Reduce (Byte.to_N "z")) \/
-               (Reduce (Byte.to_N "A") ≤ n ≤ Reduce (Byte.to_N "Z")) \/
-               b = "_"%byte)%N.
+Import Uint63Notations.
+Definition ident_char (b : PrimString.char63) : bool :=
+     in_range_incl "a" "z" b
+  || in_range_incl "A" "Z" b
+  || (b =? "_".(char63_wrap))%char63%uint63.
 
 Module parser.
   Import parsec.
@@ -38,55 +40,53 @@ Module parser.
     Context {Mbase : Type -> Type}.
     Context {RET : MRet Mbase} {FMAP : FMap Mbase} {AP : Ap Mbase} {MBIND : MBind Mbase}.
 
-    Notation M := (parsec.M@{Set _ _ _ _ _ _ _ _} bs Mbase).
+    Notation M := (parsec.M@{Set _ _ _ _ _ _ _ _} (Uint63.int * PrimString.string) Mbase).
 
-    Definition digit_char (b : Byte.byte) : bool :=
-      bool_decide (Byte.to_N "0" ≤ Byte.to_N b ≤ Byte.to_N "9")%N.
+    Definition digit_char (b : char63) : bool :=
+      (("0".(char63_wrap) ≤? b) && (b ≤? "9".(char63_wrap)))%char63%uint63.
 
-    Definition ident : M bs :=
+    Definition ident : M PrimString.string :=
       let* i :=
         let* f := char ident_char in
-        (fun xs _ => BS.String f $ BS.parse xs)
+        (fun xs _ => PrimString.make 1 f ++ PrimStringAxioms.of_list xs)%pstring
           <$> star (char ident_char <|> digit)
           <*> not (charP (fun a => ident_char a || digit_char a))
       in
       if bool_decide (i ∈ ["const";"volatile";"char";"signed";"unsigned";"flaot";"double";"int";"long";"short";
                            "typename";"class";"struct";"union";
-                           "for";"while";"do";"try";"catch"]%bs)
+                           "for";"while";"do";"try";"catch"]%pstring)
       then mfail else mret i
     .
 
     Notation exact bs := (exact_bs bs).
 
     (* a maximal identifier *)
-    Definition keyword_no_ws (b : bs) : M unit :=
-      let* _ := exact b in
+    Definition keyword_no_ws (s : PrimString.string) : M unit :=
+      let* _ := exact s in
       let* _ := not $ char (fun a => ident_char a || digit_char a) in
       mret ().
 
-    Definition keyword (b : bs) : M unit :=
+    Definition keyword (b : PrimString.string) : M unit :=
       (fun _ _ _ => ()) <$> ws <*> keyword_no_ws b <*> ws.
 
-    Definition punct_char (b : Byte.byte) : Prop :=
-      let c : N := Byte.to_N b in
-      (Reduce (Byte.to_N "!") <= c < Reduce (Byte.to_N "0"))%N \/
-      (Reduce (Byte.to_N "9") < c < Reduce (Byte.to_N "A"))%N \/
-      (Reduce (Byte.to_N "Z") < c < Reduce (Byte.to_N "a"))%N \/
-      (Reduce (Byte.to_N "z") < c < 127)%N.
+    Definition punct_char (c : char63) : Prop :=
+      in_range_incl_excl "!" "0" c \/
+      in_range_excl      "9" "A" c \/
+      in_range_excl      "Z" "a" c \/
+      in_range_excl      "z" 127%uint63 c.
 
-    Definition space_char (b : Byte.byte) : Prop :=
-      let c : N := Byte.to_N b in
-      c ∈ [9; 10; 11; 12; 13; 32]%N.
+    Definition space_char (c : char63) : Prop :=
+      c ∈ [9; 10; 11; 12; 13; 32]%uint63.
 
     (* TODO: ideally, i would like to say that this does not contain additional characters. *)
-    Definition op_token (b : bs) : M unit :=
+    Definition op_token (s : PrimString.string) : M unit :=
       let* _ := ws in
-      let* _ := exact b in
+      let* _ := exact s in
       ws.
 
     Definition decimal : M N :=
       let make ls := fold_left (fun acc x => 10 * acc + x)%N ls 0%N in
-      make <$> plus ((fun x => Byte.to_N x - Byte.to_N "0")%N <$> digit).
+      make <$> plus ((fun x => Z.to_N $ to_Z $ x - "0".(char63_wrap))%char63%uint63 <$> digit).
 
     Definition parse_qualifiers : M function_qualifiers.t :=
       let quals :=
@@ -96,9 +96,9 @@ Module parser.
                        const function_qualifiers.Nl <$> op_token "&"]) in
       fold_right function_qualifiers.join function_qualifiers.N <$> quals.
 
-    Definition basic_types {lang} : list (list bs * type' lang) :=
-      let s_or_u_l (b : list bs) (s u : type' lang) :=
-        [(b, s); ("signed" :: b, s); ("unsigned" :: b, u)]%bs
+    Definition basic_types {lang} : list (list PrimString.string * type' lang) :=
+      let s_or_u_l (b : list PrimString.string) (s u : type' lang) :=
+        [(b, s); ("signed" :: b, s); ("unsigned" :: b, u)]%pstring
       in
       let s_or_u b := s_or_u_l [b] in
       [ (["bool"], Tbool)
@@ -107,16 +107,16 @@ Module parser.
       ; (["unsigned"; "char"], Tuchar)
       ; (["signed"; "char"], Tschar)
       ; (["uint128_t"], Tuint128_t)
-      ; (["int128_t"], Tint128_t) ]%bs ++
-      s_or_u "int128"%bs Tint128_t Tuint128_t ++
-      s_or_u "__int128"%bs Tint128_t Tuint128_t ++
-      s_or_u_l ["short";"int"]%bs Tshort Tushort ++
-      s_or_u "short"%bs Tshort Tushort ++
-      s_or_u "int"%bs Tint Tuint ++
-      s_or_u_l ["long";"long";"int"]%bs Tlonglong Tulonglong ++
-      s_or_u_l ["long";"long"]%bs Tlonglong Tulonglong ++
-      s_or_u_l ["long";"int"]%bs Tlong Tulong ++
-      s_or_u "long"%bs Tlong Tulong ++
+      ; (["int128_t"], Tint128_t) ]%pstring ++
+      s_or_u "int128"%pstring Tint128_t Tuint128_t ++
+      s_or_u "__int128"%pstring Tint128_t Tuint128_t ++
+      s_or_u_l ["short";"int"]%pstring Tshort Tushort ++
+      s_or_u "short"%pstring Tshort Tushort ++
+      s_or_u "int"%pstring Tint Tuint ++
+      s_or_u_l ["long";"long";"int"]%pstring Tlonglong Tulonglong ++
+      s_or_u_l ["long";"long"]%pstring Tlonglong Tulonglong ++
+      s_or_u_l ["long";"int"]%pstring Tlong Tulong ++
+      s_or_u "long"%pstring Tlong Tulong ++
       [ (["unsigned"], Tuint)
       ; (["signed"], Tint)
       ; (["nullptr_t"], Tnullptr)
@@ -124,7 +124,7 @@ Module parser.
       ; (["float128"], Tfloat128)
       ; (["float"], Tfloat)
       ; (["double"], Tdouble)
-      ; (["long"; "double"], Tlongdouble) ]%bs.
+      ; (["long"; "double"], Tlongdouble) ]%pstring.
 
     Fixpoint interleave {A} (p : A) (ls : list A) : list A :=
       match ls with
@@ -147,7 +147,7 @@ Module parser.
         keyword_set.interp token o
       end eq_refl.
 
-    Definition operators : list (bs * OverloadableOperator) :=
+    Definition operators : list (PrimString.string * OverloadableOperator) :=
       (* this is used in an early commit manner, so longer operators
          need to come first
          TODO: list is incomplete
@@ -196,7 +196,7 @@ Module parser.
       ; ("&", OOAmp)
       ; ("^", OOCaret)
       ; ("|", OOPipe)
-      ]%bs.
+      ]%pstring.
 
     Definition operator : M OverloadableOperator :=
       let* _ := ws in
@@ -204,9 +204,9 @@ Module parser.
       let* _ := ws in
       mret res.
 
-    Definition spaced (b : bs) : M unit :=
+    Definition spaced (s : PrimString.string) : M unit :=
       let* _ := ws in
-      let* _ := exact b in
+      let* _ := exact s in
       ws.
 
     Definition get_args {lang} (ls : list (type' lang)) : list (type' lang) :=
@@ -223,7 +223,10 @@ Module parser.
 
   End with_M.
 
-  #[local] Definition M := (parsec.M bs (eta option)).
+  Notation STREAM := (Uint63.int * PrimString.string)%type.
+  Notation TKN := PrimString.char63.
+
+  #[local] Definition M := (parsec.M STREAM (eta option)).
 
   #[local] Instance M_ret : MRet M := _.
   #[local] Instance M_map : FMap M := _.
@@ -231,13 +234,13 @@ Module parser.
   #[local] Instance M_bind : MBind M := _.
   #[local] Instance M_alt : Alternative M := _.
 
-  Definition run {T} (m : M T) (str : bs) : option (bs * T) :=
-    match parsec.run_bs m str with
+  Definition run {T} (m : M T) (str : PrimString.string) : option (STREAM * T) :=
+    match parsec.run_bs m (0%uint63, str) with
     | Some (Datatypes.Some (rest, result)) => Some (rest, result)
     | _ => None
     end.
 
-  Definition run_full {T} (p : M T) (str : bs) : option T :=
+  Definition run_full {T} (p : M T) (str : PrimString.string) : option T :=
     let m : M T := (fun x _ => x) <$> p <*> eos in
     fmap (M:=eta option) (fun '(_,b) => b) $ run m str.
 
@@ -260,14 +263,14 @@ Module parser.
     (** classification of names based to account for destructors and overloadable
         operators. *)
     Variant name_type : Set :=
-      | Simple (_ : bs)
-      | Dtor (_ : bs)
-      | FirstDecl (_ : bs)
-      | FirstChild (_ : bs)
+      | Simple (_ : PrimString.string)
+      | Dtor (_ : PrimString.string)
+      | FirstDecl (_ : PrimString.string)
+      | FirstChild (_ : PrimString.string)
       | Anon (_ : N)
       | Op (_ : OverloadableOperator)
       | OpConv (_ : type)
-      | OpLit (_ : bs).
+      | OpLit (_ : PrimString.string).
 
     Section body.
       Variable parse_type : unit -> M type.
@@ -519,14 +522,14 @@ Module parser.
 
 End parser.
 
-Definition parse_name (input : bs) : option name :=
+Definition parse_name (input : PrimString.string) : option name :=
   parser.run_full (parser.parse_name 1000) input.
 
-Definition parse_type (input : bs) : option type :=
+Definition parse_type (input : PrimString.string) : option type :=
   parser.run_full (parser.parse_type 1000) input.
 
 Module Type TESTS.
-  #[local] Definition TEST (input : bs) (nm : name) : Prop :=
+  #[local] Definition TEST (input : PrimString.string) (nm : name) : Prop :=
     (parse_name input) = Some nm.
 
   #[local] Definition Msg : name := Nglobal $ Nid "Msg".

@@ -14,19 +14,19 @@ Module Type TEST.
   Record RESULT (IN OUT : Set) : Set :=
   { input : IN ; expected : OUT ; observed : OUT }.
 
-  Definition print_parse (nm : name) (str : bs) : list (RESULT _ _) :=
-    let result : option bs  := print_name nm in
+  Definition print_parse (nm : name) (str : PrimString.string) : list (RESULT _ _) :=
+    let result : option _ := print_name nm in
     if bool_decide (result = Some str) then nil
     else {| input := nm ; expected := Some str ; observed := result |} :: nil.
 
-  Definition parse_print (nm : name) (str : bs) : list (RESULT _ _) :=
+  Definition parse_print (nm : name) (str : PrimString.string) : list (RESULT _ _) :=
     let result : option name := parse_name str in
     if bool_decide (result = Some nm) then nil
     else {| input := str ; expected := Some nm ; observed := result |} :: nil.
 
-  Example TEST_print_parse : concat ((fun '(b,a) => print_parse a b) <$> canonical) = [].
+  Example TEST_print_parse : List.concat ((fun '(b,a) => print_parse a b) <$> canonical) = [].
   Proof. vm_compute. reflexivity. Qed.
 
-  Example TEST_parse_print : concat ((fun '(b,a) => parse_print a b) <$> (canonical ++ parse_only)) = [].
+  Example TEST_parse_print : List.concat ((fun '(b,a) => parse_print a b) <$> (canonical ++ parse_only)) = [].
   Proof. vm_compute. reflexivity. Qed.
 End TEST.

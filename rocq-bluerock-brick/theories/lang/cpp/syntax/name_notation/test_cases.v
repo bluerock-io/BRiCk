@@ -8,7 +8,7 @@ Require Import bedrock.lang.cpp.syntax.prelude.
 Require Import bedrock.lang.cpp.syntax.core.
 
 (* parsing the left will produce the righ *and* printing the right will produce the left *)
-Definition canonical : list (bs * name) :=
+Definition canonical : list (PrimString.string * name) :=
   let Msg : name := Nglobal $ Nid "Msg" in
   [ ("Msg", Msg)
   ; ("Msg::@0", (Nscoped Msg (Nanon 0)))
@@ -57,10 +57,10 @@ Definition canonical : list (bs * name) :=
       (Nglobal
          (Nfunction function_qualifiers.N (Nf "submit")
             [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tlong; Tint]))])])))
-  ]%bs.
+  ]%pstring.
 
 (* parsing the left will produce the right *)
-Definition parse_only : list (bs * name) :=
+Definition parse_only : list (PrimString.string * name) :=
   let Msg : name := Nglobal $ Nid "Msg" in
   [ ("::Msg", Msg)
   ; ("Msg::operator   delete()", (Nscoped Msg (Nfunction function_qualifiers.N (Nop (OODelete false)) [])) )
@@ -82,4 +82,4 @@ Definition parse_only : list (bs * name) :=
                             Tuint; Tint] in
     ("Msg<unsigned long, long, unsigned long long, long long, unsigned int, int>::Msg()", (Nscoped (Ninst Msg targs) (Nfunction function_qualifiers.N Nctor [])))
   ; ("foo_client(int[2]&, const int*, bool*, int**, char*)", (Nglobal (Nfunction function_qualifiers.N (Nf "foo_client") [Tref (Tarray Tint 2); Tptr (Tconst Tint); Tptr Tbool; Tptr (Tptr Tint); Tptr Tchar])) )
-  ]%bs.
+  ]%pstring.
