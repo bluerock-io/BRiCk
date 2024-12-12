@@ -1,0 +1,4 @@
+(include_subdirs qualified)
+(coq.theory
+ (name tc_db_info_tests)
+ (theories tc_db_info))
