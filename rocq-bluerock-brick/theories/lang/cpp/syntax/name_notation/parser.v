@@ -52,11 +52,13 @@ Module parser.
     Notation exact bs := (exact_bs bs).
 
     (* a maximal identifier *)
-    Definition keyword (b : bs) : M unit :=
-      let* _ := ws in
+    Definition keyword_no_ws (b : bs) : M unit :=
       let* _ := exact b in
       let* _ := not $ char (fun a => ident_char a || digit_char a) in
-      ws.
+      mret ().
+
+    Definition keyword (b : bs) : M unit :=
+      (fun _ _ _ => ()) <$> ws <*> keyword_no_ws b <*> ws.
 
     Definition punct_char (b : Byte.byte) : Prop :=
       let c : N := Byte.to_N b in
@@ -117,10 +119,26 @@ Module parser.
       ; (["double"], Tdouble)
       ; (["long"; "double"], Tlongdouble) ]%bs.
 
+    Fixpoint interleave {A} (p : A) (ls : list A) : list A :=
+      match ls with
+      | nil => p :: nil
+      | l :: ls => p :: l :: interleave p ls
+      end.
+
+    #[local] Definition basic_type_otree {lang} :=
+      Eval vm_compute in keyword_set.compile 1000 $ (fun '(x,y) => (interleave None (List.map Some x), y)) <$> @basic_types lang.
+
     Definition basic_type {lang} : M (type' lang) :=
-      let os : list (M (type' lang)) :=
-        fmap (M:=eta list) (fun '(tkns, val) => fmap (M:=M) (fun _ => val) (seqs $ fmap (M:=eta list) keyword tkns)) basic_types in
-      anyOf os.
+      Eval red in
+      match basic_type_otree as X return X = basic_type_otree -> _ with
+      | None => fun pf => ltac:(exfalso; inversion pf)
+      | Some o => fun _ =>
+        let token x := match x with
+                       | None => ws
+                       | Some b => keyword_no_ws b
+                       end in
+        keyword_set.interp token o
+      end eq_refl.
 
     Definition operators : list (bs * OverloadableOperator) :=
       (* this is used in an early commit manner, so longer operators
