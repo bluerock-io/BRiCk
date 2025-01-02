@@ -254,7 +254,6 @@ Module Type Expr__newdelete.
           forall (oinit : option Expr)
             new_fn storage_expr aty Q
             (nfty := normalize_type new_fn.2)
-            (_ : type_of storage_expr = Tptr Tvoid)
             (_ : args_for <$> as_function nfty = Some ([Tsize_t; Tptr Tvoid], Ar_Definite)),
             (Exists alloc_sz alloc_al,
                [| size_of aty = Some alloc_sz |] **
