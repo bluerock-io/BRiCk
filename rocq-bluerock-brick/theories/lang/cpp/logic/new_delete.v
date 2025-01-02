@@ -204,7 +204,7 @@ Module Type Expr__newdelete.
 
         Axiom wp_operand_new :
           forall (oinit : option Expr)
-            new_fn (pass_align : bool) new_args (_ : new_args <> nil) aty Q targs
+            new_fn (pass_align : bool) new_args aty Q targs
             (nfty := normalize_type new_fn.2)
             (_ : (args_for <$> as_function nfty) = Some targs)
             (alloc_sz alloc_al : N)
@@ -218,7 +218,7 @@ Module Type Expr__newdelete.
                 Exists storage_ptr : ptr,
                   [| storage_val = Vptr storage_ptr |] **
                   if bool_decide (storage_ptr = nullptr) then
-                    Q (Vptr storage_ptr) free
+                    [| new_args <> nil |] ** Q (Vptr storage_ptr) free
                     (* ^^ [new_args <> nil] exists because the default <<operator new>>
                        is never allowed to return [nullptr] *)
                   else
@@ -303,7 +303,6 @@ Module Type Expr__newdelete.
         Axiom wp_operand_array_new :
           forall (array_size : Expr) (oinit : option Expr)
             new_fn (pass_align : bool) new_args aty Q targs
-            (_ : new_args <> nil) (* prevents default [new] which must be able to throw *)
             (nfty := normalize_type new_fn.2)
             (_ : args_for <$> as_function nfty = Some targs),
             (* <https://eel.is/c++draft/expr.new#7>
@@ -351,7 +350,9 @@ Module Type Expr__newdelete.
                      Exists (storage_base : ptr),
                      res |-> primR (Tptr Tvoid) (cQp.mut 1) (Vptr storage_base) **
                      if bool_decide (storage_base = nullptr) then
-                       Q (Vptr storage_base) free
+                       [| new_args <> nil |] ** Q (Vptr storage_base) free
+                       (* ^^ [new_args <> nil] exists because the default <<operator new>>
+                          is never allowed to return [nullptr] *)
                      else
                        (* [blockR alloc_sz -|- tblockR (Tarray aty array_size)] *)
                       storage_base |-> blockR (overhead_sz + alloc_sz) (cQp.m 1) **
