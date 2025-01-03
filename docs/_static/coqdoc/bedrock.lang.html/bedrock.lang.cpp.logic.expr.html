@@ -2351,10 +2351,10 @@ Using an initializer list to create a `struct`.
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;match&nbsp;sz&nbsp;with<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;O&nbsp;=&gt;&nbsp;Q&nbsp;emp<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;S&nbsp;sz'&nbsp;=&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_at&nbsp;loop_index&nbsp;(primR&nbsp;Tu64&nbsp;(1/2)&nbsp;idx)&nbsp;-*<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_at&nbsp;loop_index&nbsp;(primR&nbsp;Tsize_t&nbsp;(1/2)&nbsp;idx)&nbsp;-*<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wp_init&nbsp;ρ&nbsp;ty&nbsp;(Vptr&nbsp;&nbsp;o_sub&nbsp;resolve&nbsp;ty&nbsp;idx)&nbsp;init<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(fun&nbsp;free&nbsp;=&gt;&nbsp;free&nbsp;**<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_at&nbsp;loop_index&nbsp;(primR&nbsp;Tu64&nbsp;(1/2)&nbsp;idx)&nbsp;**<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_at&nbsp;loop_index&nbsp;(primR&nbsp;Tulonglong&nbsp;(1/2)&nbsp;idx)&nbsp;**<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_arrayloop_init&nbsp;level&nbsp;sz'&nbsp;ρ&nbsp;(S&nbsp;idx)&nbsp;targetp&nbsp;init&nbsp;ty&nbsp;Q)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end*)</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <a id="Expr._arrayloop_init" class="idref" href="#Expr._arrayloop_init"><span class="id" title="definition">_arrayloop_init</span></a><br/>
