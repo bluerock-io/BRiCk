@@ -71,16 +71,16 @@ Section with_cpp.
                                       *)
         (* 4) The existence of the "object representation" of an object of type [ty] -
            |  in conjunction with the premises - justifies "lowering" any
-           |  [type_ptr ty (p ,, o)] fact to a family of [type_ptr Tu8 (p ,, .[Tu8 ! i])]
+           |  [type_ptr ty (p ,, o)] fact to a family of [type_ptr Tbyte (p ,, .[Tbyte ! i])]
            |  facts - where [i] is a byte-offset that "covers" the [sizeof(ty)].
            v *)
-        type_ptr ty (p ,, o) |-- type_ptr Tu8 (p ,, .[ Tu8 ! i ]).
+        type_ptr ty (p ,, o) |-- type_ptr Tbyte (p ,, .[ Tbyte ! i ]).
     Parameter (q : ptr).
-    Let p := q .[ Tu16 ! -1000 ].
-    Let o := .[ Tu16 ! 1000 ].
+    Let p := q .[ Tushort ! -1000 ].
+    Let o := .[ Tushort ! 1000 ].
 
     Lemma type_ptr_obj_repr_full_bad :
-      type_ptr Tu8 (p ,, o) |-- type_ptr Tu8 (p ,, .[ Tu8 ! 2000 ]).
+      type_ptr Tbyte (p ,, o) |-- type_ptr Tbyte (p ,, .[ Tuchar ! 2000 ]).
     Proof using type_ptr_obj_repr_full.
       subst p o.
       iIntros "tptr".

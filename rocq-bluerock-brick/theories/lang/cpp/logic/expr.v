@@ -1822,10 +1822,10 @@ Module Type Expr.
          match sz with
          | O => Q emp
          | S sz' =>
-           _at loop_index (primR Tu64 (1/2) idx) -*
+           _at loop_index (primR Tsize_t (1/2) idx) -*
            wp_init ρ ty (Vptr $ _offset_ptr targetp $ o_sub resolve ty idx) init
                    (fun free => free **
-                      _at loop_index (primR Tu64 (1/2) idx) **
+                      _at loop_index (primR Tulonglong (1/2) idx) **
                       _arrayloop_init level sz' ρ (S idx) targetp init ty Q)
          end%I.
        ```

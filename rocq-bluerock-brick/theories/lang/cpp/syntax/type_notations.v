@@ -78,20 +78,6 @@ Module Export TypeNotations.
          , format "'[' const  volatile  ty ']'"
          , only printing).
 
-  (*
-  (* [Tnum] variants *)
-  Notation "'int8'" := Ti8 (in custom CPP_type at level 0, only printing).
-  Notation "'uint8'" := Tu8 (in custom CPP_type at level 0, only printing).
-  Notation "'int16'" := Ti16 (in custom CPP_type at level 0, only printing).
-  Notation "'uint16'" := Tu16 (in custom CPP_type at level 0, only printing).
-  Notation "'int32'" := Ti32 (in custom CPP_type at level 0, only printing).
-  Notation "'uint32'" := Tu32 (in custom CPP_type at level 0, only printing).
-  Notation "'int64'" := Ti64 (in custom CPP_type at level 0, only printing).
-  Notation "'uint64'" := Tu64 (in custom CPP_type at level 0, only printing).
-  Notation "'int128'" := Ti128 (in custom CPP_type at level 0, only printing).
-  Notation "'uint128'" := Tu128 (in custom CPP_type at level 0, only printing).
-   *)
-
   (* [char_type.t] variants *)
   Notation "'char'" := Tchar (in custom CPP_type at level 0, only printing).
   Notation "'wchar'" := Twchar (in custom CPP_type at level 0, only printing).
@@ -237,16 +223,16 @@ Module Export TypeNotationsParsing.
          , format "'[' const  volatile  ty ']'").
 
   (* [Tnum] variants *)
-  Notation "'int8'" := Ti8 (in custom CPP_type at level 0).
-  Notation "'uint8'" := Tu8 (in custom CPP_type at level 0).
-  Notation "'int16'" := Ti16 (in custom CPP_type at level 0).
-  Notation "'uint16'" := Tu16 (in custom CPP_type at level 0).
-  Notation "'int32'" := Ti32 (in custom CPP_type at level 0).
-  Notation "'uint32'" := Tu32 (in custom CPP_type at level 0).
-  Notation "'int64'" := Ti64 (in custom CPP_type at level 0).
-  Notation "'uint64'" := Tu64 (in custom CPP_type at level 0).
-  Notation "'int128'" := Ti128 (in custom CPP_type at level 0).
-  Notation "'uint128'" := Tu128 (in custom CPP_type at level 0).
+  Notation "'int8'" := Tschar (in custom CPP_type at level 0).
+  Notation "'uint8'" := Tuchar (in custom CPP_type at level 0).
+  Notation "'int16'" := Tshort (in custom CPP_type at level 0).
+  Notation "'uint16'" := Tushort (in custom CPP_type at level 0).
+  Notation "'int32'" := Tint (in custom CPP_type at level 0).
+  Notation "'uint32'" := Tuint (in custom CPP_type at level 0).
+  Notation "'int64'" := Tlonglong (in custom CPP_type at level 0).
+  Notation "'uint64'" := Tulonglong (in custom CPP_type at level 0).
+  Notation "'int128'" := Tint128 (in custom CPP_type at level 0).
+  Notation "'uint128'" := Tuint128 (in custom CPP_type at level 0).
 
   (* The rest of the [type]s *)
   Notation "'ptr<' ty '>'"
