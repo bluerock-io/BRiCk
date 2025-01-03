@@ -168,7 +168,7 @@ Section TestTypeNotationsParsing.
   #[local] Definition Notation_Tbool : Tbool = {(t: bool)}%cpp_type := eq_refl.
   Print Notation_Tbool.
 
-  #[local] Definition Notation_Tmember_pointer_1 : Tmember_pointer "foobarbaz" Ti8 = {(t: ptr["foobarbaz"]<int8>)}%cpp_type := eq_refl.
+  #[local] Definition Notation_Tmember_pointer_1 : Tmember_pointer "foobarbaz" Tschar = {(t: ptr["foobarbaz"]<int8>)}%cpp_type := eq_refl.
   Print Notation_Tmember_pointer_1.
 
   Section Qualifiers.

@@ -124,7 +124,7 @@ Section with_cpp.
     eauto using val_related_not_raw.
   Qed.
 
-  (* Typical [f] are [Vint], [Vn] etc; this gives agreement for [u64R] etc. *)
+  (* Typical [f] are [Vint], [Vn] etc; this gives agreement for [ulonglongR] etc. *)
   #[global] Instance primR_observe_agree_constr ty q1 q2 {A} f `{!Inj eq eq f} (v1 v2 : A) :
     Observe2 [| v1 = v2 |]
       (primR ty q1 (f v1))

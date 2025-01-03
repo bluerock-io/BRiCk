@@ -1096,7 +1096,7 @@ Module SimpleCPP.
                                    *)
         (* 4) The existence of the "object representation" of an object of type [ty] -
            |  in conjunction with the premises - justifies "lowering" any
-           |  [type_ptr ty p] fact to a collection of [type_ptr Tu8 (p ,, .[Tu8 ! i])]
+           |  [type_ptr ty p] fact to a collection of [type_ptr Tbyte (p ,, .[Tbyte ! i])]
            |  facts - where [i] is a byte-offset within the [ty] ([0 <= i < sizeof(ty)]).
            v *)
         type_ptr ty p |-- type_ptr Tbyte (p ,, (o_sub σ Tbyte i)).
