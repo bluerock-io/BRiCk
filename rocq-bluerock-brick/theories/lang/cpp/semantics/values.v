@@ -289,7 +289,7 @@ Module Type RAW_BYTES_MIXIN
 
   (**
   The relation [val_related ty] is, for most types [ty], equality on
-  values. For type [Tu8], it also includes the relation between [Vint]
+  values. For type [Tbyte], it also includes the relation between [Vint]
   and [Vraw] induced by [raw_bytes_of_val].
 
   NOTE: Should we need it, we can show [val_related] to be compatible

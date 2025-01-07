@@ -24,8 +24,8 @@ COQLIB=${PWD}/../../_build/install/default/lib/coq
 
 doc:
 	@dune clean
+	@dune build @../coq/install
 	@dune build
-	#@dune build @../coq/install
 	@rm -rf /tmp/coqdocjs
 	@cp -r coqdocjs /tmp
 	@rm -rf doc/sphinx/_static/coqdoc

@@ -507,7 +507,7 @@ Module Type Expr.
         (letI* '(la, rv), free :=
            eval2 (evaluation_order.order_of OOEqual) (wp_lval l) (wp_operand r) in
             la |-> anyR (erase_qualifiers ty) (cQp.mut 1) **
-           (la |-> primR (erase_qualifiers ty) (cQp.mut 1) rv -* Q la free))
+           (la |-> tptstoR (erase_qualifiers ty) (cQp.mut 1) rv -* Q la free))
         |-- wp_lval (Eassign l r ty) Q.
 
     Axiom wp_lval_bop_assign : forall ty o l r Q,
@@ -1822,10 +1822,10 @@ Module Type Expr.
          match sz with
          | O => Q emp
          | S sz' =>
-           _at loop_index (primR Tu64 (1/2) idx) -*
+           _at loop_index (primR Tsize_t (1/2) idx) -*
            wp_init ρ ty (Vptr $ _offset_ptr targetp $ o_sub resolve ty idx) init
                    (fun free => free **
-                      _at loop_index (primR Tu64 (1/2) idx) **
+                      _at loop_index (primR Tulonglong (1/2) idx) **
                       _arrayloop_init level sz' ρ (S idx) targetp init ty Q)
          end%I.
        ```

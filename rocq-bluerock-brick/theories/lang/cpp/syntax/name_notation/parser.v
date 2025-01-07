@@ -52,11 +52,13 @@ Module parser.
     Notation exact bs := (exact_bs bs).
 
     (* a maximal identifier *)
-    Definition keyword (b : bs) : M unit :=
-      let* _ := ws in
+    Definition keyword_no_ws (b : bs) : M unit :=
       let* _ := exact b in
       let* _ := not $ char (fun a => ident_char a || digit_char a) in
-      ws.
+      mret ().
+
+    Definition keyword (b : bs) : M unit :=
+      (fun _ _ _ => ()) <$> ws <*> keyword_no_ws b <*> ws.
 
     Definition punct_char (b : Byte.byte) : Prop :=
       let c : N := Byte.to_N b in
@@ -94,12 +96,6 @@ Module parser.
       let s_or_u b := s_or_u_l [b] in
       [ (["bool"], Tbool)
       ; (["void"], Tvoid)
-      ; (["nullptr_t"], Tnullptr)
-      ; (["float16"], Tfloat16)
-      ; (["float128"], Tfloat128)
-      ; (["float"], Tfloat)
-      ; (["double"], Tdouble)
-      ; (["long"; "double"], Tlongdouble)
       ; (["char"], Tchar)
       ; (["unsigned"; "char"], Tuchar)
       ; (["signed"; "char"], Tschar)
@@ -107,17 +103,42 @@ Module parser.
       ; (["int128_t"], Tint128_t) ]%bs ++
       s_or_u "int128"%bs Tint128_t Tuint128_t ++
       s_or_u "__int128"%bs Tint128_t Tuint128_t ++
+      s_or_u_l ["short";"int"]%bs Tshort Tushort ++
       s_or_u "short"%bs Tshort Tushort ++
       s_or_u "int"%bs Tint Tuint ++
+      s_or_u_l ["long";"long";"int"]%bs Tlonglong Tulonglong ++
       s_or_u_l ["long";"long"]%bs Tlonglong Tulonglong ++
+      s_or_u_l ["long";"int"]%bs Tlong Tulong ++
       s_or_u "long"%bs Tlong Tulong ++
       [ (["unsigned"], Tuint)
-      ; (["signed"], Tint) ]%bs.
+      ; (["signed"], Tint)
+      ; (["nullptr_t"], Tnullptr)
+      ; (["float16"], Tfloat16)
+      ; (["float128"], Tfloat128)
+      ; (["float"], Tfloat)
+      ; (["double"], Tdouble)
+      ; (["long"; "double"], Tlongdouble) ]%bs.
+
+    Fixpoint interleave {A} (p : A) (ls : list A) : list A :=
+      match ls with
+      | nil => p :: nil
+      | l :: ls => p :: l :: interleave p ls
+      end.
+
+    #[local] Definition basic_type_otree {lang} :=
+      Eval vm_compute in keyword_set.compile 1000 $ (fun '(x,y) => (interleave None (List.map Some x), y)) <$> @basic_types lang.
 
     Definition basic_type {lang} : M (type' lang) :=
-      let os : list (M (type' lang)) :=
-        fmap (M:=eta list) (fun '(tkns, val) => fmap (M:=M) (fun _ => val) (seqs $ fmap (M:=eta list) keyword tkns)) basic_types in
-      anyOf os.
+      Eval red in
+      match basic_type_otree as X return X = basic_type_otree -> _ with
+      | None => fun pf => ltac:(exfalso; inversion pf)
+      | Some o => fun _ =>
+        let token x := match x with
+                       | None => ws
+                       | Some b => keyword_no_ws b
+                       end in
+        keyword_set.interp token o
+      end eq_refl.
 
     Definition operators : list (bs * OverloadableOperator) :=
       (* this is used in an early commit manner, so longer operators
@@ -545,6 +566,8 @@ Module Type TESTS.
                          (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc (Nf "forall") [Tmember_pointer (Tnamed (Nglobal $ Nid "C")) $ Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tint])])) := eq_refl.
 
   Succeed Example _0 : TEST "foo(unsigned int128, int128)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint128_t; Tint128_t])) := eq_refl.
+
+  Succeed Example _0 : TEST "foo(unsigned, signed, char,unsigned char,signed char,short, short int, unsigned short, unsigned short int, signed short, signed short int, int, unsigned int, signed int, long, long int, unsigned long, unsigned long int, signed long, signed long int, long long, long long int, unsigned long long, unsigned long long int, signed long long, signed long long int)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint;Tint;Tchar; Tuchar; Tschar; Tshort; Tshort; Tushort; Tushort; Tshort; Tshort; Tint; Tuint; Tint; Tlong; Tlong; Tulong; Tulong; Tlong; Tlong; Tlonglong; Tlonglong;Tulonglong;Tulonglong;Tlonglong;Tlonglong])) := eq_refl.
 
   (* NOTE: non-standard names *)
   Succeed Example _0 : TEST "Msg::@msg" (Nscoped Msg (Nfirst_decl "msg")) := eq_refl.
