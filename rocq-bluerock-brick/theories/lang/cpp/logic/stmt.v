@@ -429,16 +429,16 @@ Module Type Stmt.
 
     (** * <<while>> *)
 
-    Definition while_unroll ρ test body :=
-      wp ρ (Sif None test body Sbreak).
+    Definition while_unroll ρ decl test body :=
+      wp ρ (Sif decl test body Sbreak).
 
-    Axiom wp_while_unroll : forall ρ test body Q,
-            while_unroll ρ test body (Kloop (|> wp ρ (Swhile None test body) Q) Q)
-        |-- wp ρ (Swhile None test body) Q.
+    Axiom wp_while_unroll : forall ρ decl test body Q,
+            while_unroll ρ decl test body (Kloop (|> wp ρ (Swhile decl test body) Q) Q)
+        |-- wp ρ (Swhile decl test body) Q.
 
-    Theorem wp_while_inv I : forall ρ test body Q,
-        I |-- while_unroll ρ test body (Kloop (|> I) Q) ->
-        I |-- wp ρ (Swhile None test body) Q.
+    Theorem wp_while_inv I : forall ρ decl test body Q,
+        I |-- while_unroll ρ decl test body (Kloop (|> I) Q) ->
+        I |-- wp ρ (Swhile decl test body) Q.
     Proof.
       intros.
       iLöb as "IH".
@@ -452,9 +452,9 @@ Module Type Stmt.
     Qed.
 
     (* for backwards compatibility *)
-    Lemma wp_while_inv_nolater I : forall ρ test body Q,
-        I |-- Unfold while_unroll (while_unroll ρ test body (Kloop I Q)) ->
-        I |-- wp ρ (Swhile None test body) Q.
+    Lemma wp_while_inv_nolater I : forall ρ decl test body Q,
+        I |-- Unfold while_unroll (while_unroll ρ decl test body (Kloop I Q)) ->
+        I |-- wp ρ (Swhile decl test body) Q.
     Proof.
       intros.
       iApply wp_while_inv.
@@ -462,13 +462,6 @@ Module Type Stmt.
       iApply wp_frame; first reflexivity.
       iIntros (rt); destruct rt; simpl; eauto.
     Qed.
-
-    (**
-       `while (T x = e) body` desugars to `{ T x = e; while (x) body }`
-     *)
-    Axiom wp_while_decl : forall ρ d test body Q,
-            wp ρ (Sseq (Sdecl (d :: nil) :: Swhile None test body :: nil)) Q
-        |-- wp ρ (Swhile (Some d) test body) Q.
 
     (** * <<for>> *)
     Definition Kpost_inner I Q (rt : ReturnType) :=
