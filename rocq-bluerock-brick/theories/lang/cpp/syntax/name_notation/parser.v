@@ -316,14 +316,14 @@ Module parser.
       let* t :=
         basic_type <|>
         ((fun _ => Tparam) <$> exact "$" <*> ident) <|>
-        ((fun _ => Tenum) <$> (exact "#" <|> spaced "enum") <*> parse_name ()) <|>
-        ((fun _ => Tnamed) <$> optional (spaced "struct" <|> spaced "class") <*> parse_name ())
+        ((fun _ => Tenum) <$> (exact "#" <|> keyword "enum") <*> parse_name ()) <|>
+        ((fun _ => Tnamed) <$> optional (keyword "struct" <|> keyword "class") <*> parse_name ())
       in
       let* post := parse_postfix_type in
       mret $ post (List.fold_right (fun f x => f x) t quals).
 
    Definition parse_name': M name :=
-     ((fun _ => Ndependent) <$> spaced "typename" <*> parse_type ()) <|>
+     ((fun _ => Ndependent) <$> keyword "typename" <*> parse_type ()) <|>
      (let* (x : list (atomic_name' _ * _)) :=
         (fun _ x => x) <$> optional (spaced "::") <*> sepBy (spaced "::") (parse_name_component ())
       in
@@ -568,6 +568,11 @@ Module Type TESTS.
   Succeed Example _0 : TEST "foo(unsigned int128, int128)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint128_t; Tint128_t])) := eq_refl.
 
   Succeed Example _0 : TEST "foo(unsigned, signed, char,unsigned char,signed char,short, short int, unsigned short, unsigned short int, signed short, signed short int, int, unsigned int, signed int, long, long int, unsigned long, unsigned long int, signed long, signed long int, long long, long long int, unsigned long long, unsigned long long int, signed long long, signed long long int)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint;Tint;Tchar; Tuchar; Tschar; Tshort; Tshort; Tushort; Tushort; Tshort; Tshort; Tint; Tuint; Tint; Tlong; Tlong; Tulong; Tulong; Tlong; Tlong; Tlonglong; Tlonglong;Tulonglong;Tulonglong;Tlonglong;Tlonglong])) := eq_refl.
+
+  Succeed Example _0 : TEST "foo(class_foo)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "class_foo"))])) := eq_refl.
+  Succeed Example _0 : TEST "foo(struct_foo)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "struct_foo"))])) := eq_refl.
+  Succeed Example _0 : TEST "foo(enum_foo)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "enum_foo"))])) := eq_refl.
+  Succeed Example _0 : TEST "foo(typename_int)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "typename_int"))])) := eq_refl.
 
   (* NOTE: non-standard names *)
   Succeed Example _0 : TEST "Msg::@msg" (Nscoped Msg (Nfirst_decl "msg")) := eq_refl.
