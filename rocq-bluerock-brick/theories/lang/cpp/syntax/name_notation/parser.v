@@ -546,8 +546,6 @@ Module Type TESTS.
   Succeed Example _0 : TEST "f(const volatile int[], int[3])" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tincomplete_array (Tqualified QCV Tint); Tarray Tint 3]) := eq_refl.
   Succeed Example _0 : TEST "f(void)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") []) := eq_refl.
   Succeed Example _0 : TEST "::f(void)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") []) := eq_refl.
-  Succeed Example _0 : TEST "::f(#::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
-
   Succeed Example _0 : TEST "operator """"_f(enum ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nop_lit "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
 
 
@@ -580,7 +578,7 @@ Module Type TESTS.
   Succeed Example _0 : TEST "typename foo" (Ndependent (Tnamed (Nglobal (Nid "foo")))) := eq_refl.
   Succeed Example _0 : TEST "typename foo<int>::type"
                  (Ndependent (Tnamed (Nscoped (Ninst (Nglobal (Nid "foo")) [Atype Tint]) (Nid "type")))) := eq_refl.
-
+  Succeed Example _0 : TEST "::f(#::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
   Succeed Example _0 : TEST "Msg<int& &&>" (Ninst (Nglobal (Nid "Msg")) [Atype (Trv_ref (Tref Tint))]) := eq_refl.
 
 End TESTS.
