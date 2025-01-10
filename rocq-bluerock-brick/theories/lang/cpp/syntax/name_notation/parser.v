@@ -243,6 +243,15 @@ Module parser.
 
   Notation exact bs := (exact_bs bs).
 
+  Definition parens {T} (m : M T) : M T := quoted (spaced "(") (spaced ")") m.
+
+  Definition commit {T U} (test : M T) (yes : T -> M U) (no : M U) : M U :=
+    let* yn := optional test in
+    match yn with
+    | Some y => yes y
+    | None => no
+    end.
+
   Section with_lang.
     Context {lang : lang.t}.
     Notation type := (type' lang).
@@ -259,7 +268,6 @@ Module parser.
       | Op (_ : OverloadableOperator)
       | OpConv (_ : type)
       | OpLit (_ : bs).
-
 
     Section body.
       Variable parse_type : unit -> M type.
@@ -322,17 +330,18 @@ Module parser.
       in
       let* t :=
         basic_type <|>
-        ((fun _ => Tparam) <$> exact "$" <*> ident) <|>
-        ((fun _ => Tenum) <$> (exact "#" <|> keyword "enum") <*> parse_name ()) <|>
-        ((fun _ => Tnamed) <$> optional (keyword "struct" <|> keyword "class") <*> parse_name ())
+        (exact "$" *> (Tparam <$> ident)) <|>
+        ((exact "#" <|> keyword "enum") *> (Tenum <$> parse_name ())) <|>
+        (optional (keyword "struct" <|> keyword "class") *> (Tnamed <$> parse_name ())) <|>
+        (parens (parse_type ()))
       in
       let* post := parse_postfix_type in
       mret $ post (List.fold_right (fun f x => f x) t quals).
 
    Definition parse_name': M name :=
-     ((fun _ => Ndependent) <$> keyword "typename" <*> parse_type ()) <|>
+     commit (keyword "typename") (fun _ => Ndependent <$> parse_type ()) $
      (let* (x : list (atomic_name' _ * _)) :=
-        (fun _ x => x) <$> optional (spaced "::") <*> sepBy (spaced "::") (parse_name_component ())
+        optional (op_token "::") *> sepBy (op_token "::") (parse_name_component ())
       in
       match x with
       | nil => mfail (* unreachable *)
