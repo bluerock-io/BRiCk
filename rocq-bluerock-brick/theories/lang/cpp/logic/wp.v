@@ -292,7 +292,7 @@ Definition _local (ρ : region) (b : ident) : ptr :=
   | Some p => p
   | _ => invalid_ptr
   end.
-Arguments _local !_ !_ / : simpl nomatch, assert.
+Arguments _local !_ _ / : simpl nomatch, assert.
 
 (** [_this ρ] returns the [ptr] that [this] is bound to.
 
