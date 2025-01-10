@@ -44,10 +44,17 @@ Module parser.
       bool_decide (Byte.to_N "0" ≤ Byte.to_N b ≤ Byte.to_N "9")%N.
 
     Definition ident : M bs :=
-      let* f := char ident_char in
-      (fun xs _ => BS.String f $ BS.parse xs)
-        <$> star (char ident_char <|> digit)
-        <*> not (charP (fun a => ident_char a || digit_char a)).
+      let* i :=
+        let* f := char ident_char in
+        (fun xs _ => BS.String f $ BS.parse xs)
+          <$> star (char ident_char <|> digit)
+          <*> not (charP (fun a => ident_char a || digit_char a))
+      in
+      if bool_decide (i ∈ ["const";"volatile";"char";"signed";"unsigned";"flaot";"double";"int";"long";"short";
+                           "typename";"class";"struct";"union";
+                           "for";"while";"do";"try";"catch"]%bs)
+      then mfail else mret i
+    .
 
     Notation exact bs := (exact_bs bs).
 
