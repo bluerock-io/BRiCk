@@ -5,7 +5,26 @@
  *)
 
 Require Import Stdlib.Strings.PString.
+
+(* We have to undo a bunch of things. But we only want to to override mutable
+   ltac if the current values are exactly as we think they are. *)
+Goal exists b:bool, b = true.
+Proof.
+  exists ltac:(let t := ltac:(Zify.zify_convert_to_euclidean_division_equations_flag) in exact t).
+  reflexivity.
+Qed.
 Ltac Zify.zify_convert_to_euclidean_division_equations_flag ::= constr:(false).
+
+Module Tmp.
+  Inductive tmp := Tmp.
+  #[local] Ltac ZifyBool.elim_bool_cstr ::= exact Tmp.
+
+  Goal tmp.
+    Zify.zify_post_hook.
+  Qed.
+End Tmp.
+Ltac Zify.zify_post_hook ::= idtac.
+
 Require Import Stdlib.Numbers.Cyclic.Int63.Uint63.
 Require Import stdpp.numbers.
 Require Import stdpp.relations.
