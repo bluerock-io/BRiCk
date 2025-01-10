@@ -152,6 +152,34 @@ Proof. constructor. exact ""%pstring. Defined.
 #[global] Instance string_countable : Countable string :=
   inj_countable' to_list of_list of_to_list.
 
+Definition index (needle: PrimString.string) (haystack: PrimString.string) : option int :=
+  if bool_decide (needle = ""%pstring) then
+    if bool_decide (haystack = ""%pstring) then
+      Some 0%uint63
+    else
+      None
+  else
+  let nlen := PrimString.length needle in
+  let hlen := PrimString.length haystack in
+  let len := Z.to_nat $ to_Z hlen in
+  (fix go l i : option int :=
+     match l with
+     | S l =>
+         if bool_decide (nlen <=? hlen - i)%uint63 then
+           if PrimString.compare (PrimString.sub haystack i nlen) needle is Eq then
+             Some i
+           else
+             go l (i + 1)%uint63
+         else
+           go l (i + 1)%uint63
+     | 0 => None
+     end
+  ) len 0%uint63.
+
+Definition contains needle haystack :=
+  if index needle haystack is Some _ then true else false.
+
+
 (* Module strongly inspired from [stdpp.pretty]. *)
 Module N.
   #[local] Open Scope N_scope.
