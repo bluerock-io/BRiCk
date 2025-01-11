@@ -33,13 +33,12 @@ Module Import translation_unit.
 
   Definition raw_symbol_table : Type := NM.Raw.t ObjValue.
   Definition raw_type_table : Type := NM.Raw.t GlobDecl.
-  Definition raw_alias_table : Type := NM.Raw.t type.
 
   #[global] Instance raw_structured_insert : forall {T}, Insert globname T (NM.Raw.t T) := _.
 
   Definition t : Type :=
-    raw_symbol_table -> raw_type_table -> raw_alias_table -> list name ->
-    (raw_symbol_table -> raw_type_table -> raw_alias_table -> list name -> translation_unit * list name) ->
+    raw_symbol_table -> raw_type_table -> list name ->
+    (raw_symbol_table -> raw_type_table -> list name -> translation_unit * list name) ->
     translation_unit * list name.
 
   Definition merge_obj_value (a b : ObjValue) : option ObjValue :=
@@ -49,12 +48,12 @@ Module Import translation_unit.
          else None.
 
   Definition _symbols (n : name) (v : ObjValue) : t :=
-    fun s t a dups k =>
+    fun s t dups k =>
       match s !! n with
-      | None => k (<[n := v]> s) t a dups
+      | None => k (<[n := v]> s) t dups
       | Some v' => match merge_obj_value v v' with
-                  | Some v => k (<[n:=v]> s) t a dups
-                  | None => k s t a (n :: dups)
+                  | Some v => k (<[n:=v]> s) t dups
+                  | None => k s t (n :: dups)
                   end
       end.
   Definition merge_glob_decl (a b : GlobDecl) : option GlobDecl :=
@@ -64,34 +63,41 @@ Module Import translation_unit.
          else None.
 
   Definition _types (n : name) (v : GlobDecl) : t :=
-    fun s t a dups k =>
-      match t !! n with
-      | None => k s (<[n := v]> t) a dups
-      | Some v' => match merge_glob_decl v v' with
-                   | Some v => k s (<[n:=v]> t) a dups
-                   | None => k s t a (n :: dups)
-                   end
-      end.
-  Definition _aliases (n : name) (v : type) : t :=
-    fun s t a dups k =>
-      match a !! n with
-      | None => k s t (<[n:=v]> a) dups
-      | _ => k s t a (n :: dups)
-      end.
+    fun s t dups k =>
+      if bool_decide (Gtypedef (Tnamed n) = v \/ Gtypedef (Tenum n) = v)
+      then
+        (* ignore self-aliases. These arise when you do
+           something like
+           <<
+           typedef enum memory_order { .. } memory_order;
+           >>
+         *)
+        k s t dups
+      else
+        match t !! n with
+        | None => k s (<[n := v]> t) dups
+        | Some v' => match merge_glob_decl v v' with
+                    | Some v => k s (<[n:=v]> t) dups
+                    | None => k s t (n :: dups)
+                    end
+        end.
+
+  Definition _aliases (n : name) (ty : type) : t :=
+    _types n (Gtypedef ty).
+
   Definition _skip : t :=
-    fun s t a dups k => k s t a dups.
+    fun s t dups k => k s t dups.
 
   Fixpoint decls' (ds : list t) : t :=
     match ds with
-    | nil => fun s t a dups k => k s t a dups
-    | d :: ds => fun s t a dups k => d s t a dups (fun s t a dups' => decls' ds s t a dups' k)
+    | nil => fun s t dups k => k s t dups
+    | d :: ds => fun s t dups k => d s t dups (fun s t dups' => decls' ds s t dups' k)
     end.
 
   Definition decls (ds : list t) (e : endian) : translation_unit * list name :=
-    decls' ds ∅ ∅ ∅ [] $ fun s t a => pair {|
+    decls' ds ∅ ∅ [] $ fun s t => pair {|
       symbols := NM.from_raw s;
       types := NM.from_raw t;
-      aliases := NM.from_raw a;
       initializer := nil;	(** TODO *)
       byte_order := e;
     |}.

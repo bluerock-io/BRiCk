@@ -212,7 +212,6 @@ Is then a translation unit a "singleton" value in this monoid?
 Record translation_unit : Type := {
   symbols : symbol_table;
   types : type_table;
-  aliases : alias_table;	(* we eschew <<Gtypedef>> for now *)
   initializer : InitializerBlock;
   byte_order  : endian;
 }.
