@@ -247,7 +247,7 @@ Section with_lang.
           end
         in
         if ft.(ft_cc) is CC_C then
-          (fun t tas => t ++ "()" ++ parens (sepBy ", " $ add_dots tas))
+          (fun t tas => t ++ parens (sepBy ", " $ add_dots tas))
             <$> printT ft.(ft_return)
             <*> traverse (T:=eta list) (F:=eta option) printT ft.(ft_params)
         else mfail
@@ -340,7 +340,6 @@ Module Type TESTS.
   Succeed Example _0 : TEST "f<int>(int, int)" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tint; Tint]) [Atype Tint]) := eq_refl.
   Succeed Example _0 : TEST "f<int>(enum @1, enum en)" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum (Nglobal (Nanon 1)); Tenum (Nglobal (Nid "en"))]) [Atype Tint]) := eq_refl.
   Succeed Example _0 : TEST "f<int>(int(*)())" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tptr (Tfunction (FunctionType Tint []))]) [Atype Tint]) := eq_refl.
-  Succeed Example _0 : TEST "f<int>(int()())" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tfunction (FunctionType Tint [])]) [Atype Tint]) := eq_refl.
-
-
+  Succeed Example _0 : TEST "f<int>(int())" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tfunction (FunctionType Tint [])]) [Atype Tint]) := eq_refl.
+  Succeed Example _0 : TEST "f<int>(int(int))" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tfunction (FunctionType Tint [Tint])]) [Atype Tint]) := eq_refl.
 End TESTS.
