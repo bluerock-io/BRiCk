@@ -49,6 +49,14 @@ Definition canonical : list (bs * name) :=
   ; ("integral", (Nglobal $ Nid "integral") )
   ; ("f<int>(int, int)", (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tint; Tint]) [Atype Tint]) )
   ; ("f<int>(enum @1, enum en)", (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum (Nglobal (Nanon 1)); Tenum (Nglobal (Nid "en"))]) [Atype Tint]))
+  ; ("submit(unsigned long, std::function<void()>)",
+      Nglobal
+            (Nfunction function_qualifiers.N (Nf "submit")
+               [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType Tvoid []))])]))
+  ; ("submit(unsigned long, std::function<void(long, int, ...)>)",
+      (Nglobal
+         (Nfunction function_qualifiers.N (Nf "submit")
+            [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tlong; Tint]))])])))
   ]%bs.
 
 (* parsing the left will produce the right *)

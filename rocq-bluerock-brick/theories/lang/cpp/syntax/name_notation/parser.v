@@ -44,10 +44,17 @@ Module parser.
       bool_decide (Byte.to_N "0" ≤ Byte.to_N b ≤ Byte.to_N "9")%N.
 
     Definition ident : M bs :=
-      let* f := char ident_char in
-      (fun xs _ => BS.String f $ BS.parse xs)
-        <$> star (char ident_char <|> digit)
-        <*> not (charP (fun a => ident_char a || digit_char a)).
+      let* i :=
+        let* f := char ident_char in
+        (fun xs _ => BS.String f $ BS.parse xs)
+          <$> star (char ident_char <|> digit)
+          <*> not (charP (fun a => ident_char a || digit_char a))
+      in
+      if bool_decide (i ∈ ["const";"volatile";"char";"signed";"unsigned";"flaot";"double";"int";"long";"short";
+                           "typename";"class";"struct";"union";
+                           "for";"while";"do";"try";"catch"]%bs)
+      then mfail else mret i
+    .
 
     Notation exact bs := (exact_bs bs).
 
@@ -236,6 +243,15 @@ Module parser.
 
   Notation exact bs := (exact_bs bs).
 
+  Definition parens {T} (m : M T) : M T := quoted (spaced "(") (spaced ")") m.
+
+  Definition commit {T U} (test : M T) (yes : T -> M U) (no : M U) : M U :=
+    let* yn := optional test in
+    match yn with
+    | Some y => yes y
+    | None => no
+    end.
+
   Section with_lang.
     Context {lang : lang.t}.
     Notation type := (type' lang).
@@ -253,14 +269,13 @@ Module parser.
       | OpConv (_ : type)
       | OpLit (_ : bs).
 
-
     Section body.
       Variable parse_type : unit -> M type.
       Variable parse_name : unit -> M name.
       Variable parse_name_component : unit -> M (atomic_name' lang * option (list (temp_arg' lang))).
       Variable parse_expr : unit -> M (Expr' lang).
 
-      Definition parse_args : M (list type * function_arity) :=
+      Definition parse_args (no_start_paren : bool) : M (list type * function_arity) :=
         let args := sepBy (spaced ",") (parse_type ()) in
         let arity :=
           let arity a :=
@@ -271,40 +286,53 @@ Module parser.
           in
           arity <$> optional ((fun _ _ => ()) <$> spaced "," <*> spaced "...")
         in
-        quoted (spaced "(") (spaced ")") (pair <$> (get_args <$> args) <*> arity).
+        if no_start_paren then
+          (pair <$> (get_args <$> args) <*> arity) <* spaced ")"
+        else
+          parens (pair <$> (get_args <$> args) <*> arity).
 
       Definition parse_postfix_type : M (type -> type) :=
-        let entry :=
+        let entry := fix entry fuel :=
+          let array_entry :=
+            (exact "]" *> mret Tincomplete_array) <|>
+              (let* n := decimal in
+               let* _ := exact "]" in
+               mret (fun x => Tarray x n))  <|>
+              (let* n := parse_expr () in
+               let* _ := exact "]" in
+               mret (fun x => Tvariable_array x n))
+          in
+          let function_entry :=
+            let qualified :=
+              let* (post : list (type -> type)) := (star (NEXT fuel entry) : M (list (type -> type))) <* ws <* exact ")" in
+              if post is nil then
+                mret (fun rt => Tfunction (FunctionType rt []))
+              else
+                let post := fold_left (fun t f => f t) post in
+                let* '(args, ar) := parse_args false in
+                mret (fun rt => post $ Tfunction (FunctionType (ft_arity:=ar) rt args))
+            in
+            qualified <|>
+            (let* '(args, ar) := parse_args true in
+             mret (fun rt => Tfunction (FunctionType (ft_arity:=ar) rt args)))
+          in
           let* _ := ws in
           (let* _ := exact "&&" in mret Trv_ref) <|>
             (let* _ := exact "&" in mret Tref) <|>
             (let* _ := exact "*" in mret Tptr) <|>
             (let* _ := keyword "const" in mret $ fun x => tqualified QC x) <|>
             (let* _ := keyword "volatile" in mret $ fun x => tqualified QV x) <|>
-            (let* _ := spaced "[]" in
-             mret (fun x => Tincomplete_array x)) <|>
-            (let* _ := exact "[" in
-             let* n := decimal in
-             let* _ := exact "]" in
-             mret (fun x => Tarray x n))  <|>
-            (let* _ := exact "[" in
-             let* n := parse_expr () in
-             let* _ := exact "]" in
-             mret (fun x => Tvariable_array x n)) <|>
-            (let* _ := spaced "(" in
-             let* _ := exact "*" in
-             let* _ := spaced ")" in
-             let* '(args, ar) := parse_args in
-             mret (fun rt => Tptr $ Tfunction (FunctionType (ft_arity:=ar) rt args))) <|>
-            (let* _ := spaced "(" in
+            (exact "[" *> array_entry) <|>
+            (exact "(" *> function_entry) <|>
+            (let* _ := exact "(" in
              let* nm := parse_name () in
              let* _ := spaced "::" in
              let* _ := exact "*" in
              let* _ := spaced ")" in
-             let* '(args, ar) := parse_args in
+             let* '(args, ar) := parse_args false in
              mret (fun rt => Tmember_pointer (Tnamed nm) $ Tfunction (FunctionType (ft_arity:=ar) rt args)))
         in
-        fold_left (fun t f => f t) <$> star entry.
+        fold_left (fun t f => f t) <$> star (entry 100).
 
 
     (* The core parsers are based on fuel to handle the mutual recursion *)
@@ -315,17 +343,18 @@ Module parser.
       in
       let* t :=
         basic_type <|>
-        ((fun _ => Tparam) <$> exact "$" <*> ident) <|>
-        ((fun _ => Tenum) <$> (exact "#" <|> keyword "enum") <*> parse_name ()) <|>
-        ((fun _ => Tnamed) <$> optional (keyword "struct" <|> keyword "class") <*> parse_name ())
+        (exact "$" *> (Tparam <$> ident)) <|>
+        ((exact "#" <|> keyword "enum") *> (Tenum <$> parse_name ())) <|>
+        (optional (keyword "struct" <|> keyword "class") *> (Tnamed <$> parse_name ())) <|>
+        (parens (parse_type ()))
       in
       let* post := parse_postfix_type in
       mret $ post (List.fold_right (fun f x => f x) t quals).
 
    Definition parse_name': M name :=
-     ((fun _ => Ndependent) <$> keyword "typename" <*> parse_type ()) <|>
+     commit (keyword "typename") (fun _ => Ndependent <$> parse_type ()) $
      (let* (x : list (atomic_name' _ * _)) :=
-        (fun _ x => x) <$> optional (spaced "::") <*> sepBy (spaced "::") (parse_name_component ())
+        optional (op_token "::") *> sepBy (op_token "::") (parse_name_component ())
       in
       match x with
       | nil => mfail (* unreachable *)
@@ -352,34 +381,31 @@ Module parser.
             (root, nm)).1
       end).
 
+   Fixpoint as_conv (q : function_qualifiers.t) (t : type) : option (type * list type * function_qualifiers.t) :=
+     match t with
+     | Tqualified cv t =>
+         as_conv (function_qualifiers.join q $ function_qualifiers.mk (q_const cv) (q_volatile cv) Prvalue) t
+     | Tref t => as_conv (function_qualifiers.join q $ function_qualifiers.mk false false Lvalue) t
+     | Trv_ref t => as_conv (function_qualifiers.join q $ function_qualifiers.mk false false Xvalue) t
+     | Tfunction ft => Some (ft.(ft_return), ft.(ft_params), q)
+     | _ => None
+     end.
+
     (* name components basically amount to atomic names with an optional template
        specialization after them. They are complex because function names include their
        arguments.
      *)
     Definition parse_name_component' : M (atomic_name' lang * option (list (temp_arg' lang))) :=
       let* (nm : name_type) :=
-        let* op := optional (keyword "operator") in
-        match op with
-        | None => let* d := optional (op_token "~") in
-                 match d with
-                 | None =>
-                     let* d := optional (exact "@") in
-                     match d with
-                     | None =>
-                         let* d := optional (exact ".") in
-                         match d with
-                         | None => Simple <$> ident
-                         | Some _ => FirstChild <$> ident
-                         end
-                     | Some _ => (Anon <$> decimal) <|> (FirstDecl <$> ident)
-                     end
-                 | Some _ => Dtor <$> ident
-                 end
-        | Some _ =>
-            (Op <$> operator) <|>
-            (OpConv <$> parse_type ()) <|>
-            (const OpLit <$> exact """""_" <*> ident)
-        end
+        let operator _ :=
+          (Op <$> operator) <|>
+          (exact """""_" *> (OpLit <$> ident)) <|>
+          (OpConv <$> parse_type ())
+        in
+        commit (keyword "operator") operator
+        $ commit (op_token "~") (fun _ => Dtor <$> ident)
+        $ commit (exact "@") (fun _ => (Anon <$> decimal) <|> (FirstDecl <$> ident))
+        $ commit (exact ".") (fun _ => FirstChild <$> ident) (Simple <$> ident)
       in
       let mk_atomic_name (nm : name_type) (args : option _) : M (atomic_name' _) :=
         match args with
@@ -388,10 +414,16 @@ Module parser.
                  | FirstDecl nm => mret $ Nfirst_decl nm
                  | FirstChild nm => mret $ Nfirst_child nm
                  | Anon n => mret $ Nanon n
+                 | OpConv t =>
+                     (* NOTE: this is a hack because <<int()>> is parsed as a function type. *)
+                     match as_conv function_qualifiers.N t with
+                     | Some (ret, args, q) =>
+                         mret (Nfunction q (Nop_conv ret) args)
+                     | None => mfail
+                     end
                  | Dtor _
                  | Op _
-                 | OpLit _
-                 | OpConv _ => mfail
+                 | OpLit _ => mfail
                  end
         | Some (args, ar, quals) =>
             (fun nm => Nfunction quals nm args) <$>
@@ -407,15 +439,15 @@ Module parser.
               end
         end
       in
-      let parse_args : M _ :=
-        optional (let* '(args, arity) := parse_args in
-                  let* quals := parse_qualifiers in
-                  mret (args, arity, quals))
-      in
       let* template_args :=
         let template_arg :=
           (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) in
         optional (quoted (spaced "<") (spaced ">") $ sepBy (op_token ",") template_arg) in
+      let parse_args : M _ :=
+        optional (let* '(args, arity) := parse_args false in
+                  let* quals := parse_qualifiers in
+                  mret (args, arity, quals))
+      in
       let* nm := let* a := parse_args in mk_atomic_name nm a in
       mret (nm, template_args)
     .
@@ -528,6 +560,10 @@ Module Type TESTS.
   Succeed Example _0 : TEST "Msg::operator   delete()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop (OODelete false)) [])) := eq_refl.
   Succeed Example _0 : TEST "Msg::operator delete[]()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop (OODelete true)) [])) := eq_refl.
   Succeed Example _0 : TEST "Msg::operator int()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop_conv Tint) [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator int() const" (Nscoped Msg (Nfunction function_qualifiers.Nc (Nop_conv Tint) [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator int() const volatile" (Nscoped Msg (Nfunction function_qualifiers.Ncv (Nop_conv Tint) [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator int() &" (Nscoped Msg (Nfunction function_qualifiers.Nl (Nop_conv Tint) [])) := eq_refl.
+
   Succeed Example _0 : TEST "foo_client(int[2]&, int const*, bool*, int**, char*)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo_client") [Tref (Tarray Tint 2); Tptr (Tconst Tint); Tptr Tbool; Tptr (Tptr Tint); Tptr Tchar])) := eq_refl.
   Succeed Example _0 : TEST "DlistInternal::iterator::operator!=(const DlistInternal::iterator&) const"
                  (Nscoped (Nscoped (Nglobal (Nid "DlistInternal")) (Nid "iterator"))
@@ -546,10 +582,16 @@ Module Type TESTS.
   Succeed Example _0 : TEST "f(const volatile int[], int[3])" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tincomplete_array (Tqualified QCV Tint); Tarray Tint 3]) := eq_refl.
   Succeed Example _0 : TEST "f(void)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") []) := eq_refl.
   Succeed Example _0 : TEST "::f(void)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") []) := eq_refl.
-  Succeed Example _0 : TEST "::f(#::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
-
   Succeed Example _0 : TEST "operator """"_f(enum ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nop_lit "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
 
+  Succeed Example _0 : TEST "submit(unsigned long, std::function<void()>)"
+                 (Nglobal
+                    (Nfunction function_qualifiers.N (Nf "submit")
+                       [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType Tvoid []))])])) := eq_refl.
+  Succeed Example _0 : TEST "submit(unsigned long, std::function<void(long, int, ...)>)"
+                         (Nglobal
+                            (Nfunction function_qualifiers.N (Nf "submit")
+                               [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tlong; Tint]))])])) := eq_refl.
 
   Succeed Example _0 : TEST "::f(enum ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
   Succeed Example _0 : TEST "::f(struct ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tnamed $ Nglobal $ Nid "foo"]) := eq_refl.
@@ -569,10 +611,23 @@ Module Type TESTS.
 
   Succeed Example _0 : TEST "foo(unsigned, signed, char,unsigned char,signed char,short, short int, unsigned short, unsigned short int, signed short, signed short int, int, unsigned int, signed int, long, long int, unsigned long, unsigned long int, signed long, signed long int, long long, long long int, unsigned long long, unsigned long long int, signed long long, signed long long int)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint;Tint;Tchar; Tuchar; Tschar; Tshort; Tshort; Tushort; Tushort; Tshort; Tshort; Tint; Tuint; Tint; Tlong; Tlong; Tulong; Tulong; Tlong; Tlong; Tlonglong; Tlonglong;Tulonglong;Tulonglong;Tlonglong;Tlonglong])) := eq_refl.
 
-  Succeed Example _0 : TEST "foo(class_foo)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "class_foo"))])) := eq_refl.
-  Succeed Example _0 : TEST "foo(struct_foo)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "struct_foo"))])) := eq_refl.
-  Succeed Example _0 : TEST "foo(enum_foo)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "enum_foo"))])) := eq_refl.
-  Succeed Example _0 : TEST "foo(typename_int)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tnamed (Nglobal (Nid "typename_int"))])) := eq_refl.
+  Succeed Example _0 : TEST "submit(unsigned long, std::function<void()>)"
+                         (Nglobal
+        (Nfunction function_qualifiers.N (Nf "submit")
+           [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType Tvoid []))])])) := eq_refl.
+  Succeed Example _0 : TEST "submit(unsigned long, std::function<void(long, int, ...)>)"
+                         (Nglobal
+         (Nfunction function_qualifiers.N (Nf "submit")
+            [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tlong; Tint]))])])) := eq_refl.
+
+  Succeed Example _0 : TEST "foo(int(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(*)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tptr $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(const *)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tptr $ Tconst $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(*const)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tconst $ Tptr $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(C::*)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tmember_pointer (Tnamed $ Nglobal (Nid "C")) $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+
+  (* known issues *)
+
 
   (* NOTE: non-standard names *)
   Succeed Example _0 : TEST "Msg::@msg" (Nscoped Msg (Nfirst_decl "msg")) := eq_refl.
@@ -580,7 +635,7 @@ Module Type TESTS.
   Succeed Example _0 : TEST "typename foo" (Ndependent (Tnamed (Nglobal (Nid "foo")))) := eq_refl.
   Succeed Example _0 : TEST "typename foo<int>::type"
                  (Ndependent (Tnamed (Nscoped (Ninst (Nglobal (Nid "foo")) [Atype Tint]) (Nid "type")))) := eq_refl.
-
+  Succeed Example _0 : TEST "::f(#::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
   Succeed Example _0 : TEST "Msg<int& &&>" (Ninst (Nglobal (Nid "Msg")) [Atype (Trv_ref (Tref Tint))]) := eq_refl.
 
 End TESTS.

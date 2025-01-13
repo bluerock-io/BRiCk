@@ -40,7 +40,7 @@
        : type
   
   Notation_Tnamed_2 uses section variable nm.
-  Notation_Tfunction_novariadic_noargs_1 = "void()()"%cpp_type
+  Notation_Tfunction_novariadic_noargs_1 = "void()"%cpp_type
        : type
   Notation_Tfunction_novariadic_noargs_2 =
   {t: extern CC_C ???() -> {?: rty}}
@@ -48,7 +48,7 @@
   
   Notation_Tfunction_novariadic_noargs_2 uses section variable rty.
   Notation_Tfunction_novariadic_args_nowrap_1 =
-  "void()(bool, nullptr_t)"%cpp_type
+  "void(bool, nullptr_t)"%cpp_type
        : type
   Notation_Tfunction_novariadic_args_nowrap_2 =
   {t: extern CC_C ???({?: aty1}, {?: "void"%cpp_type}, {?: aty2}) -> {?: rty}}
@@ -57,9 +57,9 @@
   Notation_Tfunction_novariadic_args_nowrap_2 uses section variables
   rty aty1 aty2.
   Notation_Tfunction_novariadic_args_wrap =
-  "void()(askldjfo;lasjdlkfj;aklsdjg;blkajl;ksdjfl;aksdjf;lkasjdf;lkajsd;lfkjas;dlkfj;alskdjf;kalsdjf;lk, askldjflk;ajsdkl;gjasdklgjakl;sdjgl;kasdjfl;kjasdlfhajklsdgljkasdhfgjkahsdfljk)"%cpp_type
+  "void(askldjfo;lasjdlkfj;aklsdjg;blkajl;ksdjfl;aksdjf;lkasjdf;lkajsd;lfkjas;dlkfj;alskdjf;kalsdjf;lk, askldjflk;ajsdkl;gjasdklgjakl;sdjgl;kasdjfl;kjasdlfhajklsdgljkasdhfgjkahsdfljk)"%cpp_type
        : type
-  Notation_Tfunction_variadic_noargs_1 = "void()(...)"%cpp_type
+  Notation_Tfunction_variadic_noargs_1 = "void(...)"%cpp_type
        : type
   Notation_Tfunction_variadic_noargs_2 =
   {t: extern CC_C ???()(...) -> {?: rty}}
@@ -67,7 +67,7 @@
   
   Notation_Tfunction_variadic_noargs_2 uses section variable rty.
   Notation_Tfunction_variadic_args_nowrap_1 =
-  "void()(bool, nullptr_t, ...)"%cpp_type
+  "void(bool, nullptr_t, ...)"%cpp_type
        : type
   Notation_Tfunction_variadic_args_nowrap_2 =
   {t: extern CC_C ???({?: aty1}, {?: "void"%cpp_type}, {?: aty2})(...) -> 
@@ -77,7 +77,7 @@
   Notation_Tfunction_variadic_args_nowrap_2 uses section variables
   rty aty1 aty2.
   Notation_Tfunction_variadic_args_wrap =
-  "void()(askldjfo;lasjdlkfj;aklsdjg;blkajl;ksdjfl;aksdjf;lkasjdf;lkajsd;lfkjas;dlkfj;alskdjf;kalsdjf;lk, askldjflk;ajsdkl;gjasdklgjakl;sdjgl;kasdjfl;kjasdlfhajklsdgljkasdhfgjkahsdfljk, ...)"%cpp_type
+  "void(askldjfo;lasjdlkfj;aklsdjg;blkajl;ksdjfl;aksdjf;lkasjdf;lkajsd;lfkjas;dlkfj;alskdjf;kalsdjf;lk, askldjflk;ajsdkl;gjasdklgjakl;sdjgl;kasdjfl;kjasdlfhajklsdgljkasdhfgjkahsdfljk, ...)"%cpp_type
        : type
   Notation_Tbool = "bool"%cpp_type
        : type
