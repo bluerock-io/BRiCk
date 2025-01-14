@@ -117,7 +117,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 	};
 
 	auto bytestring = [&](CoqPrinter& print) -> auto& {
-		return print.output() << "#[local] Open Scope bs_scope." << fmt::line;
+		return print.output() << "#[local] Open Scope pstring_scope." << fmt::line;
 	};
 
 	with_open_file(

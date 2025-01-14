@@ -4,7 +4,7 @@
   # scrub test_17_name_test.v
   Require Import bedrock.lang.cpp.mparser.
   
-  #[local] Open Scope bs_scope.
+  #[local] Open Scope pstring_scope.
   
   Definition module_names : list Mname :=
     (

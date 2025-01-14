@@ -72,7 +72,7 @@ End function_type.
 Variant temp_param_ {type : Set} : Set :=
 | Ptype (_ : ident)
 | Pvalue (_ : ident) (_ : type)
-| Punsupported (_ : bs).
+| Punsupported (_ : PrimString.string).
 #[global] Arguments temp_param_ : clear implicits.
 #[global] Instance temp_param__inhabited {A} : Inhabited (temp_param_ A).
 Proof. solve_inhabited. Qed.
@@ -120,7 +120,7 @@ Inductive temp_arg_ {name decltype Expr : Set} : Set :=
 | Avalue (_ : Expr)
 | Apack (_ : list temp_arg_)
 | Atemplate (_ : name)
-| Aunsupported (_ : bs).
+| Aunsupported (_ : PrimString.string).
 Arguments temp_arg_ : clear implicits.
 #[global] Instance temp_arg__inhabited {A B C : Set} {_ : Inhabited A} : Inhabited (temp_arg_ A B C).
 Proof. solve_inhabited. Qed.
@@ -191,7 +191,7 @@ Variant function_name_ {type : Set} : Set :=
 | Nop (_ : OverloadableOperator)
 | Nop_conv (_ : type)
 | Nop_lit (_ : ident)
-| Nunsupported_function (_ : bs).
+| Nunsupported_function (_ : PrimString.string).
 #[global] Arguments function_name_ : clear implicits.
 #[global] Instance function_name__inhabited {A} : Inhabited (function_name_ A).
 Proof. solve_inhabited. Qed.
@@ -343,7 +343,7 @@ return types?
 | Nfirst_child (_ : ident)
 
 (** Errors *)
-| Nunsupported_atomic (_ : bs).
+| Nunsupported_atomic (_ : PrimString.string).
 #[global] Arguments atomic_name_ : clear implicits.
 #[global] Instance atomic_name__inhabited {A} : Inhabited (atomic_name_ A).
 Proof. solve_inhabited. Qed.
@@ -425,7 +425,7 @@ Inductive name' {lang : lang.t} : Set :=
 | Nglobal (c : atomic_name_ type')	(* <<::c>> *)
 | Ndependent (t : type') (* <<typename t>> *)
 | Nscoped (n : name') (c : atomic_name_ type')	(* <<n::c>> *)
-| Nunsupported (_ : bs)
+| Nunsupported (_ : PrimString.string)
 
 (** ** Types *)
 (**
@@ -464,7 +464,7 @@ with type' {lang : lang.t} : Set :=
 | Tfloat_ (_ : float_type.t)
 | Tqualified (q : type_qualifiers) (t : type')
 | Tnullptr
-| Tarch (osz : option bitsize) (name : bs)
+| Tarch (osz : option bitsize) (name : PrimString.string)
 | Tdecltype (_ : Expr')
   (* ^^ this is <<decltype(e)>> when <<e>> is an expression, including a parenthesized expression.
      (2) in <https://en.cppreference.com/w/cpp/language/decltype>
@@ -473,7 +473,7 @@ with type' {lang : lang.t} : Set :=
   (* ^^ this is <<decltype(e)>> when <<e>> is a variable reference
      (1) in <https://en.cppreference.com/w/cpp/language/decltype>
    *)
-| Tunsupported (_ : bs)
+| Tunsupported (_ : PrimString.string)
 
 (** ** Expressions *)
 (**
@@ -594,7 +594,7 @@ Should be [gn : classname]
 | Earrayloop_init (oname : N) (src : Expr') (level : N) (length : N) (init : Expr') (t : type')
 | Earrayloop_index (level : N) (t : type')
 | Eopaque_ref (name : N) (t : type')
-| Eunsupported (s : bs) (t : type')
+| Eunsupported (s : PrimString.string) (t : type')
 with Stmt' {lang : lang.t} : Set :=
 | Sseq    (_ : list Stmt')
 | Sdecl   (_ : list VarDecl')
@@ -619,14 +619,14 @@ with Stmt' {lang : lang.t} : Set :=
 
 | Sattr (_ : list ident) (_ : Stmt')
 
-| Sasm (_ : bs) (volatile : bool)
+| Sasm (_ : PrimString.string) (volatile : bool)
        (inputs : list (ident * Expr'))
        (outputs : list (ident * Expr'))
        (clobbers : list ident)
 
 | Slabeled (_ : ident) (_ : Stmt')
 | Sgoto (_ : ident)
-| Sunsupported (_ : bs)
+| Sunsupported (_ : PrimString.string)
 with VarDecl' {lang : lang.t} : Set :=
 | Dvar (name : localname) (_ : type') (init : option Expr')
 | Ddecompose (_ : Expr') (anon_var : ident) (_ : list BindingDecl')
@@ -879,12 +879,11 @@ Notation BindingDecl := (BindingDecl' lang.cpp).
 Notation Stemp_arg := (temp_arg lang.cpp). *)
 Notation atomic_name := (atomic_name' lang.cpp).
 
-
 Module field_name.
   Definition t lang := (atomic_name' lang).
-  Definition Id {lang} : bs -> t lang := Nid.
+  Definition Id {lang} : ident -> t lang := Nid.
   Definition Anon {lang} : _ -> t lang := Nanon.
-  Definition CaptureVar {lang} : bs -> t lang := Nid.
+  Definition CaptureVar {lang} : ident -> t lang := Nid.
   Definition CaptureThis {lang} : t lang := Nid ".this".
 End field_name.
 Notation field_name := (field_name.t lang.cpp).

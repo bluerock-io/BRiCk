@@ -152,7 +152,7 @@ Module BinOp.
     end.
   Definition resolve_comparison : resolve := fun tl tr =>
     Tbool.
-  Definition resolve_todo (msg : bs) : resolve := fun tl tr =>
+  Definition resolve_todo (msg : PrimString.string) : resolve := fun tl tr =>
     Tunsupported ("[mparser] Ebinop todo: " ++ msg).
 
   Definition resolve_binop (op : BinOp) : resolve :=
