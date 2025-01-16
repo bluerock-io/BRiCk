@@ -27,10 +27,11 @@ Import ChargeNotation.
           character encoding (see [syntax/expr.v]). This is *not* the
           same as bytes, and will not be for multi-byte characters.
   *)
+
 mlock
-Definition string_bytesR `{Σ : cpp_logic} {σ : genv} (cty : char_type) (q : cQp.t) (ls : list N) : Rep :=
+Definition string_bytesR `{Σ : cpp_logic} {σ : genv} (cty : char_type) (q : cQp.t) (s : literal_string.t) : Rep :=
   let ty := Tchar_ cty in
-  arrayR ty (λ c, primR ty q (N_to_char cty c)) (ls ++ [0%N]).
+  arrayR ty (λ c, primR ty q (N_to_char cty c)) (literal_string.to_list_N s ++ [0%N]).
 #[global] Arguments string_bytesR {_ _ _ _} _ _ _ : assert.
 
 (* Arguments char_type.bitsN !_ /.

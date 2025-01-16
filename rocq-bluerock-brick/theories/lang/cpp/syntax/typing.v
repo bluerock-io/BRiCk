@@ -295,7 +295,7 @@ Module decltype.
 
         | Echar _ t => mret t
         | Estring chars t =>
-            mret $ Tref $ Tarray (Tconst t) (1 + list_numbers.lengthN chars)
+            mret $ Tref $ Tarray (Tconst t) (1 + literal_string.lengthN chars)
         | Eint _ t => mret t
         | Ebool _ => mret Tbool
         | Eunop _ _ t => mret t

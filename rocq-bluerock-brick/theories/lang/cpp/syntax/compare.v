@@ -5,9 +5,11 @@
  *)
 
 Require Import bedrock.prelude.compare.
+Require Import bedrock.prelude.pstring.
 Require Import bedrock.lang.cpp.syntax.prelude.
 Require Import bedrock.lang.cpp.syntax.preliminary.
 Require Import bedrock.lang.cpp.syntax.overloadable.
+Require Import bedrock.lang.cpp.syntax.literal_string.
 Require Import bedrock.lang.cpp.syntax.core.
 Require Stdlib.Numbers.Cyclic.Int63.PrimInt63.
 
@@ -1487,11 +1489,11 @@ Module Expr.
       compareT b1.(box_Echar_1) b2.(box_Echar_1).
 
     Record box_Estring : Set := Box_Estring {
-      box_Estring_0 : list N;
+      box_Estring_0 : literal_string.t;
       box_Estring_1 : type;
     }.
     Definition box_Estring_compare (b1 b2 : box_Estring) : comparison :=
-      compare_lex (List.compare N.compare b1.(box_Estring_0) b2.(box_Estring_0)) $ fun _ =>
+      compare_lex (literal_string.compare b1.(box_Estring_0) b2.(box_Estring_0)) $ fun _ =>
       compareT b1.(box_Estring_1) b2.(box_Estring_1).
 
     Record box_Eint : Set := Box_Eint {

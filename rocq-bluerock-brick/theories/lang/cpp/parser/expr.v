@@ -132,4 +132,8 @@ Module ParserExpr (Import Lang : PARSER_LANG).
     | Some val => Ebool val
     end.
 
+  Definition Estring (chars : list N) (t : type) : Expr :=
+    let str := literal_string.of_list_N chars in
+    Estring str t.
+
 End ParserExpr.

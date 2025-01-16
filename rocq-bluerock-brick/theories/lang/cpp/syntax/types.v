@@ -1245,8 +1245,6 @@ Definition Tmember_func {lang} (ty : exprtype' lang) (fty : functype' lang) : fu
                                 ; ft_return := ft.(ft_return) ; ft_params := Tptr ty :: ft.(ft_params) |}
   | _ => fty
   end.
-
-
 End with_lang.
 
 Notation normalize_type := (normalize_type' QM).
