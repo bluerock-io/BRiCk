@@ -987,6 +987,11 @@ Notation Tdouble := (Tfloat_ float_type.Fdouble).
 Notation Tlongdouble := (Tfloat_ float_type.Flongdouble).
 Notation Tfloat128 := (Tfloat_ float_type.Ffloat128).
 
+Notation Twchar_t := (Tchar_ char_type.Cwchar).
+Notation Tchar8_t := (Tchar_ char_type.C8).
+Notation Tchar16_t := (Tchar_ char_type.C16).
+Notation Tchar32_t := (Tchar_ char_type.C32).
+
 (* TODO: This is determined by the compiler. *)
 Notation Tsize_t := Tulong (only parsing).
 (* NOTE Use [Tbyte] when talking about the offsets for "raw bytes" *)
