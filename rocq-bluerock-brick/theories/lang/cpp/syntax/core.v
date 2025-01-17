@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2024 BlueRock Security, Inc.
+ * Copyright (c) 2024-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -114,74 +114,6 @@ Module temp_param.
   End traverse.
 
 End temp_param.
-
-Inductive temp_arg_ {name decltype Expr : Set} : Set :=
-| Atype (_ : decltype)
-| Avalue (_ : Expr)
-| Apack (_ : list temp_arg_)
-| Atemplate (_ : name)
-| Aunsupported (_ : PrimString.string).
-Arguments temp_arg_ : clear implicits.
-#[global] Instance temp_arg__inhabited {A B C : Set} {_ : Inhabited A} : Inhabited (temp_arg_ A B C).
-Proof. solve_inhabited. Qed.
-(*
-#[global] Instance temp_arg__eq_dec {A B : Set} {_ : EqDecision A} {_ : EqDecision B} : EqDecision (temp_arg_ A B).
-Proof. solve_decision. Defined.
-*)
-
-Module temp_arg.
-  Import UPoly.
-  Section existsb.
-    Context {name type Expr : Set} (e : name -> bool) (f : type -> bool) (g : Expr -> bool).
-
-    Fixpoint existsb (a : temp_arg_ name type Expr) : bool :=
-      match a with
-      | Atype t => f t
-      | Avalue e => g e
-      | Apack ls => List.existsb existsb ls
-      | Atemplate n => e n
-      | Aunsupported _ => false
-      end.
-  End existsb.
-
-  Section fmap.
-    Context {name name' type type' Expr Expr' : Set}
-      (e : name -> name') (f : type -> type') (g : Expr -> Expr').
-
-    Fixpoint fmap (a : temp_arg_ name type Expr) : temp_arg_ name' type' Expr' :=
-      match a with
-      | Atype t => Atype (f t)
-      | Avalue e => Avalue (g e)
-      | Apack ls => Apack $ fmap <$> ls
-      | Atemplate n => Atemplate $ e n
-      | Aunsupported msg => Aunsupported msg
-      end.
-  End fmap.
-  #[global] Arguments fmap _ _ _ _ _ _ _ _ _ & _ : assert.
-
-  Section traverse.
-    #[local] Set Universe Polymorphism.
-    #[local] Unset Auto Template Polymorphism.
-    #[local] Unset Universe Minimization ToSet.
-    Universe u.
-    Context {F : Set -> Type@{u}} `{!FMap F, !MRet F, AP : !Ap F}.
-    Context {name name' type type' Expr Expr' : Set}
-      (e : name -> F name') (f : type -> F type')
-      (g : Expr -> F Expr').
-
-    Fixpoint traverse (a : temp_arg_ name type Expr) : F (temp_arg_ name' type' Expr') :=
-      match a with
-      | Atype t => Atype <$> f t
-      | Avalue e => Avalue <$> g e
-      | Apack ls => Apack <$> UPoly.traverse (T:=eta list) (F:=F) traverse ls
-      | Atemplate n => Atemplate <$> e n
-      | Aunsupported msg => mret $ Aunsupported msg
-      end.
-    #[global] Arguments traverse & _ : assert.
-    #[global] Hint Opaque traverse : typeclass_instances.
-  End traverse.
-
-End temp_arg.
 
 (** ** Function names and qualifiers *)
 Variant function_name_ {type : Set} : Set :=
@@ -421,11 +353,18 @@ End cast_style.
 
 (** ** Structured names *)
 Inductive name' {lang : lang.t} : Set :=
-| Ninst (c : name') (_ : list (temp_arg_ name' type' Expr'))
+| Ninst (c : name') (_ : list temp_arg')
 | Nglobal (c : atomic_name_ type')	(* <<::c>> *)
 | Ndependent (t : type') (* <<typename t>> *)
 | Nscoped (n : name') (c : atomic_name_ type')	(* <<n::c>> *)
 | Nunsupported (_ : PrimString.string)
+
+with temp_arg' {lang : lang.t} : Set :=
+| Atype (_ : type')
+| Avalue (_ : Expr')
+| Apack_expansion (_ : list temp_arg') (* TODO: this is incorrect, it needs a pack expansion pattern *)
+| Atemplate (_ : name')
+| Aunsupported (_ : PrimString.string)
 
 (** ** Types *)
 (**
@@ -683,6 +622,7 @@ with Cast' {lang : lang.t} : Set :=
 .
 #[global] Arguments Cast' : clear implicits.
 #[global] Arguments name' : clear implicits.
+#[global] Arguments temp_arg' : clear implicits.
 #[global] Arguments type' : clear implicits.
 #[global] Arguments Expr' : clear implicits.
 #[global] Arguments VarDecl' : clear implicits.
@@ -695,6 +635,8 @@ Proof. solve_inhabited. Qed.
 Proof. solve_inhabited. Qed.
 #[global] Instance name_inhabited {lang} : Inhabited (name' lang).
 Proof. apply populate, Nglobal, inhabitant. Qed.
+#[global] Instance temp_arg_inhabited {lang} : Inhabited (temp_arg' lang).
+Proof. apply populate, Atype, inhabitant. Qed.
 #[global] Instance VarDecl_inhabited {lang} : Inhabited (VarDecl' lang).
 Proof. solve_inhabited. Qed.
 #[global] Instance BindingDecl_inhabited {lang} : Inhabited (BindingDecl' lang).
@@ -703,40 +645,6 @@ Proof. solve_inhabited. Qed.
 Proof. apply populate, Sseq, nil. Qed.
 #[global] Instance Cast_inhabited {lang} : Inhabited (Cast' lang).
 Proof. apply populate, C2void. Qed.
-
-(*
-Section eq_dec.
-  Context {lang : lang.t}.
-  #[local] Notation EQ_DEC T := (∀ x y : T, Decision (x = y)) (only parsing).
-
-  Lemma name_eq_dec' : EQ_DEC (name' lang)
-  with type_eq_dec' : EQ_DEC (type' lang)
-  with Expr_eq_dec' : EQ_DEC (Expr' lang)
-  with VarDecl_eq_dec' : EQ_DEC (VarDecl' lang)
-  with BindingDecl_eq_dec' : EQ_DEC (BindingDecl' lang)
-  with Stmt_eq_dec' : EQ_DEC (Stmt' lang)
-  with Cast_eq_dec' : EQ_DEC (Cast' lang).
-  Proof.
-    all: intros x y.
-    all: pose (name_eq_dec' : EqDecision _).
-    all: pose (type_eq_dec' : EqDecision _).
-    all: pose (Expr_eq_dec' : EqDecision _).
-    all: pose (VarDecl_eq_dec' : EqDecision _).
-    all: pose (BindingDecl_eq_dec' : EqDecision _).
-    all: pose (Stmt_eq_dec' : EqDecision _).
-    all: pose (Cast_eq_dec' : EqDecision _).
-    all:unfold Decision; decide equality; solve_decision.
-  Defined.
-
-  #[global] Instance name_eq_dec : EqDecision _ := name_eq_dec'.
-  #[global] Instance type_eq_dec : EqDecision _ := type_eq_dec'.
-  #[global] Instance Expr_eq_dec : EqDecision _ := Expr_eq_dec'.
-  #[global] Instance VarDecl_eq_dec : EqDecision _ := VarDecl_eq_dec'.
-  #[global] Instance BindingDecl_eq_dec : EqDecision _ := BindingDecl_eq_dec'.
-  #[global] Instance Stmt_eq_dec : EqDecision _ := Stmt_eq_dec'.
-  #[global] Instance Cast_eq_dec : EqDecision _ := Cast_eq_dec'.
-End eq_dec.
-*)
 
 Module Cast.
   Definition existsb {lang : lang.t}
@@ -799,7 +707,6 @@ Notation MethodRef' lang := (MethodRef_ (obj_name' lang) (functype' lang) (Expr'
 Notation function_type' lang := (function_type_ (decltype' lang)).
 Notation function_name' lang := (function_name_ (decltype' lang)).
 Notation temp_param' lang := (temp_param_ (type' lang)).
-Notation temp_arg' lang := (temp_arg_ (name' lang) (decltype' lang) (Expr' lang)).
 Notation atomic_name' lang := (atomic_name_ (type' lang)).
 
 (**
@@ -999,14 +906,22 @@ Notation Tbyte := (Tnum int_rank.Ichar Unsigned) (only parsing).
 
 
 (** ** Dependent names, types, and terms *)
-
 Fixpoint is_dependentN {lang} (n : name' lang) : bool :=
   match n with
-  | Ninst n xs => is_dependentN n || existsb (temp_arg.existsb is_dependentN is_dependentT is_dependentE) xs
+  | Ninst n xs => is_dependentN n || existsb is_dependentTA xs
   | Nglobal c => atomic_name.existsb is_dependentT c
   | Ndependent t => is_dependentT t
   | Nscoped n c => is_dependentN n || atomic_name.existsb is_dependentT c
   | Nunsupported _ => false
+  end
+
+with is_dependentTA {lang} (t : temp_arg' lang) : bool :=
+  match t with
+  | Atype t => is_dependentT t
+  | Avalue e => is_dependentE e
+  | Apack_expansion tas => List.existsb is_dependentTA tas
+  | Atemplate nm => is_dependentN nm
+  | Aunsupported _ => false
   end
 
 with is_dependentT {lang} (t : type' lang) : bool :=

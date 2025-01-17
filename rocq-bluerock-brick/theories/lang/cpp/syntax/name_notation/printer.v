@@ -158,7 +158,7 @@ Section with_lang.
           match ta with
           | Atype t => printT t
           | Avalue e => printE e
-          | Apack _ => mfail
+          | Apack_expansion _ => mfail
           | Atemplate _ => mfail
           | Aunsupported note => mfail
           end
