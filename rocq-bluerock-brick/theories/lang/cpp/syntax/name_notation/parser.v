@@ -103,6 +103,10 @@ Module parser.
       let s_or_u b := s_or_u_l [b] in
       [ (["bool"], Tbool)
       ; (["void"], Tvoid)
+      ; (["wchar_t"], Twchar_t)
+      ; (["char8_t"], Tchar8_t)
+      ; (["char16_t"], Tchar16_t)
+      ; (["char32_t"], Tchar32_t)
       ; (["char"], Tchar)
       ; (["unsigned"; "char"], Tuchar)
       ; (["signed"; "char"], Tschar)
@@ -613,6 +617,8 @@ Module Type TESTS.
   Succeed Example _0 : TEST "foo(unsigned int128, int128)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint128_t; Tint128_t])) := eq_refl.
 
   Succeed Example _0 : TEST "foo(unsigned, signed, char,unsigned char,signed char,short, short int, unsigned short, unsigned short int, signed short, signed short int, int, unsigned int, signed int, long, long int, unsigned long, unsigned long int, signed long, signed long int, long long, long long int, unsigned long long, unsigned long long int, signed long long, signed long long int)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint;Tint;Tchar; Tuchar; Tschar; Tshort; Tshort; Tushort; Tushort; Tshort; Tshort; Tint; Tuint; Tint; Tlong; Tlong; Tulong; Tulong; Tlong; Tlong; Tlonglong; Tlonglong;Tulonglong;Tulonglong;Tlonglong;Tlonglong])) := eq_refl.
+
+  Succeed Example _0 : TEST "foo(char8_t, char16_t, char32_t, wchar_t, char)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tchar8_t; Tchar16_t; Tchar32_t; Twchar_t; Tchar])) := eq_refl.
 
   Succeed Example _0 : TEST "submit(unsigned long, std::function<void()>)"
                          (Nglobal
