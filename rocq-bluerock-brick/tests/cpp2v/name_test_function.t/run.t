@@ -8,33 +8,33 @@
   
   Definition module_names : list Mname :=
     (
-      (* Function fid() at $TESTCASE_ROOT/test.cpp:9:1 *) (Nglobal (Nfunction function_qualifiers.N (Nf "fid") nil)) ::
+      (* Function fid() at $TESTCASE_ROOT/test.cpp:9:1 *) (Nglobal (Nfunction function_qualifiers.N "fid" nil)) ::
   
-      (* CXXConstructor fname::fname() at $TESTCASE_ROOT/test.cpp:11:5 *) (Nscoped (Nglobal (Nid "fname")) (Nfunction function_qualifiers.N Nctor nil)) ::
+      (* CXXConstructor fname::fname() at $TESTCASE_ROOT/test.cpp:11:5 *) (Nscoped (Nglobal (Nid "fname")) (Nctor nil)) ::
   
-      (* CXXDestructor fname::~fname() at $TESTCASE_ROOT/test.cpp:12:5 *) (Nscoped (Nglobal (Nid "fname")) (Nfunction function_qualifiers.N Ndtor nil)) ::
+      (* CXXDestructor fname::~fname() at $TESTCASE_ROOT/test.cpp:12:5 *) (Nscoped (Nglobal (Nid "fname")) Ndtor) ::
   
-      (* CXXMethod fname::operator++() at $TESTCASE_ROOT/test.cpp:17:5 *) (Nscoped (Nglobal (Nid "fname")) (Nfunction function_qualifiers.N (Nop OOPlusPlus) nil)) ::
+      (* CXXMethod fname::operator++() at $TESTCASE_ROOT/test.cpp:17:5 *) (Nscoped (Nglobal (Nid "fname")) (Nop function_qualifiers.N OOPlusPlus nil)) ::
   
-      (* CXXConversion fname::operator int() at $TESTCASE_ROOT/test.cpp:18:5 *) (Nscoped (Nglobal (Nid "fname")) (Nfunction function_qualifiers.N (Nop_conv Tint) nil)) ::
+      (* CXXConversion fname::operator int() at $TESTCASE_ROOT/test.cpp:18:5 *) (Nscoped (Nglobal (Nid "fname")) (Nop_conv function_qualifiers.N Tint)) ::
   
-      (* Function operator""_lit(unsigned long long) at $TESTCASE_ROOT/test.cpp:20:1 *) (Nglobal (Nfunction function_qualifiers.N (Nop_lit "_lit") (Tulonglong :: nil))) ::
+      (* Function operator""_lit(unsigned long long) at $TESTCASE_ROOT/test.cpp:20:1 *) (Nglobal (Nop_lit "_lit" (Tulonglong :: nil))) ::
   
-      (* CXXDestructor extra::~extra() at $TESTCASE_ROOT/test.cpp:26:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.N Ndtor nil)) ::
+      (* CXXDestructor extra::~extra() at $TESTCASE_ROOT/test.cpp:26:5 *) (Nscoped (Nglobal (Nid "extra")) Ndtor) ::
   
-      (* CXXMethod extra::args() at $TESTCASE_ROOT/test.cpp:32:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.N (Nf "args") nil)) ::
+      (* CXXMethod extra::args() at $TESTCASE_ROOT/test.cpp:32:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.N "args" nil)) ::
   
-      (* CXXMethod extra::args(int, bool) at $TESTCASE_ROOT/test.cpp:33:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.N (Nf "args") (Tint :: Tbool :: nil))) ::
+      (* CXXMethod extra::args(int, bool) at $TESTCASE_ROOT/test.cpp:33:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.N "args" (Tint :: Tbool :: nil))) ::
   
-      (* CXXMethod extra::l() & at $TESTCASE_ROOT/test.cpp:34:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nl (Nf "l") nil)) ::
+      (* CXXMethod extra::l() & at $TESTCASE_ROOT/test.cpp:34:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nl "l" nil)) ::
   
-      (* CXXMethod extra::r() && at $TESTCASE_ROOT/test.cpp:35:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nr (Nf "r") nil)) ::
+      (* CXXMethod extra::r() && at $TESTCASE_ROOT/test.cpp:35:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nr "r" nil)) ::
   
-      (* CXXMethod extra::c() const at $TESTCASE_ROOT/test.cpp:36:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nc (Nf "c") nil)) ::
+      (* CXXMethod extra::c() const at $TESTCASE_ROOT/test.cpp:36:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nc "c" nil)) ::
   
-      (* CXXMethod extra::v() volatile at $TESTCASE_ROOT/test.cpp:37:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nv (Nf "v") nil)) ::
+      (* CXXMethod extra::v() volatile at $TESTCASE_ROOT/test.cpp:37:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Nv "v" nil)) ::
   
-      (* CXXMethod extra::cvl() const volatile & at $TESTCASE_ROOT/test.cpp:38:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Ncvl (Nf "cvl") nil)) ::
+      (* CXXMethod extra::cvl() const volatile & at $TESTCASE_ROOT/test.cpp:38:5 *) (Nscoped (Nglobal (Nid "extra")) (Nfunction function_qualifiers.Ncvl "cvl" nil)) ::
   
       (* CXXRecord fname at $TESTCASE_ROOT/test.cpp:10:1 *) (Nglobal (Nid "fname")) ::
   

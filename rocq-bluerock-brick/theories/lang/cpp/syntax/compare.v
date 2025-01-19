@@ -766,65 +766,6 @@ Module OverloadableOperator.
 End OverloadableOperator.
 #[global] Instance OverloadableOperator_compare : Compare OverloadableOperator := OverloadableOperator.compare.
 
-Module function_name.
-  Section compare.
-    Context {type : Set}.
-    Context (compareT : type -> type -> comparison).
-    #[local] Notation function_name := (function_name_ type).
-
-    Definition tag (x : function_name) : positive :=
-      match x with
-      | Nf _ => 1
-      | Nctor => 2
-      | Ndtor => 3
-      | Nop _ => 4
-      | Nop_conv _ => 5
-      | Nop_lit _ => 6
-      | Nunsupported_function _ => 7
-      end.
-    Definition car (t : positive) : Set :=
-      match t with
-      | 1 | 6 | 7 => PrimString.string
-      | 4 => OverloadableOperator
-      | 5 => type
-      | _ => unit
-      end.
-    Definition data (x : function_name) : car (tag x) :=
-      match x with
-      | Nf f => f
-      | Nctor
-      | Ndtor => ()
-      | Nop oo => oo
-      | Nop_conv t => t
-      | Nop_lit id => id
-      | Nunsupported_function msg => msg
-      end.
-    Definition compare_data (t : positive) : car t -> car t -> comparison :=
-      match t with
-      | 1 | 6 | 7 => PrimString.compare
-      | 4 => OverloadableOperator.compare
-      | 5 => compareT
-      | _ => fun _ _ => Eq
-      end.
-
-    #[local] Notation compare_ctor := (compare_ctor tag car data compare_data).
-    #[local] Notation compare_tag := (compare_tag tag).
-
-    Definition compare (x : function_name) : function_name -> comparison :=
-      match x with
-      | Nf f => compare_ctor (Reduce (tag (Nf f))) (fun _ => Reduce (data (Nf f)))
-      | Nctor => compare_tag (Reduce (tag Nctor))
-      | Ndtor => compare_tag (Reduce (tag Ndtor))
-      | Nop oo => compare_ctor (Reduce (tag (Nop oo))) (fun _ => Reduce (data (Nop oo)))
-      | Nop_conv t => compare_ctor (Reduce (tag (Nop_conv t))) (fun _ => Reduce (data (Nop_conv t)))
-      | Nop_lit id => compare_ctor (Reduce (tag (Nop_lit id))) (fun _ => Reduce (data (Nop_lit id)))
-      | Nunsupported_function msg => compare_ctor (Reduce (tag (Nunsupported_function msg))) (fun _ => Reduce (data (Nunsupported_function msg)))
-      end.
-  End compare.
-
-End function_name.
-#[global] Instance function_name_compare {A : Set} `{!Compare A} : Compare (function_name_ A) := function_name.compare compare.
-
 #[global] Instance function_qualifier_compare : Compare function_qualifiers.t := function_qualifiers.compare.
 
 Module atomic_name.
@@ -838,28 +779,64 @@ Module atomic_name.
 
     Record box_Nfunction : Set := Box_Nfunction {
       box_Nfunction_0 : function_qualifiers.t;
-      box_Nfunction_1 : function_name_ type;
+      box_Nfunction_1 : ident;
       box_Nfunction_2 : list type;
     }.
     Definition box_Nfunction_compare (b1 b2 : box_Nfunction) : comparison :=
       compare_lex (function_qualifiers.compare b1.(box_Nfunction_0) b2.(box_Nfunction_0)) $ fun _ =>
-      compare_lex (function_name.compare compareT b1.(box_Nfunction_1) b2.(box_Nfunction_1)) $ fun _ =>
+      compare_lex (PrimString.compare b1.(box_Nfunction_1) b2.(box_Nfunction_1)) $ fun _ =>
       List.compare compareT b1.(box_Nfunction_2) b2.(box_Nfunction_2).
+
+    Record box_Nop : Set := Box_Nop {
+                                box_Nop_0 : function_qualifiers.t;
+                                box_Nop_1 : OverloadableOperator;
+                                box_Nop_2 : list type
+                              }.
+    Definition box_Nop_compare (b1 b2 : box_Nop) : comparison :=
+      compare_lex (function_qualifiers.compare b1.(box_Nop_0) b2.(box_Nop_0)) $ fun _ =>
+      compare_lex (OverloadableOperator.compare b1.(box_Nop_1) b2.(box_Nop_1)) $ fun _ =>
+      List.compare compareT b1.(box_Nop_2) b2.(box_Nop_2).
+
+    Record box_Nop_conv : Set := Box_Nop_conv {
+                                    box_Nop_conv_0 : function_qualifiers.t ;
+                                    box_Nop_conv_1 : type
+                                  }.
+    Definition box_Nop_conv_compare (b1 b2 : box_Nop_conv) : comparison :=
+      compare_lex (function_qualifiers.compare b1.(box_Nop_conv_0) b2.(box_Nop_conv_0)) $ fun _ =>
+      compareT b1.(box_Nop_conv_1) b2.(box_Nop_conv_1).
+
+    Record box_Nop_lit : Set := Box_Nop_lit {
+                                    box_Nop_lit_0 : ident ;
+                                    box_Nop_lit_1 : list type
+                                  }.
+    Definition box_Nop_lit_compare (b1 b2 : box_Nop_lit) : comparison :=
+      compare_lex (PrimString.compare b1.(box_Nop_lit_0) b2.(box_Nop_lit_0)) $ fun _ =>
+          List.compare compareT b1.(box_Nop_lit_1) b2.(box_Nop_lit_1).
 
     Definition car (t : positive) : Set :=
       match t with
       | 1 => ident
       | 2 => box_Nfunction
-      | 3 => N
+      | 3 => list type
       | 4 => unit
-      | 5 => ident
-      | 6 => ident
+      | 5 => box_Nop
+      | 6 => box_Nop_conv
+      | 7 => box_Nop_lit
+      | 8 => N
+      | 9 => unit
+      | 10 => ident
+      | 11 => ident
       | _ => PrimString.string
       end.
     Definition data (p : atomic_name) : car (tag p) :=
       match p with
       | Nid id => id
       | Nfunction qs f ts => Box_Nfunction qs f ts
+      | Nctor ts => ts
+      | Ndtor => tt
+      | Nop a b c => Box_Nop a b c
+      | Nop_conv a b => Box_Nop_conv a b
+      | Nop_lit a b => Box_Nop_lit a b
       | Nanon n => n
       | Nanonymous => tt
       | Nfirst_decl n => n
@@ -870,24 +847,40 @@ Module atomic_name.
       match t with
       | 1 => PrimString.compare
       | 2 => box_Nfunction_compare
-      | 3 => N.compare
+      | 3 => List.compare compareT
       | 4 => _compare
-      | 5 => PrimString.compare
-      | 6 => PrimString.compare
+      | 5 => box_Nop_compare
+      | 6 => box_Nop_conv_compare
+      | 7 => box_Nop_lit_compare
+      | 8 => N.compare
+      | 9 => _compare
+      | 10 => PrimString.compare
+      | 11 => PrimString.compare
       | _ => PrimString.compare
       end.
 
     #[local] Notation compare_ctor := (compare_ctor tag car data compare_data).
 
+    #[local] Notation compare_tag := (compare_tag tag).
+
+    #[local] Notation COMP e := (compare_ctor (Reduce (tag (e : atomic_name))) (fun _ => Reduce (data (e : atomic_name)))) (only parsing).
+
+
+
     Definition compare (p : atomic_name) : atomic_name -> comparison :=
       match p with
-      | Nid i => compare_ctor (Reduce (tag (Nid i))) (fun _ => Reduce (data (Nid i)))
-      | Nfunction qs f ts => compare_ctor (Reduce (tag (Nfunction qs f ts))) (fun _ => Reduce (data (Nfunction qs f ts)))
-      | Nanon n => compare_ctor (Reduce (tag (Nanon n))) (fun _ => Reduce (data (Nanon n)))
-      | Nanonymous => compare_ctor (Reduce (tag Nanonymous)) (fun _ => Reduce (data Nanonymous))
-      | Nfirst_decl n => compare_ctor (Reduce (tag (Nfirst_decl n))) (fun _ => Reduce (data (Nfirst_decl n)))
-      | Nfirst_child n => compare_ctor (Reduce (tag (Nfirst_child n))) (fun _ => Reduce (data (Nfirst_child n)))
-      | Nunsupported_atomic msg => compare_ctor (Reduce (tag (Nunsupported_atomic msg))) (fun _ => Reduce (data (Nunsupported_atomic msg)))
+      | Nid i => COMP (Nid i : atomic_name)
+      | Nfunction qs f ts => COMP (Nfunction qs f ts)
+      | Nctor ts => COMP (Nctor ts)
+      | Ndtor => COMP (Ndtor : atomic_name)
+      | Nop a b c => COMP (Nop a b c)
+      | Nop_conv a b => COMP (Nop_conv a b)
+      | Nop_lit a b => COMP (Nop_lit a b)
+      | Nanon n => COMP (Nanon n : atomic_name)
+      | Nanonymous => COMP (Nanonymous : atomic_name)
+      | Nfirst_decl n => COMP (Nfirst_decl n : atomic_name)
+      | Nfirst_child n => COMP (Nfirst_child n : atomic_name)
+      | Nunsupported_atomic msg => COMP (Nunsupported_atomic msg : atomic_name)
       end.
   End compare.
 

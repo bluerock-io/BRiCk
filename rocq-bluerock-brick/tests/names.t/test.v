@@ -16,8 +16,8 @@ Definition is_Some {T} (a : option T) : Prop :=
 
 (* check that the function exists *)
 Goal is_Some $ test_cpp.module.(symbols) !!
-        (Ninst (Nscoped (Nscoped (Ninst (Nglobal (Nfunction function_qualifiers.N (Nf "run") ( Tint :: Tnullptr :: nil)))
-              ((Atype Tint) :: (Atype Tnullptr) :: nil)) (Nanon 0)) (Nfunction function_qualifiers.Nc (Nop OOCall) (Tlong :: Tint :: Tnullptr :: nil)))
+        (Ninst (Nscoped (Nscoped (Ninst (Nglobal (Nfunction function_qualifiers.N "run" ( Tint :: Tnullptr :: nil)))
+              ((Atype Tint) :: (Atype Tnullptr) :: nil)) (Nanon 0)) (Nop function_qualifiers.Nc OOCall (Tlong :: Tint :: Tnullptr :: nil)))
         ((Atype Tlong) :: nil)).
 Proof. exact I. Qed.
 

@@ -70,27 +70,6 @@ Section with_lang.
     Context {type Expr : Set} (printType : type -> PrimString.string) (printExpr : Expr -> PrimString.string).
     Variable top : option PrimString.string.
 
-    Definition printFN (fn : function_name_ type) : PrimString.string :=
-      match fn with
-      | Nf nm => nm
-      | Nctor =>
-          match top with
-          | None => "<ctor>"
-          | Some cls => cls
-          end
-      | Ndtor =>
-          match top with
-          | None => "<dtor>"
-          | Some cls => "~" ++ cls
-          end
-      | Nop o =>
-          let o := printOO o in
-          "operator" ++ o
-      | Nop_conv t => "operator " ++ printType t
-      | Nop_lit i => "operator """"_" ++ i
-      | Nunsupported_function note => "?" ++ note
-      end.
-
     Definition with_space (b : PrimString.string) : PrimString.string :=
       if bool_decide (b = "") then "" else " " ++ b.
 
@@ -105,10 +84,25 @@ Section with_lang.
       concat $ join_sep " " $ (c ++ v ++ vc)%list.
 
     Definition printAN (an : atomic_name_ type) : PrimString.string :=
+      let print_args args := parens $ concat $ join_sep ", " $ printType <$> args in
       match an with
       | Nid id => id
       | Nfunction quals nm args =>
-          printFN nm ++ (parens $ concat $ join_sep ", " $ printType <$> args) ++ with_space (printFQ quals)
+          nm ++ print_args args ++ with_space (printFQ quals)
+      | Nctor args =>
+          match top with
+          | None => "<ctor>"
+          | Some cls => cls
+          end ++ print_args args
+      | Ndtor =>
+          match top with
+          | None => "<dtor>"
+          | Some cls => "~" ++ cls
+          end
+      | Nop q o args =>
+          "operator" ++ printOO o ++ print_args args ++ with_space (printFQ q)
+      | Nop_conv q t => "operator " ++ printType t ++ "()" ++ with_space (printFQ q)
+      | Nop_lit i args => "operator """"_" ++ i ++ print_args args
       | Nanon n => "@" ++ showN n
       | Nanonymous => "(anon)"
       | Nfirst_decl n => "#" ++ n
@@ -266,9 +260,9 @@ Definition TEST (nm : name) (result : PrimString.string) : Prop :=
   (print_name nm) = result.
 
 Succeed Example _0 : TEST (Nglobal $ Nid "foo") "foo" := eq_refl.
-Succeed Example _0 : TEST (Nglobal $ Nfunction function_qualifiers.N (Nop OOPlusPlus) []) "operator++()" := eq_refl.
-Succeed Example _0 : TEST (Nglobal $ Nfunction function_qualifiers.N (Nop $ OONew true) []) "operator new[]()" := eq_refl.
-Succeed Example _0 : TEST (Nglobal $ Nfunction function_qualifiers.N (Nop $ OONew false) []) "operator new()" := eq_refl.
-Succeed Example _0 : TEST (Nglobal $ Nfunction function_qualifiers.N (Nop $ OODelete true) []) "operator delete[]()" := eq_refl.
-Succeed Example _0 : TEST (Nglobal $ Nfunction function_qualifiers.N (Nop $ OODelete false) []) "operator delete()" := eq_refl.
-Succeed Example _0 : TEST (Nglobal $ Nfunction function_qualifiers.N (Nop $ OOCoawait) []) "operator coawait()" := eq_refl.
+Succeed Example _0 : TEST (Nglobal $ Nop function_qualifiers.N OOPlusPlus []) "operator++()" := eq_refl.
+Succeed Example _0 : TEST (Nglobal $ Nop function_qualifiers.N (OONew true) []) "operator new[]()" := eq_refl.
+Succeed Example _0 : TEST (Nglobal $ Nop function_qualifiers.N (OONew false) []) "operator new()" := eq_refl.
+Succeed Example _0 : TEST (Nglobal $ Nop function_qualifiers.N (OODelete true) []) "operator delete[]()" := eq_refl.
+Succeed Example _0 : TEST (Nglobal $ Nop function_qualifiers.N (OODelete false) []) "operator delete()" := eq_refl.
+Succeed Example _0 : TEST (Nglobal $ Nop function_qualifiers.N (OOCoawait) []) "operator coawait()" := eq_refl.
