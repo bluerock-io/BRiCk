@@ -115,10 +115,12 @@ Module PTRS_IMPL <: PTRS_INTF.
     else
       (o_base_ der2 base2, o2) :: normalize ((o_derived_ base1 der1, o1) :: os)
   | (o_sub_ ty1 i1, o1) :: (o_sub_ ty2 i2, o2) :: os =>
-      if decide (ty1 = ty2) then
-        normalize ((o_sub_ ty1 (i1 + i2), o1 + o2) :: os)
-      else
-        (o_sub_ ty1 i1, o1) :: normalize ((o_sub_ ty2 i2, o2) :: os)
+    if decide (i1 = 0) then
+      normalize ((o_sub_ ty2 i2, o2) :: os)
+    else if decide (ty1 = ty2) then
+      normalize ((o_sub_ ty1 (i1 + i2), o1 + o2) :: os)
+    else
+      (o_sub_ ty1 i1, o1) :: normalize ((o_sub_ ty2 i2, o2) :: os)
   | (o_sub_ ty i, o) :: os =>
     if decide (i = 0) then
       normalize os
@@ -138,7 +140,29 @@ Module PTRS_IMPL <: PTRS_INTF.
       roff_rw ol2 or2 ->
       roff_rw (ol1 ++ ol2) (or1 ++ or2).
   Proof.
-  Admitted.
+    move=> ol1 ol2 or1 or2 Hrw0 Hrw1.
+    induction Hrw0.
+    {
+      induction Hrw1.
+      { done. }
+      {
+        apply: rtc_l. 2: exact: IHHrw1.
+        move: H => [l [r [s [t [H1 [H2 H3]]]]]].
+        subst. exists (x ++ l), r, s, t.
+        split. by rewrite app_assoc.
+        split. by rewrite app_assoc.
+        done.
+      }
+    }
+    {
+      apply: rtc_l. 2: exact IHHrw0.
+      move: H => [l [r [s [t [H1 [H2 H3]]]]]].
+      subst. exists l, (r ++ ol2), s, t.
+      split. by repeat rewrite -app_assoc.
+      split. by repeat rewrite -app_assoc.
+      done.
+    }
+  Qed.
 
   Lemma norm_sound :
     ∀ os, roff_rw os (normalize os).
@@ -187,6 +211,15 @@ Module PTRS_IMPL <: PTRS_INTF.
       {
         subst.
         apply: rtc_l. 2: by apply H.
+        exists [], ((o_sub_ ty2 i2, o2) :: os), [(o_sub_ ty1 0, o1)], [].
+        split. easy.
+        split. easy. 
+        constructor.
+      }
+      case_match.
+      {
+        subst.
+        apply: rtc_l. 2: by apply H0.
         exists [], os, [(o_sub_ ty2 i1, o1); (o_sub_ ty2 i2, o2)], [(o_sub_ ty2 (i1 + i2), o1 + o2)].
         split. easy.
         split. easy.
@@ -197,7 +230,7 @@ Module PTRS_IMPL <: PTRS_INTF.
           (ol1:=[(o_sub_ ty1 i1, o1)])
           (or1:=[(o_sub_ ty1 i1, o1)]).
         { done. }
-        { by apply H0. }
+        { by apply H1. }
       }
     }
     {
@@ -370,23 +403,189 @@ Module PTRS_IMPL <: PTRS_INTF.
       roff_canon o2 ->
       normalize o1 = o2.
   Proof.
+    move=> o1 o2 Hrw Hc.
+    admit.
   Admitted.
 
   Lemma norm_canon :
     ∀ os, roff_canon (normalize os).
   Proof.
-  Admitted.
-
-  Lemma norm_absorb_l :
-    ∀ o1 o2,
-      normalize (o1 ++ normalize o2) = normalize (o1 ++ o2).
-  Proof.
-  Admitted.
-  
-  Lemma norm_absorb_r :
-    ∀ o1 o2,
-      normalize (normalize o1 ++ o2) = normalize (o1 ++ o2).
-  Proof.
+    rewrite
+      /roff_canon /nf /red
+      /roff_rw_global.
+    move=> os [o [l [r [s [t [H1 [H2 H3]]]]]]].
+    subst. funelim (normalize os); simp normalize in *.
+    {
+      destruct l, s, r.
+      { inversion H3. }
+      all: done.
+    }
+    {
+      assert (∃ l', l = (o_field_ f, z) :: l').
+      {
+        destruct l; simpl in *.
+        {
+          destruct H3; simpl in *;
+          inversion H1.
+        }
+        {
+          inversion H1.
+          by repeat eexists.
+        }
+      }
+      move: H0 => [l' Hl]. subst.
+      simpl in *. inversion H1.
+      apply: H. exact: H2. exact H3.
+    }
+    {
+      case_match.
+      { apply: H; done. }
+      {
+        destruct l.
+        {
+          simpl in *.
+          destruct H3;
+          simpl in *;
+          inversion H1;
+          done.
+        }
+        {
+          simpl in H1.
+          inversion H1.
+          apply: H0; done.
+        }
+      }
+    }
+    {
+      case_match.
+      { apply: H; done. }
+      {
+        destruct l0.
+        {
+          simpl in *.
+          destruct H3;
+          simpl in *;
+          inversion H1;
+          done.
+        }
+        {
+          simpl in H1.
+          inversion H1.
+          apply: H0; done.
+        }
+      }
+    }
+    {
+      case_match.
+      { apply: H; done. }
+      case_match.
+      {
+        subst.
+        apply: H0; done.
+      }
+      {
+        destruct l.
+        {
+          simpl in *.
+          destruct H3; simpl in *;
+          inversion H2; subst.
+          { done. }
+          {
+            induction os; simpl in *;
+            simp normalize in *.
+            {
+              case_match.
+              { done. }
+              { inversion H9. subst. done. }
+            }
+            {
+              destruct a, r0; simpl in *;
+              simp normalize in *; case_match;
+              inversion H9; subst; try done.
+            }
+          }
+        }
+        {
+          simpl in *.
+          inversion H2. subst.
+          apply: H1; done.
+        }
+      }
+    }
+    {
+      case_match.
+      { apply: H; done. }
+      {
+        destruct l0.
+        {
+          simpl in *.
+          destruct H3; simpl in *;
+          inversion H1; subst.
+          { done. }
+          { admit. }
+        }
+        {
+          simpl in H1.
+          inversion H1.
+          apply: H0; done.
+        }
+      }
+    }
+    {
+      case_match.
+      { apply: H; done. }
+      {
+        destruct l0.
+        {
+          simpl in *.
+          destruct H3; simpl in *;
+          inversion H1; subst.
+          { done. }
+          { admit. }
+        }
+        {
+          simpl in H1.
+          inversion H1.
+          apply: H0; done.
+        }
+      }
+    }
+    {
+      case_match.
+      { apply: H; done. }
+      {
+        destruct l0.
+        {
+          simpl in *.
+          destruct H3; simpl in *;
+          inversion H1; subst.
+          { done. }
+        }
+        {
+          simpl in H1.
+          inversion H1.
+          apply: H0; done.
+        }
+      }
+    }
+    {
+      destruct l; simpl in *.
+      { destruct H3; done. }
+      {
+        inversion H1. subst.
+        destruct l; simpl in *.
+        { destruct H3; done. }
+        { done. }
+      }
+    }
+    {
+      destruct l0; simpl in *.
+      { destruct H3; done. }
+      {
+        inversion H1.
+        apply: H; done.
+      }
+    }
   Admitted.
 
   Lemma norm_rel :
@@ -419,6 +618,19 @@ Module PTRS_IMPL <: PTRS_INTF.
     { done. }
   Qed.
 
+  Lemma norm_absorb_l :
+    ∀ o1 o2,
+      normalize (o1 ++ normalize o2) = normalize (o1 ++ o2).
+  Proof.
+    move=> o1 o2.
+  Admitted.
+  
+  Lemma norm_absorb_r :
+    ∀ o1 o2,
+      normalize (normalize o1 ++ o2) = normalize (o1 ++ o2).
+  Proof.
+  Admitted.
+
   Lemma nf_tc {A} (R : relation A):
     ∀ x, nf R x -> nf (tc R) x.
   Proof.
@@ -432,8 +644,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   Lemma nil_canon :
     roff_canon [].
   Proof.
-    apply nf_tc.
-    rewrite /roff_rw_global /nf /not /red.
+    rewrite /roff_canon /roff_rw_global /nf /not /red.
     move=> [o [l [r [s [t [H1 [H2 H3]]]]]]].
     subst.
     assert (l = []).
@@ -577,10 +788,10 @@ Module PTRS_IMPL <: PTRS_INTF.
       (¬∃ ty, fst o = o_sub_ ty 0) ->
       roff_canon [o].
   Proof.
-    move=> o H. apply: nf_tc.
-    rewrite /nf /roff_rw_global /red.
+    move=> o H.
+    rewrite /roff_canon /nf /roff_rw_global /red.
     move=> [_ [l [r [s [t [H1 [_ H2]]]]]]].
-    
+  Admitted.
 
   Definition eval_raw_offset_seg σ (ro : raw_offset_seg) : option Z :=
     match ro with
@@ -668,7 +879,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     {
       simpl. f_equal. apply: sig_eq.
       rewrite norm_absorb_r -app_assoc norm_rel.
-      split. 2: easy. constructor.
+      split. 2: easy. apply: rtc_l. 2: constructor.
       eexists o, [], [mk_offset_seg σ (o_base_ der base); mk_offset_seg σ (o_derived_ base der)], [].
       split. { easy. }
       split. { simpl. by rewrite app_nil_r. }
@@ -676,7 +887,6 @@ Module PTRS_IMPL <: PTRS_INTF.
       rewrite Hd. constructor.
     }
   Qed.
-
   
   Lemma o_derived_base :
     ∀ σ (p : ptr) base derived,
@@ -690,7 +900,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     {
       simpl. f_equal. apply: sig_eq.
       rewrite norm_absorb_r -app_assoc norm_rel.
-      split. 2: easy. constructor.
+      split. 2: easy. apply: rtc_l. 2: constructor.
       eexists o, [], [mk_offset_seg σ (o_derived_ base der); mk_offset_seg σ (o_base_ der base)], [].
       split. { easy. }
       split. { simpl. by rewrite app_nil_r. }
@@ -732,10 +942,9 @@ Module PTRS_IMPL <: PTRS_INTF.
     {
       rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
       rewrite HSome; simpl. simp normalize.
-      case_match. 2: done.
-      case_match. done.
-      assert ((i + j) * sz = i * sz + j * sz) by lia.
-      by rewrite H4.
+      repeat case_match; subst; try (lia || congruence).
+      assert (i * sz + j * sz = (i + j) * sz) by lia.
+      by rewrite H5.
     }
   Qed.
 End PTRS_IMPL.
