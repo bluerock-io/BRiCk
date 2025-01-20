@@ -165,6 +165,13 @@ Module PTRS_IMPL <: PTRS_INTF.
         done.
       }
     Qed.
+    #[global] Instance roff_rw_cong_proper :
+      Proper (roff_rw ==> roff_rw ==> roff_rw) (++).
+    Proof.
+      rewrite /Proper /respectful.
+      move=> ol1 or1 H1 ol2 or2 H2.
+      by apply roff_rw_cong.
+    Qed.
 
     Lemma norm_sound :
       ∀ os, roff_rw os (normalize os).
@@ -620,13 +627,44 @@ Module PTRS_IMPL <: PTRS_INTF.
       { done. }
     Qed.
 
+    Lemma roff_rw_uncons :
+      ∀ l r s t e,
+        roff_canon e ->
+        roff_rw (l ++ s ++ r) e ->
+        roff_rw_local s t ->
+        roff_rw (l ++ t ++ r) e.
+    Proof.
+      move=> l r s t e Hc H1 H2.
+      remember (l ++ s ++ r).
+      generalize dependent l.
+      generalize dependent r.
+      induction H1; subst;
+      move=> r l Heq; subst.
+      {
+        exfalso. apply: Hc.
+        by exists (l ++ t ++ r), l, r, s, t.
+      }
+      {
+        apply: IHrtc. done.
+        admit.
+      }
+    Admitted.
+
     Lemma rw_bwd_r :
       ∀ o1 o2 o2' o3,
+        roff_canon o3 ->
         roff_rw o2 o2' ->
         roff_rw (o1 ++ o2) o3 ->
         roff_rw (o1 ++ o2') o3.
     Proof.
-    Admitted.
+      move=> o1 o2 o2' o3 Hc H1 H2.
+      induction H1. done.
+      move: H => [l [r [s [t [Hx [Hy Hrw]]]]]].
+      subst. apply: IHrtc. rewrite app_assoc.
+      apply: roff_rw_uncons. 3: done.
+      { done. }
+      { by rewrite -app_assoc. }
+    Qed.
 
     Lemma norm_absorb_l :
       ∀ o1 o2,
@@ -649,11 +687,20 @@ Module PTRS_IMPL <: PTRS_INTF.
 
     Lemma rw_bwd_l :
       ∀ o1 o1' o2 o3,
+        roff_canon o3 ->
         roff_rw o1 o1' ->
         roff_rw (o1 ++ o2) o3 ->
         roff_rw (o1' ++ o2) o3.
     Proof.
-    Admitted.
+      move=> o1 o1' o2 o3 Hc H1 H2.
+      induction H1. done.
+      apply: IHrtc.
+      move: H => [l [r [s [t [Hx [Hy Hrw]]]]]].
+      subst. repeat rewrite -app_assoc.
+      apply: roff_rw_uncons. 3: done.
+      { done. }
+      { by repeat rewrite -app_assoc in H2. }
+    Qed.
 
     Lemma norm_absorb_r :
       ∀ o1 o2,
