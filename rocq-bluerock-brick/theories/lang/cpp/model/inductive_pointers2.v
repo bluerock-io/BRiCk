@@ -100,7 +100,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       apply n.
       now apply proj1_sig_eq in H.
     }
-  Qed.
+  Qed.  
 
   Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
   | [] => []
@@ -134,225 +134,183 @@ Module PTRS_IMPL <: PTRS_INTF.
     repeat case_match; (done || lia).
   Qed.
 
-  Lemma roff_rw_cong :
-    ∀ ol1 ol2 or1 or2,
-      roff_rw ol1 or1 ->
-      roff_rw ol2 or2 ->
-      roff_rw (ol1 ++ ol2) (or1 ++ or2).
-  Proof.
-    move=> ol1 ol2 or1 or2 Hrw0 Hrw1.
-    induction Hrw0.
-    {
-      induction Hrw1.
-      { done. }
+  Section norm_lemmas.
+
+    Lemma roff_rw_cong :
+      ∀ ol1 ol2 or1 or2,
+        roff_rw ol1 or1 ->
+        roff_rw ol2 or2 ->
+        roff_rw (ol1 ++ ol2) (or1 ++ or2).
+    Proof.
+      move=> ol1 ol2 or1 or2 Hrw0 Hrw1.
+      induction Hrw0.
       {
-        apply: rtc_l. 2: exact: IHHrw1.
+        induction Hrw1.
+        { done. }
+        {
+          apply: rtc_l. 2: exact: IHHrw1.
+          move: H => [l [r [s [t [H1 [H2 H3]]]]]].
+          subst. exists (x ++ l), r, s, t.
+          split. by rewrite app_assoc.
+          split. by rewrite app_assoc.
+          done.
+        }
+      }
+      {
+        apply: rtc_l. 2: exact IHHrw0.
         move: H => [l [r [s [t [H1 [H2 H3]]]]]].
-        subst. exists (x ++ l), r, s, t.
-        split. by rewrite app_assoc.
-        split. by rewrite app_assoc.
+        subst. exists l, (r ++ ol2), s, t.
+        split. by repeat rewrite -app_assoc.
+        split. by repeat rewrite -app_assoc.
         done.
       }
-    }
-    {
-      apply: rtc_l. 2: exact IHHrw0.
-      move: H => [l [r [s [t [H1 [H2 H3]]]]]].
-      subst. exists l, (r ++ ol2), s, t.
-      split. by repeat rewrite -app_assoc.
-      split. by repeat rewrite -app_assoc.
-      done.
-    }
-  Qed.
+    Qed.
 
-  Lemma norm_sound :
-    ∀ os, roff_rw os (normalize os).
-  Proof.
-    move=> os.
-    funelim (normalize os);
-    simp normalize in *.
-    { constructor. }
-    {
-      by apply roff_rw_cong with
-        (ol1:=[(o_field_ f, z)])
-        (or1:=[(o_field_ f, z)]).
-    }
-    {
-      case_match.
+    Lemma norm_sound :
+      ∀ os, roff_rw os (normalize os).
+    Proof.
+      move=> os.
+      funelim (normalize os);
+      simp normalize in *.
+      { constructor. }
       {
-        subst.
-        apply: rtc_l. 2: done.
-        exists [], [], [(o_sub_ ty 0, o)], [].
-        split. easy.
-        split. easy.
-        constructor.
-      }
-      { done. }
-    }
-    {
-      case_match.
-      {
-        subst.
-        apply: rtc_l. 2: by apply: H.
-        exists [], ((o_field_ f, z1) :: l), [(o_sub_ ty 0, o)], [].
-        split. easy.
-        split. easy.
-        constructor.
+        by apply roff_rw_cong with
+          (ol1:=[(o_field_ f, z)])
+          (or1:=[(o_field_ f, z)]).
       }
       {
-        apply roff_rw_cong with
-          (ol1:=[(o_sub_ ty i, o)])
-          (or1:=[(o_sub_ ty i, o)]).
+        case_match.
+        {
+          subst.
+          apply: rtc_l. 2: done.
+          exists [], [], [(o_sub_ ty 0, o)], [].
+          split. easy.
+          split. easy.
+          constructor.
+        }
         { done. }
-        { by apply H0. }
       }
-    }
-    {
-      case_match.
       {
-        subst.
-        apply: rtc_l. 2: by apply H.
-        exists [], ((o_sub_ ty2 i2, o2) :: os), [(o_sub_ ty1 0, o1)], [].
-        split. easy.
-        split. easy. 
-        constructor.
+        case_match.
+        {
+          subst.
+          apply: rtc_l. 2: by apply: H.
+          exists [], ((o_field_ f, z1) :: l), [(o_sub_ ty 0, o)], [].
+          split. easy.
+          split. easy.
+          constructor.
+        }
+        {
+          apply roff_rw_cong with
+            (ol1:=[(o_sub_ ty i, o)])
+            (or1:=[(o_sub_ ty i, o)]).
+          { done. }
+          { by apply H0. }
+        }
       }
-      case_match.
       {
-        subst.
-        apply: rtc_l. 2: by apply H0.
-        exists [], os, [(o_sub_ ty2 i1, o1); (o_sub_ ty2 i2, o2)], [(o_sub_ ty2 (i1 + i2), o1 + o2)].
-        split. easy.
-        split. easy.
-        constructor.
+        case_match.
+        {
+          subst.
+          apply: rtc_l. 2: by apply H.
+          exists [], ((o_sub_ ty2 i2, o2) :: os), [(o_sub_ ty1 0, o1)], [].
+          split. easy.
+          split. easy. 
+          constructor.
+        }
+        case_match.
+        {
+          subst.
+          apply: rtc_l. 2: by apply H0.
+          exists [], os, [(o_sub_ ty2 i1, o1); (o_sub_ ty2 i2, o2)], [(o_sub_ ty2 (i1 + i2), o1 + o2)].
+          split. easy.
+          split. easy.
+          constructor.
+        }
+        {
+          apply roff_rw_cong with
+            (ol1:=[(o_sub_ ty1 i1, o1)])
+            (or1:=[(o_sub_ ty1 i1, o1)]).
+          { done. }
+          { by apply H1. }
+        }
       }
+      {
+        case_match.
+        {
+          subst.
+          apply: rtc_l. 2: by apply: H.
+          exists [], ((o_base_ derived base, z1) :: l), [(o_sub_ ty 0, o)], [].
+          split. easy.
+          split. easy.
+          constructor.
+        }
+        {
+          apply roff_rw_cong with
+            (ol1:=[(o_sub_ ty i, o)])
+            (or1:=[(o_sub_ ty i, o)]).
+          { done. }
+          { by apply H0. }
+        }
+      }
+      {
+        case_match.
+        {
+          subst.
+          apply: rtc_l. 2: by apply: H.
+          exists [], ((o_derived_ base0 derived0, z1) :: l), [(o_sub_ ty 0, o)], [].
+          split. easy.
+          split. easy.
+          constructor.
+        }
+        {
+          apply roff_rw_cong with
+            (ol1:=[(o_sub_ ty i, o)])
+            (or1:=[(o_sub_ ty i, o)]).
+          { done. }
+          { by apply H0. }
+        }
+      }
+      {
+        case_match.
+        {
+          subst.
+          apply: rtc_l. 2: by apply: H.
+          exists [], ((o_invalid_, z1) :: l), [(o_sub_ ty 0, o)], [].
+          split. easy.
+          split. easy.
+          constructor.
+        }
+        {
+          apply roff_rw_cong with
+            (ol1:=[(o_sub_ ty i, o)])
+            (or1:=[(o_sub_ ty i, o)]).
+          { done. }
+          { by apply H0. }
+        }
+      }
+      { done. }
       {
         apply roff_rw_cong with
-          (ol1:=[(o_sub_ ty1 i1, o1)])
-          (or1:=[(o_sub_ ty1 i1, o1)]).
+          (ol1:=[(o_base_ derived base, z)])
+          (or1:=[(o_base_ derived base, z)]).
         { done. }
-        { by apply H1. }
-      }
-    }
-    {
-      case_match.
-      {
-        subst.
-        apply: rtc_l. 2: by apply: H.
-        exists [], ((o_base_ derived base, z1) :: l), [(o_sub_ ty 0, o)], [].
-        split. easy.
-        split. easy.
-        constructor.
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[(o_sub_ ty i, o)])
-          (or1:=[(o_sub_ ty i, o)]).
         { done. }
-        { by apply H0. }
-      }
-    }
-    {
-      case_match.
-      {
-        subst.
-        apply: rtc_l. 2: by apply: H.
-        exists [], ((o_derived_ base0 derived0, z1) :: l), [(o_sub_ ty 0, o)], [].
-        split. easy.
-        split. easy.
-        constructor.
       }
       {
         apply roff_rw_cong with
-          (ol1:=[(o_sub_ ty i, o)])
-          (or1:=[(o_sub_ ty i, o)]).
+          (ol1:=[(o_base_ derived base, z)])
+          (or1:=[(o_base_ derived base, z)]).
         { done. }
-        { by apply H0. }
-      }
-    }
-    {
-      case_match.
-      {
-        subst.
-        apply: rtc_l. 2: by apply: H.
-        exists [], ((o_invalid_, z1) :: l), [(o_sub_ ty 0, o)], [].
-        split. easy.
-        split. easy.
-        constructor.
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[(o_sub_ ty i, o)])
-          (or1:=[(o_sub_ ty i, o)]).
         { done. }
-        { by apply H0. }
-      }
-    }
-    { done. }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_base_ derived base, z)])
-        (or1:=[(o_base_ derived base, z)]).
-      { done. }
-      { done. }
-    }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_base_ derived base, z)])
-        (or1:=[(o_base_ derived base, z)]).
-      { done. }
-      { done. }
-    }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_base_ derived base, z)])
-        (or1:=[(o_base_ derived base, z)]).
-      { done. }
-      { done. }
-    }
-    {
-      case_match.
-      {
-        clear H1.
-        move: a => [Hbase Hder].
-        subst.
-        apply: rtc_l. 2: by apply: H.
-        exists [], os, [(o_base_ der2 base2, o2); (o_derived_ base2 der2, o1)], [].
-        split. easy.
-        split. easy.
-        constructor.
       }
       {
         apply roff_rw_cong with
-        (ol1:=[(o_base_ der2 base2, o2)])
-        (or1:=[(o_base_ der2 base2, o2)]).
-      { done. }
-      { by apply H0. }
+          (ol1:=[(o_base_ derived base, z)])
+          (or1:=[(o_base_ derived base, z)]).
+        { done. }
+        { done. }
       }
-    }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_base_ derived base, z)])
-        (or1:=[(o_base_ derived base, z)]).
-      { done. }
-      { done. }
-    }
-    { done. }
-    {
-      
-      apply roff_rw_cong with
-        (ol1:=[(o_derived_ base0 derived0, z)])
-        (or1:=[(o_derived_ base0 derived0, z)]).
-      { done. }
-      { done. }
-    }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_derived_ base0 derived0, z)])
-        (or1:=[(o_derived_ base0 derived0, z)]).
-      { done. }
-      { done. }
-    }
-    {
       {
         case_match.
         {
@@ -360,286 +318,363 @@ Module PTRS_IMPL <: PTRS_INTF.
           move: a => [Hbase Hder].
           subst.
           apply: rtc_l. 2: by apply: H.
-          exists [], os, [(o_derived_ base2 der2, o1); (o_base_ der2 base2, o2)], [].
+          exists [], os, [(o_base_ der2 base2, o2); (o_derived_ base2 der2, o1)], [].
           split. easy.
           split. easy.
           constructor.
         }
         {
           apply roff_rw_cong with
-            (ol1:=[(o_derived_ base1 der1, o1)])
-            (or1:=[(o_derived_ base1 der1, o1)]).
+          (ol1:=[(o_base_ der2 base2, o2)])
+          (or1:=[(o_base_ der2 base2, o2)]).
         { done. }
         { by apply H0. }
         }
       }
-    }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_derived_ base0 derived0, z)])
-        (or1:=[(o_derived_ base0 derived0, z)]).
-      { done. }
-      { done. }
-    }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_derived_ base0 derived0, z)])
-        (or1:=[(o_derived_ base0 derived0, z)]).
-      { done. }
-      { done. }
-    }
-    {
-      apply roff_rw_cong with
-        (ol1:=[(o_invalid_, z)])
-        (or1:=[(o_invalid_, z)]).
-      { done. }
-      { done. }
-    }
-  Qed.
-
-  Lemma norm_complete :
-    ∀ o1 o2,
-      roff_rw o1 o2 ->
-      roff_canon o2 ->
-      normalize o1 = o2.
-  Proof.
-    move=> o1 o2 Hrw Hc.
-    admit.
-  Admitted.
-
-  Lemma norm_canon :
-    ∀ os, roff_canon (normalize os).
-  Proof.
-    rewrite
-      /roff_canon /nf /red
-      /roff_rw_global.
-    move=> os [o [l [r [s [t [H1 [H2 H3]]]]]]].
-    subst. funelim (normalize os); simp normalize in *.
-    {
-      destruct l, s, r.
-      { inversion H3. }
-      all: done.
-    }
-    {
-      assert (∃ l', l = (o_field_ f, z) :: l').
       {
-        destruct l; simpl in *.
-        {
-          destruct H3; simpl in *;
-          inversion H1.
-        }
-        {
-          inversion H1.
-          by repeat eexists.
-        }
-      }
-      move: H0 => [l' Hl]. subst.
-      simpl in *. inversion H1.
-      apply: H. exact: H2. exact H3.
-    }
-    {
-      case_match.
-      { apply: H; done. }
-      {
-        destruct l.
-        {
-          simpl in *.
-          destruct H3;
-          simpl in *;
-          inversion H1;
-          done.
-        }
-        {
-          simpl in H1.
-          inversion H1.
-          apply: H0; done.
-        }
-      }
-    }
-    {
-      case_match.
-      { apply: H; done. }
-      {
-        destruct l0.
-        {
-          simpl in *.
-          destruct H3;
-          simpl in *;
-          inversion H1;
-          done.
-        }
-        {
-          simpl in H1.
-          inversion H1.
-          apply: H0; done.
-        }
-      }
-    }
-    {
-      case_match.
-      { apply: H; done. }
-      case_match.
-      {
-        subst.
-        apply: H0; done.
-      }
-      {
-        destruct l.
-        {
-          simpl in *.
-          destruct H3; simpl in *;
-          inversion H2; subst.
-          { done. }
-          {
-            induction os; simpl in *;
-            simp normalize in *.
-            {
-              case_match.
-              { done. }
-              { inversion H9. subst. done. }
-            }
-            {
-              destruct a, r0; simpl in *;
-              simp normalize in *; case_match;
-              inversion H9; subst; try done.
-            }
-          }
-        }
-        {
-          simpl in *.
-          inversion H2. subst.
-          apply: H1; done.
-        }
-      }
-    }
-    {
-      case_match.
-      { apply: H; done. }
-      {
-        destruct l0.
-        {
-          simpl in *.
-          destruct H3; simpl in *;
-          inversion H1; subst.
-          { done. }
-          { admit. }
-        }
-        {
-          simpl in H1.
-          inversion H1.
-          apply: H0; done.
-        }
-      }
-    }
-    {
-      case_match.
-      { apply: H; done. }
-      {
-        destruct l0.
-        {
-          simpl in *.
-          destruct H3; simpl in *;
-          inversion H1; subst.
-          { done. }
-          { admit. }
-        }
-        {
-          simpl in H1.
-          inversion H1.
-          apply: H0; done.
-        }
-      }
-    }
-    {
-      case_match.
-      { apply: H; done. }
-      {
-        destruct l0.
-        {
-          simpl in *.
-          destruct H3; simpl in *;
-          inversion H1; subst.
-          { done. }
-        }
-        {
-          simpl in H1.
-          inversion H1.
-          apply: H0; done.
-        }
-      }
-    }
-    {
-      destruct l; simpl in *.
-      { destruct H3; done. }
-      {
-        inversion H1. subst.
-        destruct l; simpl in *.
-        { destruct H3; done. }
+        apply roff_rw_cong with
+          (ol1:=[(o_base_ derived base, z)])
+          (or1:=[(o_base_ derived base, z)]).
+        { done. }
         { done. }
       }
-    }
-    {
-      destruct l0; simpl in *.
-      { destruct H3; done. }
+      { done. }
       {
-        inversion H1.
-        apply: H; done.
+        
+        apply roff_rw_cong with
+          (ol1:=[(o_derived_ base0 derived0, z)])
+          (or1:=[(o_derived_ base0 derived0, z)]).
+        { done. }
+        { done. }
       }
-    }
-  Admitted.
+      {
+        apply roff_rw_cong with
+          (ol1:=[(o_derived_ base0 derived0, z)])
+          (or1:=[(o_derived_ base0 derived0, z)]).
+        { done. }
+        { done. }
+      }
+      {
+        {
+          case_match.
+          {
+            clear H1.
+            move: a => [Hbase Hder].
+            subst.
+            apply: rtc_l. 2: by apply: H.
+            exists [], os, [(o_derived_ base2 der2, o1); (o_base_ der2 base2, o2)], [].
+            split. easy.
+            split. easy.
+            constructor.
+          }
+          {
+            apply roff_rw_cong with
+              (ol1:=[(o_derived_ base1 der1, o1)])
+              (or1:=[(o_derived_ base1 der1, o1)]).
+          { done. }
+          { by apply H0. }
+          }
+        }
+      }
+      {
+        apply roff_rw_cong with
+          (ol1:=[(o_derived_ base0 derived0, z)])
+          (or1:=[(o_derived_ base0 derived0, z)]).
+        { done. }
+        { done. }
+      }
+      {
+        apply roff_rw_cong with
+          (ol1:=[(o_derived_ base0 derived0, z)])
+          (or1:=[(o_derived_ base0 derived0, z)]).
+        { done. }
+        { done. }
+      }
+      {
+        apply roff_rw_cong with
+          (ol1:=[(o_invalid_, z)])
+          (or1:=[(o_invalid_, z)]).
+        { done. }
+        { done. }
+      }
+    Qed.
 
-  Lemma norm_rel :
-    ∀ o1 o2,
-      normalize o1 = o2 <-> roff_rw o1 o2 /\ roff_canon o2.
-  Proof.
-    move=> o1 o2.
-    split.
-    {
-      move=> H. subst.
+    Lemma norm_complete :
+      ∀ o1 o2,
+        roff_rw o1 o2 ->
+        roff_canon o2 ->
+        normalize o1 = o2.
+    Proof.
+      move=> o1 o2 Hrw Hc.
+      admit.
+    Admitted.
+
+    Lemma norm_canon :
+      ∀ os, roff_canon (normalize os).
+    Proof.
+      (* rewrite
+        /roff_canon /nf /red
+        /roff_rw_global.
+      move=> os [o [l [r [s [t [H1 [H2 H3]]]]]]].
+      subst. funelim (normalize os); simp normalize in *.
+      {
+        destruct l, s, r.
+        { inversion H3. }
+        all: done.
+      }
+      {
+        assert (∃ l', l = (o_field_ f, z) :: l').
+        {
+          destruct l; simpl in *.
+          {
+            destruct H3; simpl in *;
+            inversion H1.
+          }
+          {
+            inversion H1.
+            by repeat eexists.
+          }
+        }
+        move: H0 => [l' Hl]. subst.
+        simpl in *. inversion H1.
+        apply: H. exact: H2. exact H3.
+      }
+      {
+        case_match.
+        { apply: H; done. }
+        {
+          destruct l.
+          {
+            simpl in *.
+            destruct H3;
+            simpl in *;
+            inversion H1;
+            done.
+          }
+          {
+            simpl in H1.
+            inversion H1.
+            apply: H0; done.
+          }
+        }
+      }
+      {
+        case_match.
+        { apply: H; done. }
+        {
+          destruct l0.
+          {
+            simpl in *.
+            destruct H3;
+            simpl in *;
+            inversion H1;
+            done.
+          }
+          {
+            simpl in H1.
+            inversion H1.
+            apply: H0; done.
+          }
+        }
+      }
+      {
+        case_match.
+        { apply: H; done. }
+        case_match.
+        {
+          subst.
+          apply: H0; done.
+        }
+        {
+          destruct l.
+          {
+            simpl in *.
+            destruct H3; simpl in *;
+            inversion H2; subst.
+            { done. }
+            {
+              induction os; simpl in *;
+              simp normalize in *.
+              {
+                case_match.
+                { done. }
+                { inversion H9. subst. done. }
+              }
+              {
+                destruct a, r0; simpl in *;
+                simp normalize in *; case_match;
+                inversion H9; subst; try done.
+              }
+            }
+          }
+          {
+            simpl in *.
+            inversion H2. subst.
+            apply: H1; done.
+          }
+        }
+      }
+      {
+        case_match.
+        { apply: H; done. }
+        {
+          destruct l0.
+          {
+            simpl in *.
+            destruct H3; simpl in *;
+            inversion H1; subst.
+            { done. }
+            { admit. }
+          }
+          {
+            simpl in H1.
+            inversion H1.
+            apply: H0; done.
+          }
+        }
+      }
+      {
+        case_match.
+        { apply: H; done. }
+        {
+          destruct l0.
+          {
+            simpl in *.
+            destruct H3; simpl in *;
+            inversion H1; subst.
+            { done. }
+            { admit. }
+          }
+          {
+            simpl in H1.
+            inversion H1.
+            apply: H0; done.
+          }
+        }
+      }
+      {
+        case_match.
+        { apply: H; done. }
+        {
+          destruct l0.
+          {
+            simpl in *.
+            destruct H3; simpl in *;
+            inversion H1; subst.
+            { done. }
+          }
+          {
+            simpl in H1.
+            inversion H1.
+            apply: H0; done.
+          }
+        }
+      }
+      {
+        destruct l; simpl in *.
+        { destruct H3; done. }
+        {
+          inversion H1. subst.
+          destruct l; simpl in *.
+          { destruct H3; done. }
+          { done. }
+        }
+      }
+      {
+        destruct l0; simpl in *.
+        { destruct H3; done. }
+        {
+          inversion H1.
+          apply: H; done.
+        }
+      } *)
+    Admitted.
+
+    Lemma norm_rel :
+      ∀ o1 o2,
+        normalize o1 = o2 <-> roff_rw o1 o2 /\ roff_canon o2.
+    Proof.
+      move=> o1 o2.
       split.
-      { apply: norm_sound. }
+      {
+        move=> H. subst.
+        split.
+        { apply: norm_sound. }
+        { apply: norm_canon. }
+      }
+      {
+        move=> [H1 H2].
+        by apply norm_complete.
+      }
+    Qed.
+    
+    Lemma norm_invol :
+      ∀ os,
+        roff_canon os ->
+        normalize os = os.
+    Proof.
+      move=> o H.
+      rewrite norm_rel.
+      split.
+      { constructor. }
+      { done. }
+    Qed.
+
+    Lemma rw_bwd_r :
+      ∀ o1 o2 o2' o3,
+        roff_rw o2 o2' ->
+        roff_rw (o1 ++ o2) o3 ->
+        roff_rw (o1 ++ o2') o3.
+    Proof.
+    Admitted.
+
+    Lemma norm_absorb_l :
+      ∀ o1 o2,
+        normalize (o1 ++ normalize o2) = normalize (o1 ++ o2).
+    Proof.
+      move=> o1 o2.
+      rewrite norm_rel.
+      split.
+      {
+        remember (normalize o2) as o2n.
+        symmetry in Heqo2n. rewrite norm_rel in Heqo2n.
+        remember (normalize (o1 ++ o2)) as ocn.
+        symmetry in Heqocn. rewrite norm_rel in Heqocn.
+        move: Heqo2n => [Hrw0 Hc0].
+        move: Heqocn => [Hrw1 Hc1].
+        apply: rw_bwd_r; done.
+      }
       { apply: norm_canon. }
-    }
-    {
-      move=> [H1 H2].
-      by apply norm_complete.
-    }
-  Qed.
-  
-  Lemma norm_invol :
-    ∀ os,
-      roff_canon os ->
-      normalize os = os.
-  Proof.
-    move=> o H.
-    rewrite norm_rel.
-    split.
-    { constructor. }
-    { done. }
-  Qed.
+    Qed.
 
-  Lemma norm_absorb_l :
-    ∀ o1 o2,
-      normalize (o1 ++ normalize o2) = normalize (o1 ++ o2).
-  Proof.
-    move=> o1 o2.
-  Admitted.
-  
-  Lemma norm_absorb_r :
-    ∀ o1 o2,
-      normalize (normalize o1 ++ o2) = normalize (o1 ++ o2).
-  Proof.
-  Admitted.
+    Lemma rw_bwd_l :
+      ∀ o1 o1' o2 o3,
+        roff_rw o1 o1' ->
+        roff_rw (o1 ++ o2) o3 ->
+        roff_rw (o1' ++ o2) o3.
+    Proof.
+    Admitted.
 
-  Lemma nf_tc {A} (R : relation A):
-    ∀ x, nf R x -> nf (tc R) x.
-  Proof.
-    rewrite /nf /red /not.
-    move=> x H1 [y H2].
-    apply: H1.
-    destruct H2;
-    by exists y.
-  Qed.
+    Lemma norm_absorb_r :
+      ∀ o1 o2,
+        normalize (normalize o1 ++ o2) = normalize (o1 ++ o2).
+    Proof.
+      move=> o1 o2.
+      rewrite norm_rel.
+      split.
+      {
+        remember (normalize o1) as o1n.
+        symmetry in Heqo1n. rewrite norm_rel in Heqo1n.
+        remember (normalize (o1 ++ o2)) as ocn.
+        symmetry in Heqocn. rewrite norm_rel in Heqocn.
+        move: Heqo1n => [Hrw0 Hc0].
+        move: Heqocn => [Hrw1 Hc1].
+        apply: rw_bwd_l; done.
+      }
+      { apply: norm_canon. }
+    Qed.
+
+  End norm_lemmas.
 
   Lemma nil_canon :
     roff_canon [].
@@ -788,10 +823,27 @@ Module PTRS_IMPL <: PTRS_INTF.
       (¬∃ ty, fst o = o_sub_ ty 0) ->
       roff_canon [o].
   Proof.
+    assert (Hn : ∀ A (x y z : A) (l r : list A), [x] ≠ l ++ [y; z] ++ r).
+    {
+      move=> A x y z l r H.
+      destruct l. done.
+      inversion H. subst.
+      destruct l; done.
+    }
     move=> o H.
     rewrite /roff_canon /nf /roff_rw_global /red.
     move=> [_ [l [r [s [t [H1 [_ H2]]]]]]].
-  Admitted.
+    destruct H2.
+    { apply: Hn. exact: H1. }
+    { apply: Hn. exact: H1. }
+    {
+      destruct l; simpl in H1;
+      inversion H1; subst.
+      { apply: H. by exists ty. }
+      destruct l; done.
+    }
+    { apply: Hn. exact: H1. }
+  Qed.
 
   Definition eval_raw_offset_seg σ (ro : raw_offset_seg) : option Z :=
     match ro with
