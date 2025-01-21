@@ -341,18 +341,26 @@ Module parser.
         in
         fold_left (fun t f => f t) <$> star (entry 100).
 
-
     (* The core parsers are based on fuel to handle the mutual recursion *)
     Definition parse_type' : M type :=
       let* quals :=
         star (((fun _ => tqualified (lang:=lang) QC) <$> keyword "const") <|>
               ((fun _ => tqualified QV) <$> keyword "volatile"))
       in
+      let build_named_type ctor nm :=
+        match nm with
+        | Nglobal (Nfunction function_qualifiers.N nm args) =>
+            Tfunction $ FunctionType (ctor $ Nglobal $ Nid nm) args
+        | Nscoped scp (Nfunction function_qualifiers.N nm args) =>
+            Tfunction $ FunctionType (ctor $ Nscoped scp (Nid nm)) args
+        | _ => ctor nm
+        end
+      in
       let* t :=
         basic_type <|>
         (exact "$" *> (Tparam <$> ident)) <|>
-        ((exact "#" <|> keyword "enum") *> (Tenum <$> parse_name ())) <|>
-        (optional (keyword "struct" <|> keyword "class") *> (Tnamed <$> parse_name ())) <|>
+        ((exact "#" <|> keyword "enum") *> (build_named_type Tenum <$> parse_name ())) <|>
+        (optional (keyword "struct" <|> keyword "class") *> (build_named_type Tnamed <$> parse_name ())) <|>
         (parens (parse_type ()))
       in
       let* post := parse_postfix_type in
@@ -535,6 +543,8 @@ Definition parse_type (input : PrimString.string) : option type :=
 Module Type TESTS.
   #[local] Definition TEST (input : PrimString.string) (nm : name) : Prop :=
     (parse_name input) = Some nm.
+  #[local] Definition TEST_type (input : PrimString.string) (nm : type) : Prop :=
+    (parse_type input) = Some nm.
 
   #[local] Definition Msg : name := Nglobal $ Nid "Msg".
 
@@ -634,6 +644,9 @@ Module Type TESTS.
   Succeed Example _0 : TEST "foo(int(const *)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tptr $ Tconst $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
   Succeed Example _0 : TEST "foo(int(*const)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tconst $ Tptr $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
   Succeed Example _0 : TEST "foo(int(C::*)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tmember_pointer (Tnamed $ Nglobal (Nid "C")) $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+
+  Succeed Example _0 : TEST_type "enum E()" (Tfunction (FunctionType (Tenum (Nglobal (Nid "E"))) [])) := eq_refl.
+  Succeed Example _0 : TEST_type "enum NS::E()" (Tfunction (FunctionType (Tenum (Nscoped (Nglobal (Nid "NS")) (Nid "E"))) [])) := eq_refl.
 
   (* known issues *)
 
