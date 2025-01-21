@@ -627,17 +627,20 @@ End temp_param.
 
 Module temp_arg.
   Section compare.
-    Context {name type Expr : Set}.
+    Context {lang : lang.t}.
+    #[local] Notation name := (name' lang).
+    #[local] Notation type := (type' lang).
+    #[local] Notation Expr := (Expr' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
-    #[local] Notation temp_arg := (temp_arg_ name type Expr).
+   #[local] Notation temp_arg := (temp_arg' lang).
 
     Definition tag (p : temp_arg) : positive :=
       match p with
       | Atype _ => 1
       | Avalue _ => 2
-      | Apack _ => 3
+      | Apack_expansion _ => 3
       | Atemplate _ => 4
       | Aunsupported _ => 5
       end.
@@ -645,7 +648,7 @@ Module temp_arg.
       match t with
       | 1 => type
       | 2 => Expr
-      | 3 => list (temp_arg_ name type Expr)
+      | 3 => list temp_arg
       | 4 => name
       | _ => PrimString.string
       end.
@@ -653,7 +656,7 @@ Module temp_arg.
       match p with
       | Atype t => t
       | Avalue e => e
-      | Apack ls => ls
+      | Apack_expansion ls => ls
       | Atemplate n => n
       | Aunsupported msg => msg
       end.
@@ -673,14 +676,13 @@ Module temp_arg.
       match p with
       | Atype t => compare_ctor compare (Reduce (tag (Atype t))) (fun _ => Reduce (data (Atype t)))
       | Avalue e => compare_ctor compare (Reduce (tag (Avalue e))) (fun _ => Reduce (data (Avalue e)))
-      | Apack ls => compare_ctor compare (Reduce (tag (Apack ls))) (fun _ => Reduce (data (Apack ls)))
+      | Apack_expansion ls => compare_ctor compare (Reduce (tag (Apack_expansion ls))) (fun _ => Reduce (data (Apack_expansion ls)))
       | Atemplate n => compare_ctor compare (Reduce (tag (Atemplate n))) (fun _ => Reduce (data (Atemplate n)))
       | Aunsupported msg => compare_ctor compare (Reduce (tag (Aunsupported msg))) (fun _ => Reduce (data (Aunsupported msg)))
       end.
   End compare.
 
 End temp_arg.
-#[global] Instance temp_arg_compare {A B C : Set} `{!Compare A, !Compare B, !Compare C} : Compare (temp_arg_ A B C) := temp_arg.compare compare compare compare.
 
 Module OverloadableOperator.
   #[prefix="", only(tag)] derive OverloadableOperator.

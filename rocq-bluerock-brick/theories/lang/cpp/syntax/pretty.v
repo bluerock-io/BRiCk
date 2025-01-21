@@ -175,19 +175,6 @@ Section with_lang.
     | overloadable.Rsubscript => "[]"
     end.
 
-  Section printTA.
-    Context (printN : name -> PrimString.string) (printT : type -> PrimString.string) (printE : Expr -> PrimString.string).
-
-    Fixpoint printTA (ta : temp_arg_ name type Expr) : list PrimString.string :=
-      match ta with
-      | Atype t => [printT t]
-      | Avalue e => [printE e]
-      | Apack ls => List.concat (List.map printTA ls)
-      | Atemplate n => ["<>" ++ printN n]
-      | Aunsupported note => [note]
-      end.
-  End printTA.
-
   Fixpoint printN (nm : name) : PrimString.string :=
     match nm with
     | Nglobal an => printAN printT None an
@@ -195,9 +182,18 @@ Section with_lang.
     | Nscoped base Nanonymous => printN base
     | Nscoped base n => printN base ++ "::" ++ printAN printT (topName base) n
     | Ninst base i =>
-        printN base ++ angles (concat $ join_sep ", " $ List.concat (List.map (printTA printN printT printE) i))
+        printN base ++ angles (concat $ join_sep ", " $ List.concat (List.map printTA i))
     | Nunsupported note => "?" ++ note
     end
+
+  with printTA (ta : temp_arg' lang.cpp) : list PrimString.string :=
+      match ta with
+      | Atype t => [printT t]
+      | Avalue e => [printE e]
+      | Apack_expansion ls => "(...)" ::  List.concat (List.map printTA ls)
+      | Atemplate n => ["<>" ++ printN n]
+      | Aunsupported note => [note]
+      end
 
   with printT (ty : type) : PrimString.string :=
     match ty with
