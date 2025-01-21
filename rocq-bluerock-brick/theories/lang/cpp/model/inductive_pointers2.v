@@ -66,9 +66,9 @@ Module PTRS_IMPL <: PTRS_INTF.
     roff_rw_local
       [(o_base_ der base, o1); (o_derived_ base der, o2)]
       []
-  | CanonSubZero ty o :
+  | CanonSubZero ty :
     roff_rw_local
-      [(o_sub_ ty 0, o)]
+      [(o_sub_ ty 0, 0)]
       []
   | CanonSubMerge ty n1 n2 o1 o2 :
       roff_rw_local
@@ -115,14 +115,14 @@ Module PTRS_IMPL <: PTRS_INTF.
     else
       (o_base_ der2 base2, o2) :: normalize ((o_derived_ base1 der1, o1) :: os)
   | (o_sub_ ty1 i1, o1) :: (o_sub_ ty2 i2, o2) :: os =>
-    if decide (i1 = 0) then
+    if decide (i1 = 0 /\ o1 = 0) then
       normalize ((o_sub_ ty2 i2, o2) :: os)
     else if decide (ty1 = ty2) then
       normalize ((o_sub_ ty1 (i1 + i2), o1 + o2) :: os)
     else
       (o_sub_ ty1 i1, o1) :: normalize ((o_sub_ ty2 i2, o2) :: os)
   | (o_sub_ ty i, o) :: os =>
-    if decide (i = 0) then
+    if decide (i = 0 /\ o = 0) then
       normalize os
     else
     (o_sub_ ty i, o) :: normalize os
@@ -188,9 +188,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       {
         case_match.
         {
-          subst.
+          destruct a. subst.
           apply: rtc_l. 2: done.
-          exists [], [], [(o_sub_ ty 0, o)], [].
+          exists [], [], [(o_sub_ ty 0, 0)], [].
           split. easy.
           split. easy.
           constructor.
@@ -200,9 +200,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       {
         case_match.
         {
-          subst.
+          destruct a. subst.
           apply: rtc_l. 2: by apply: H.
-          exists [], ((o_field_ f, z1) :: l), [(o_sub_ ty 0, o)], [].
+          exists [], ((o_field_ f, z1) :: l), [(o_sub_ ty 0, 0)], [].
           split. easy.
           split. easy.
           constructor.
@@ -218,9 +218,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       {
         case_match.
         {
-          subst.
+          destruct a. subst.
           apply: rtc_l. 2: by apply H.
-          exists [], ((o_sub_ ty2 i2, o2) :: os), [(o_sub_ ty1 0, o1)], [].
+          exists [], ((o_sub_ ty2 i2, o2) :: os), [(o_sub_ ty1 0, 0)], [].
           split. easy.
           split. easy. 
           constructor.
@@ -245,9 +245,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       {
         case_match.
         {
-          subst.
+          destruct a. subst.
           apply: rtc_l. 2: by apply: H.
-          exists [], ((o_base_ derived base, z1) :: l), [(o_sub_ ty 0, o)], [].
+          exists [], ((o_base_ derived base, z1) :: l), [(o_sub_ ty 0, 0)], [].
           split. easy.
           split. easy.
           constructor.
@@ -263,9 +263,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       {
         case_match.
         {
-          subst.
+          destruct a. subst.
           apply: rtc_l. 2: by apply: H.
-          exists [], ((o_derived_ base0 derived0, z1) :: l), [(o_sub_ ty 0, o)], [].
+          exists [], ((o_derived_ base0 derived0, z1) :: l), [(o_sub_ ty 0, 0)], [].
           split. easy.
           split. easy.
           constructor.
@@ -281,9 +281,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       {
         case_match.
         {
-          subst.
+          destruct a. subst.
           apply: rtc_l. 2: by apply: H.
-          exists [], ((o_invalid_, z1) :: l), [(o_sub_ ty 0, o)], [].
+          exists [], ((o_invalid_, z1) :: l), [(o_sub_ ty 0, 0)], [].
           split. easy.
           split. easy.
           constructor.
@@ -627,6 +627,58 @@ Module PTRS_IMPL <: PTRS_INTF.
       { done. }
     Qed.
 
+    Lemma simp_norm_sub0 :
+      ∀ ty os,
+        normalize ((o_sub_ ty 0, 0) :: os) = normalize os.
+    Proof.
+      move=> ty os.
+      induction os; simpl.
+      {
+        simp normalize.
+        case_match.
+        { by simp normalize. }
+        { done. }
+      }
+      destruct a, r;
+      simp normalize;
+      by case_match.
+    Qed.
+
+    Equations roff_rw_uncons_help (l : raw_offset) :
+      ∀ s t r,
+      roff_rw_local s t ->
+      roff_rw (l ++ t ++ r) (normalize (l ++ s ++ r))
+    by wf (length l) lt :=
+    roff_rw_uncons_help l s t r H1 := _.
+    Next Obligation.
+      destruct l; simpl in *.
+      {
+        destruct H1; simpl;
+        simp normalize.
+        {
+          case_match.
+          { apply norm_sound. }
+          { exfalso. by apply n. }
+        }
+        {
+          case_match.
+          { apply norm_sound. }
+          { exfalso. by apply n. }
+        }
+        {
+          rewrite simp_norm_sub0.
+          apply norm_sound.
+        }
+        {
+          repeat case_match; try done.
+          {
+            subst.
+            admit.
+          }
+          admit.
+        }
+      }
+
     Lemma roff_rw_uncons :
       ∀ l r s t e,
         roff_canon e ->
@@ -635,20 +687,10 @@ Module PTRS_IMPL <: PTRS_INTF.
         roff_rw (l ++ t ++ r) e.
     Proof.
       move=> l r s t e Hc H1 H2.
-      remember (l ++ s ++ r).
-      generalize dependent l.
-      generalize dependent r.
-      induction H1; subst;
-      move=> r l Heq; subst.
-      {
-        exfalso. apply: Hc.
-        by exists (l ++ t ++ r), l, r, s, t.
-      }
-      {
-        apply: IHrtc. done.
-        admit.
-      }
-    Admitted.
+      assert (roff_rw (l ++ s ++ r) e /\ roff_canon e) by done.
+      rewrite -norm_rel in H. subst. clear - H2.
+      by apply: roff_rw_uncons_help.
+    Qed.
 
     Lemma rw_bwd_r :
       ∀ o1 o2 o2' o3,
