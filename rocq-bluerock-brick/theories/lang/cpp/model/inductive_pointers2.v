@@ -43,8 +43,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   | o_field_ (* type-name: *) (f : field)
   | o_sub_ (ty : type) (z : Z)
   | o_base_ (derived base : globname)
-  | o_derived_ (base derived : globname)
-  | o_invalid_.
+  | o_derived_ (base derived : globname).
   #[local] Instance raw_offset_seg_eq_dec : EqDecision raw_offset_seg.
   Proof. solve_decision. Defined.
   #[global] Declare Instance raw_offset_seg_countable : Countable raw_offset_seg.
@@ -280,24 +279,6 @@ Module PTRS_IMPL <: PTRS_INTF.
           { by apply H0. }
         }
       }
-      {
-        case_match.
-        {
-          subst.
-          apply: rtc_l. 2: by apply: H.
-          exists [], (o_invalid_ :: l), [o_sub_ ty 0], [].
-          split. easy.
-          split. easy.
-          constructor.
-        }
-        {
-          apply roff_rw_cong with
-            (ol1:=[o_sub_ ty i])
-            (or1:=[o_sub_ ty i]).
-          { done. }
-          { by apply H0. }
-        }
-      }
       { done. }
       {
         apply roff_rw_cong with
@@ -339,13 +320,6 @@ Module PTRS_IMPL <: PTRS_INTF.
         { done. }
         { by apply H0. }
         }
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[o_base_ derived base])
-          (or1:=[o_base_ derived base]).
-        { done. }
-        { done. }
       }
       { done. }
       {
@@ -389,20 +363,6 @@ Module PTRS_IMPL <: PTRS_INTF.
         apply roff_rw_cong with
           (ol1:=[o_derived_ base0 derived0])
           (or1:=[o_derived_ base0 derived0]).
-        { done. }
-        { done. }
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[o_derived_ base0 derived0])
-          (or1:=[o_derived_ base0 derived0]).
-        { done. }
-        { done. }
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[o_invalid_])
-          (or1:=[o_invalid_]).
         { done. }
         { done. }
       }
@@ -575,10 +535,6 @@ Module PTRS_IMPL <: PTRS_INTF.
         apply roff_rw_cong_cons.
         apply norm_sound.
       }
-      4:{
-        apply roff_rw_cong_cons.
-        apply norm_sound.
-      }
       {
         destruct (decide (z = 0)).
         {
@@ -598,7 +554,6 @@ Module PTRS_IMPL <: PTRS_INTF.
           { apply roff_rw_sub0, roff_rw_uncons_help_sing. simpl. lia. }
           { apply roff_rw_sub0, roff_rw_uncons_help_sing. simpl. lia. }
           { apply roff_rw_sub0, roff_rw_uncons_help_sing. simpl. lia. }
-          { apply roff_rw_sub0, roff_rw_cong_cons, norm_sound. }
         }
         {
           destruct r.
@@ -617,7 +572,6 @@ Module PTRS_IMPL <: PTRS_INTF.
           }
           { apply roff_rw_cong_cons, norm_sound. }
           { apply roff_rw_cong_cons, norm_sound. }
-          { apply roff_rw_cong_cons, roff_rw_cong_cons, norm_sound. }
         }
       }
       {
@@ -891,11 +845,6 @@ Module PTRS_IMPL <: PTRS_INTF.
             { done. }
             { simpl. lia. }
           }
-          {
-            apply roff_rw_cong_cons.
-            apply roff_rw_cong_cons.
-            apply roff_rw_uncons_help; (done || lia).
-          }
         }
       }
       {
@@ -947,11 +896,6 @@ Module PTRS_IMPL <: PTRS_INTF.
               with (([o_derived_ base0 derived0] ++ l) ++ s ++ r).
               apply roff_rw_uncons_help; simpl; (done || lia).
             }
-          }
-          {
-            apply roff_rw_cong_cons.
-            apply roff_rw_cong_cons.
-            apply roff_rw_uncons_help; (done || lia).
           }
         }
       }
@@ -1005,16 +949,7 @@ Module PTRS_IMPL <: PTRS_INTF.
             with (([o_derived_ base0 derived0] ++ l) ++ s ++ r).
             apply roff_rw_uncons_help; simpl; (done || lia).
           }
-          {
-            apply roff_rw_cong_cons.
-            apply roff_rw_cong_cons.
-            apply roff_rw_uncons_help; (done || lia).
-          }
         }
-      }
-      {
-        apply roff_rw_cong_cons.
-        apply roff_rw_uncons_help; (done || lia).
       }
     Qed.
 
@@ -1247,8 +1182,8 @@ Module PTRS_IMPL <: PTRS_INTF.
   Qed.
 
   Lemma singleton_offset_canon :
-    ∀ o : offset_seg,
-      (¬∃ ty, fst o = o_sub_ ty 0) ->
+    ∀ o,
+      (¬∃ ty, o = o_sub_ ty 0) ->
       roff_canon [o].
   Proof.
     assert (Hn : ∀ A (x y z : A) (l r : list A), [x] ≠ l ++ [y; z] ++ r).
@@ -1273,62 +1208,48 @@ Module PTRS_IMPL <: PTRS_INTF.
     { apply: Hn. exact: H1. }
   Qed.
 
-  Definition eval_raw_offset_seg σ (ro : raw_offset_seg) : option Z :=
+  (* Definition eval_raw_offset_seg σ (ro : raw_offset_seg) : option Z :=
     match ro with
     | o_field_ f => o_field_off σ f
     | o_sub_ ty z => o_sub_off σ ty z
     | o_base_ derived base => o_base_off σ derived base
     | o_derived_ base derived => o_derived_off σ base derived
     | o_invalid_ => None
-    end.
-  
-  Definition mk_offset_seg σ (ro : raw_offset_seg) : offset_seg :=
-    match eval_raw_offset_seg σ ro with
-    | None => (o_invalid_, 0%Z)
-    | Some off => (ro, off)
-    end.
+    end. *)
 
-  Program Definition o_field (σ : genv) (f : field) : offset :=
-    [mk_offset_seg σ (o_field_ f)].
+  Program Definition o_field (f : field) : offset :=
+    [o_field_ f].
   Next Obligation.
     (* move=> σ f. *)
     apply: singleton_offset_canon. 2: exact: H.
-    rewrite /mk_offset_seg /eval_raw_offset_seg.
-    clear H.
-    move=> [ty H]. by destruct (o_field_off σ f).
+    clear H. by move=> [ty H].
   Qed.
 
-  Program Definition o_base σ derived base : offset :=
-    [mk_offset_seg σ (o_base_ derived base)].
+  Program Definition o_base derived base : offset :=
+    [o_base_ derived base].
   Next Obligation.
     (* move=> σ der base. *)
     apply: singleton_offset_canon. 2: exact: H.
-    rewrite /mk_offset_seg /eval_raw_offset_seg.
-    clear H. move=> [ty H]. by destruct (o_base_off σ derived base).
+    clear H. by move=> [ty H].
   Qed.
 
-  Program Definition o_derived σ base derived : offset :=
-    [mk_offset_seg σ (o_derived_ base derived)].
+  Program Definition o_derived base derived : offset :=
+    [o_derived_ base derived].
   Next Obligation.
     (* move=> σ base der. *)
     apply: singleton_offset_canon. 2: exact: H.
-    rewrite /mk_offset_seg /eval_raw_offset_seg.
-    clear H. move=> [ty H]. by destruct (o_derived_off σ base derived).
+    clear H. by move=> [ty H].
   Qed.
 
-  Program Definition o_sub σ ty z : offset :=
+  Program Definition o_sub ty z : offset :=
     if decide (z = 0)%Z then
       o_id
     else
-      [mk_offset_seg σ (o_sub_ ty z)].
+      [o_sub_ ty z].
   Next Obligation.
     (* move=> σ ty z znz. *)
     apply: singleton_offset_canon. 2: exact: H.
-    clear - n. move=> [ty' H].
-    unfold mk_offset_seg, eval_raw_offset_seg, o_sub_off in H.
-    destruct (size_of σ ty); simpl in *.
-    { inversion H. by subst. }
-    { easy. }
+    clear - n. move=> [ty' H]. congruence.
   Qed.
 
   #[global] Notation "p ., o" := (_dot p (o_field _ o))
@@ -1338,93 +1259,72 @@ Module PTRS_IMPL <: PTRS_INTF.
     #[global] Notation ".[ t ! n ]" := (o_sub _ t n) (at level 11, no associativity, format ".[  t  !  n  ]") : stdpp_scope.
 
   Lemma o_sub_0 :
-    ∀ σ ty,
-      is_Some (size_of σ ty) ->
-      o_sub σ ty 0 = o_id.
+    ∀ ty, o_sub ty 0 = o_id.
   Proof.
-    move=> σ ty _.
+    move=> ty.
     rewrite /o_sub.
     by case_match.
   Qed.
 
   Lemma o_base_derived :
-    ∀ σ (p : ptr) base derived,
-      directly_derives σ derived base ->
-      p ,, o_base σ derived base ,, o_derived σ base derived = p.
+    ∀ (p : ptr) base derived,
+      p ,, o_base derived base ,, o_derived base derived = p.
   Proof.
     UNFOLD_dot.
     rewrite /__offset_ptr.
-    move=> σ [| r [o H]] base der [pz Hd].
-    { easy. }
+    move=> [| rp [o H]] base der.
+    { done. }
     {
-      simpl. f_equal. apply: sig_eq.
+      f_equal. simpl. apply: sig_eq.
       rewrite norm_absorb_r -app_assoc norm_rel.
-      split. 2: easy. apply: rtc_l. 2: constructor.
-      eexists o, [], [mk_offset_seg σ (o_base_ der base); mk_offset_seg σ (o_derived_ base der)], [].
-      split. { easy. }
-      split. { simpl. by rewrite app_nil_r. }
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_base_off /o_derived_off.
-      rewrite Hd. constructor.
+      split.
+      {
+        simpl. apply: rtc_l. 2: done.
+        exists o, [], [o_base_ der base; o_derived_ base der], [].
+        split. done.
+        split. by repeat rewrite app_nil_r.
+        constructor.
+      }
+      { done. }
     }
   Qed.
   
   Lemma o_derived_base :
-    ∀ σ (p : ptr) base derived,
-      directly_derives σ derived base ->
-      p ,, o_derived σ base derived ,, o_base σ derived base = p.
+    ∀ (p : ptr) base derived,
+      p ,, o_derived base derived ,, o_base derived base = p.
   Proof.
     UNFOLD_dot.
     rewrite /__offset_ptr.
-    move=> σ [| r [o H]] base der [pz Hd].
-    { easy. }
+    move=> [| rp [o H]] base der.
+    { done. }
     {
-      simpl. f_equal. apply: sig_eq.
+      f_equal. simpl. apply: sig_eq.
       rewrite norm_absorb_r -app_assoc norm_rel.
-      split. 2: easy. apply: rtc_l. 2: constructor.
-      eexists o, [], [mk_offset_seg σ (o_derived_ base der); mk_offset_seg σ (o_base_ der base)], [].
-      split. { easy. }
-      split. { simpl. by rewrite app_nil_r. }
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_base_off /o_derived_off.
-      rewrite Hd. constructor.
+      split.
+      {
+        simpl. apply: rtc_l. 2: done.
+        exists o, [], [o_derived_ base der; o_base_ der base], [].
+        split. done.
+        split. by repeat rewrite app_nil_r.
+        constructor.
+      }
+      { done. }
     }
   Qed.
 
   Lemma o_dot_sub :
-    ∀ σ i j ty,
-      is_Some (size_of σ ty) ->
-      (o_sub _ ty i) ,, (o_sub _ ty j) = o_sub _ ty (i + j).
+    ∀ i j ty,
+      o_sub ty i ,, o_sub ty j = o_sub ty (i + j).
   Proof.
     UNFOLD_dot.
-    move=> σ i j ty [sz HSome].
+    move=> i j ty.
     rewrite /__o_dot /o_sub.
     repeat case_match;
     subst; try lia;
     rewrite /o_id; simpl in *;
-    apply: sig_eq;
-    try done.
-    {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome. simpl. simp normalize. case_match; done.
-    }
-    {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome; simpl; simp normalize.
-      assert (i + 0 = i) by lia.
-      case_match.
-      { lia. }
-      { by rewrite H2. }
-    }
-    {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome; simpl. simp normalize.
-      repeat case_match; done.
-    }
-    {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome; simpl. simp normalize.
-      repeat case_match; subst; try (lia || congruence).
-      assert (i * sz + j * sz = (i + j) * sz) by lia.
-      by rewrite H5.
-    }
+    apply: sig_eq; try done;
+    simp normalize;
+    repeat case_match; try done.
+    { by replace (i + 0) with i by lia. }
   Qed.
 End PTRS_IMPL.
