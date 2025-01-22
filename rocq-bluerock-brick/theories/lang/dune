@@ -2,4 +2,4 @@
 (coq.theory
  (name bedrock.lang)
  (package rocq-bluerock-brick)
- (theories bedrock.prelude iris stdpp elpi Ltac2))
+ (theories bedrock.prelude iris stdpp elpi Ltac2 Equations Equations.Prop Equations.Type))
