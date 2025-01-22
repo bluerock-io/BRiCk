@@ -5,7 +5,6 @@
  *)
 Require Import Stdlib.Numbers.BinNums.
 Require Import Stdlib.NArith.BinNat.
-Require Import bedrock.prelude.bytestring_core.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.notations.
 Require Import bedrock.lang.cpp.code_notations.

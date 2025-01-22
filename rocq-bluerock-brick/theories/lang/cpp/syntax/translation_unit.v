@@ -5,8 +5,8 @@
  *)
 Require Import stdpp.fin_maps.
 Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.bytestring_core.
 Require Import bedrock.prelude.avl.
+Require Import bedrock.prelude.pstring.
 Require Import bedrock.lang.cpp.syntax.core.
 Require Import bedrock.lang.cpp.syntax.types.
 Require Import bedrock.lang.cpp.syntax.decl.
@@ -25,7 +25,7 @@ Variant GlobDecl' {lang} : Set :=
   | Genum     (_ : type' lang) (_ : list ident) (* *)
   | Gconstant (_ : type' lang) (init : option (Expr' lang)) (* used for enumerator constants*)
   | Gtypedef  (_ : type' lang)
-  | Gunsupported (_ : bs).
+  | Gunsupported (_ : PrimString.string).
 #[global] Arguments GlobDecl' : clear implicits.
 #[global] Arguments Gunion _ & _ : assert.
 #[global] Arguments Gstruct _ & _ : assert.

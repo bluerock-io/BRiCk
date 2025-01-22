@@ -5,7 +5,7 @@
  *)
 Require Ltac2.Ltac2.
 Require Export bedrock.prelude.base.	(* for, e.g., <<::>> *)
-Require Export bedrock.prelude.bytestring.	(* for <<%bs>> *)
+Require Export Stdlib.Strings.PrimString.
 Require Import bedrock.prelude.avl.
 Require Export bedrock.lang.cpp.syntax. (* NOTE: too much *)
 Require bedrock.lang.cpp.semantics.sub_module.
@@ -154,7 +154,7 @@ Definition Ddestructor (n : obj_name) (f : Dtor) : K :=
 Definition Dtype (n : globname) : K :=
   _types n $ Gtype.
 
-Definition Dunsupported (n : globname) (msg : bs) : K :=
+Definition Dunsupported (n : globname) (msg : PrimString.string) : K :=
   _types n $ Gunsupported msg.
 
 Definition Dstruct (n : globname) (f : option Struct) : K :=
@@ -176,7 +176,7 @@ Definition Denum_constant (n : globname)
 Definition Dtypedef (n : globname) (t : type) : K :=
   _aliases n t.
 
-Definition Dstatic_assert (msg : option bs) (e : Expr) : K :=
+Definition Dstatic_assert (msg : option PrimString.string) (e : Expr) : K :=
   _skip.
 
 Definition Qconst_volatile : type -> type := tqualified QCV.

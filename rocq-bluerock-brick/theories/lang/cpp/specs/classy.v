@@ -53,7 +53,7 @@ Section with_prop.
   Definition post_void {RESULT} {WP : @WithPost RESULT} {HV : HasVoid RESULT} (P : PROP) : post_car :=
     post_ret _void P.
 
-  Definition add_named_arg `{WA : WithArg ARG} (nm : bs) : ARG -> spec_car -> spec_car :=
+  Definition add_named_arg `{WA : WithArg ARG} (nm : PrimString.string) : ARG -> spec_car -> spec_car :=
     add_arg.
 
   Definition let_pre_spec {T : Type} (x : T) : T := x.
@@ -101,12 +101,12 @@ Notation "'\let{' x .. y '}' z ':=' e X" :=
 Notation "'\let{' x .. y '}' z ':=' e X" :=
   (add_with (fun x => .. (add_with (fun y => let_pre_spec (let z := e in X%pre_spec)) _) ..) _) (only printing).
 
-Notation "'\arg' nm v X" := (add_named_arg nm%bs v X%pre_spec).
+Notation "'\arg' nm v X" := (add_named_arg nm v X%pre_spec).
 
 Notation "'\arg{' x .. y } nm v X" :=
-  (add_with (fun x => .. (add_with (fun y => add_named_arg nm%bs v X%pre_spec) [binder y]) ..) [binder x]) (only parsing).
+  (add_with (fun x => .. (add_with (fun y => add_named_arg nm v X%pre_spec) [binder y]) ..) [binder x]) (only parsing).
 Notation "'\arg{' x .. y } nm v X" :=
-  (add_with (fun x => .. (add_with (fun y => add_named_arg nm%bs v X%pre_spec) _) ..) _) (only printing).
+  (add_with (fun x => .. (add_with (fun y => add_named_arg nm v X%pre_spec) _) ..) _) (only printing).
 
 Notation "'\args' v X" := (add_args v X%pre_spec).
 

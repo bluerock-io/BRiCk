@@ -122,7 +122,7 @@ Module decltype.
       | None => throw ("failed to find global "%bs, n)
       end.
 
-    Definition type_of_constant (n : name) (id : bs) : M decltype :=
+    Definition type_of_constant (n : name) (id : ident) : M decltype :=
       let* osym := readerT.asks (fun '(tu, _, _, _) => tu.(ext_types) $ Nscoped n (Nid id)) in
       match osym with
       | Some (Gconstant ty _) => mret ty
