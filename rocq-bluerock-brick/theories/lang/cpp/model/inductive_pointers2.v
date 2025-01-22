@@ -78,6 +78,14 @@ Module PTRS_IMPL <: PTRS_INTF.
       roff_rw_local s t.
 
   Definition roff_rw := rtc roff_rw_global.
+
+  #[global] Instance: RewriteRelation roff_rw := {}.
+  #[global] Instance: subrelation roff_rw_global roff_rw.
+  Proof. exact: rtc_once. Qed.
+  (* #[global] Instance: Reflexive roff_rw.
+  Proof. apply _. Abort.
+  #[global] Instance: Transitive roff_rw.
+  Proof. apply _. Abort. *)
   Definition roff_canon := nf roff_rw_global.
 
   Definition offset := {o : raw_offset | roff_canon o}.
@@ -167,13 +175,28 @@ Module PTRS_IMPL <: PTRS_INTF.
         done.
       }
     Qed.
-    #[global] Instance roff_rw_cong_proper :
+
+    #[global] Instance roff_rw_app_mono :
       Proper (roff_rw ==> roff_rw ==> roff_rw) (++).
     Proof.
       rewrite /Proper /respectful.
       move=> ol1 or1 H1 ol2 or2 H2.
       by apply roff_rw_cong.
     Qed.
+    #[global] Instance roff_rw_app_flip_mono :
+      Proper (flip roff_rw ==> flip roff_rw ==> flip roff_rw) (++).
+    Proof. solve_proper. Qed.
+
+    #[global] Instance roff_rw_cons_mono ro :
+      Proper (roff_rw ==> roff_rw) (ro ::.).
+    Proof.
+      intros x y H.
+      by apply roff_rw_cong with (ol1:=[ro]) (or1:=[ro]).
+    Qed.
+
+    #[global] Instance roff_rw_cons_flip_mono ro :
+      Proper (flip roff_rw ==> flip roff_rw) (ro ::.).
+    Proof. solve_proper. Qed.
 
     Lemma norm_sound :
       ∀ os, roff_rw os (normalize os).
