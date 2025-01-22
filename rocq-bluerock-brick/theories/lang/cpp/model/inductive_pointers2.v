@@ -77,6 +77,15 @@ Module PTRS_IMPL <: PTRS_INTF.
       roff_rw_local s t.
 
   Definition roff_rw := rtc roff_rw_global.
+  #[global] Instance roff_rw_reflexive : Reflexive roff_rw.
+  Proof.
+    move=> x. done.
+  Qed.
+  #[global] Instance roff_rw_transitive : Transitive roff_rw.
+  Proof.
+    move=> x y z. apply rtc_transitive.
+  Qed.
+
   Definition roff_canon := nf roff_rw_global.
   
   Definition offset := {o : raw_offset | roff_canon o}.
@@ -964,6 +973,52 @@ Module PTRS_IMPL <: PTRS_INTF.
       assert (roff_rw (l ++ s ++ r) e /\ roff_canon e) by done.
       rewrite -norm_rel in H. subst. clear - H2.
       by apply: roff_rw_uncons_help.
+    Qed.
+
+    Example no_canon_rw_bwd_false :
+      ¬(
+        ∀ o1 o2 o2' o3,
+          roff_rw o2 o2' ->
+          roff_rw (o1 ++ o2) o3 ->
+          roff_rw (o1 ++ o2') o3
+      ).
+    Proof.
+      move=> H.
+      specialize (H []). simpl in *.
+      specialize (H
+        [o_sub_ Tint 2; o_sub_ Tint 2]
+        [o_sub_ Tint 4]
+        [o_sub_ Tint 2; o_sub_ Tint 2]
+      ).
+      assert (roff_rw [o_sub_ Tint 4] [o_sub_ Tint 2; o_sub_ Tint 2]).
+      {
+        apply: H.
+        {
+          apply roff_rw_sub_sub.
+          done.
+        }
+        { done. }
+      }
+      clear H.
+      remember [o_sub_ Tint 4].
+      remember [o_sub_ Tint 2; o_sub_ Tint 2].
+      destruct H0.
+      { subst. done. }
+      {
+        subst.
+        move: H => [l [r [s [t [H1 [H2 H3]]]]]].
+        subst.
+        assert (l = []).
+        {
+          destruct H3; simpl in *;
+          destruct l; simpl in *;
+          try done; inversion H1;
+          destruct l; simpl in *;
+          done.
+        }
+        subst. simpl in *.
+        destruct H3; inversion H1.
+      }
     Qed.
 
     Lemma rw_bwd_r :
