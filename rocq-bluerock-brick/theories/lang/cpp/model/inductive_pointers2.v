@@ -79,7 +79,7 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   Definition roff_rw := rtc roff_rw_global.
   Definition roff_canon := nf roff_rw_global.
-  
+
   Definition offset := {o : raw_offset | roff_canon o}.
   #[global] Instance offset_eq_dec : EqDecision offset.
   Proof.
@@ -96,7 +96,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       apply n.
       now apply proj1_sig_eq in H.
     }
-  Qed.  
+  Qed.
 
   Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
   | [] => []
@@ -129,7 +129,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     simp normalize.
     repeat case_match; (done || lia).
   Qed.
-  
+
   Goal normalize [o_sub_ Tint 2; o_sub_ Tint 2] = [o_sub_ Tint 4].
   Proof.
     simp normalize.
@@ -440,7 +440,7 @@ Module PTRS_IMPL <: PTRS_INTF.
         by apply norm_complete.
       }
     Qed.
-    
+
     Lemma norm_invol :
       ∀ os,
         roff_canon os ->
@@ -1125,7 +1125,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   | global_ptr_ (tu : translation_unit_canon) (o : obj_name)
   | fun_ptr_ (tu : translation_unit_canon) (o : obj_name)
   | alloc_ptr_ (a : alloc_id).
-  
+
   Inductive ptr_ : Set :=
   | invalid_ptr_
   | offset_ptr (p : root_ptr) (o : offset).
@@ -1149,7 +1149,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     apply: norm_canon.
     exact: H.
   Qed.
-  
+
   Include PTRS_SYNTAX_MIXIN.
 
   Lemma sig_eq {A} {P : A -> Prop} :
@@ -1187,7 +1187,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     simpl. apply: sig_eq.
     by rewrite app_nil_r norm_invol.
   Qed.
-    
+
   Lemma dot_assoc : Assoc (=) o_dot.
   Proof.
     UNFOLD_dot.
@@ -1231,7 +1231,7 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   Definition invalid_ptr : ptr :=
     invalid_ptr_.
-  
+
   Program Definition global_ptr (tu : translation_unit) (n : name) : ptr :=
     offset_ptr (global_ptr_ (tu_to_canon tu) n) [].
   Next Obligation.
@@ -1281,7 +1281,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     | o_derived_ base derived => o_derived_off σ base derived
     | o_invalid_ => None
     end.
-  
+
   Definition mk_offset_seg σ (ro : raw_offset_seg) : offset_seg :=
     match eval_raw_offset_seg σ ro with
     | None => (o_invalid_, 0%Z)
@@ -1367,7 +1367,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       rewrite Hd. constructor.
     }
   Qed.
-  
+
   Lemma o_derived_base :
     ∀ σ (p : ptr) base derived,
       directly_derives σ derived base ->
