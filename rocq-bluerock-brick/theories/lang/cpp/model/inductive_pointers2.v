@@ -200,181 +200,74 @@ Module PTRS_IMPL <: PTRS_INTF.
       Proper (flip roff_rw ==> flip roff_rw) (ro ::.).
     Proof. solve_proper. Qed.
 
-    Lemma norm_sound :
-      ∀ os, roff_rw os (normalize os).
-    Proof.
-      move=> os.
-      funelim (normalize os);
-      simp normalize in *.
-      { constructor. }
-      {
-        (** The [Succeed] can be removed later *)
-        Succeed by rewrite {1}H.
-        Succeed by rewrite ->H at 1.
-        by rewrite -H.
-      }
-      {
-        case_match.
+    Section norm_sound.
+      #[local] Hint Constructors roff_rw_local : core.
+
+      Lemma norm_sound :
+        ∀ os, roff_rw os (normalize os).
+      Proof.
+        move=> os.
+        funelim (normalize os);
+        simp normalize in *; repeat case_match.
+        all: try by [|rewrite -H| rewrite -H0|rewrite -H1].
         {
           subst.
           apply rtc_once.
-          exists [], [], [o_sub_ ty 0], [].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], [], [o_sub_ ty 0], [].
         }
-        { done. }
-      }
-      {
-        case_match.
         {
           subst.
           rewrite -H; last done.
           apply rtc_once.
-          exists [], (o_field_ f :: l), [o_sub_ ty 0], [].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], (o_field_ f :: l), [o_sub_ ty 0], [].
         }
-        {
-          by rewrite H0.
-        }
-      }
-      {
-        case_match.
         {
           subst.
           rewrite -H; last done.
           apply rtc_once.
-          exists [], (o_sub_ ty2 i2 :: os), [o_sub_ ty1 0], [].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], (o_sub_ ty2 i2 :: os), [o_sub_ ty1 0], [].
         }
-        case_match.
         {
           subst.
           rewrite -H0; [|done..].
           apply rtc_once.
-          exists [], os, [o_sub_ ty2 i1; o_sub_ ty2 i2], [o_sub_ ty2 (i1 + i2)].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], os, [o_sub_ ty2 i1; o_sub_ ty2 i2], [o_sub_ ty2 (i1 + i2)].
         }
-        {
-          by rewrite -H1.
-        }
-      }
-      {
-        case_match.
         {
           subst.
           rewrite -H; [|done..].
           apply rtc_once.
-          exists [], (o_base_ derived base :: l), [o_sub_ ty 0], [].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], (o_base_ derived base :: l), [o_sub_ ty 0], [].
         }
-        {
-          by rewrite -H0.
-        }
-      }
-      {
-        case_match.
         {
           subst.
           rewrite -H; [|done..].
           apply rtc_once.
-          exists [], (o_derived_ base0 derived0 :: l), [o_sub_ ty 0], [].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], (o_derived_ base0 derived0 :: l), [o_sub_ ty 0], [].
         }
-        {
-          by rewrite -H0.
-        }
-      }
-      {
-        case_match.
         {
           subst.
           apply: rtc_l. 2: by apply: H.
-          exists [], (o_invalid_ :: l), [o_sub_ ty 0], [].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], (o_invalid_ :: l), [o_sub_ ty 0], [].
         }
-        {
-          by rewrite -H0.
-        }
-      }
-      { done. }
-      {
-        by rewrite H.
-      }
-      {
-        by rewrite -H.
-      }
-      {
-        by rewrite -H.
-      }
-      {
-        case_match.
         {
           clear H1.
           move: a => [Hbase Hder].
           subst.
           rewrite -H; last done.
           apply rtc_once.
-          exists [], os, [o_base_ der2 base2; o_derived_ base2 der2], [].
-          split. easy.
-          split. easy.
-          constructor.
+          by exists [], os, [o_base_ der2 base2; o_derived_ base2 der2], [].
         }
         {
-          by rewrite -H0.
+          clear H1.
+          move: a => [Hbase Hder].
+          subst.
+          rewrite -H //.
+          apply: rtc_once.
+          by exists [], os, [o_derived_ base2 der2; o_base_ der2 base2], [].
         }
-      }
-      {
-        by rewrite -H.
-      }
-      { done. }
-      {
-        by rewrite -H.
-      }
-      {
-        by rewrite -H.
-      }
-      {
-        {
-          case_match.
-          {
-            clear H1.
-            move: a => [Hbase Hder].
-            subst.
-            rewrite -H //.
-            apply: rtc_once.
-            exists [], os, [o_derived_ base2 der2; o_base_ der2 base2], [].
-            split. easy.
-            split. easy.
-            constructor.
-          }
-          {
-            by rewrite -H0.
-          }
-        }
-      }
-      {
-        by rewrite {1}H.
-      }
-      {
-        by rewrite -H.
-      }
-      {
-        by rewrite -H.
-      }
-    Qed.
+      Qed.
+    End norm_sound.
 
     Lemma norm_complete :
       ∀ o1 o2,
@@ -408,6 +301,18 @@ Module PTRS_IMPL <: PTRS_INTF.
         by apply norm_complete.
       }
     Qed.
+  #[global] Instance normalize_mono :
+    Proper (roff_rw ==> roff_rw) normalize.
+  Proof.
+    move=> o1 o2 E.
+    move E1: (normalize o1) => o1'.
+    move E2: (normalize o2) => o2'.
+    move: E1 E2 => /norm_rel [E1 C1] /norm_rel [E2 C2].
+    rewrite -E2 -E.
+
+    Lemma norm_rel :
+      ∀ o1 o2,
+        normalize o1 = o2 <-> roff_rw o1 o2 /\ roff_canon o2.
 
     Lemma norm_invol :
       ∀ os,
