@@ -24,16 +24,15 @@ Section with_monad.
   Section with_lang.
 
     Context {lang : lang.t}.
-  Definition function_name (type : type' lang -> M) (fn : function_name' lang) : M :=
-    match fn with
-    | Nf _ | Nctor | Ndtor | Nop _ | Nop_lit _ => OK
-    | Nunsupported_function _ => FAIL
-    | Nop_conv t => type t
-    end.
   Definition atomic_name (type : type' lang -> M) (an : atomic_name' lang) : M :=
     match an with
     | Nid _ => OK
-    | Nfunction _ fn ts => function_name type fn <+> List.forallb type ts
+    | Nfunction _ _ ts => List.forallb type ts
+    | Nctor ts => List.forallb type ts
+    | Ndtor => OK
+    | Nop _ _ ts => List.forallb type ts
+    | Nop_conv _ t => type t
+    | Nop_lit _ ts => List.forallb type ts
     | Nanon _
     | Nanonymous
     | Nfirst_decl _ | Nfirst_child _ => OK

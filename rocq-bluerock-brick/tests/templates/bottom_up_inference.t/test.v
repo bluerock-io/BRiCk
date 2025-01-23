@@ -63,7 +63,7 @@ Fixpoint check_stmt (s : MStmt) : result :=
   end.
 
 Definition run_test (tu : Mtranslation_unit) : result :=
-  match tu.(msymbols) !! Ninst (Nglobal (Nfunction function_qualifiers.N (Nf "test") [])) [Atype (Tparam "T")] with
+  match tu.(msymbols) !! Ninst (Nglobal (Nfunction function_qualifiers.N "test" [])) [Atype (Tparam "T")] with
   | Some template =>
     let d := template.(template_value) in
     match d with

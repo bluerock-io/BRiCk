@@ -65,7 +65,7 @@ Definition check_stmt (s : Stmt) : list Error :=
 
 
 Definition run_test (tu : translation_unit) : list Error :=
-  match tu.(symbols) !! Nglobal (Nfunction function_qualifiers.N (Nf "test") []) with
+  match tu.(symbols) !! Nglobal (Nfunction function_qualifiers.N "test" []) with
   | Some d =>
       match d with
       | Ofunction f =>

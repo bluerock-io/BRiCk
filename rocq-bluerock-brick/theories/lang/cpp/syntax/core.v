@@ -115,65 +115,6 @@ Module temp_param.
 
 End temp_param.
 
-(** ** Function names and qualifiers *)
-Variant function_name_ {type : Set} : Set :=
-| Nf (_ : ident)
-| Nctor
-| Ndtor
-| Nop (_ : OverloadableOperator)
-| Nop_conv (_ : type)
-| Nop_lit (_ : ident)
-| Nunsupported_function (_ : PrimString.string).
-#[global] Arguments function_name_ : clear implicits.
-#[global] Instance function_name__inhabited {A} : Inhabited (function_name_ A).
-Proof. solve_inhabited. Qed.
-#[global] Instance function_name__eq_dec {A : Set} `{!EqDecision A} : EqDecision (function_name_ A).
-Proof. solve_decision. Defined.
-
-Module function_name.
-  Import UPoly.
-
-  Definition existsb {type : Set} (f : type -> bool) (n : function_name_ type) : bool :=
-    if n is Nop_conv t then f t else false.
-
-  Definition fmap {type type' : Set} (f : type -> type') (n : function_name_ type) : function_name_ type' :=
-    match n in function_name_ _ with
-    | Nf id => Nf id
-    | Nctor => Nctor
-    | Ndtor => Ndtor
-    | Nop oo => Nop oo
-    | Nop_conv t => Nop_conv (f t)
-    | Nop_lit s => Nop_lit s
-    | Nunsupported_function msg => Nunsupported_function msg
-    end.
-  #[global] Arguments fmap _ _ _ & _ : assert.
-  #[global] Hint Opaque fmap : typeclass_instances.
-
-  Section traverse.
-    #[local] Set Universe Polymorphism.
-    #[local] Unset Auto Template Polymorphism.
-    #[local] Unset Universe Minimization ToSet.
-    Universe u.
-    Context {F : Set -> Type@{u}} `{!FMap F, !MRet F, AP : !Ap F}.
-    Context {type type' : Set}.
-
-    Definition traverse (f : type -> F type')
-        (n : function_name_ type) : F (function_name_ type') :=
-      match n with
-      | Nf id => mret $ Nf id
-      | Nctor => mret Nctor
-      | Ndtor => mret Ndtor
-      | Nop oo => mret $ Nop oo
-      | Nop_conv t => Nop_conv <$> f t
-      | Nop_lit s => mret $ Nop_lit s
-      | Nunsupported_function msg => mret $ Nunsupported_function msg
-      end.
-    #[global] Arguments traverse _ & _ : assert.
-    #[global] Hint Opaque traverse : typeclass_instances.
-  End traverse.
-
-End function_name.
-
 Module function_qualifiers.
   (* This is a compressed tuple.
      - <<l>> means <<&>>
@@ -258,7 +199,13 @@ Variant atomic_name_ {type : Set} : Set :=
 TODO (Discuss): Do we need to distinguish templated functions by their
 return types?
 *)
-| Nfunction (_ : function_qualifiers.t) (_ : function_name_ type) (_ : list type)
+| Nfunction (_ : function_qualifiers.t) (_ : ident) (_ : list type)
+| Nctor (_ : list type)
+| Ndtor
+| Nop (_ : function_qualifiers.t) (_ : OverloadableOperator) (_ : list type)
+| Nop_conv (_ : function_qualifiers.t) (_ : type)
+| Nop_lit (_ : ident) (_ : list type)
+
 (** Unnamed things *)
 | Nanon (_ : N)
   (* an anonymous namespace. Specialized b/c they are re-declarable so
@@ -285,7 +232,12 @@ Module atomic_name.
       (c : atomic_name_ type) : bool :=
     match c with
     | Nid _ => false
-    | Nfunction _ n ts => function_name.existsb f n || List.existsb f ts
+    | Nfunction _ _ ts => List.existsb f ts
+    | Nctor ts => List.existsb f ts
+    | Ndtor => false
+    | Nop _ _ ts => List.existsb f ts
+    | Nop_conv _ t => f t
+    | Nop_lit _ ts => List.existsb f ts
     | Nanon _
     | Nanonymous
     | Nfirst_decl _
@@ -299,7 +251,12 @@ Module atomic_name.
       (c : atomic_name_ type) : atomic_name_ type' :=
     match c with
     | Nid id => Nid id
-    | Nfunction qs n ts => Nfunction qs (function_name.fmap f n) (f <$> ts)
+    | Nfunction qs n ts => Nfunction qs n (f <$> ts)
+    | Nctor ts => Nctor (f <$> ts)
+    | Ndtor => Ndtor
+    | Nop q oo ts => Nop q oo (f <$> ts)
+    | Nop_conv n t => Nop_conv n $ f t
+    | Nop_lit n ts => Nop_lit n $ f <$> ts
     | Nanon n => Nanon n
     | Nanonymous => Nanonymous
     | Nfirst_decl n => Nfirst_decl n
@@ -321,7 +278,12 @@ Module atomic_name.
     Definition traverse (c : atomic_name_ type) : F (atomic_name_ type') :=
       match c with
       | Nid id => mret $ Nid id
-      | Nfunction qs n ts => Nfunction qs <$> function_name.traverse f n <*> list_traverse f ts
+      | Nfunction qs n ts => Nfunction qs n <$> list_traverse f ts
+      | Nctor ts => Nctor <$> list_traverse f ts
+      | Ndtor => mret Ndtor
+      | Nop q oo ts => Nop q oo <$> list_traverse f ts
+      | Nop_conv n t => Nop_conv n <$> f t
+      | Nop_lit n ts => Nop_lit n <$> list_traverse f ts
       | Nanon n => mret $ Nanon n
       | Nanonymous => mret Nanonymous
       | Nfirst_decl n => mret $ Nfirst_decl n
@@ -705,7 +667,6 @@ Notation Nenum_const gn id := (Nscoped gn (Nid id)) (only parsing).
 Notation operator_impl' lang := (operator_impl.t (obj_name' lang) (type' lang)).
 Notation MethodRef' lang := (MethodRef_ (obj_name' lang) (functype' lang) (Expr' lang)).
 Notation function_type' lang := (function_type_ (decltype' lang)).
-Notation function_name' lang := (function_name_ (decltype' lang)).
 Notation temp_param' lang := (temp_param_ (type' lang)).
 Notation atomic_name' lang := (atomic_name_ (type' lang)).
 

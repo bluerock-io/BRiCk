@@ -341,18 +341,26 @@ Module parser.
         in
         fold_left (fun t f => f t) <$> star (entry 100).
 
-
     (* The core parsers are based on fuel to handle the mutual recursion *)
     Definition parse_type' : M type :=
       let* quals :=
         star (((fun _ => tqualified (lang:=lang) QC) <$> keyword "const") <|>
               ((fun _ => tqualified QV) <$> keyword "volatile"))
       in
+      let build_named_type ctor nm :=
+        match nm with
+        | Nglobal (Nfunction function_qualifiers.N nm args) =>
+            Tfunction $ FunctionType (ctor $ Nglobal $ Nid nm) args
+        | Nscoped scp (Nfunction function_qualifiers.N nm args) =>
+            Tfunction $ FunctionType (ctor $ Nscoped scp (Nid nm)) args
+        | _ => ctor nm
+        end
+      in
       let* t :=
         basic_type <|>
         (exact "$" *> (Tparam <$> ident)) <|>
-        ((exact "#" <|> keyword "enum") *> (Tenum <$> parse_name ())) <|>
-        (optional (keyword "struct" <|> keyword "class") *> (Tnamed <$> parse_name ())) <|>
+        ((exact "#" <|> keyword "enum") *> (build_named_type Tenum <$> parse_name ())) <|>
+        (optional (keyword "struct" <|> keyword "class") *> (build_named_type Tnamed <$> parse_name ())) <|>
         (parens (parse_type ()))
       in
       let* post := parse_postfix_type in
@@ -377,9 +385,9 @@ Module parser.
           in
           mret (List.fold_left (fun '(acc, last) '(nm, oinst) =>
                                   match nm with
-                                  | Nfunction function_qualifiers.N (Nf fnm) args =>
+                                  | Nfunction function_qualifiers.N fnm args =>
                                       if bool_decide (Nid fnm = last) then
-                                        (sp oinst (Nscoped acc $ Nfunction function_qualifiers.N Nctor args), nm)
+                                        (sp oinst (Nscoped acc $ Nctor args), nm)
                                       else
                                         (sp oinst (Nscoped acc nm), nm)
                                   | _ =>
@@ -425,7 +433,10 @@ Module parser.
                      (* NOTE: this is a hack because <<int()>> is parsed as a function type. *)
                      match as_conv function_qualifiers.N t with
                      | Some (ret, args, q) =>
-                         mret (Nfunction q (Nop_conv ret) args)
+                         match args with
+                         | nil => mret $ Nop_conv q ret
+                         | _ => mfail
+                         end
                      | None => mfail
                      end
                  | Dtor _
@@ -433,13 +444,20 @@ Module parser.
                  | OpLit _ => mfail
                  end
         | Some (args, ar, quals) =>
-            (fun nm => Nfunction quals nm args) <$>
               match nm with
               | Dtor _ => mret $ Ndtor
-              | Simple nm => mret $ Nf nm
-              | Op oo => mret $ Nop oo
-              | OpConv t => mret $ Nop_conv t
-              | OpLit n => mret $ Nop_lit n
+              | Simple nm => mret $ Nfunction quals nm args
+              | Op oo => mret $ Nop quals oo args
+              | OpConv t =>
+                  match args with
+                  | nil => mret $ Nop_conv quals t
+                  | _ => mfail
+                  end
+              | OpLit n =>
+                  match quals with
+                  | function_qualifiers.N => mret $ Nop_lit n args
+                  | _ => mfail
+                  end
               | FirstDecl n => mfail
               | FirstChild n => mfail
               | Anon _ => mfail
@@ -535,14 +553,16 @@ Definition parse_type (input : PrimString.string) : option type :=
 Module Type TESTS.
   #[local] Definition TEST (input : PrimString.string) (nm : name) : Prop :=
     (parse_name input) = Some nm.
+  #[local] Definition TEST_type (input : PrimString.string) (nm : type) : Prop :=
+    (parse_type input) = Some nm.
 
   #[local] Definition Msg : name := Nglobal $ Nid "Msg".
 
   Succeed Example _0 : TEST "Msg" Msg := eq_refl.
   Succeed Example _0 : TEST "::Msg" Msg := eq_refl.
   Succeed Example _0 : TEST "Msg::@0" (Nscoped Msg (Nanon 0)) := eq_refl.
-  Succeed Example _0 : TEST "Msg::Msg()" (Nscoped Msg (Nfunction function_qualifiers.N Nctor [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::~Msg()" (Nscoped Msg (Nfunction function_qualifiers.N Ndtor [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::Msg()" (Nscoped Msg (Nctor [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::~Msg()" (Nscoped Msg (Ndtor)) := eq_refl.
   Succeed Example _0 :
     let targs := Avalue <$> [Eint 1 Tulong;
                              Eint (-2) Tlong;
@@ -550,90 +570,93 @@ Module Type TESTS.
                              Eint (-4) Tlonglong;
                              Eint 5 Tuint;
                              Eint 6 Tint] in
-    TEST "Msg<1ul, -2l, 3ull, -4ll, 5u, 6>::Msg()" (Nscoped (Ninst Msg targs) (Nfunction function_qualifiers.N Nctor [])) := eq_refl.
+    TEST "Msg<1ul, -2l, 3ull, -4ll, 5u, 6>::Msg()" (Nscoped (Ninst Msg targs) (Nctor [])) := eq_refl.
   Succeed Example _0 :
     let targs := Atype <$> [Tulong;
                             Tlong;
                             Tulonglong;
                             Tlonglong;
                             Tuint; Tint] in
-    TEST "Msg<unsigned long, long, unsigned long long, long long, unsigned int, int>::Msg()" (Nscoped (Ninst Msg targs) (Nfunction function_qualifiers.N Nctor [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::Msg(int)" (Nscoped Msg (Nfunction function_qualifiers.N Nctor [Tint])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::Msg(long)" (Nscoped Msg (Nfunction function_qualifiers.N Nctor [Tlong])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator=(const Msg&)" (Nscoped Msg (Nfunction function_qualifiers.N (Nop OOEqual) [Tref (Tconst (Tnamed $ Nglobal (Nid "Msg")))])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator=(const Msg&&)" (Nscoped Msg (Nfunction function_qualifiers.N (Nop OOEqual) [Trv_ref (Tconst (Tnamed $ Nglobal (Nid "Msg")))])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator new()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop (OONew false)) [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator new[]()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop (OONew true)) [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator   delete()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop (OODelete false)) [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator delete[]()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop (OODelete true)) [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator int()" (Nscoped Msg (Nfunction function_qualifiers.N (Nop_conv Tint) [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator int() const" (Nscoped Msg (Nfunction function_qualifiers.Nc (Nop_conv Tint) [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator int() const volatile" (Nscoped Msg (Nfunction function_qualifiers.Ncv (Nop_conv Tint) [])) := eq_refl.
-  Succeed Example _0 : TEST "Msg::operator int() &" (Nscoped Msg (Nfunction function_qualifiers.Nl (Nop_conv Tint) [])) := eq_refl.
+    TEST "Msg<unsigned long, long, unsigned long long, long long, unsigned int, int>::Msg()" (Nscoped (Ninst Msg targs) (Nctor [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::Msg(int)" (Nscoped Msg (Nctor [Tint])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::Msg(long)" (Nscoped Msg (Nctor [Tlong])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator=(const Msg&)" (Nscoped Msg (Nop function_qualifiers.N OOEqual [Tref (Tconst (Tnamed $ Nglobal (Nid "Msg")))])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator=(const Msg&&)" (Nscoped Msg (Nop function_qualifiers.N OOEqual [Trv_ref (Tconst (Tnamed $ Nglobal (Nid "Msg")))])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator new()" (Nscoped Msg (Nop function_qualifiers.N (OONew false) [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator new[]()" (Nscoped Msg (Nop function_qualifiers.N (OONew true) [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator   delete()" (Nscoped Msg (Nop function_qualifiers.N (OODelete false) [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator delete[]()" (Nscoped Msg (Nop function_qualifiers.N (OODelete true) [])) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator int()" (Nscoped Msg (Nop_conv function_qualifiers.N Tint)) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator int() const" (Nscoped Msg (Nop_conv function_qualifiers.Nc Tint)) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator int() const volatile" (Nscoped Msg (Nop_conv function_qualifiers.Ncv Tint)) := eq_refl.
+  Succeed Example _0 : TEST "Msg::operator int() &" (Nscoped Msg (Nop_conv function_qualifiers.Nl Tint)) := eq_refl.
 
-  Succeed Example _0 : TEST "foo_client(int[2]&, int const*, bool*, int**, char*)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo_client") [Tref (Tarray Tint 2); Tptr (Tconst Tint); Tptr Tbool; Tptr (Tptr Tint); Tptr Tchar])) := eq_refl.
+  Succeed Example _0 : TEST "foo_client(int[2]&, int const*, bool*, int**, char*)" (Nglobal (Nfunction function_qualifiers.N "foo_client" [Tref (Tarray Tint 2); Tptr (Tconst Tint); Tptr Tbool; Tptr (Tptr Tint); Tptr Tchar])) := eq_refl.
   Succeed Example _0 : TEST "DlistInternal::iterator::operator!=(const DlistInternal::iterator&) const"
                  (Nscoped (Nscoped (Nglobal (Nid "DlistInternal")) (Nid "iterator"))
-                    (Nfunction function_qualifiers.Nc (Nop OOExclaimEqual) [Tref (Tqualified QC (Tnamed (Nscoped (Nglobal (Nid "DlistInternal")) (Nid "iterator"))))])) := eq_refl.
+                    (Nop function_qualifiers.Nc OOExclaimEqual [Tref (Tqualified QC (Tnamed (Nscoped (Nglobal (Nid "DlistInternal")) (Nid "iterator"))))])) := eq_refl.
   Succeed Example _0 : TEST "intrusive::List_internal::iterator::iterator(intrusive::List_internal::Node*)"
                  (Nscoped (Nscoped (Nscoped (Nglobal (Nid "intrusive")) (Nid "List_internal")) (Nid "iterator"))
-                    (Nfunction function_qualifiers.N Nctor [Tptr (Tnamed (Nscoped (Nscoped (Nglobal (Nid "intrusive")) (Nid "List_internal")) (Nid "Node")))])) := eq_refl.
+                    (Nctor [Tptr (Tnamed (Nscoped (Nscoped (Nglobal (Nid "intrusive")) (Nid "List_internal")) (Nid "Node")))])) := eq_refl.
   Succeed Example _0 : TEST "span<const int, 1ul>::span(const int*, unsigned long)"
                          (Nscoped (Ninst (Nglobal (Nid "span")) [Atype (Tqualified QC Tint);
                                                                  Avalue (Eint 1 Tulong)])
-                            (Nfunction function_qualifiers.N Nctor [Tptr (Tqualified QC Tint); Tulong])) := eq_refl.
+                            (Nctor [Tptr (Tqualified QC Tint); Tulong])) := eq_refl.
   Succeed Example _0 : TEST "integral" (Nglobal $ Nid "integral") := eq_refl.
-  Succeed Example _0 : TEST "f<int>(int, int)" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tint; Tint]) [Atype Tint]) := eq_refl.
-  Succeed Example _0 : TEST "f<int>(#e1, const #e2)" (Ninst (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum (Nglobal (Nid "e1")); Tconst $ Tenum (Nglobal (Nid "e2"))]) [Atype Tint]) := eq_refl.
-  Succeed Example _0 : TEST "f(int[], int[3])" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tincomplete_array Tint; Tarray Tint 3]) := eq_refl.
-  Succeed Example _0 : TEST "f(const volatile int[], int[3])" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tincomplete_array (Tqualified QCV Tint); Tarray Tint 3]) := eq_refl.
-  Succeed Example _0 : TEST "f(void)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") []) := eq_refl.
-  Succeed Example _0 : TEST "::f(void)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") []) := eq_refl.
-  Succeed Example _0 : TEST "operator """"_f(enum ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nop_lit "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
+  Succeed Example _0 : TEST "f<int>(int, int)" (Ninst (Nglobal $ Nfunction function_qualifiers.N "f" [Tint; Tint]) [Atype Tint]) := eq_refl.
+  Succeed Example _0 : TEST "f<int>(#e1, const #e2)" (Ninst (Nglobal $ Nfunction function_qualifiers.N "f" [Tenum (Nglobal (Nid "e1")); Tconst $ Tenum (Nglobal (Nid "e2"))]) [Atype Tint]) := eq_refl.
+  Succeed Example _0 : TEST "f(int[], int[3])" (Nglobal $ Nfunction function_qualifiers.N "f" [Tincomplete_array Tint; Tarray Tint 3]) := eq_refl.
+  Succeed Example _0 : TEST "f(const volatile int[], int[3])" (Nglobal $ Nfunction function_qualifiers.N "f" [Tincomplete_array (Tqualified QCV Tint); Tarray Tint 3]) := eq_refl.
+  Succeed Example _0 : TEST "f(void)" (Nglobal $ Nfunction function_qualifiers.N "f" []) := eq_refl.
+  Succeed Example _0 : TEST "::f(void)" (Nglobal $ Nfunction function_qualifiers.N "f" []) := eq_refl.
+  Succeed Example _0 : TEST "operator """"_f(enum ::foo)" (Nglobal $ Nop_lit "f" [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
 
   Succeed Example _0 : TEST "submit(unsigned long, std::function<void()>)"
                  (Nglobal
-                    (Nfunction function_qualifiers.N (Nf "submit")
+                    (Nfunction function_qualifiers.N "submit"
                        [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType Tvoid []))])])) := eq_refl.
   Succeed Example _0 : TEST "submit(unsigned long, std::function<void(long, int, ...)>)"
                          (Nglobal
-                            (Nfunction function_qualifiers.N (Nf "submit")
+                            (Nfunction function_qualifiers.N "submit"
                                [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tlong; Tint]))])])) := eq_refl.
 
-  Succeed Example _0 : TEST "::f(enum ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
-  Succeed Example _0 : TEST "::f(struct ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tnamed $ Nglobal $ Nid "foo"]) := eq_refl.
-  Succeed Example _0 : TEST "::f(class ::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tnamed $ Nglobal $ Nid "foo"]) := eq_refl.
-  Succeed Example _0 : TEST "::f(::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tnamed $ Nglobal $ Nid "foo"]) := eq_refl.
+  Succeed Example _0 : TEST "::f(enum ::foo)" (Nglobal $ Nfunction function_qualifiers.N "f" [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
+  Succeed Example _0 : TEST "::f(struct ::foo)" (Nglobal $ Nfunction function_qualifiers.N "f" [Tnamed $ Nglobal $ Nid "foo"]) := eq_refl.
+  Succeed Example _0 : TEST "::f(class ::foo)" (Nglobal $ Nfunction function_qualifiers.N "f" [Tnamed $ Nglobal $ Nid "foo"]) := eq_refl.
+  Succeed Example _0 : TEST "::f(::foo)" (Nglobal $ Nfunction function_qualifiers.N "f" [Tnamed $ Nglobal $ Nid "foo"]) := eq_refl.
   Succeed Example _0 : TEST "CpuSet::forall(void (*)(int)) const"
-                 (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc (Nf "forall") [Tptr $ Tfunction (FunctionType Tvoid [Tint])])) := eq_refl.
+                 (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc "forall" [Tptr $ Tfunction (FunctionType Tvoid [Tint])])) := eq_refl.
   Succeed Example _0 : TEST "CpuSet::forall(void (C::*)(int)) const"
-                         (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc (Nf "forall") [Tmember_pointer (Tnamed (Nglobal $ Nid "C")) $ Tfunction (FunctionType Tvoid [Tint])])) := eq_refl.
+                         (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc "forall" [Tmember_pointer (Tnamed (Nglobal $ Nid "C")) $ Tfunction (FunctionType Tvoid [Tint])])) := eq_refl.
 
   Succeed Example _0 : TEST "CpuSet::forall(void (C::*)(int), ...) const"
-                         (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc (Nf "forall") [Tmember_pointer (Tnamed (Nglobal $ Nid "C")) $ Tfunction (FunctionType Tvoid [Tint])])) := eq_refl.
+                         (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc "forall" [Tmember_pointer (Tnamed (Nglobal $ Nid "C")) $ Tfunction (FunctionType Tvoid [Tint])])) := eq_refl.
   Succeed Example _0 : TEST "CpuSet::forall(void (C::*)(int, ...), ...) const"
-                         (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc (Nf "forall") [Tmember_pointer (Tnamed (Nglobal $ Nid "C")) $ Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tint])])) := eq_refl.
+                         (Nscoped (Nglobal (Nid "CpuSet")) (Nfunction function_qualifiers.Nc "forall" [Tmember_pointer (Tnamed (Nglobal $ Nid "C")) $ Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tint])])) := eq_refl.
 
-  Succeed Example _0 : TEST "foo(unsigned int128, int128)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint128_t; Tint128_t])) := eq_refl.
+  Succeed Example _0 : TEST "foo(unsigned int128, int128)" (Nglobal (Nfunction function_qualifiers.N "foo" [Tuint128_t; Tint128_t])) := eq_refl.
 
-  Succeed Example _0 : TEST "foo(unsigned, signed, char,unsigned char,signed char,short, short int, unsigned short, unsigned short int, signed short, signed short int, int, unsigned int, signed int, long, long int, unsigned long, unsigned long int, signed long, signed long int, long long, long long int, unsigned long long, unsigned long long int, signed long long, signed long long int)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tuint;Tint;Tchar; Tuchar; Tschar; Tshort; Tshort; Tushort; Tushort; Tshort; Tshort; Tint; Tuint; Tint; Tlong; Tlong; Tulong; Tulong; Tlong; Tlong; Tlonglong; Tlonglong;Tulonglong;Tulonglong;Tlonglong;Tlonglong])) := eq_refl.
+  Succeed Example _0 : TEST "foo(unsigned, signed, char,unsigned char,signed char,short, short int, unsigned short, unsigned short int, signed short, signed short int, int, unsigned int, signed int, long, long int, unsigned long, unsigned long int, signed long, signed long int, long long, long long int, unsigned long long, unsigned long long int, signed long long, signed long long int)" (Nglobal (Nfunction function_qualifiers.N "foo" [Tuint;Tint;Tchar; Tuchar; Tschar; Tshort; Tshort; Tushort; Tushort; Tshort; Tshort; Tint; Tuint; Tint; Tlong; Tlong; Tulong; Tulong; Tlong; Tlong; Tlonglong; Tlonglong;Tulonglong;Tulonglong;Tlonglong;Tlonglong])) := eq_refl.
 
-  Succeed Example _0 : TEST "foo(char8_t, char16_t, char32_t, wchar_t, char)" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tchar8_t; Tchar16_t; Tchar32_t; Twchar_t; Tchar])) := eq_refl.
+  Succeed Example _0 : TEST "foo(char8_t, char16_t, char32_t, wchar_t, char)" (Nglobal (Nfunction function_qualifiers.N "foo" [Tchar8_t; Tchar16_t; Tchar32_t; Twchar_t; Tchar])) := eq_refl.
 
   Succeed Example _0 : TEST "submit(unsigned long, std::function<void()>)"
                          (Nglobal
-        (Nfunction function_qualifiers.N (Nf "submit")
+        (Nfunction function_qualifiers.N "submit"
            [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType Tvoid []))])])) := eq_refl.
   Succeed Example _0 : TEST "submit(unsigned long, std::function<void(long, int, ...)>)"
                          (Nglobal
-         (Nfunction function_qualifiers.N (Nf "submit")
+         (Nfunction function_qualifiers.N "submit"
             [Tnum int_rank.Ilong Unsigned; Tnamed (Ninst (Nscoped (Nglobal (Nid "std")) (Nid "function")) [Atype (Tfunction (FunctionType (ft_arity:=Ar_Variadic) Tvoid [Tlong; Tint]))])])) := eq_refl.
 
-  Succeed Example _0 : TEST "foo(int(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tfunction (FunctionType Tint [Tint])])) := eq_refl.
-  Succeed Example _0 : TEST "foo(int(*)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tptr $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
-  Succeed Example _0 : TEST "foo(int(const *)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tptr $ Tconst $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
-  Succeed Example _0 : TEST "foo(int(*const)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tconst $ Tptr $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
-  Succeed Example _0 : TEST "foo(int(C::*)(int))" (Nglobal (Nfunction function_qualifiers.N (Nf "foo") [Tmember_pointer (Tnamed $ Nglobal (Nid "C")) $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(int))" (Nglobal (Nfunction function_qualifiers.N "foo" [Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(*)(int))" (Nglobal (Nfunction function_qualifiers.N "foo" [Tptr $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(const *)(int))" (Nglobal (Nfunction function_qualifiers.N "foo" [Tptr $ Tconst $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(*const)(int))" (Nglobal (Nfunction function_qualifiers.N "foo" [Tconst $ Tptr $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+  Succeed Example _0 : TEST "foo(int(C::*)(int))" (Nglobal (Nfunction function_qualifiers.N "foo" [Tmember_pointer (Tnamed $ Nglobal (Nid "C")) $ Tfunction (FunctionType Tint [Tint])])) := eq_refl.
+
+  Succeed Example _0 : TEST_type "enum E()" (Tfunction (FunctionType (Tenum (Nglobal (Nid "E"))) [])) := eq_refl.
+  Succeed Example _0 : TEST_type "enum NS::E()" (Tfunction (FunctionType (Tenum (Nscoped (Nglobal (Nid "NS")) (Nid "E"))) [])) := eq_refl.
 
   (* known issues *)
 
@@ -644,7 +667,7 @@ Module Type TESTS.
   Succeed Example _0 : TEST "typename foo" (Ndependent (Tnamed (Nglobal (Nid "foo")))) := eq_refl.
   Succeed Example _0 : TEST "typename foo<int>::type"
                  (Ndependent (Tnamed (Nscoped (Ninst (Nglobal (Nid "foo")) [Atype Tint]) (Nid "type")))) := eq_refl.
-  Succeed Example _0 : TEST "::f(#::foo)" (Nglobal $ Nfunction function_qualifiers.N (Nf "f") [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
+  Succeed Example _0 : TEST "::f(#::foo)" (Nglobal $ Nfunction function_qualifiers.N "f" [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
   Succeed Example _0 : TEST "Msg<int& &&>" (Ninst (Nglobal (Nid "Msg")) [Atype (Trv_ref (Tref Tint))]) := eq_refl.
 
 End TESTS.
