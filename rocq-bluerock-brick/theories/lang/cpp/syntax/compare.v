@@ -1217,63 +1217,67 @@ Module type.
 
     Definition tag (t : type) : positive :=
       match t with
-      | Tparam _ => 1
-      | Tresult_param _ => 2
-      | Tresult_global _ => 3
-      | Tresult_unop _ _ => 4
-      | Tresult_binop _ _ _ => 5
-      | Tresult_call _ _ => 6
-      | Tresult_member_call _ _ _ => 7
-      | Tresult_parenlist _ _ => 8
-      | Tresult_member _ _ => 9
-      | Tptr _ => 10
-      | Tref _ => 11
-      | Trv_ref _ => 12
-      | Tnum _ _ => 13
-      | Tchar_ _ => 14
-      | Tvoid => 15
-      | Tarray _ _ => 16
-      | Tincomplete_array _ => 17
-      | Tvariable_array _ _ => 18
-      | Tnamed _ => 19
-      | Tenum _ => 20
-      | Tfunction _ => 21
-      | Tbool => 22
-      | Tmember_pointer _ _ => 23
-      | Tfloat_ _ => 24
-      | Tqualified _ _ => 25
-      | Tnullptr => 26
-      | Tarch _ _ => 27
-      | Tdecltype _ => 28
-      | Texprtype _ => 29
+      | Tnum _ _ => 1
+      | Tchar_ _ => 2
+      | Tbool => 3
+      | Tnamed _ => 4
+      | Tenum _ => 5
+      | Tptr _ => 6
+      | Tref _ => 7
+      | Trv_ref _ => 8
+      | Tvoid => 9
+      | Tarray _ _ => 10
+      | Tqualified _ _ => 11
+      | Tnullptr => 12
+      | Tincomplete_array _ => 13
+      | Tvariable_array _ _ => 14
+      | Tfunction _ => 15
+      | Tmember_pointer _ _ => 16
+      | Tfloat_ _ => 17
+      | Tarch _ _ => 18
+      | Tdecltype _ => 19
+      | Texprtype _ => 20
+
+      | Tparam _ => 21
+      | Tresult_param _ => 22
+      | Tresult_global _ => 23
+      | Tresult_unop _ _ => 24
+      | Tresult_binop _ _ _ => 25
+      | Tresult_call _ _ => 26
+      | Tresult_member_call _ _ _ => 27
+      | Tresult_parenlist _ _ => 28
+      | Tresult_member _ _ => 29
+
       | Tunsupported _ => 30
       end.
     Definition car (t : positive) : Set :=
       match t with
-      | 1 | 2 => ident
-      | 3 => name
-      | 4 => box_Tresult_unop
-      | 5 => box_Tresult_binop
-      | 6 => box_Tresult_call
-      | 7 => box_Tresult_member_call
-      | 8 => box_Tresult_parenlist
-      | 9 => box_Tresult_member
-      | 10 | 11 | 12 => type
-      | 13 => box_Tnum
-      | 14 => char_type
-      | 15 => unit
-      | 16 => box_Tarray
-      | 17 => type
-      | 18 => box_Tvariable_array
-      | 19 | 20 => name
-      | 21 => function_type_ type
-      | 22 => unit
-      | 23 => box_Tmember_pointer
-      | 24 => float_type.t
-      | 25 => box_Tqualified
-      | 26 => unit
-      | 27 => box_Tarch
-      | 28 | 29 => Expr
+      | 6 | 7 | 8 => type
+      | 1 => box_Tnum
+      | 2 => char_type
+      | 3 => unit
+      | 10 => box_Tarray
+      | 13 => type
+      | 14 => box_Tvariable_array
+      | 4 | 5 => name
+      | 15 => function_type_ type
+      | 12 => unit
+      | 16 => box_Tmember_pointer
+      | 17 => float_type.t
+      | 11 => box_Tqualified
+      | 9 => unit
+      | 18 => box_Tarch
+      | 19 | 20 => Expr
+
+      | 21 | 22 => ident
+      | 23 => name
+      | 24 => box_Tresult_unop
+      | 25 => box_Tresult_binop
+      | 26 => box_Tresult_call
+      | 27 => box_Tresult_member_call
+      | 28 => box_Tresult_parenlist
+      | 29 => box_Tresult_member
+
       | _ => PrimString.string
       end.
     Definition data (t : type) : car (tag t) :=
@@ -1307,31 +1311,33 @@ Module type.
       | Tunsupported msg => msg
       end.
     Definition compare_data (t : positive) : car t -> car t -> comparison :=
-      match t with
-      | 1 | 2 => PrimString.compare
-      | 3 => compareN
-      | 4 => box_Tresult_unop_compare
-      | 5 => box_Tresult_binop_compare
-      | 6 => box_Tresult_call_compare
-      | 7 => box_Tresult_member_call_compare
-      | 8 => box_Tresult_parenlist_compare
-      | 9 => box_Tresult_member_compare
-      | 10 | 11 | 12 => compareT
-      | 13 => box_Tnum_compare
-      | 14 => char_type.compare
-      | 15 => fun _ _ => Eq
-      | 16 => box_Tarray_compare
-      | 17 => compareT
-      | 18 => box_Tvariable_array_compare
-      | 19 | 20 => compareN
-      | 21 => function_type.compare compareT
-      | 22 => fun _ _ => Eq
-      | 23 => box_Tmember_pointer_compare
-      | 24 => float_type.compare
-      | 25 => box_Tqualified_compare
-      | 26 => fun _ _ => Eq
-      | 27 => box_Tarch_compare
-      | 28 | 29 => compareE
+      match t as t return car t -> car t -> comparison with
+      | 1 => box_Tnum_compare
+      | 2 => char_type.compare
+      | 3 => fun _ _ => Eq
+      | 4 | 5 => compareN
+      | 6 | 7 | 8 => compareT
+      | 9 => fun _ _ => Eq
+      | 10 => box_Tarray_compare
+      | 13 => compareT
+      | 14 => box_Tvariable_array_compare
+      | 15 => function_type.compare compareT
+      | 12 => fun _ _ => Eq
+      | 16 => box_Tmember_pointer_compare
+      | 17 => float_type.compare
+      | 11 => box_Tqualified_compare
+      | 18 => box_Tarch_compare
+      | 19 | 20 => compareE
+
+      | 21 | 22 => PrimString.compare
+      | 23 => compareN
+      | 24 => box_Tresult_unop_compare
+      | 25 => box_Tresult_binop_compare
+      | 26 => box_Tresult_call_compare
+      | 27 => box_Tresult_member_call_compare
+      | 28 => box_Tresult_parenlist_compare
+      | 29 => box_Tresult_member_compare
+
       | _ => PrimString.compare
       end.
 
