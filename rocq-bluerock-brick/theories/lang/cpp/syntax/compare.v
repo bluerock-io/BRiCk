@@ -788,19 +788,19 @@ Module atomic_name.
       List.compare compareT b1.(box_Nfunction_2) b2.(box_Nfunction_2).
 
     Record box_Nop : Set := Box_Nop {
-                                box_Nop_0 : function_qualifiers.t;
-                                box_Nop_1 : OverloadableOperator;
-                                box_Nop_2 : list type
-                              }.
+      box_Nop_0 : function_qualifiers.t;
+      box_Nop_1 : OverloadableOperator;
+      box_Nop_2 : list type
+    }.
     Definition box_Nop_compare (b1 b2 : box_Nop) : comparison :=
       compare_lex (function_qualifiers.compare b1.(box_Nop_0) b2.(box_Nop_0)) $ fun _ =>
       compare_lex (OverloadableOperator.compare b1.(box_Nop_1) b2.(box_Nop_1)) $ fun _ =>
       List.compare compareT b1.(box_Nop_2) b2.(box_Nop_2).
 
     Record box_Nop_conv : Set := Box_Nop_conv {
-                                    box_Nop_conv_0 : function_qualifiers.t ;
-                                    box_Nop_conv_1 : type
-                                  }.
+      box_Nop_conv_0 : function_qualifiers.t ;
+      box_Nop_conv_1 : type
+    }.
     Definition box_Nop_conv_compare (b1 b2 : box_Nop_conv) : comparison :=
       compare_lex (function_qualifiers.compare b1.(box_Nop_conv_0) b2.(box_Nop_conv_0)) $ fun _ =>
       compareT b1.(box_Nop_conv_1) b2.(box_Nop_conv_1).
