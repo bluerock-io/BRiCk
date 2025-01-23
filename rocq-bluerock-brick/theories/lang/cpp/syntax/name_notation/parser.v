@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2023-2024
+ * Copyright (C) BlueRock Security Inc. 2023-2025
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -30,6 +30,9 @@ Definition ident_char (b : PrimString.char63) : bool :=
   || in_range_incl "A" "Z" b
   || (b =? "_".(char63_wrap))%char63%uint63.
 
+Definition digit_char (b : char63) : bool :=
+  (("0".(char63_wrap) ≤? b) && (b ≤? "9".(char63_wrap)))%char63%uint63.
+
 Module parser.
   Import parsec.
   Import UPoly.
@@ -42,17 +45,35 @@ Module parser.
 
     Notation M := (parsec.M@{Set _ _ _ _ _ _ _ _} (Uint63.int * PrimString.string) Mbase).
 
-    Definition digit_char (b : char63) : bool :=
-      (("0".(char63_wrap) ≤? b) && (b ≤? "9".(char63_wrap)))%char63%uint63.
+    Fixpoint get_ident (s : PrimString.string) (start len : int) (f : char63 -> bool) (fuel : nat)
+      : int * PrimString.string :=
+      let idx := (start + len)%uint63 in
+      match fuel with
+      | 0 => (start + len, PrimString.sub s start len)
+      | S fuel =>
+          if ltb idx (PrimString.length s) then
+            let c := PrimString.get s idx in
+            if f c then
+              get_ident s start (len + 1)%uint63 f fuel
+            else
+              (start + len, PrimString.sub s start len)
+          else
+            (start + len, PrimString.sub s start len)
+      end%uint63.
 
     Definition ident : M PrimString.string :=
       let* i :=
-        let* f := char ident_char in
-        (fun xs _ => PrimString.make 1 f ++ PrimStringAxioms.of_list xs)%pstring
-          <$> star (char ident_char <|> digit)
-          <*> not (charP (fun a => ident_char a || digit_char a))
+        (
+          stateT.mk $ fun '(idx, str) =>
+              if ltb idx (PrimString.length str) then
+                if ident_char (PrimString.get str idx) then
+                  let '(fin, s) := get_ident str idx 1%uint63 (fun x => ident_char x || digit_char x) 1000 in
+                  optionT.mk (mret (UTypes.Some (UTypes.pair (fin, str) s)))
+                else optionT.mk (mret (UTypes.None))
+              else
+                optionT.mk (mret (UTypes.None)))
       in
-      if bool_decide (i ∈ ["const";"volatile";"char";"signed";"unsigned";"flaot";"double";"int";"long";"short";
+      if bool_decide (i ∈ ["const";"volatile";"char";"signed";"unsigned";"float";"double";"int";"long";"short";
                            "typename";"class";"struct";"union";
                            "for";"while";"do";"try";"catch"]%pstring)
       then mfail else mret i
@@ -67,7 +88,7 @@ Module parser.
       mret ().
 
     Definition keyword (b : PrimString.string) : M unit :=
-      (fun _ _ _ => ()) <$> ws <*> keyword_no_ws b <*> ws.
+      ws *> keyword_no_ws b <* ws.
 
     Definition punct_char (c : char63) : Prop :=
       in_range_incl_excl "!" "0" c \/
@@ -341,6 +362,9 @@ Module parser.
         in
         fold_left (fun t f => f t) <$> star (entry 100).
 
+    Definition build_named_type (ctor : name -> type) (n : name) : type :=
+      ctor n.
+
     (* The core parsers are based on fuel to handle the mutual recursion *)
     Definition parse_type' : M type :=
       let* quals :=
@@ -358,10 +382,12 @@ Module parser.
       in
       let* t :=
         basic_type <|>
-        (exact "$" *> (Tparam <$> ident)) <|>
-        ((exact "#" <|> keyword "enum") *> (build_named_type Tenum <$> parse_name ())) <|>
-        (optional (keyword "struct" <|> keyword "class") *> (build_named_type Tnamed <$> parse_name ())) <|>
-        (parens (parse_type ()))
+        (commit (exact "(") (fun _ => parse_type () <* exact ")")
+         $ commit (exact "$") (fun _ => Tparam <$> ident)
+         $ commit (exact "#" <|> keyword "enum")
+                (fun _ => build_named_type Tenum <$> parse_name ())
+         $ let* _ := optional (keyword "struct" <|> keyword "class") in
+           (build_named_type Tnamed <$> parse_name ()))
       in
       let* post := parse_postfix_type in
       mret $ post (List.fold_right (fun f x => f x) t quals).
@@ -414,8 +440,8 @@ Module parser.
       let* (nm : name_type) :=
         let operator _ :=
           (Op <$> operator) <|>
-          (exact """""_" *> (OpLit <$> ident)) <|>
-          (OpConv <$> parse_type ())
+          (commit (exact """""_") (fun _ => OpLit <$> ident)
+             $ OpConv <$> parse_type ())
         in
         commit (keyword "operator") operator
         $ commit (op_token "~") (fun _ => Dtor <$> ident)

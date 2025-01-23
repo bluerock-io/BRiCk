@@ -8,6 +8,7 @@ Require Import bedrock.lang.cpp.syntax.prelude.
 Require Export bedrock.lang.cpp.syntax.preliminary.
 Require Export bedrock.lang.cpp.syntax.overloadable.
 Require Import bedrock.lang.cpp.syntax.notations.
+Require Import PrimInt63.
 
 #[local] Set Primitive Projections.
 
@@ -176,8 +177,24 @@ Module function_qualifiers.
 
   #[prefix="", only(tag)] derive t.
 
+  #[local] Definition tag_prim (x : t) : PrimInt63.int :=
+    match x with
+    | N => 1
+    | Nl => 2
+    | Nr => 3
+    | Nc => 4
+    | Ncl => 5
+    | Ncr => 6
+    | Nv => 7
+    | Nvl => 8
+    | Nvr => 9
+    | Ncv => 10
+    | Ncvl => 11
+    | Ncvr => 12
+    end%uint63.
+
   Definition compare (a b : t) : comparison :=
-    Pos.compare (tag a) (tag b).
+    PrimInt63.compare (tag_prim a) (tag_prim b).
 
   Definition to_type_qualifiers (f : t) : type_qualifiers :=
     match f with
