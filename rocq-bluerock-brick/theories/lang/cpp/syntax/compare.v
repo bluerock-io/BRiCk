@@ -1052,11 +1052,11 @@ Module name.
 
     Record box_Nscoped : Set := Box_Nscoped {
       box_Nscoped_0 : name;
-      box_Nscoped_1 : atomic_name;
+      box_Nscoped_1 : atomic_name; (* compare first b/c they are cheap and very discriminating *)
     }.
     Definition box_Nscoped_compare (b1 b2 : box_Nscoped) : comparison :=
-      compare_lex (compareN b1.(box_Nscoped_0) b2.(box_Nscoped_0)) $ fun _ =>
-      atomic_name.compare compareT b1.(box_Nscoped_1) b2.(box_Nscoped_1).
+      compare_lex (atomic_name.compare compareT b1.(box_Nscoped_1) b2.(box_Nscoped_1)) $ fun _ =>
+      compareN b1.(box_Nscoped_0) b2.(box_Nscoped_0).
 
     Definition tag (n : name) : positive :=
       match n with
