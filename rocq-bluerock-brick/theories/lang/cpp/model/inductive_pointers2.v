@@ -200,9 +200,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       Proper (flip roff_rw ==> flip roff_rw) (ro ::.).
     Proof. solve_proper. Qed.
 
-    Section norm_sound.
-      #[local] Hint Constructors roff_rw_local : core.
+    #[local] Hint Constructors roff_rw_local : core.
 
+    Section norm_sound. (* <- Now unnecessary *)
       Lemma norm_sound :
         ∀ os, roff_rw os (normalize os).
       Proof.
@@ -301,18 +301,17 @@ Module PTRS_IMPL <: PTRS_INTF.
         by apply norm_complete.
       }
     Qed.
-  #[global] Instance normalize_mono :
-    Proper (roff_rw ==> roff_rw) normalize.
-  Proof.
-    move=> o1 o2 E.
-    move E1: (normalize o1) => o1'.
-    move E2: (normalize o2) => o2'.
-    move: E1 E2 => /norm_rel [E1 C1] /norm_rel [E2 C2].
-    rewrite -E2 -E.
 
-    Lemma norm_rel :
-      ∀ o1 o2,
-        normalize o1 = o2 <-> roff_rw o1 o2 /\ roff_canon o2.
+    #[global] Instance normalize_mono :
+      Proper (roff_rw ==> roff_rw) normalize.
+    Proof.
+      move=> o1 o2 E.
+      move E1: (normalize o1) => o1'.
+      move E2: (normalize o2) => o2'.
+      move: E1 E2 => /norm_rel [E1 C1] /norm_rel [E2 C2].
+      rewrite -E2 -E.
+      (* only works for symmetric closure. *)
+    Abort.
 
     Lemma norm_invol :
       ∀ os,
@@ -369,8 +368,8 @@ Module PTRS_IMPL <: PTRS_INTF.
         repeat case_match; try done.
         {
           subst.
-          assert (0 + n2 = n2) by lia.
-          rewrite H0. apply norm_sound.
+          assert (0 + n2 = n2) as -> by lia.
+          apply norm_sound.
         }
         {
           apply norm_sound.
@@ -382,23 +381,16 @@ Module PTRS_IMPL <: PTRS_INTF.
       ∀ o os1 os2,
         roff_rw os1 os2 ->
         roff_rw (o :: os1) (o :: os2).
-    Proof.
-      move=> o os1 os2 H.
-      apply roff_rw_cong with
-        (ol1:=[o]) (or1:=[o]);
-      done.
-    Qed.
+    Proof. by move=> o os1 os2 ->. Qed.
 
     Lemma roff_rw_sub_sub :
       ∀ os1 os2 ty i1 i2,
         roff_rw (o_sub_ ty (i1 + i2) :: os1) os2 ->
         roff_rw (o_sub_ ty i1 :: o_sub_ ty i2 :: os1) os2.
     Proof.
-      move=> os1 os2 ty i1 i2 H.
-      apply: rtc_l. 2: exact: H.
-      exists [], os1, [o_sub_ ty i1; o_sub_ ty i2], [o_sub_ ty (i1 + i2)].
-      split. done. split. done.
-      constructor.
+      move=> os1 os2 ty i1 i2 <-.
+      apply: rtc_once.
+      by exists [], os1, [o_sub_ ty i1; o_sub_ ty i2], [o_sub_ ty (i1 + i2)].
     Qed.
 
     Lemma roff_rw_sub0 :
@@ -406,11 +398,9 @@ Module PTRS_IMPL <: PTRS_INTF.
         roff_rw os1 os2 ->
         roff_rw (o_sub_ ty 0 :: os1) os2.
     Proof.
-      move=> os1 os2 ty H.
-      apply: rtc_l. 2: exact: H.
-      exists [], os1, [o_sub_ ty 0], [].
-      split. done. split. done.
-      constructor.
+      move=> os1 os2 ty <-.
+      apply: rtc_once.
+      by exists [], os1, [o_sub_ ty 0], [].
     Qed.
 
     Lemma roff_rw_base_der :
@@ -418,11 +408,9 @@ Module PTRS_IMPL <: PTRS_INTF.
         roff_rw os1 os2 ->
         roff_rw (o_base_ der base :: o_derived_ base der :: os1) os2.
     Proof.
-      move=> os1 os2 der base H.
-      apply: rtc_l. 2: exact: H.
-      exists [], os1, [o_base_ der base; o_derived_ base der], [].
-      split. done. split. done.
-      constructor.
+      move=> os1 os2 der base <-.
+      apply: rtc_once.
+      by exists [], os1, [o_base_ der base; o_derived_ base der], [].
     Qed.
 
     Lemma roff_rw_der_base :
@@ -430,11 +418,9 @@ Module PTRS_IMPL <: PTRS_INTF.
         roff_rw os1 os2 ->
         roff_rw (o_derived_ base der :: o_base_ der base :: os1) os2.
     Proof.
-      move=> os1 os2 der base H.
-      apply: rtc_l. 2: exact: H.
-      exists [], os1, [o_derived_ base der; o_base_ der base], [].
-      split. done. split. done.
-      constructor.
+      move=> os1 os2 der base <-.
+      apply: rtc_once.
+      by exists [], os1, [o_derived_ base der; o_base_ der base], [].
     Qed.
 
     Equations roff_rw_uncons_help_sing r :
@@ -460,9 +446,7 @@ Module PTRS_IMPL <: PTRS_INTF.
             simp normalize.
             case_match; try done.
             apply: rtc_l. 2: done.
-            exists [], [], [o_sub_ ty 0], [].
-            split. done. split. done.
-            constructor.
+            by exists [], [], [o_sub_ ty 0], [].
           }
           destruct r;
           simp normalize;
