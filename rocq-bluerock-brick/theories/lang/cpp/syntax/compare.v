@@ -9,6 +9,7 @@ Require Import bedrock.lang.cpp.syntax.prelude.
 Require Import bedrock.lang.cpp.syntax.preliminary.
 Require Import bedrock.lang.cpp.syntax.overloadable.
 Require Import bedrock.lang.cpp.syntax.core.
+Require Stdlib.Numbers.Cyclic.Int63.PrimInt63.
 
 #[local] Set Primitive Projections.
 #[local] Open Scope positive_scope.
@@ -136,7 +137,7 @@ Module sum.
 
   End compare.
 End sum.
-#[global] Instance sum_compare `{!Compare A, !Compare B} : Compare (A + B) := sum.compare compare compare.
+#[global] Instance sum_compare `{!Compare A, !Compare B} : Compare (A + B)%type := sum.compare compare compare.
 
 Module prod.
   Section compare.
@@ -388,9 +389,20 @@ End bitsize.
 
 Module int_rank.
   #[prefix="", only(tag)] derive int_rank.t.
+  Import PrimInt63.
+
+  Definition prim_tag (r : int_rank.t) : PrimInt63.int :=
+    match r with
+    | int_rank.Ichar => 1
+    | int_rank.Ishort => 2
+    | int_rank.Iint => 3
+    | int_rank.Ilong => 4
+    | int_rank.Ilonglong => 5
+    | int_rank.I128 => 6
+    end%uint63.
 
   Definition compare (x y : int_rank.t) : comparison :=
-    Pos.compare (tag x) (tag y).
+    PrimInt63.compare (prim_tag x) (prim_tag y).
 End int_rank.
 #[global] Instance int_rank_compare : Compare int_rank := int_rank.compare.
 
@@ -407,9 +419,19 @@ End signed.
 
 Module char_type.
   #[prefix="", only(tag)] derive char_type.t.
+  Import PrimInt63.
+
+  Definition prim_tag (r : char_type.t) : PrimInt63.int :=
+    match r with
+    | char_type.Cchar => 1
+    | char_type.Cwchar => 2
+    | char_type.C8 => 3
+    | char_type.C16 => 4
+    | char_type.C32 => 5
+    end%uint63.
 
   Definition compare (x y : char_type.t) : comparison :=
-    Pos.compare (tag x) (tag y).
+    PrimInt63.compare (prim_tag x) (prim_tag y).
 End char_type.
 #[global] Instance char_type_compare : Compare char_type.t := char_type.compare.
 
@@ -567,10 +589,10 @@ Module function_type.
 
   Definition compare {type : Set} (compareT : type -> type -> comparison)
       (x y : function_type_ type) : comparison :=
-    compare_lex (calling_conv.compare x.(ft_cc) y.(ft_cc)) $ fun _ =>
-    compare_lex (function_arity.compare x.(ft_arity) y.(ft_arity)) $ fun _ =>
     compare_lex (compareT x.(ft_return) y.(ft_return)) $ fun _ =>
-    List.compare compareT x.(ft_params) y.(ft_params).
+    compare_lex (List.compare compareT x.(ft_params) y.(ft_params)) $ fun _ =>
+    compare_lex (calling_conv.compare x.(ft_cc) y.(ft_cc)) $ fun _ =>
+    function_arity.compare x.(ft_arity) y.(ft_arity).
 
 End function_type.
 #[global] Instance function_type_compare {A : Set} `{!Compare A} : Compare (function_type_ A) := function_type.compare compare.
@@ -689,78 +711,58 @@ Module OverloadableOperator.
 
   Section compare.
     #[local] Notation OO := OverloadableOperator.
+    Import PrimInt63.
 
-    Definition car (t : positive) : Set :=
-      match t with
-      | 39 | 40 => bool
-      | _ => unit
-      end.
-    Definition data (p : OO) : car (tag p) :=
-      match p with
-      | OONew b | OODelete b => b
-      | _ => tt
-      end.
-    Definition compare_data (t : positive) : car t -> car t -> comparison :=
-      match t with
-      | 39 | 40 => Bool.compare
-      | _ => fun _ _ => Eq
-      end.
-
-    #[local] Tactic Notation "compare_ctor" uconstr(x) :=
-      let t := eval red in (tag x) in
-      let d := eval red in (data x) in
-      exact (compare_ctor tag car data compare_data t (fun _ => d)).
-    #[local] Notation compare_ctor x := ltac:(compare_ctor x) (only parsing).
-    #[local] Tactic Notation "compare_tag" uconstr(x) :=
-      let t := eval red in (tag x) in
-      exact (fun y => Pos.compare t (tag y)).
-    #[local] Notation compare_tag x := ltac:(compare_tag x) (only parsing).
-
-    Definition compare (oo : OO) : OO -> comparison :=
+    Definition prim_tag (oo : OverloadableOperator) : PrimInt63.int :=
       match oo with
-      | OOTilde => compare_tag OOTilde
-      | OOExclaim => compare_tag OOExclaim
-      | OOPlusPlus => compare_tag OOPlusPlus
-      | OOMinusMinus => compare_tag OOMinusMinus
-      | OOStar => compare_tag OOStar
-      | OOPlus => compare_tag OOPlus
-      | OOMinus => compare_tag OOMinus
-      | OOSlash => compare_tag OOSlash
-      | OOPercent => compare_tag OOPercent
-      | OOCaret => compare_tag OOCaret
-      | OOAmp => compare_tag OOAmp
-      | OOPipe => compare_tag OOPipe
-      | OOEqual => compare_tag OOEqual
-      | OOLessLess => compare_tag OOLessLess
-      | OOGreaterGreater => compare_tag OOGreaterGreater
-      | OOPlusEqual => compare_tag OOPlusEqual
-      | OOMinusEqual => compare_tag OOMinusEqual
-      | OOStarEqual => compare_tag OOStarEqual
-      | OOSlashEqual => compare_tag OOSlashEqual
-      | OOPercentEqual => compare_tag OOPercentEqual
-      | OOCaretEqual => compare_tag OOCaretEqual
-      | OOAmpEqual => compare_tag OOAmpEqual
-      | OOPipeEqual => compare_tag OOPipeEqual
-      | OOLessLessEqual => compare_tag OOLessLessEqual
-      | OOGreaterGreaterEqual => compare_tag OOGreaterGreaterEqual
-      | OOEqualEqual => compare_tag OOEqualEqual
-      | OOExclaimEqual => compare_tag OOExclaimEqual
-      | OOLess => compare_tag OOLess
-      | OOGreater => compare_tag OOGreater
-      | OOLessEqual => compare_tag OOLessEqual
-      | OOGreaterEqual => compare_tag OOGreaterEqual
-      | OOSpaceship => compare_tag OOSpaceship
-      | OOComma => compare_tag OOComma
-      | OOArrowStar => compare_tag OOArrowStar
-      | OOArrow => compare_tag OOArrow
-      | OOSubscript => compare_tag OOSubscript
-      | OOAmpAmp => compare_tag OOAmpAmp
-      | OOPipePipe => compare_tag OOPipePipe
-      | OONew b => compare_ctor (OONew b)
-      | OODelete b => compare_ctor (OODelete b)
-      | OOCall => compare_tag OOCall
-      | OOCoawait => compare_tag OOCoawait
-      end.
+      | OOTilde => 1
+      | OOExclaim => 2
+      | OOPlusPlus => 3
+      | OOMinusMinus => 4
+      | OOStar => 5
+      | OOPlus => 6
+      | OOMinus => 7
+      | OOSlash => 8
+      | OOPercent => 9
+      | OOCaret => 10
+      | OOAmp => 11
+      | OOPipe => 12
+      | OOEqual => 13
+      | OOLessLess => 14
+      | OOGreaterGreater => 15
+      | OOPlusEqual => 16
+      | OOMinusEqual => 17
+      | OOStarEqual => 18
+      | OOSlashEqual => 19
+      | OOPercentEqual => 20
+      | OOCaretEqual => 21
+      | OOAmpEqual => 22
+      | OOPipeEqual => 23
+      | OOLessLessEqual => 24
+      | OOGreaterGreaterEqual => 25
+      | OOEqualEqual => 26
+      | OOExclaimEqual => 27
+      | OOLess => 28
+      | OOGreater => 29
+      | OOLessEqual => 30
+      | OOGreaterEqual => 31
+      | OOSpaceship => 32
+      | OOComma => 33
+      | OOArrowStar => 34
+      | OOArrow => 35
+      | OOSubscript => 36
+      | OOAmpAmp => 37
+      | OOPipePipe => 38
+      | OONew false => 39
+      | OONew true => 40
+      | OODelete false => 41
+      | OODelete true => 42
+      | OOCall => 43
+      | OOCoawait => 44
+    end%uint63.
+
+    Definition compare (a b : OverloadableOperator) : comparison :=
+      PrimInt63.compare (prim_tag a) (prim_tag b).
   End compare.
 
 End OverloadableOperator.
