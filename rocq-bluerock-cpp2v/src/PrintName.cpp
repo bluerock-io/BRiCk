@@ -509,7 +509,7 @@ printTemplateArgument(CoqPrinter& print, const TemplateArgument& arg,
 		});
 
 	case TemplateArgument::ArgKind::Pack: {
-		guard::ctor _(print, "Apack", false);
+		guard::ctor _(print, "Apack_expansion", false);
 		return print.list(arg.getPackAsArray(), [&](auto value) {
 			printTemplateArgument(print, value, cprint, loc);
 		});
@@ -618,6 +618,17 @@ printFunctionQualifiers(CoqPrinter& print, const FunctionDecl& decl,
 }
 
 static fmt::Formatter&
+printFunctionParamTypes(CoqPrinter& print, const FunctionDecl& decl,
+						ClangPrinter& cprint) {
+	if (ClangPrinter::debug && cprint.trace(Trace::Name))
+		cprint.trace("printFunctionParamTypes", loc::of(decl));
+	auto loc = loc::of(decl);
+	return print.list(decl.parameters(), [&](auto* param) {
+		cprint.printQualType(print, param->getType(), loc);
+	});
+}
+
+static fmt::Formatter&
 printFunctionName(CoqPrinter& print, const FunctionDecl& decl,
 				  ClangPrinter& cprint) {
 	if (ClangPrinter::debug && cprint.trace(Trace::Name))
@@ -629,7 +640,7 @@ printFunctionName(CoqPrinter& print, const FunctionDecl& decl,
 		decl.getNameForDiagnostic(os, cprint.getContext().getPrintingPolicy(),
 								  false);
 		::unsupported(cprint, loc::of(decl)) << what << "\n";
-		guard::ctor _(print, "Nunsupported_function", false);
+		guard::ctor _(print, "Nunsupported_atomic", false);
 		return print.str(what);
 	};
 	auto name = decl.getDeclName();
@@ -637,25 +648,35 @@ printFunctionName(CoqPrinter& print, const FunctionDecl& decl,
 
 	case DeclarationName::NameKind::Identifier:
 		if (auto id = name.getAsIdentifierInfo()) {
-			guard::ctor _(print, "Nf", false);
-			return print.str(id->getName());
+			guard::ctor _(print, "Nfunction", false);
+			printFunctionQualifiers(print, decl, cprint) << fmt::nbsp;
+			print.str(id->getName()) << fmt::nbsp;
+			return printFunctionParamTypes(print, decl, cprint);
 		} else
 			return unsupported();
 
-	case DeclarationName::NameKind::CXXConstructorName:
-		return print.output() << "Nctor";
+	case DeclarationName::NameKind::CXXConstructorName: {
+		guard::ctor _(print, "Nctor", false);
+		return printFunctionParamTypes(print, decl, cprint);
+	}
 
 	case DeclarationName::NameKind::CXXDestructorName:
+		always_assert(decl.getNumParams() == 0);
 		return print.output() << "Ndtor";
 
 	case DeclarationName::NameKind::CXXOperatorName: {
 		guard::ctor _(print, "Nop", false);
-		return cprint.printOverloadableOperator(
-			print, name.getCXXOverloadedOperator(), loc::of(decl));
+		printFunctionQualifiers(print, decl, cprint) << fmt::nbsp;
+		cprint.printOverloadableOperator(print, name.getCXXOverloadedOperator(),
+										 loc::of(decl))
+			<< fmt::nbsp;
+		return printFunctionParamTypes(print, decl, cprint);
 	}
 
 	case DeclarationName::NameKind::CXXConversionFunctionName: {
+		always_assert(decl.getNumParams() == 0);
 		guard::ctor _(print, "Nop_conv", false);
+		printFunctionQualifiers(print, decl, cprint) << fmt::nbsp;
 		return cprint.printQualType(print, name.getCXXNameType(),
 									loc::of(decl));
 	}
@@ -663,24 +684,14 @@ printFunctionName(CoqPrinter& print, const FunctionDecl& decl,
 	case DeclarationName::NameKind::CXXLiteralOperatorName:
 		if (auto id = name.getCXXLiteralIdentifier()) {
 			guard::ctor _(print, "Nop_lit", false);
-			return print.str(id->getName()) << fmt::nbsp;
+			print.str(id->getName()) << fmt::nbsp;
+			return printFunctionParamTypes(print, decl, cprint);
 		} else
 			return unsupported();
 
 	default:
 		return unsupported();
 	}
-}
-
-static fmt::Formatter&
-printFunctionParamTypes(CoqPrinter& print, const FunctionDecl& decl,
-						ClangPrinter& cprint) {
-	if (ClangPrinter::debug && cprint.trace(Trace::Name))
-		cprint.trace("printFunctionParamTypes", loc::of(decl));
-	auto loc = loc::of(decl);
-	return print.list(decl.parameters(), [&](auto* param) {
-		cprint.printQualType(print, param->getType(), loc);
-	});
 }
 
 static fmt::Formatter&
@@ -815,11 +826,13 @@ printAtomicName(const DeclContext& ctx, const Decl& decl, CoqPrinter& print,
 		return ident_or_anon();
 
 	case Decl::Kind::FunctionTemplate: {
+		// TODO: this does not work
 		auto& fd = *cast<FunctionTemplateDecl>(decl).getTemplatedDecl();
-		guard::ctor _(print, "Nfunction", false);
-		printFunctionQualifiers(print, fd, cprint) << fmt::nbsp;
-		printFunctionName(print, fd, cprint) << fmt::nbsp;
-		return printFunctionParamTypes(print, fd, cprint);
+		return printFunctionName(print, fd, cprint);
+		// guard::ctor _(print, "Nfunction", false);
+		// printFunctionQualifiers(print, fd, cprint) << fmt::nbsp;
+		// printFunctionName(print, fd, cprint) << fmt::nbsp;
+		// return printFunctionParamTypes(print, fd, cprint);
 	}
 	case Decl::Kind::Function:
 	case Decl::Kind::CXXMethod:
@@ -827,10 +840,7 @@ printAtomicName(const DeclContext& ctx, const Decl& decl, CoqPrinter& print,
 	case Decl::Kind::CXXDestructor:
 	case Decl::Kind::CXXConversion: {
 		auto& fd = cast<FunctionDecl>(decl);
-		guard::ctor _(print, "Nfunction", false);
-		printFunctionQualifiers(print, fd, cprint) << fmt::nbsp;
-		printFunctionName(print, fd, cprint) << fmt::nbsp;
-		return printFunctionParamTypes(print, fd, cprint);
+		return printFunctionName(print, fd, cprint);
 	}
 
 	case Decl::Kind::TypeAliasTemplate:
@@ -937,11 +947,7 @@ printDtorName(CoqPrinter& print, const CXXRecordDecl& decl,
 
 	guard::ctor _(print, "Nscoped", false);
 	printName(print, decl, cprint) << fmt::nbsp;
-	{
-		guard::ctor _(print, "Nfunction", false);
-		return print.output() << "function_qualifiers.N" << fmt::nbsp << "Ndtor"
-							  << fmt::nbsp << "nil";
-	}
+	return print.output() << "Ndtor";
 }
 
 } // namespace structured

@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2024 BlueRock Security, Inc.
+ * Copyright (c) 2024-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -8,6 +8,7 @@ Require Import bedrock.lang.cpp.syntax.prelude.
 Require Export bedrock.lang.cpp.syntax.preliminary.
 Require Export bedrock.lang.cpp.syntax.overloadable.
 Require Import bedrock.lang.cpp.syntax.notations.
+Require Import PrimInt63.
 
 #[local] Set Primitive Projections.
 
@@ -72,7 +73,7 @@ End function_type.
 Variant temp_param_ {type : Set} : Set :=
 | Ptype (_ : ident)
 | Pvalue (_ : ident) (_ : type)
-| Punsupported (_ : bs).
+| Punsupported (_ : PrimString.string).
 #[global] Arguments temp_param_ : clear implicits.
 #[global] Instance temp_param__inhabited {A} : Inhabited (temp_param_ A).
 Proof. solve_inhabited. Qed.
@@ -114,133 +115,6 @@ Module temp_param.
   End traverse.
 
 End temp_param.
-
-Inductive temp_arg_ {name decltype Expr : Set} : Set :=
-| Atype (_ : decltype)
-| Avalue (_ : Expr)
-| Apack (_ : list temp_arg_)
-| Atemplate (_ : name)
-| Aunsupported (_ : bs).
-Arguments temp_arg_ : clear implicits.
-#[global] Instance temp_arg__inhabited {A B C : Set} {_ : Inhabited A} : Inhabited (temp_arg_ A B C).
-Proof. solve_inhabited. Qed.
-(*
-#[global] Instance temp_arg__eq_dec {A B : Set} {_ : EqDecision A} {_ : EqDecision B} : EqDecision (temp_arg_ A B).
-Proof. solve_decision. Defined.
-*)
-
-Module temp_arg.
-  Import UPoly.
-  Section existsb.
-    Context {name type Expr : Set} (e : name -> bool) (f : type -> bool) (g : Expr -> bool).
-
-    Fixpoint existsb (a : temp_arg_ name type Expr) : bool :=
-      match a with
-      | Atype t => f t
-      | Avalue e => g e
-      | Apack ls => List.existsb existsb ls
-      | Atemplate n => e n
-      | Aunsupported _ => false
-      end.
-  End existsb.
-
-  Section fmap.
-    Context {name name' type type' Expr Expr' : Set}
-      (e : name -> name') (f : type -> type') (g : Expr -> Expr').
-
-    Fixpoint fmap (a : temp_arg_ name type Expr) : temp_arg_ name' type' Expr' :=
-      match a with
-      | Atype t => Atype (f t)
-      | Avalue e => Avalue (g e)
-      | Apack ls => Apack $ fmap <$> ls
-      | Atemplate n => Atemplate $ e n
-      | Aunsupported msg => Aunsupported msg
-      end.
-  End fmap.
-  #[global] Arguments fmap _ _ _ _ _ _ _ _ _ & _ : assert.
-
-  Section traverse.
-    #[local] Set Universe Polymorphism.
-    #[local] Unset Auto Template Polymorphism.
-    #[local] Unset Universe Minimization ToSet.
-    Universe u.
-    Context {F : Set -> Type@{u}} `{!FMap F, !MRet F, AP : !Ap F}.
-    Context {name name' type type' Expr Expr' : Set}
-      (e : name -> F name') (f : type -> F type')
-      (g : Expr -> F Expr').
-
-    Fixpoint traverse (a : temp_arg_ name type Expr) : F (temp_arg_ name' type' Expr') :=
-      match a with
-      | Atype t => Atype <$> f t
-      | Avalue e => Avalue <$> g e
-      | Apack ls => Apack <$> UPoly.traverse (T:=eta list) (F:=F) traverse ls
-      | Atemplate n => Atemplate <$> e n
-      | Aunsupported msg => mret $ Aunsupported msg
-      end.
-    #[global] Arguments traverse & _ : assert.
-    #[global] Hint Opaque traverse : typeclass_instances.
-  End traverse.
-
-End temp_arg.
-
-(** ** Function names and qualifiers *)
-Variant function_name_ {type : Set} : Set :=
-| Nf (_ : ident)
-| Nctor
-| Ndtor
-| Nop (_ : OverloadableOperator)
-| Nop_conv (_ : type)
-| Nop_lit (_ : ident)
-| Nunsupported_function (_ : bs).
-#[global] Arguments function_name_ : clear implicits.
-#[global] Instance function_name__inhabited {A} : Inhabited (function_name_ A).
-Proof. solve_inhabited. Qed.
-#[global] Instance function_name__eq_dec {A : Set} `{!EqDecision A} : EqDecision (function_name_ A).
-Proof. solve_decision. Defined.
-
-Module function_name.
-  Import UPoly.
-
-  Definition existsb {type : Set} (f : type -> bool) (n : function_name_ type) : bool :=
-    if n is Nop_conv t then f t else false.
-
-  Definition fmap {type type' : Set} (f : type -> type') (n : function_name_ type) : function_name_ type' :=
-    match n in function_name_ _ with
-    | Nf id => Nf id
-    | Nctor => Nctor
-    | Ndtor => Ndtor
-    | Nop oo => Nop oo
-    | Nop_conv t => Nop_conv (f t)
-    | Nop_lit s => Nop_lit s
-    | Nunsupported_function msg => Nunsupported_function msg
-    end.
-  #[global] Arguments fmap _ _ _ & _ : assert.
-  #[global] Hint Opaque fmap : typeclass_instances.
-
-  Section traverse.
-    #[local] Set Universe Polymorphism.
-    #[local] Unset Auto Template Polymorphism.
-    #[local] Unset Universe Minimization ToSet.
-    Universe u.
-    Context {F : Set -> Type@{u}} `{!FMap F, !MRet F, AP : !Ap F}.
-    Context {type type' : Set}.
-
-    Definition traverse (f : type -> F type')
-        (n : function_name_ type) : F (function_name_ type') :=
-      match n with
-      | Nf id => mret $ Nf id
-      | Nctor => mret Nctor
-      | Ndtor => mret Ndtor
-      | Nop oo => mret $ Nop oo
-      | Nop_conv t => Nop_conv <$> f t
-      | Nop_lit s => mret $ Nop_lit s
-      | Nunsupported_function msg => mret $ Nunsupported_function msg
-      end.
-    #[global] Arguments traverse _ & _ : assert.
-    #[global] Hint Opaque traverse : typeclass_instances.
-  End traverse.
-
-End function_name.
 
 Module function_qualifiers.
   (* This is a compressed tuple.
@@ -303,8 +177,24 @@ Module function_qualifiers.
 
   #[prefix="", only(tag)] derive t.
 
+  #[local] Definition tag_prim (x : t) : PrimInt63.int :=
+    match x with
+    | N => 1
+    | Nl => 2
+    | Nr => 3
+    | Nc => 4
+    | Ncl => 5
+    | Ncr => 6
+    | Nv => 7
+    | Nvl => 8
+    | Nvr => 9
+    | Ncv => 10
+    | Ncvl => 11
+    | Ncvr => 12
+    end%uint63.
+
   Definition compare (a b : t) : comparison :=
-    Pos.compare (tag a) (tag b).
+    PrimInt63.compare (tag_prim a) (tag_prim b).
 
   Definition to_type_qualifiers (f : t) : type_qualifiers :=
     match f with
@@ -326,7 +216,13 @@ Variant atomic_name_ {type : Set} : Set :=
 TODO (Discuss): Do we need to distinguish templated functions by their
 return types?
 *)
-| Nfunction (_ : function_qualifiers.t) (_ : function_name_ type) (_ : list type)
+| Nfunction (_ : function_qualifiers.t) (_ : ident) (_ : list type)
+| Nctor (_ : list type)
+| Ndtor
+| Nop (_ : function_qualifiers.t) (_ : OverloadableOperator) (_ : list type)
+| Nop_conv (_ : function_qualifiers.t) (_ : type)
+| Nop_lit (_ : ident) (_ : list type)
+
 (** Unnamed things *)
 | Nanon (_ : N)
   (* an anonymous namespace. Specialized b/c they are re-declarable so
@@ -343,7 +239,7 @@ return types?
 | Nfirst_child (_ : ident)
 
 (** Errors *)
-| Nunsupported_atomic (_ : bs).
+| Nunsupported_atomic (_ : PrimString.string).
 #[global] Arguments atomic_name_ : clear implicits.
 #[global] Instance atomic_name__inhabited {A} : Inhabited (atomic_name_ A).
 Proof. solve_inhabited. Qed.
@@ -353,7 +249,12 @@ Module atomic_name.
       (c : atomic_name_ type) : bool :=
     match c with
     | Nid _ => false
-    | Nfunction _ n ts => function_name.existsb f n || List.existsb f ts
+    | Nfunction _ _ ts => List.existsb f ts
+    | Nctor ts => List.existsb f ts
+    | Ndtor => false
+    | Nop _ _ ts => List.existsb f ts
+    | Nop_conv _ t => f t
+    | Nop_lit _ ts => List.existsb f ts
     | Nanon _
     | Nanonymous
     | Nfirst_decl _
@@ -367,7 +268,12 @@ Module atomic_name.
       (c : atomic_name_ type) : atomic_name_ type' :=
     match c with
     | Nid id => Nid id
-    | Nfunction qs n ts => Nfunction qs (function_name.fmap f n) (f <$> ts)
+    | Nfunction qs n ts => Nfunction qs n (f <$> ts)
+    | Nctor ts => Nctor (f <$> ts)
+    | Ndtor => Ndtor
+    | Nop q oo ts => Nop q oo (f <$> ts)
+    | Nop_conv n t => Nop_conv n $ f t
+    | Nop_lit n ts => Nop_lit n $ f <$> ts
     | Nanon n => Nanon n
     | Nanonymous => Nanonymous
     | Nfirst_decl n => Nfirst_decl n
@@ -389,7 +295,12 @@ Module atomic_name.
     Definition traverse (c : atomic_name_ type) : F (atomic_name_ type') :=
       match c with
       | Nid id => mret $ Nid id
-      | Nfunction qs n ts => Nfunction qs <$> function_name.traverse f n <*> list_traverse f ts
+      | Nfunction qs n ts => Nfunction qs n <$> list_traverse f ts
+      | Nctor ts => Nctor <$> list_traverse f ts
+      | Ndtor => mret Ndtor
+      | Nop q oo ts => Nop q oo <$> list_traverse f ts
+      | Nop_conv n t => Nop_conv n <$> f t
+      | Nop_lit n ts => Nop_lit n <$> list_traverse f ts
       | Nanon n => mret $ Nanon n
       | Nanonymous => mret Nanonymous
       | Nfirst_decl n => mret $ Nfirst_decl n
@@ -421,11 +332,18 @@ End cast_style.
 
 (** ** Structured names *)
 Inductive name' {lang : lang.t} : Set :=
-| Ninst (c : name') (_ : list (temp_arg_ name' type' Expr'))
+| Ninst (c : name') (_ : list temp_arg')
 | Nglobal (c : atomic_name_ type')	(* <<::c>> *)
 | Ndependent (t : type') (* <<typename t>> *)
 | Nscoped (n : name') (c : atomic_name_ type')	(* <<n::c>> *)
-| Nunsupported (_ : bs)
+| Nunsupported (_ : PrimString.string)
+
+with temp_arg' {lang : lang.t} : Set :=
+| Atype (_ : type')
+| Avalue (_ : Expr')
+| Apack_expansion (_ : list temp_arg') (* TODO: this is incorrect, it needs a pack expansion pattern *)
+| Atemplate (_ : name')
+| Aunsupported (_ : PrimString.string)
 
 (** ** Types *)
 (**
@@ -464,7 +382,7 @@ with type' {lang : lang.t} : Set :=
 | Tfloat_ (_ : float_type.t)
 | Tqualified (q : type_qualifiers) (t : type')
 | Tnullptr
-| Tarch (osz : option bitsize) (name : bs)
+| Tarch (osz : option bitsize) (name : PrimString.string)
 | Tdecltype (_ : Expr')
   (* ^^ this is <<decltype(e)>> when <<e>> is an expression, including a parenthesized expression.
      (2) in <https://en.cppreference.com/w/cpp/language/decltype>
@@ -473,7 +391,7 @@ with type' {lang : lang.t} : Set :=
   (* ^^ this is <<decltype(e)>> when <<e>> is a variable reference
      (1) in <https://en.cppreference.com/w/cpp/language/decltype>
    *)
-| Tunsupported (_ : bs)
+| Tunsupported (_ : PrimString.string)
 
 (** ** Expressions *)
 (**
@@ -594,7 +512,7 @@ Should be [gn : classname]
 | Earrayloop_init (oname : N) (src : Expr') (level : N) (length : N) (init : Expr') (t : type')
 | Earrayloop_index (level : N) (t : type')
 | Eopaque_ref (name : N) (t : type')
-| Eunsupported (s : bs) (t : type')
+| Eunsupported (s : PrimString.string) (t : type')
 with Stmt' {lang : lang.t} : Set :=
 | Sseq    (_ : list Stmt')
 | Sdecl   (_ : list VarDecl')
@@ -619,14 +537,14 @@ with Stmt' {lang : lang.t} : Set :=
 
 | Sattr (_ : list ident) (_ : Stmt')
 
-| Sasm (_ : bs) (volatile : bool)
+| Sasm (_ : PrimString.string) (volatile : bool)
        (inputs : list (ident * Expr'))
        (outputs : list (ident * Expr'))
        (clobbers : list ident)
 
 | Slabeled (_ : ident) (_ : Stmt')
 | Sgoto (_ : ident)
-| Sunsupported (_ : bs)
+| Sunsupported (_ : PrimString.string)
 with VarDecl' {lang : lang.t} : Set :=
 | Dvar (name : localname) (_ : type') (init : option Expr')
 | Ddecompose (_ : Expr') (anon_var : ident) (_ : list BindingDecl')
@@ -683,6 +601,7 @@ with Cast' {lang : lang.t} : Set :=
 .
 #[global] Arguments Cast' : clear implicits.
 #[global] Arguments name' : clear implicits.
+#[global] Arguments temp_arg' : clear implicits.
 #[global] Arguments type' : clear implicits.
 #[global] Arguments Expr' : clear implicits.
 #[global] Arguments VarDecl' : clear implicits.
@@ -695,6 +614,8 @@ Proof. solve_inhabited. Qed.
 Proof. solve_inhabited. Qed.
 #[global] Instance name_inhabited {lang} : Inhabited (name' lang).
 Proof. apply populate, Nglobal, inhabitant. Qed.
+#[global] Instance temp_arg_inhabited {lang} : Inhabited (temp_arg' lang).
+Proof. apply populate, Atype, inhabitant. Qed.
 #[global] Instance VarDecl_inhabited {lang} : Inhabited (VarDecl' lang).
 Proof. solve_inhabited. Qed.
 #[global] Instance BindingDecl_inhabited {lang} : Inhabited (BindingDecl' lang).
@@ -703,40 +624,6 @@ Proof. solve_inhabited. Qed.
 Proof. apply populate, Sseq, nil. Qed.
 #[global] Instance Cast_inhabited {lang} : Inhabited (Cast' lang).
 Proof. apply populate, C2void. Qed.
-
-(*
-Section eq_dec.
-  Context {lang : lang.t}.
-  #[local] Notation EQ_DEC T := (∀ x y : T, Decision (x = y)) (only parsing).
-
-  Lemma name_eq_dec' : EQ_DEC (name' lang)
-  with type_eq_dec' : EQ_DEC (type' lang)
-  with Expr_eq_dec' : EQ_DEC (Expr' lang)
-  with VarDecl_eq_dec' : EQ_DEC (VarDecl' lang)
-  with BindingDecl_eq_dec' : EQ_DEC (BindingDecl' lang)
-  with Stmt_eq_dec' : EQ_DEC (Stmt' lang)
-  with Cast_eq_dec' : EQ_DEC (Cast' lang).
-  Proof.
-    all: intros x y.
-    all: pose (name_eq_dec' : EqDecision _).
-    all: pose (type_eq_dec' : EqDecision _).
-    all: pose (Expr_eq_dec' : EqDecision _).
-    all: pose (VarDecl_eq_dec' : EqDecision _).
-    all: pose (BindingDecl_eq_dec' : EqDecision _).
-    all: pose (Stmt_eq_dec' : EqDecision _).
-    all: pose (Cast_eq_dec' : EqDecision _).
-    all:unfold Decision; decide equality; solve_decision.
-  Defined.
-
-  #[global] Instance name_eq_dec : EqDecision _ := name_eq_dec'.
-  #[global] Instance type_eq_dec : EqDecision _ := type_eq_dec'.
-  #[global] Instance Expr_eq_dec : EqDecision _ := Expr_eq_dec'.
-  #[global] Instance VarDecl_eq_dec : EqDecision _ := VarDecl_eq_dec'.
-  #[global] Instance BindingDecl_eq_dec : EqDecision _ := BindingDecl_eq_dec'.
-  #[global] Instance Stmt_eq_dec : EqDecision _ := Stmt_eq_dec'.
-  #[global] Instance Cast_eq_dec : EqDecision _ := Cast_eq_dec'.
-End eq_dec.
-*)
 
 Module Cast.
   Definition existsb {lang : lang.t}
@@ -797,9 +684,7 @@ Notation Nenum_const gn id := (Nscoped gn (Nid id)) (only parsing).
 Notation operator_impl' lang := (operator_impl.t (obj_name' lang) (type' lang)).
 Notation MethodRef' lang := (MethodRef_ (obj_name' lang) (functype' lang) (Expr' lang)).
 Notation function_type' lang := (function_type_ (decltype' lang)).
-Notation function_name' lang := (function_name_ (decltype' lang)).
 Notation temp_param' lang := (temp_param_ (type' lang)).
-Notation temp_arg' lang := (temp_arg_ (name' lang) (decltype' lang) (Expr' lang)).
 Notation atomic_name' lang := (atomic_name_ (type' lang)).
 
 (**
@@ -879,12 +764,11 @@ Notation BindingDecl := (BindingDecl' lang.cpp).
 Notation Stemp_arg := (temp_arg lang.cpp). *)
 Notation atomic_name := (atomic_name' lang.cpp).
 
-
 Module field_name.
   Definition t lang := (atomic_name' lang).
-  Definition Id {lang} : bs -> t lang := Nid.
+  Definition Id {lang} : ident -> t lang := Nid.
   Definition Anon {lang} : _ -> t lang := Nanon.
-  Definition CaptureVar {lang} : bs -> t lang := Nid.
+  Definition CaptureVar {lang} : ident -> t lang := Nid.
   Definition CaptureThis {lang} : t lang := Nid ".this".
 End field_name.
 Notation field_name := (field_name.t lang.cpp).
@@ -988,6 +872,11 @@ Notation Tdouble := (Tfloat_ float_type.Fdouble).
 Notation Tlongdouble := (Tfloat_ float_type.Flongdouble).
 Notation Tfloat128 := (Tfloat_ float_type.Ffloat128).
 
+Notation Twchar_t := (Tchar_ char_type.Cwchar).
+Notation Tchar8_t := (Tchar_ char_type.C8).
+Notation Tchar16_t := (Tchar_ char_type.C16).
+Notation Tchar32_t := (Tchar_ char_type.C32).
+
 (* TODO: This is determined by the compiler. *)
 Notation Tsize_t := Tulong (only parsing).
 (* NOTE Use [Tbyte] when talking about the offsets for "raw bytes" *)
@@ -995,14 +884,22 @@ Notation Tbyte := (Tnum int_rank.Ichar Unsigned) (only parsing).
 
 
 (** ** Dependent names, types, and terms *)
-
 Fixpoint is_dependentN {lang} (n : name' lang) : bool :=
   match n with
-  | Ninst n xs => is_dependentN n || existsb (temp_arg.existsb is_dependentN is_dependentT is_dependentE) xs
+  | Ninst n xs => is_dependentN n || existsb is_dependentTA xs
   | Nglobal c => atomic_name.existsb is_dependentT c
   | Ndependent t => is_dependentT t
   | Nscoped n c => is_dependentN n || atomic_name.existsb is_dependentT c
   | Nunsupported _ => false
+  end
+
+with is_dependentTA {lang} (t : temp_arg' lang) : bool :=
+  match t with
+  | Atype t => is_dependentT t
+  | Avalue e => is_dependentE e
+  | Apack_expansion tas => List.existsb is_dependentTA tas
+  | Atemplate nm => is_dependentN nm
+  | Aunsupported _ => false
   end
 
 with is_dependentT {lang} (t : type' lang) : bool :=

@@ -79,12 +79,7 @@ End eval_offset_seg.
 (*
 Utility function, used to emulate [global_ptr] without a linker.
 This is a really bad model and it'd fail a bunch of sanity checks.
-
-Caveat: a model this to model [global_ptr] isn't correct, beyond proving
-[global_ptr]'s isn't contradictory.
-This model would fail proving that objects are disjoint or that
-[global_ptr tu1 "staticR" |-> anyR T 1%Qp  ... ∗
-  global_ptr tu2 "staticR" |-> anyR T 1%Qp  ...] actually holds at startup.
+See comments around [global_ptr] in [simple_pointers.v].
 *)
 
 Definition global_ptr_encode_vaddr (o : obj_name) : vaddr. (*  := Npos (encode o). *) Admitted. (* Countable *)

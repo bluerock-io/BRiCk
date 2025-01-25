@@ -17,14 +17,20 @@ Module ParserName (Import Lang : PARSER_LANG).
    *)
   Definition Nfunction qs nm ts :=
     Nfunction qs nm $ List.map (@normalize_arg_type parser_lang) ts.
+  Definition Nctor ts :=
+    Nctor $ List.map (@normalize_arg_type parser_lang) ts.
+  Definition Nop q oo ts :=
+    Nop q oo $ List.map (@normalize_arg_type parser_lang) ts.
+  Definition Nop_lit fn ts :=
+    Nop_lit fn $ List.map (@normalize_arg_type parser_lang) ts.
 
-  Definition Nrecord_by_field (nm : bs) : atomic_name' parser_lang :=
+  Definition Nrecord_by_field (nm : ident) : atomic_name' parser_lang :=
     Nfirst_child nm.
 
-  Definition Nenum_by_enumerator (nm : bs) : atomic_name' parser_lang :=
+  Definition Nenum_by_enumerator (nm : ident) : atomic_name' parser_lang :=
     Nfirst_child nm.
 
-  Definition Nby_first_decl (nm : bs) : atomic_name' parser_lang :=
+  Definition Nby_first_decl (nm : ident) : atomic_name' parser_lang :=
     Nfirst_decl nm.
 
   Definition Ndependent (t : type' parser_lang) : name' parser_lang :=

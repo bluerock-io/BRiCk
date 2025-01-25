@@ -58,7 +58,7 @@ Module Export RegionNotations.
 
   (* [Rbind nm p ρ] *)
   Notation "v @ p ';' ρ "
-      := (Rbind v%bs p ρ)
+      := (Rbind v p ρ)
          (in custom CPP_region at level 30
          , v constr
          , p constr
