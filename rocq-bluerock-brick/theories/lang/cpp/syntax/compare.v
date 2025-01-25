@@ -445,9 +445,18 @@ End float_type.
 
 Module type_qualifiers.
   #[prefix="", only(tag)] derive type_qualifiers.
+  Import PrimInt63.
+
+  Definition prim_tag (t : type_qualifiers) : PrimInt63.int :=
+    match t with
+    | QCV => 0
+    | QC => 1
+    | QV => 2
+    | QM => 3
+    end%uint63.
 
   Definition compare (x y : type_qualifiers) : comparison :=
-    Pos.compare (tag x) (tag y).
+    PrimInt63.compare (prim_tag x) (prim_tag y).
 End type_qualifiers.
 #[global] Instance type_qualifiers_compare : Compare type_qualifiers := type_qualifiers.compare.
 
