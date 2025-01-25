@@ -23,7 +23,7 @@ Require Import bedrock.prelude.numbers.
 
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.semantics.sub_module.
-Require Import bedrock.lang.cpp.semantics.values.
+Require Import bedrock.lang.cpp.semantics.ptrs.
 Require Import bedrock.lang.cpp.model.simple_pointers_utils.
 Require Import bedrock.lang.cpp.model.inductive_pointers_utils.
 
