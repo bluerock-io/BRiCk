@@ -24,7 +24,6 @@ Notation MExpr := (Expr' temp).
 Notation Mfunction_type := (function_type' temp).
 Notation Mtemp_param := (temp_param' temp).
 Notation Mtemp_arg := (temp_arg' temp).
-Notation Mfunction_name := (function_name' temp).
 Notation Matomic_name := (atomic_name' temp).
 Notation MBindingDecl := (BindingDecl' lang.temp).
 Notation MVarDecl := (VarDecl' temp).
