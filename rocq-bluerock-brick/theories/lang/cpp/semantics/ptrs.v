@@ -332,6 +332,26 @@ Module Type PTRS_DERIVED (Import P : PTRS).
 
 End PTRS_DERIVED.
 
+Module Type PTRS_DERIVED_MIXIN (Import P : PTRS).
+  Definition same_alloc : ptr -> ptr -> Prop := same_property ptr_alloc_id.
+  Lemma same_alloc_eq : same_alloc = same_property ptr_alloc_id.
+  Proof. done. Qed.
+
+  Definition same_address : ptr -> ptr -> Prop := same_property ptr_vaddr.
+  Lemma same_address_eq : same_address = same_property ptr_vaddr.
+  Proof. done. Qed.
+
+  Definition pinned_ptr_pure (va : vaddr) (p : ptr) := ptr_vaddr p = Some va.
+  Lemma pinned_ptr_pure_eq :
+    pinned_ptr_pure = fun (va : vaddr) (p : ptr) => ptr_vaddr p = Some va.
+  Proof. done. Qed.
+End PTRS_DERIVED_MIXIN.
+
+(* Double-check [PTRS_DERIVED_MIXIN] matches its interface. *)
+Module PTRS_DERIVED_TEST (P : PTRS) : PTRS_DERIVED P.
+Include PTRS_DERIVED_MIXIN P.
+End PTRS_DERIVED_TEST.
+
 Module Type PTRS_INTF_MINIMAL := PTRS <+ PTRS_DERIVED.
 
 Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
