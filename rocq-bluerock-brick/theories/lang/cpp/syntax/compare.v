@@ -1226,171 +1226,166 @@ Module type.
       compare_lex (option.compare bitsize.compare b1.(box_Tarch_0) b2.(box_Tarch_0)) $ fun _ =>
       PrimString.compare b1.(box_Tarch_1) b2.(box_Tarch_1).
 
-    Definition tag (t : type) : positive :=
-      match t with
-      | Tnum _ _ => 1
-      | Tchar_ _ => 2
-      | Tbool => 3
-      | Tnamed _ => 4
-      | Tenum _ => 5
-      | Tptr _ => 6
-      | Tref _ => 7
-      | Trv_ref _ => 8
-      | Tvoid => 9
-      | Tarray _ _ => 10
-      | Tqualified _ _ => 11
-      | Tnullptr => 12
-      | Tincomplete_array _ => 13
-      | Tvariable_array _ _ => 14
-      | Tfunction _ => 15
-      | Tmember_pointer _ _ => 16
-      | Tfloat_ _ => 17
-      | Tarch _ _ => 18
-      | Tdecltype _ => 19
-      | Texprtype _ => 20
+    Import PrimInt63.
 
-      | Tparam _ => 21
-      | Tresult_param _ => 22
-      | Tresult_global _ => 23
-      | Tresult_unop _ _ => 24
-      | Tresult_binop _ _ _ => 25
-      | Tresult_call _ _ => 26
-      | Tresult_member_call _ _ _ => 27
-      | Tresult_parenlist _ _ => 28
-      | Tresult_member _ _ => 29
+    Definition prim_tagFT (ft : float_type.t) : PrimInt63.int :=
+      match ft with
+      | float_type.Ffloat => 1
+      | float_type.Fdouble => 2
+      | float_type.Flongdouble => 3
+      | float_type.Ffloat16 => 4
+      | float_type.Ffloat128 => 5
+      end%uint63.
 
-      | Tunsupported _ => 30
-      end.
-    Definition car (t : positive) : Set :=
-      match t with
-      | 6 | 7 | 8 => type
-      | 1 => box_Tnum
-      | 2 => char_type
-      | 3 => unit
-      | 10 => box_Tarray
-      | 13 => type
-      | 14 => box_Tvariable_array
-      | 4 | 5 => name
-      | 15 => function_type_ type
-      | 12 => unit
-      | 16 => box_Tmember_pointer
-      | 17 => float_type.t
-      | 11 => box_Tqualified
-      | 9 => unit
-      | 18 => box_Tarch
-      | 19 | 20 => Expr
+    #[local] Definition tag_direct (i : PrimInt63.int) : _ + positive :=
+      inl i.
+    Arguments tag_direct _%uint63.
 
-      | 21 | 22 => ident
-      | 23 => name
-      | 24 => box_Tresult_unop
-      | 25 => box_Tresult_binop
-      | 26 => box_Tresult_call
-      | 27 => box_Tresult_member_call
-      | 28 => box_Tresult_parenlist
-      | 29 => box_Tresult_member
+    #[local] Definition FIRST_INT_TAG : PrimInt63.int :=
+      3.
+    #[local] Definition FIRST_CHAR_TAG : PrimInt63.int :=
+      Evaluate (PrimInt63.add FIRST_INT_TAG $ PrimInt63.mul 2%uint63 (PrimInt63.add 1 $ int_rank.prim_tag int_rank.I128)).
+    #[local] Definition FIRST_FLOAT_TAG : PrimInt63.int :=
+      Evaluate (PrimInt63.add FIRST_CHAR_TAG (prim_tagFT float_type.Ffloat128)).
 
+    #[local] Notation "a + b" := (PrimInt63.add a b) : uint63_scope.
+    #[local] Notation "a * b" := (PrimInt63.mul a b) : uint63_scope.
+
+    Definition car (p : positive) : Set :=
+      match p with
+      | 1 | 2 => name
+      | 3 | 4 | 5 => type
+      | 6 => box_Tqualified
+      | 7 => box_Tarray
+      | 8 => type
+      | 9 => box_Tvariable_array
+      | 10 => function_type' lang
+      | 11 => box_Tmember_pointer
+      | 12 => box_Tarch
+      | 13 | 14 => Expr
+      | 15 | 16 => ident
+      | 17 => name
+      | 18 => box_Tresult_unop
+      | 19 => box_Tresult_binop
+      | 20 => box_Tresult_call
+      | 21 => box_Tresult_member_call
+      | 22 => box_Tresult_parenlist
+      | 23 => box_Tresult_member
       | _ => PrimString.string
       end.
-    Definition data (t : type) : car (tag t) :=
+
+    (*
+    Definition tag' (t : type) : PrimInt63.int + positive :=
       match t with
-      | Tparam T => T
-      | Tresult_param X => X
-      | Tresult_global on => on
-      | Tresult_unop op t => Box_Tresult_unop op t
-      | Tresult_binop op tl tr => Box_Tresult_binop op tl tr
-      | Tresult_call on ts => Box_Tresult_call on ts
-      | Tresult_member_call on t ts => Box_Tresult_member_call on t ts
-      | Tresult_parenlist t ts => Box_Tresult_parenlist t ts
-      | Tresult_member t f => Box_Tresult_member t f
-      | Tptr t | Tref t | Trv_ref t => t
-      | Tnum sz sgn => Box_Tnum sz sgn
-      | Tchar_ t => t
-      | Tvoid => ()
-      | Tarray t n => Box_Tarray t n
-      | Tincomplete_array t => t
-      | Tvariable_array t e => Box_Tvariable_array t e
-      | Tnamed gn | Tenum gn => gn
-      | Tfunction t => t
-      | Tbool => ()
-      | Tmember_pointer gn t => Box_Tmember_pointer gn t
-      | Tfloat_ t => t
-      | Tqualified cv t => Box_Tqualified cv t
-      | Tnullptr => ()
-      | Tarch sz n => Box_Tarch sz n
-      | Tdecltype e => e
-      | Texprtype e => e
-      | Tunsupported msg => msg
+      | Tnum r Unsigned => tag_direct (FIRST_INT_TAG + int_rank.prim_tag r * 2)%uint63
+      | Tnum r Signed => tag_direct (FIRST_INT_TAG + int_rank.prim_tag r * 2 + 1)%uint63
+      | Tchar_ ct => tag_direct (FIRST_CHAR_TAG + char_type.prim_tag ct)%uint63
+      | Tfloat_ ft => tag_direct (FIRST_FLOAT_TAG + prim_tagFT ft)
+      | Tvoid => tag_direct 0
+      | Tnullptr => tag_direct 1
+      | Tbool => tag_direct 2
+      | Tnamed _ => inr 1
+      | Tenum _ => inr 2
+      | Tptr _ => inr 3
+      | Tref _ => inr 4
+      | Trv_ref _ => inr 5
+      | Tqualified _ _ => inr 6
+      | Tarray _ _ => inr 7
+      | Tincomplete_array _ => inr 8
+      | Tvariable_array _ _ => inr 9
+      | Tfunction _ => inr 10
+      | Tmember_pointer _ _ => inr 11
+      | Tarch _ _ => inr 12
+      | Tdecltype _ => inr 13
+      | Texprtype _ => inr 14
+      | Tparam _ => inr 15
+      | Tresult_param _ => inr 16
+      | Tresult_global _ => inr 17
+      | Tresult_unop _ _ => inr 18
+      | Tresult_binop _ _ _ => inr 19
+      | Tresult_call _ _ => inr 20
+      | Tresult_member_call _ _ _ => inr 21
+      | Tresult_parenlist _ _ => inr 22
+      | Tresult_member _ _ => inr 23
+      | Tunsupported _ => inr 24
       end.
-    Definition compare_data (t : positive) : car t -> car t -> comparison :=
-      match t as t return car t -> car t -> comparison with
-      | 1 => box_Tnum_compare
-      | 2 => char_type.compare
-      | 3 => fun _ _ => Eq
-      | 4 | 5 => compareN
-      | 6 | 7 | 8 => compareT
-      | 9 => fun _ _ => Eq
-      | 10 => box_Tarray_compare
-      | 13 => compareT
-      | 14 => box_Tvariable_array_compare
-      | 15 => function_type.compare compareT
-      | 12 => fun _ _ => Eq
-      | 16 => box_Tmember_pointer_compare
-      | 17 => float_type.compare
-      | 11 => box_Tqualified_compare
-      | 18 => box_Tarch_compare
-      | 19 | 20 => compareE
+      *)
 
-      | 21 | 22 => PrimString.compare
-      | 23 => compareN
-      | 24 => box_Tresult_unop_compare
-      | 25 => box_Tresult_binop_compare
-      | 26 => box_Tresult_call_compare
-      | 27 => box_Tresult_member_call_compare
-      | 28 => box_Tresult_parenlist_compare
-      | 29 => box_Tresult_member_compare
+    Definition data {T} (t : type) (k : int -> T) (kp : forall p, car p -> T) : T :=
+      match t with
+      | Tnum r Unsigned => k (FIRST_INT_TAG + int_rank.prim_tag r * 2)%uint63
+      | Tnum r Signed => k (FIRST_INT_TAG + int_rank.prim_tag r * 2 + 1)%uint63
+      | Tchar_ ct => k (FIRST_CHAR_TAG + char_type.prim_tag ct)%uint63
+      | Tfloat_ ft => k (FIRST_FLOAT_TAG + prim_tagFT ft)%uint63
+      | Tvoid => k 0%uint63
+      | Tnullptr => k 1%uint63
+      | Tbool => k 2%uint63
+      | Tnamed n => kp 1 n
+      | Tenum n => kp 2 n
+      | Tptr t => kp 3 t
+      | Tref t => kp 4 t
+      | Trv_ref t => kp 5 t
+      | Tqualified q t => kp 6 $ Box_Tqualified q t
+      | Tarray t n => kp 7 $ Box_Tarray t n
+      | Tincomplete_array t => kp 8 t
+      | Tvariable_array t e => kp 9 $ Box_Tvariable_array t e
+      | Tfunction ft => kp 10 ft
+      | Tmember_pointer a b => kp 11 $ Box_Tmember_pointer a b
+      | Tarch a b => kp 12 $ Box_Tarch a b
+      | Tdecltype e => kp 13 e
+      | Texprtype e => kp 14 e
+      | Tparam n => kp 15 n
+      | Tresult_param n => kp 16 n
+      | Tresult_global n => kp 17 n
+      | Tresult_unop a b => kp 18 $ Box_Tresult_unop a b
+      | Tresult_binop a b c => kp 19 $ Box_Tresult_binop a b c
+      | Tresult_call a b => kp 20 $ Box_Tresult_call a b
+      | Tresult_member_call a b c => kp 21 $ Box_Tresult_member_call a b c
+      | Tresult_parenlist a b => kp 22 $ Box_Tresult_parenlist a b
+      | Tresult_member a b => kp 23 $ Box_Tresult_member a b
+      | Tunsupported msg => kp 24 msg
+      end.
 
+    Definition compare_data (p : positive) : car p -> car p -> comparison :=
+      match p as p return car p -> car p -> comparison with
+      | 1 | 2 => compareN
+      | 3 | 4 | 5 => compareT
+      | 6 => box_Tqualified_compare
+      | 7 => box_Tarray_compare
+      | 8 => compareT
+      | 9 => box_Tvariable_array_compare
+      | 10 => function_type.compare compareT
+      | 11 => box_Tmember_pointer_compare
+      | 12 => box_Tarch_compare
+      | 13 | 14 => compareE
+      | 15 | 16 => PrimString.compare
+      | 17 => compareN
+      | 18 => box_Tresult_unop_compare
+      | 19 => box_Tresult_binop_compare
+      | 20 => box_Tresult_call_compare
+      | 21 => box_Tresult_member_call_compare
+      | 22 => box_Tresult_parenlist_compare
+      | 23 => box_Tresult_member_compare
       | _ => PrimString.compare
       end.
 
-    #[local] Notation compare_ctor := (compare_ctor tag car data compare_data).
-    #[local] Notation compare_tag := (compare_tag tag).
+    Definition compare_body' (a b : positive) (av : car a) : car b -> comparison :=
+      match Pos.compare a b as CMP return Pos.compare a b = CMP -> _ with
+      | Eq => fun pf =>
+               match numbers.Pos.compare_eq _ _ pf with
+               | eq_refl => compare_data _ av
+               end
+      | Lt => fun _ _ => Lt
+      | Gt => fun _ _ => Gt
+      end eq_refl.
 
-    #[local] Notation COMP e := (compare_ctor (Reduce (tag e)) (fun _ => Reduce (data e))) (only parsing).
-
-    Definition compare_body (t : type) : type -> comparison :=
-      match t with
-      | Tparam T => COMP (Tparam T : type)
-      | Tresult_param X => COMP (Tresult_param X : type)
-      | Tresult_global on => COMP (Tresult_global on)
-      | Tresult_unop op t => COMP (Tresult_unop op t)
-      | Tresult_binop op tl tr => COMP (Tresult_binop op tl tr)
-      | Tresult_call on ts => COMP (Tresult_call on ts)
-      | Tresult_member_call on t ts => COMP (Tresult_member_call on t ts)
-      | Tresult_parenlist t ts => COMP (Tresult_parenlist t ts)
-      | Tresult_member t f => COMP (Tresult_member t f)
-      | Tptr t => COMP (Tptr t)
-      | Tref t => COMP (Tref t)
-      | Trv_ref t => COMP (Trv_ref t)
-      | Tnum sz sgn => COMP (Tnum sz sgn : type)
-      | Tchar_ t => COMP (Tchar_ t : type)
-      | Tvoid => compare_tag (Reduce (tag Tvoid))
-      | Tarray t n => COMP (Tarray t n)
-      | Tincomplete_array t => COMP (Tincomplete_array t)
-      | Tvariable_array t e => COMP (Tvariable_array t e)
-      | Tnamed gn => COMP (Tnamed gn)
-      | Tenum gn => COMP (Tenum gn)
-      | Tfunction t => COMP (Tfunction t)
-      | Tbool => compare_tag (Reduce (tag Tbool))
-      | Tmember_pointer gn t => COMP (Tmember_pointer gn t)
-      | Tfloat_ t => COMP (Tfloat_ t : type)
-      | Tqualified cv t => COMP (Tqualified cv t)
-      | Tnullptr => compare_tag (Reduce (tag Tnullptr))
-      | Tarch sz n => COMP (Tarch sz n : type)
-      | Tdecltype e => COMP (Tdecltype e)
-      | Texprtype e => COMP (Texprtype e)
-      | Tunsupported msg => COMP (Tunsupported msg : type)
-      end.
+    Definition compare_body (a b : type) : comparison :=
+      data a (fun a => data b (fun b => Uint63.compare a b)
+                         (fun _ _ => Lt))
+        (fun a ad => data b (fun b => Gt)
+                       (fun b bd => compare_body' a b ad bd)).
   End compare_body.
+
 End type.
 
 Module Expr.
