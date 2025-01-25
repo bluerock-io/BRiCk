@@ -292,7 +292,7 @@ Definition _local (ρ : region) (b : ident) : ptr :=
   | Some p => p
   | _ => invalid_ptr
   end.
-Arguments _local !_ !_ / : simpl nomatch, assert.
+Arguments _local !_ _ / : simpl nomatch, assert.
 
 (** [_this ρ] returns the [ptr] that [this] is bound to.
 
@@ -1594,13 +1594,13 @@ TODO: maybe be more uniform in the future. *)
 
 (* DEPRECATIONS *)
 #[deprecated(since="20241102",note="use [wp_mfptr].")]
-Notation mspec := wp_mfptr.
+Notation mspec := wp_mfptr (only parsing).
 #[deprecated(since="20241102",note="use [wp_mfptr_frame_fupd_strong].")]
-Notation mspec_frame_fupd_strong := wp_mfptr_frame_fupd_strong.
+Notation mspec_frame_fupd_strong := wp_mfptr_frame_fupd_strong (only parsing).
 #[deprecated(since="20241102",note="use [wp_mfptr_shift].")]
-Notation mspec_shift := wp_mfptr_shift.
+Notation mspec_shift := wp_mfptr_shift (only parsing).
 #[deprecated(since="20241102",note="use [wp_mfptr_frame].")]
-Notation mspec_frame := wp_mfptr_frame.
+Notation mspec_frame := wp_mfptr_frame (only parsing).
 #[deprecated(since="20241102",note="use [wp_mfptr_frame].")]
 Notation mspec_frame_fupd := wp_mfptr_frame_fupd.
 End WPE.

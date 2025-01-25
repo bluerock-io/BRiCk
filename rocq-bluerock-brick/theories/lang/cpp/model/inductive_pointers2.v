@@ -27,6 +27,7 @@ Require Import bedrock.lang.cpp.semantics.sub_module.
 Require Import bedrock.lang.cpp.semantics.values.
 Require Import bedrock.lang.cpp.model.simple_pointers_utils.
 Require Import bedrock.lang.cpp.model.inductive_pointers_utils.
+Require Import bedrock.lang.cpp.semantics.ptrs2.
 
 From Equations Require Import Equations.
 
@@ -43,8 +44,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   | o_field_ (* type-name: *) (f : field)
   | o_sub_ (ty : type) (z : Z)
   | o_base_ (derived base : globname)
-  | o_derived_ (base derived : globname)
-  | o_invalid_.
+  | o_derived_ (base derived : globname).
   #[local] Instance raw_offset_seg_eq_dec : EqDecision raw_offset_seg.
   Proof. solve_decision. Defined.
   #[global] Declare Instance raw_offset_seg_countable : Countable raw_offset_seg.
@@ -78,8 +78,146 @@ Module PTRS_IMPL <: PTRS_INTF.
       roff_rw_local s t.
 
   Definition roff_rw := rtc roff_rw_global.
+  #[global] Instance roff_rw_reflexive : Reflexive roff_rw.
+  Proof.
+    move=> x. done.
+  Qed.
+  #[global] Instance roff_rw_transitive : Transitive roff_rw.
+  Proof.
+    move=> x y z. apply rtc_transitive.
+  Qed.
+
   Definition roff_canon := nf roff_rw_global.
-  
+
+  Lemma singleton_offset_canon :
+    ∀ o,
+      (¬∃ ty, o = o_sub_ ty 0) ->
+      roff_canon [o].
+  Proof.
+    assert (Hn : ∀ A (x y z : A) (l r : list A), [x] ≠ l ++ [y; z] ++ r).
+    {
+      move=> A x y z l r H.
+      destruct l. done.
+      inversion H. subst.
+      destruct l; done.
+    }
+    move=> o H.
+    rewrite /roff_canon /nf /roff_rw_global /red.
+    move=> [_ [l [r [s [t [H1 [_ H2]]]]]]].
+    destruct H2.
+    { apply: Hn. exact: H1. }
+    { apply: Hn. exact: H1. }
+    {
+      destruct l; simpl in H1;
+      inversion H1; subst.
+      { apply: H. by exists ty. }
+      destruct l; done.
+    }
+    { apply: Hn. exact: H1. }
+  Qed.
+
+  Lemma nil_canon :
+    roff_canon [].
+  Proof.
+    rewrite /roff_canon /roff_rw_global /nf /not /red.
+    move=> [o [l [r [s [t [H1 [H2 H3]]]]]]].
+    subst.
+    assert (l = []).
+    { by destruct l. }
+    subst.
+    assert (s = []).
+    { by destruct s. }
+    subst.
+    clear - H3. remember [].
+    by destruct H3.
+  Qed.
+
+  Inductive roff_canon_syn : raw_offset -> Prop :=
+  | NilCanon :
+      roff_canon_syn []
+  | SingCanon o :
+      ¬(∃ ty, o = o_sub_ ty 0) ->
+      roff_canon_syn [o]
+  | SubCanon ty i o os :
+      roff_canon_syn (o :: os) ->
+      ¬(∃ i' ty', o = o_sub_ ty' i') ->
+      i ≠ 0 ->
+      roff_canon_syn (o_sub_ ty i :: o :: os)
+  | FieldCanon f os :
+      roff_canon_syn os ->
+      roff_canon_syn (o_field_ f :: os)
+  | BaseCanon der base o os :
+      roff_canon_syn (o :: os) ->
+      o ≠ o_derived_ base der ->
+      roff_canon_syn (o_base_ der base :: o :: os)
+  | DerCanon base der o os :
+      roff_canon_syn (o :: os) ->
+      o ≠ o_base_ der base ->
+      roff_canon_syn (o_derived_ base der :: o :: os).
+
+  Lemma canon_syn_sem_eqv :
+    ∀ os,
+      roff_canon os <-> roff_canon_syn os.
+  Proof.
+    rewrite /roff_canon /nf /red.
+    move=> os. split; move=> Hc.
+    {
+      admit.
+    }
+    {
+      induction Hc;
+      try (
+        remember (o :: os) as eos;
+        destruct Hc; subst
+      ); try done;
+      try inversion Heqeos;
+      subst.
+      { apply: nil_canon. }
+      { by apply: singleton_offset_canon. }
+      all:
+        move=> [y [l [r [s [t [Ho [Hl Hstep]]]]]]];
+        subst; destruct l; simpl in *; destruct Hstep;
+        simpl in *; inversion Ho; subst; try done;
+        try (
+          match goal with
+          | H : ¬∃ i ty, o_sub_ _ _ = o_sub_ ty i |- False =>
+            apply H
+          end;
+          try repeat eexists
+        );
+        try (
+          match goal with
+          | H : [?o] = ?l ++ ?r |- False =>
+            destruct l; simpl in *;
+            inversion H; subst;
+            destruct l; simpl in *;
+            inversion H
+          end
+        );
+        try (
+          match goal with
+          | H : [?o] = ?l ++ ?r |- False =>
+            destruct l; simpl in *;
+            inversion H; subst
+          end
+        );
+        try (
+          match goal with
+          | H : ¬∃ ty, o_sub_ _ 0 = o_sub_ ty 0 |- False =>
+              apply H; repeat eexists
+          end
+        );
+        try (
+          match goal with
+          | H : [] = ?l ++ ?r |- False =>
+              destruct l; simpl in *;
+              inversion H
+          end
+        ).
+        all: admit.
+    }
+  Admitted.
+
   Definition offset := {o : raw_offset | roff_canon o}.
   #[global] Instance offset_eq_dec : EqDecision offset.
   Proof.
@@ -280,24 +418,6 @@ Module PTRS_IMPL <: PTRS_INTF.
           { by apply H0. }
         }
       }
-      {
-        case_match.
-        {
-          subst.
-          apply: rtc_l. 2: by apply: H.
-          exists [], (o_invalid_ :: l), [o_sub_ ty 0], [].
-          split. easy.
-          split. easy.
-          constructor.
-        }
-        {
-          apply roff_rw_cong with
-            (ol1:=[o_sub_ ty i])
-            (or1:=[o_sub_ ty i]).
-          { done. }
-          { by apply H0. }
-        }
-      }
       { done. }
       {
         apply roff_rw_cong with
@@ -339,13 +459,6 @@ Module PTRS_IMPL <: PTRS_INTF.
         { done. }
         { by apply H0. }
         }
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[o_base_ derived base])
-          (or1:=[o_base_ derived base]).
-        { done. }
-        { done. }
       }
       { done. }
       {
@@ -389,20 +502,6 @@ Module PTRS_IMPL <: PTRS_INTF.
         apply roff_rw_cong with
           (ol1:=[o_derived_ base0 derived0])
           (or1:=[o_derived_ base0 derived0]).
-        { done. }
-        { done. }
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[o_derived_ base0 derived0])
-          (or1:=[o_derived_ base0 derived0]).
-        { done. }
-        { done. }
-      }
-      {
-        apply roff_rw_cong with
-          (ol1:=[o_invalid_])
-          (or1:=[o_invalid_]).
         { done. }
         { done. }
       }
@@ -575,10 +674,6 @@ Module PTRS_IMPL <: PTRS_INTF.
         apply roff_rw_cong_cons.
         apply norm_sound.
       }
-      4:{
-        apply roff_rw_cong_cons.
-        apply norm_sound.
-      }
       {
         destruct (decide (z = 0)).
         {
@@ -598,7 +693,6 @@ Module PTRS_IMPL <: PTRS_INTF.
           { apply roff_rw_sub0, roff_rw_uncons_help_sing. simpl. lia. }
           { apply roff_rw_sub0, roff_rw_uncons_help_sing. simpl. lia. }
           { apply roff_rw_sub0, roff_rw_uncons_help_sing. simpl. lia. }
-          { apply roff_rw_sub0, roff_rw_cong_cons, norm_sound. }
         }
         {
           destruct r.
@@ -617,7 +711,6 @@ Module PTRS_IMPL <: PTRS_INTF.
           }
           { apply roff_rw_cong_cons, norm_sound. }
           { apply roff_rw_cong_cons, norm_sound. }
-          { apply roff_rw_cong_cons, roff_rw_cong_cons, norm_sound. }
         }
       }
       {
@@ -891,11 +984,6 @@ Module PTRS_IMPL <: PTRS_INTF.
             { done. }
             { simpl. lia. }
           }
-          {
-            apply roff_rw_cong_cons.
-            apply roff_rw_cong_cons.
-            apply roff_rw_uncons_help; (done || lia).
-          }
         }
       }
       {
@@ -947,11 +1035,6 @@ Module PTRS_IMPL <: PTRS_INTF.
               with (([o_derived_ base0 derived0] ++ l) ++ s ++ r).
               apply roff_rw_uncons_help; simpl; (done || lia).
             }
-          }
-          {
-            apply roff_rw_cong_cons.
-            apply roff_rw_cong_cons.
-            apply roff_rw_uncons_help; (done || lia).
           }
         }
       }
@@ -1005,16 +1088,7 @@ Module PTRS_IMPL <: PTRS_INTF.
             with (([o_derived_ base0 derived0] ++ l) ++ s ++ r).
             apply roff_rw_uncons_help; simpl; (done || lia).
           }
-          {
-            apply roff_rw_cong_cons.
-            apply roff_rw_cong_cons.
-            apply roff_rw_uncons_help; (done || lia).
-          }
         }
-      }
-      {
-        apply roff_rw_cong_cons.
-        apply roff_rw_uncons_help; (done || lia).
       }
     Qed.
 
@@ -1029,6 +1103,52 @@ Module PTRS_IMPL <: PTRS_INTF.
       assert (roff_rw (l ++ s ++ r) e /\ roff_canon e) by done.
       rewrite -norm_rel in H. subst. clear - H2.
       by apply: roff_rw_uncons_help.
+    Qed.
+
+    Example no_canon_rw_bwd_false :
+      ¬(
+        ∀ o1 o2 o2' o3,
+          roff_rw o2 o2' ->
+          roff_rw (o1 ++ o2) o3 ->
+          roff_rw (o1 ++ o2') o3
+      ).
+    Proof.
+      move=> H.
+      specialize (H []). simpl in *.
+      specialize (H
+        [o_sub_ Tint 2; o_sub_ Tint 2]
+        [o_sub_ Tint 4]
+        [o_sub_ Tint 2; o_sub_ Tint 2]
+      ).
+      assert (roff_rw [o_sub_ Tint 4] [o_sub_ Tint 2; o_sub_ Tint 2]).
+      {
+        apply: H.
+        {
+          apply roff_rw_sub_sub.
+          done.
+        }
+        { done. }
+      }
+      clear H.
+      remember [o_sub_ Tint 4].
+      remember [o_sub_ Tint 2; o_sub_ Tint 2].
+      destruct H0.
+      { subst. done. }
+      {
+        subst.
+        move: H => [l [r [s [t [H1 [H2 H3]]]]]].
+        subst.
+        assert (l = []).
+        {
+          destruct H3; simpl in *;
+          destruct l; simpl in *;
+          try done; inversion H1;
+          destruct l; simpl in *;
+          done.
+        }
+        subst. simpl in *.
+        destruct H3; inversion H1.
+      }
     Qed.
 
     Lemma rw_bwd_r :
@@ -1104,32 +1224,20 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   End norm_lemmas.
 
-  Lemma nil_canon :
-    roff_canon [].
-  Proof.
-    rewrite /roff_canon /roff_rw_global /nf /not /red.
-    move=> [o [l [r [s [t [H1 [H2 H3]]]]]]].
-    subst.
-    assert (l = []).
-    { by destruct l. }
-    subst.
-    assert (s = []).
-    { by destruct s. }
-    subst.
-    clear - H3. remember [].
-    by destruct H3.
-  Qed.
-
   Inductive root_ptr : Set :=
   | nullptr_
   | global_ptr_ (tu : translation_unit_canon) (o : obj_name)
   | fun_ptr_ (tu : translation_unit_canon) (o : obj_name)
-  | alloc_ptr_ (a : alloc_id).
+  | alloc_ptr_ (a : alloc_id) (va : vaddr).
   
   Inductive ptr_ : Set :=
   | invalid_ptr_
   | offset_ptr (p : root_ptr) (o : offset).
   Definition ptr := ptr_.
+  #[global] Instance ptr_eq_dec : EqDecision ptr.
+  Admitted.
+  #[global] Instance ptr_countable : Countable ptr.
+  Admitted.
 
   Program Definition __offset_ptr (p : ptr) (o : offset) : ptr :=
     match p with
@@ -1246,89 +1354,48 @@ Module PTRS_IMPL <: PTRS_INTF.
     by done.
   Qed.
 
-  Lemma singleton_offset_canon :
-    ∀ o : offset_seg,
-      (¬∃ ty, fst o = o_sub_ ty 0) ->
-      roff_canon [o].
-  Proof.
-    assert (Hn : ∀ A (x y z : A) (l r : list A), [x] ≠ l ++ [y; z] ++ r).
-    {
-      move=> A x y z l r H.
-      destruct l. done.
-      inversion H. subst.
-      destruct l; done.
-    }
-    move=> o H.
-    rewrite /roff_canon /nf /roff_rw_global /red.
-    move=> [_ [l [r [s [t [H1 [_ H2]]]]]]].
-    destruct H2.
-    { apply: Hn. exact: H1. }
-    { apply: Hn. exact: H1. }
-    {
-      destruct l; simpl in H1;
-      inversion H1; subst.
-      { apply: H. by exists ty. }
-      destruct l; done.
-    }
-    { apply: Hn. exact: H1. }
-  Qed.
-
-  Definition eval_raw_offset_seg σ (ro : raw_offset_seg) : option Z :=
+  (* Definition eval_raw_offset_seg σ (ro : raw_offset_seg) : option Z :=
     match ro with
     | o_field_ f => o_field_off σ f
     | o_sub_ ty z => o_sub_off σ ty z
     | o_base_ derived base => o_base_off σ derived base
     | o_derived_ base derived => o_derived_off σ base derived
     | o_invalid_ => None
-    end.
-  
-  Definition mk_offset_seg σ (ro : raw_offset_seg) : offset_seg :=
-    match eval_raw_offset_seg σ ro with
-    | None => (o_invalid_, 0%Z)
-    | Some off => (ro, off)
-    end.
+    end. *)
 
-  Program Definition o_field (σ : genv) (f : field) : offset :=
-    [mk_offset_seg σ (o_field_ f)].
+  Program Definition o_field (f : field) : offset :=
+    [o_field_ f].
   Next Obligation.
     (* move=> σ f. *)
     apply: singleton_offset_canon. 2: exact: H.
-    rewrite /mk_offset_seg /eval_raw_offset_seg.
-    clear H.
-    move=> [ty H]. by destruct (o_field_off σ f).
+    clear H. by move=> [ty H].
   Qed.
 
-  Program Definition o_base σ derived base : offset :=
-    [mk_offset_seg σ (o_base_ derived base)].
+  Program Definition o_base derived base : offset :=
+    [o_base_ derived base].
   Next Obligation.
     (* move=> σ der base. *)
     apply: singleton_offset_canon. 2: exact: H.
-    rewrite /mk_offset_seg /eval_raw_offset_seg.
-    clear H. move=> [ty H]. by destruct (o_base_off σ derived base).
+    clear H. by move=> [ty H].
   Qed.
 
-  Program Definition o_derived σ base derived : offset :=
-    [mk_offset_seg σ (o_derived_ base derived)].
+  Program Definition o_derived base derived : offset :=
+    [o_derived_ base derived].
   Next Obligation.
     (* move=> σ base der. *)
     apply: singleton_offset_canon. 2: exact: H.
-    rewrite /mk_offset_seg /eval_raw_offset_seg.
-    clear H. move=> [ty H]. by destruct (o_derived_off σ base derived).
+    clear H. by move=> [ty H].
   Qed.
 
-  Program Definition o_sub σ ty z : offset :=
+  Program Definition o_sub ty z : offset :=
     if decide (z = 0)%Z then
       o_id
     else
-      [mk_offset_seg σ (o_sub_ ty z)].
+      [o_sub_ ty z].
   Next Obligation.
     (* move=> σ ty z znz. *)
     apply: singleton_offset_canon. 2: exact: H.
-    clear - n. move=> [ty' H].
-    unfold mk_offset_seg, eval_raw_offset_seg, o_sub_off in H.
-    destruct (size_of σ ty); simpl in *.
-    { inversion H. by subst. }
-    { easy. }
+    clear - n. move=> [ty' H]. congruence.
   Qed.
 
   #[global] Notation "p ., o" := (_dot p (o_field _ o))
@@ -1338,93 +1405,437 @@ Module PTRS_IMPL <: PTRS_INTF.
     #[global] Notation ".[ t ! n ]" := (o_sub _ t n) (at level 11, no associativity, format ".[  t  !  n  ]") : stdpp_scope.
 
   Lemma o_sub_0 :
-    ∀ σ ty,
-      is_Some (size_of σ ty) ->
-      o_sub σ ty 0 = o_id.
+    ∀ ty, o_sub ty 0 = o_id.
   Proof.
-    move=> σ ty _.
+    move=> ty.
     rewrite /o_sub.
     by case_match.
   Qed.
 
   Lemma o_base_derived :
-    ∀ σ (p : ptr) base derived,
-      directly_derives σ derived base ->
-      p ,, o_base σ derived base ,, o_derived σ base derived = p.
+    ∀ (p : ptr) base derived,
+      p ,, o_base derived base ,, o_derived base derived = p.
   Proof.
     UNFOLD_dot.
     rewrite /__offset_ptr.
-    move=> σ [| r [o H]] base der [pz Hd].
-    { easy. }
+    move=> [| rp [o H]] base der.
+    { done. }
     {
-      simpl. f_equal. apply: sig_eq.
+      f_equal. simpl. apply: sig_eq.
       rewrite norm_absorb_r -app_assoc norm_rel.
-      split. 2: easy. apply: rtc_l. 2: constructor.
-      eexists o, [], [mk_offset_seg σ (o_base_ der base); mk_offset_seg σ (o_derived_ base der)], [].
-      split. { easy. }
-      split. { simpl. by rewrite app_nil_r. }
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_base_off /o_derived_off.
-      rewrite Hd. constructor.
+      split.
+      {
+        simpl. apply: rtc_l. 2: done.
+        exists o, [], [o_base_ der base; o_derived_ base der], [].
+        split. done.
+        split. by repeat rewrite app_nil_r.
+        constructor.
+      }
+      { done. }
     }
   Qed.
   
   Lemma o_derived_base :
-    ∀ σ (p : ptr) base derived,
-      directly_derives σ derived base ->
-      p ,, o_derived σ base derived ,, o_base σ derived base = p.
+    ∀ (p : ptr) base derived,
+      p ,, o_derived base derived ,, o_base derived base = p.
   Proof.
     UNFOLD_dot.
     rewrite /__offset_ptr.
-    move=> σ [| r [o H]] base der [pz Hd].
-    { easy. }
+    move=> [| rp [o H]] base der.
+    { done. }
     {
-      simpl. f_equal. apply: sig_eq.
+      f_equal. simpl. apply: sig_eq.
       rewrite norm_absorb_r -app_assoc norm_rel.
-      split. 2: easy. apply: rtc_l. 2: constructor.
-      eexists o, [], [mk_offset_seg σ (o_derived_ base der); mk_offset_seg σ (o_base_ der base)], [].
-      split. { easy. }
-      split. { simpl. by rewrite app_nil_r. }
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_base_off /o_derived_off.
-      rewrite Hd. constructor.
+      split.
+      {
+        simpl. apply: rtc_l. 2: done.
+        exists o, [], [o_derived_ base der; o_base_ der base], [].
+        split. done.
+        split. by repeat rewrite app_nil_r.
+        constructor.
+      }
+      { done. }
     }
   Qed.
 
   Lemma o_dot_sub :
-    ∀ σ i j ty,
-      is_Some (size_of σ ty) ->
-      (o_sub _ ty i) ,, (o_sub _ ty j) = o_sub _ ty (i + j).
+    ∀ i j ty,
+      o_sub ty i ,, o_sub ty j = o_sub ty (i + j).
   Proof.
     UNFOLD_dot.
-    move=> σ i j ty [sz HSome].
+    move=> i j ty.
     rewrite /__o_dot /o_sub.
     repeat case_match;
     subst; try lia;
     rewrite /o_id; simpl in *;
-    apply: sig_eq;
-    try done.
+    apply: sig_eq; try done;
+    simp normalize;
+    repeat case_match; try done.
+    { by replace (i + 0) with i by lia. }
+  Qed.
+
+  Definition ptr_alloc_id (p : ptr) : option alloc_id :=
+    match p with
+    | offset_ptr (alloc_ptr_ a _) _ => Some a
+    | _ => None
+    end.
+  
+  Definition null_alloc_id : alloc_id.
+  Admitted.
+  Lemma ptr_alloc_id_nullptr :
+    ptr_alloc_id nullptr = Some null_alloc_id.
+  Admitted.
+
+  Lemma ptr_alloc_id_offset :
+    ∀ p o,
+      is_Some (ptr_alloc_id (p ,, o)) ->
+      ptr_alloc_id (p ,, o) = ptr_alloc_id p.
+  Proof.
+    UNFOLD_dot.
+    rewrite /ptr_alloc_id.
+    move=> [| r o1] o2; simpl.
+    { done. }
+    { by destruct r. }
+  Qed.
+
+  Definition eval_offset_seg (σ : genv) (o : raw_offset_seg) : option Z :=
+    match o with
+    | o_field_ f => o_field_off σ f
+    | o_sub_ ty i => o_sub_off σ ty i
+    | o_base_ der base => o_base_off σ der base
+    | o_derived_ base der => o_derived_off σ base der
+    end.
+
+  Fixpoint eval_offset_aux (σ : genv) (os : list raw_offset_seg) : option Z :=
+    match os with
+    | [] => Some 0
+    | o :: os =>
+      eval_offset_seg σ o ≫= λ o,
+      eval_offset_aux σ os ≫= λ os,
+      Some (o + os)
+    end.
+
+  Definition eval_offset (σ : genv) (os : offset) : option Z :=
+    eval_offset_aux σ (`os).
+
+  Lemma eval_o_sub :
+    ∀ σ ty (i : Z),
+      is_Some (size_of σ ty) ->
+      eval_offset σ (o_sub ty i) = (fun n => Z.of_N n * i) <$> size_of σ ty.
+  Proof.
+    rewrite /eval_offset /o_sub.
+    move=> σ ty i [n Hsome].
+    case_match; subst; simpl.
     {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome. simpl. simp normalize. case_match; done.
+      rewrite Hsome. simpl.
+      by replace (n * 0) with 0 by lia.
     }
     {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome; simpl; simp normalize.
-      assert (i + 0 = i) by lia.
-      case_match.
-      { lia. }
-      { by rewrite H2. }
-    }
-    {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome; simpl. simp normalize.
-      repeat case_match; done.
-    }
-    {
-      rewrite /mk_offset_seg /eval_raw_offset_seg /o_sub_off.
-      rewrite HSome; simpl. simp normalize.
-      repeat case_match; subst; try (lia || congruence).
-      assert (i * sz + j * sz = (i + j) * sz) by lia.
-      by rewrite H5.
+      rewrite /o_sub_off Hsome. simpl.
+      by replace (i * n + 0) with (n * i) by lia.
     }
   Qed.
+
+  Lemma eval_o_field :
+    ∀ σ n cls st,
+      glob_def σ cls = Some (Gstruct st) ->
+      st.(s_layout) = POD \/ st.(s_layout) = Standard ->
+      eval_offset σ (o_field (Field cls n)) = offset_of σ cls n.
+  Proof.
+  Admitted.
+
+  Lemma eval_offset_resp_norm :
+    ∀ σ os,
+      roff_canon os ->
+      eval_offset_aux σ (normalize os) = eval_offset_aux σ os.
+  Proof.
+    move=> σ os.
+    rewrite canon_syn_sem_eqv.
+    move=> Hc. induction Hc;
+    simp normalize.
+    { done. }
+    {
+      destruct o;
+      simp normalize;
+      simpl; try done.
+      case_match; subst; simpl.
+      { exfalso. apply: H. repeat eexists. }
+      { done. }
+    }
+    {
+      destruct o; simp normalize in *;
+      repeat case_match; subst; try done;
+      simpl in *; f_equal;
+      try (extensionality o;rewrite IHHc; done).
+      { exfalso. apply H. repeat eexists. }
+    }
+    { simpl. by rewrite IHHc. }
+    {
+      destruct o;
+      simp normalize in *;
+      try case_match; simpl in *;
+      try rewrite IHHc; try done.
+      { exfalso. apply H. destruct a. by subst. }
+    }
+    {
+      destruct o;
+      simp normalize in *;
+      try case_match; simpl in *;
+      try rewrite IHHc; try done.
+      { exfalso. apply H. destruct a. by subst. }
+    }
+  Qed.
+
+  Lemma simp_norm_canon_sub :
+    ∀ ty i o os,
+      i ≠ 0 ->
+      ¬(∃ i ty, o = o_sub_ ty i) ->
+      normalize (o_sub_ ty i :: o :: os) = o_sub_ ty i :: normalize (o :: os).
+  Proof.
+    move=> ty i o os Hne H.
+    destruct o; simpl;
+    simp normalize;
+    repeat case_match;
+    subst; try done.
+    exfalso. apply H.
+    repeat eexists.
+  Qed.
+
+  Lemma simp_norm_canon_base :
+    ∀ der base o os,
+      o ≠ o_derived_ base der ->
+      normalize (o_base_ der base :: o :: os) = o_base_ der base :: normalize (o :: os).
+  Proof.
+    move=> der base o os Hne.
+    destruct o; simpl;
+    simp normalize;
+    repeat case_match;
+    subst; try done.
+    exfalso. apply Hne.
+    destruct a. by subst.
+  Qed.
+
+  Lemma simp_norm_canon_der :
+    ∀ base der o os,
+      o ≠ o_base_ der base ->
+      normalize (o_derived_ base der :: o :: os) = o_derived_ base der :: normalize (o :: os).
+  Proof.
+    move=> base der o os Hne.
+    destruct o; simpl;
+    simp normalize;
+    repeat case_match;
+    subst; try done.
+    exfalso. apply Hne.
+    destruct a. by subst.
+  Qed.
+
+  Lemma bind_assoc {A} :
+    ∀ (m : option A) (k1 k2 : A -> option A),
+      (m >>= k1) >>= k2 = m >>= λ x, k1 x >>= k2.
+  Proof.
+    move=> m k1 k2.
+    by destruct m.
+  Qed.
+
+  (* TODO:
+    this doesn't quite work. imagine this case for instance:
+      o1 = [o_sub_ FOO 2]
+      o2 = [o_sub_ FOO -2]
+    the goal is then
+      eval_offset_aux σ (normalize [o_sub_ FOO 2; o_sub_ FOO -2])
+        =
+      add_opt (eval_offset_aux σ [o_sub_ FOO 2]) (eval_offset_aux σ [o_sub_ FOO -2])
+    key here: let's say FOO is an *invalid* type, as in size_ty σ ty
+    will compute to None. in this case, the goal is this:
+      eval_offset_aux σ o_id = add_opt None None
+    which further computes to
+      Some 0 = None
+    this happens because offset normalization eagerly reduces o_sub_ ty 0 to
+    o_id, even if ty is an invalid type!
+  *)
+  Equations eval_offset_dot_aux σ (o1 o2 : raw_offset)
+      (H : roff_canon o1)
+      (H0 : roff_canon o2) :
+      eval_offset_aux σ (normalize (o1 ++ o2)) =
+      add_opt (eval_offset_aux σ o1) (eval_offset_aux σ o2)
+      by wf (length o1) lt :=
+      eval_offset_dot_aux σ o1 o2 := _.
+  Next Obligation.
+    unfold add_opt, liftM2 in *.
+    move: H H0.
+    do 2 rewrite canon_syn_sem_eqv.
+    move=> Hc1 Hc2. destruct Hc1; simpl.
+    {
+      rewrite eval_offset_resp_norm.
+      { by destruct (eval_offset_aux σ o2). }
+      { by rewrite canon_syn_sem_eqv. }
+    }
+    {
+      destruct o; simp normalize;
+      simpl.
+      {
+        rewrite eval_offset_resp_norm.
+        2:{ by rewrite canon_syn_sem_eqv. }
+        destruct (o_field_off σ f); simpl.
+        2:{ done. }
+        f_equal. extensionality os.
+        replace (z + os) with (z + 0 + os) by lia.
+        done.
+      }
+      {
+        destruct Hc2; simp normalize;
+        repeat case_match; subst;
+        try match goal with
+        | H : ¬∃ ty, o_sub_ _ 0 = o_sub_ ty 0 |- _ =>
+          exfalso; apply H; repeat eexists
+        end; simpl.
+        {
+          destruct (o_sub_off σ ty z); simpl.
+          { by replace (z0 + 0 + 0) with (z0 + 0) by lia. }
+          { done. }
+        }
+        {
+          destruct o; simpl;
+          simp normalize;
+          repeat case_match;
+          simpl; subst;
+          try match goal with
+          | H : ¬∃ ty, o_sub_ _ 0 = o_sub_ ty 0 |- _ =>
+            exfalso; apply H; repeat eexists
+          end;
+          repeat (
+            rewrite bind_assoc;
+            simpl; f_equal
+          ); simpl.
+          {
+            destruct (o_field_off σ f); simpl;
+            extensionality o. 2: done.
+            replace (o + 0 + (z0 + 0))
+            with    (o + (z0 + 0))
+            by lia.
+            done.
+          }
+          all: admit.
+        }
+        all: admit.
+      }
+      {
+        admit.
+      }
+      {
+        admit.
+      }
+    }
+    {
+      rewrite simp_norm_canon_sub. 2: done. simpl.
+      change (normalize (o :: os ++ o2))
+      with   (normalize ((o :: os) ++ o2)).
+      rewrite eval_offset_dot_aux.
+      2:{ simpl. lia. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      destruct (o_sub_off σ ty i); simpl.
+      2:{ done. }
+      destruct (eval_offset_seg σ o); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ os); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ o2); simpl.
+      2:{ done. }
+      {
+        replace (z + (z0 + z1 + z2))
+        with    (z + (z0 + z1) + z2)
+        by lia.
+        done.
+      }
+      { done. }
+    }
+    {
+      simp normalize. simpl.
+      rewrite eval_offset_dot_aux.
+      2:{ simpl. lia. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      destruct (o_field_off σ f); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ os); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ o2); simpl.
+      2:{ done. }
+      replace (z + (z0 + z1))
+      with    (z + z0 + z1)
+      by lia.
+      { done. }
+    }
+    {
+      rewrite simp_norm_canon_base. 2: done. simpl.
+      change (normalize (o :: os ++ o2))
+      with   (normalize ((o :: os) ++ o2)).
+      rewrite eval_offset_dot_aux.
+      2:{ simpl. lia. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      destruct (o_base_off σ der base); simpl.
+      2:{ done. }
+      destruct (eval_offset_seg σ o); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ os); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ o2); simpl.
+      2:{ done. }
+      {
+        replace (z + (z0 + z1 + z2))
+        with    (z + (z0 + z1) + z2)
+        by lia.
+        done.
+      }
+    }
+    {
+      rewrite simp_norm_canon_der. 2: done. simpl.
+      change (normalize (o :: os ++ o2))
+      with   (normalize ((o :: os) ++ o2)).
+      rewrite eval_offset_dot_aux.
+      2:{ simpl. lia. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      2:{ by rewrite canon_syn_sem_eqv. }
+      destruct (o_derived_off σ base der); simpl.
+      2:{ done. }
+      destruct (eval_offset_seg σ o); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ os); simpl.
+      2:{ done. }
+      destruct (eval_offset_aux σ o2); simpl.
+      2:{ done. }
+      {
+        replace (z + (z0 + z1 + z2))
+        with    (z + (z0 + z1) + z2)
+        by lia.
+        done.
+      }
+    }
+  Admitted.
+
+  Lemma eval_offset_dot :
+    ∀ σ (o1 o2 : offset),
+      eval_offset σ (o1 ,, o2) =
+      add_opt (eval_offset σ o1) (eval_offset σ o2).
+  Proof.
+    UNFOLD_dot. rewrite /eval_offset.
+    move=> σ [o1 H1] [o2 H2]. simpl.
+    induction o1; simpl.
+
+  Definition ptr_vaddr (p : ptr) : option vaddr :=
+    match p with
+    | invalid_ptr_ => None
+    | offset_ptr p (exist _ o _) =>
+      foldr
+        (λ off ova, Some 1)
+        (match p with
+        | nullptr_ => Some 0%N
+        | fun_ptr_ tu o => Some (global_ptr_encode_vaddr o)
+        | global_ptr_ tu o => Some (global_ptr_encode_vaddr o)
+        | alloc_ptr_ aid va => Some va
+        end)
+        o
+    end.
 End PTRS_IMPL.

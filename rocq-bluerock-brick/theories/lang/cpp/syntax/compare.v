@@ -66,12 +66,15 @@ Definition from_comparison {A cmp} {C : Comparison cmp} {LC : @LeibnizComparison
   Canonical bs_comparator :=
     {| _car := bs
     ; _compare := bs_compare |}.
+  Canonical pstring_comparator :=
+    {| _car := PrimString.string
+    ; _compare := PrimString.compare |}.
   Canonical localname_comparator :=
     {| _car := localname
-     ; _compare := bs_compare |}.
+     ; _compare := PrimString.compare |}.
   Canonical ident_comparator :=
     {| _car := ident
-    ; _compare := bs_compare |}.
+    ; _compare := PrimString.compare |}.
   Canonical bool_comparator :=
     {| _car := bool
     ; _compare := Bool.compare |}.
@@ -203,7 +206,7 @@ Module UnOp.
   #[prefix="", only(tag)] derive UnOp.
   Definition car (t : positive) : Set :=
     match t with
-    | 5 => bs
+    | 5 => PrimString.string
     | _ => unit
     end.
   Definition data (x : UnOp) : car (tag x) :=
@@ -213,7 +216,7 @@ Module UnOp.
     end.
   Definition compare_data (t : positive) : car t -> car t -> comparison :=
     match t with
-    | 5 => bs_cmp
+    | 5 => PrimString.compare
     | _ => fun _ _ => Eq
     end.
 
@@ -243,7 +246,7 @@ Module BinOp.
   #[prefix="", only(tag)] derive BinOp.
   Definition car (t : positive) : Set :=
     match t with
-    | 20 => bs
+    | 20 => PrimString.string
     | _ => unit
     end.
   Definition data (x : BinOp) : car (tag x) :=
@@ -253,7 +256,7 @@ Module BinOp.
     end.
   Definition compare_data (t : positive) : car t -> car t -> comparison :=
     match t with
-    | 20 => bs_cmp
+    | 20 => PrimString.compare
     | _ => fun _ _ => Eq
     end.
 
@@ -583,7 +586,7 @@ Module temp_param.
       box_Pvalue_1 : type;
     }.
     Definition box_Pvalue_compare (b1 b2 : box_Pvalue) : comparison :=
-      compare_lex (bs_cmp b1.(box_Pvalue_0) b2.(box_Pvalue_0)) $ fun _ =>
+      compare_lex (PrimString.compare b1.(box_Pvalue_0) b2.(box_Pvalue_0)) $ fun _ =>
       compareT b1.(box_Pvalue_1) b2.(box_Pvalue_1).
 
     Definition tag (p : temp_param) : positive :=
@@ -595,7 +598,7 @@ Module temp_param.
     Definition car (t : positive) : Set :=
       match t with
       | 2 => box_Pvalue
-      | _ => bs
+      | _ => ident
       end.
     Definition data (p : temp_param) : car (tag p) :=
       match p with
@@ -606,7 +609,7 @@ Module temp_param.
     Definition compare_data (t : positive) : car t -> car t -> comparison :=
       match t with
       | 2 => box_Pvalue_compare
-      | _ => bs_cmp
+      | _ => PrimString.compare
       end.
 
     #[local] Notation compare_ctor := (compare_ctor tag car data compare_data).
@@ -624,17 +627,20 @@ End temp_param.
 
 Module temp_arg.
   Section compare.
-    Context {name type Expr : Set}.
+    Context {lang : lang.t}.
+    #[local] Notation name := (name' lang).
+    #[local] Notation type := (type' lang).
+    #[local] Notation Expr := (Expr' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
-    #[local] Notation temp_arg := (temp_arg_ name type Expr).
+   #[local] Notation temp_arg := (temp_arg' lang).
 
     Definition tag (p : temp_arg) : positive :=
       match p with
       | Atype _ => 1
       | Avalue _ => 2
-      | Apack _ => 3
+      | Apack_expansion _ => 3
       | Atemplate _ => 4
       | Aunsupported _ => 5
       end.
@@ -642,15 +648,15 @@ Module temp_arg.
       match t with
       | 1 => type
       | 2 => Expr
-      | 3 => list (temp_arg_ name type Expr)
+      | 3 => list temp_arg
       | 4 => name
-      | _ => bs
+      | _ => PrimString.string
       end.
     Definition data (p : temp_arg) : car (tag p) :=
       match p with
       | Atype t => t
       | Avalue e => e
-      | Apack ls => ls
+      | Apack_expansion ls => ls
       | Atemplate n => n
       | Aunsupported msg => msg
       end.
@@ -661,7 +667,7 @@ Module temp_arg.
       | 2 => compareE
       | 3 => List.compare ta_compare
       | 4 => compareN
-      | _ => bs_cmp
+      | _ => PrimString.compare
       end.
 
     #[local] Notation compare_ctor compare := (compare_ctor tag car data $ compare_data compare).
@@ -670,14 +676,13 @@ Module temp_arg.
       match p with
       | Atype t => compare_ctor compare (Reduce (tag (Atype t))) (fun _ => Reduce (data (Atype t)))
       | Avalue e => compare_ctor compare (Reduce (tag (Avalue e))) (fun _ => Reduce (data (Avalue e)))
-      | Apack ls => compare_ctor compare (Reduce (tag (Apack ls))) (fun _ => Reduce (data (Apack ls)))
+      | Apack_expansion ls => compare_ctor compare (Reduce (tag (Apack_expansion ls))) (fun _ => Reduce (data (Apack_expansion ls)))
       | Atemplate n => compare_ctor compare (Reduce (tag (Atemplate n))) (fun _ => Reduce (data (Atemplate n)))
       | Aunsupported msg => compare_ctor compare (Reduce (tag (Aunsupported msg))) (fun _ => Reduce (data (Aunsupported msg)))
       end.
   End compare.
 
 End temp_arg.
-#[global] Instance temp_arg_compare {A B C : Set} `{!Compare A, !Compare B, !Compare C} : Compare (temp_arg_ A B C) := temp_arg.compare compare compare compare.
 
 Module OverloadableOperator.
   #[prefix="", only(tag)] derive OverloadableOperator.
@@ -779,7 +784,7 @@ Module function_name.
       end.
     Definition car (t : positive) : Set :=
       match t with
-      | 1 | 6 | 7 => bs
+      | 1 | 6 | 7 => PrimString.string
       | 4 => OverloadableOperator
       | 5 => type
       | _ => unit
@@ -796,7 +801,7 @@ Module function_name.
       end.
     Definition compare_data (t : positive) : car t -> car t -> comparison :=
       match t with
-      | 1 | 6 | 7 => bs_cmp
+      | 1 | 6 | 7 => PrimString.compare
       | 4 => OverloadableOperator.compare
       | 5 => compareT
       | _ => fun _ _ => Eq
@@ -849,7 +854,7 @@ Module atomic_name.
       | 4 => unit
       | 5 => ident
       | 6 => ident
-      | _ => bs
+      | _ => PrimString.string
       end.
     Definition data (p : atomic_name) : car (tag p) :=
       match p with
@@ -863,13 +868,13 @@ Module atomic_name.
       end.
     Definition compare_data (t : positive) : car t -> car t -> comparison :=
       match t with
-      | 1 => bs_cmp
+      | 1 => PrimString.compare
       | 2 => box_Nfunction_compare
       | 3 => N.compare
       | 4 => _compare
-      | 5 => bs_cmp
-      | 6 => bs_cmp
-      | _ => bs_cmp
+      | 5 => PrimString.compare
+      | 6 => PrimString.compare
+      | _ => PrimString.compare
       end.
 
     #[local] Notation compare_ctor := (compare_ctor tag car data compare_data).
@@ -1074,7 +1079,7 @@ Module name.
       | 2 => atomic_name
       | 3 => type
       | 4 => box_Nscoped
-      | _ => bs
+      | _ => PrimString.string
       end.
     Definition data (n : name) : car (tag n) :=
       match n with
@@ -1090,7 +1095,7 @@ Module name.
       | 2 => atomic_name.compare compareT
       | 3 => compareT
       | 4 => box_Nscoped_compare
-      | _ => bs_cmp
+      | _ => PrimString.compare
       end.
 
     #[local] Notation compare_ctor := (compare_ctor tag car data compare_data).
@@ -1211,11 +1216,11 @@ Module type.
 
     Record box_Tarch : Set := Box_Tarch {
       box_Tarch_0 : option bitsize;
-      box_Tarch_1 : bs;
+      box_Tarch_1 : PrimString.string;
     }.
     Definition box_Tarch_compare (b1 b2 : box_Tarch) : comparison :=
       compare_lex (option.compare bitsize.compare b1.(box_Tarch_0) b2.(box_Tarch_0)) $ fun _ =>
-      bs_cmp b1.(box_Tarch_1) b2.(box_Tarch_1).
+      PrimString.compare b1.(box_Tarch_1) b2.(box_Tarch_1).
 
     Definition tag (t : type) : positive :=
       match t with
@@ -1276,7 +1281,7 @@ Module type.
       | 26 => unit
       | 27 => box_Tarch
       | 28 | 29 => Expr
-      | _ => bs
+      | _ => PrimString.string
       end.
     Definition data (t : type) : car (tag t) :=
       match t with
@@ -1310,7 +1315,7 @@ Module type.
       end.
     Definition compare_data (t : positive) : car t -> car t -> comparison :=
       match t with
-      | 1 | 2 => bs_cmp
+      | 1 | 2 => PrimString.compare
       | 3 => compareN
       | 4 => box_Tresult_unop_compare
       | 5 => box_Tresult_binop_compare
@@ -1334,7 +1339,7 @@ Module type.
       | 26 => fun _ _ => Eq
       | 27 => box_Tarch_compare
       | 28 | 29 => compareE
-      | _ => bs_cmp
+      | _ => PrimString.compare
       end.
 
     #[local] Notation compare_ctor := (compare_ctor tag car data compare_data).
@@ -1449,7 +1454,7 @@ Module Expr.
       box_Evar_1 : type;
     }.
     Definition box_Evar_compare (b1 b2 : box_Evar) : comparison :=
-      compare_lex (bs_cmp b1.(box_Evar_0) b2.(box_Evar_0)) $ fun _ =>
+      compare_lex (PrimString.compare b1.(box_Evar_0) b2.(box_Evar_0)) $ fun _ =>
       compareT b1.(box_Evar_1) b2.(box_Evar_1).
 
     Record box_Eenum_const : Set := Box_Eenum_const {
@@ -1458,7 +1463,7 @@ Module Expr.
     }.
     Definition box_Eenum_const_compare (b1 b2 : box_Eenum_const) : comparison :=
       compare_lex (compareN b1.(box_Eenum_const_0) b2.(box_Eenum_const_0)) $ fun _ =>
-      bs_cmp b1.(box_Eenum_const_1) b2.(box_Eenum_const_1).
+      PrimString.compare b1.(box_Eenum_const_1) b2.(box_Eenum_const_1).
 
     Record box_Eglobal : Set := Box_Eglobal {
       box_Eglobal_0 : name;
@@ -1635,7 +1640,7 @@ Module Expr.
     }.
     Definition box_Eoffsetof_compare (b1 b2 : box_Eoffsetof) : comparison :=
       compare_lex (compareT b1.(box_Eoffsetof_0) b2.(box_Eoffsetof_0)) $ fun _ =>
-      compare_lex (bs_cmp b1.(box_Eoffsetof_1) b2.(box_Eoffsetof_1)) $ fun _ =>
+      compare_lex (PrimString.compare b1.(box_Eoffsetof_1) b2.(box_Eoffsetof_1)) $ fun _ =>
       compareT b1.(box_Eoffsetof_2) b2.(box_Eoffsetof_2).
 
     Record box_Econstructor : Set := Box_Econstructor {
@@ -1785,11 +1790,11 @@ Module Expr.
       compareT b1.(box_Eopaque_ref_1) b2.(box_Eopaque_ref_1).
 
     Record box_Eunsupported : Set := Box_Eunsupported {
-      box_Eunsupported_0 : bs;
+      box_Eunsupported_0 : PrimString.string;
       box_Eunsupported_1 : type;
     }.
     Definition box_Eunsupported_compare (b1 b2 : box_Eunsupported) : comparison :=
-      compare_lex (bs_cmp b1.(box_Eunsupported_0) b2.(box_Eunsupported_0)) $ fun _ =>
+      compare_lex (PrimString.compare b1.(box_Eunsupported_0) b2.(box_Eunsupported_0)) $ fun _ =>
       compareT b1.(box_Eunsupported_1) b2.(box_Eunsupported_1).
 
     Record box_Estmt : Set := Box_Estmt {
@@ -1991,7 +1996,7 @@ Module Expr.
       end.
     Definition compare_data (t : positive) : car t -> car t -> comparison :=
       match t as t return car t -> car t -> comparison with
-      | 1 => bs_cmp
+      | 1 => PrimString.compare
       | 2 => compareN
       | 3 => box_Eunresolved_unop_compare
       | 4 => box_Eunresolved_binop_compare
@@ -2316,10 +2321,10 @@ Module Stmt.
       | 12 => option Expr
       | 13 => Expr
       | 14 => list ident * Stmt
-      | 15 => bs * bool * list (ident * Expr) * list (ident * Expr) * list ident
+      | 15 => PrimString.string * bool * list (ident * Expr) * list (ident * Expr) * list ident
       | 16 => ident * Stmt
       | 17 => ident
-      | _ => bs
+      | _ => PrimString.string
       end.
     Definition data (s : Stmt) : car (tag s) :=
       match s with

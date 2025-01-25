@@ -4,14 +4,15 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.bytestring_core.
-Require Import bedrock.prelude.bytestring.
+Require Import bedrock.prelude.pstring.
 
 Require Import bedrock.lang.cpp.syntax.core.
 
 (** Pretty printing of C++ terms *)
 
-Definition printOO (oo : OverloadableOperator) : bs :=
+#[local] Open Scope pstring_scope.
+
+Definition printOO (oo : OverloadableOperator) : PrimString.string :=
   match oo with
   | OOTilde => "~"
   | OOExclaim => "!"
@@ -55,25 +56,21 @@ Definition printOO (oo : OverloadableOperator) : bs :=
   | OODelete array => if array then " delete[]" else " delete"
   | OOCall => "()"
   | OOCoawait => " coawait"
-  end%bs.
+  end.
 
 Section with_lang.
 
-  #[local] Open Scope bs_scope.
+  Definition showN (n : N) : PrimString.string :=
+    pstring.N.to_string n.
 
-  Definition showN (n : N) : bs :=
-    BS.of_string $ pretty.pretty_N n.
-
-  Definition parens (b : bs) : bs := "(" ++ b ++ ")".
-  Definition angles (b : bs) : bs := "<" ++ b ++ ">".
-
-  #[local] Open Scope bs_scope.
+  Definition parens (b : PrimString.string) : PrimString.string := "(" ++ b ++ ")".
+  Definition angles (b : PrimString.string) : PrimString.string := "<" ++ b ++ ">".
 
   Section atomic_name.
-    Context {type Expr : Set} (printType : type -> bs) (printExpr : Expr -> bs).
-    Variable top : option bs.
+    Context {type Expr : Set} (printType : type -> PrimString.string) (printExpr : Expr -> PrimString.string).
+    Variable top : option PrimString.string.
 
-    Definition printFN (fn : function_name_ type) : bs :=
+    Definition printFN (fn : function_name_ type) : PrimString.string :=
       match fn with
       | Nf nm => nm
       | Nctor =>
@@ -94,13 +91,10 @@ Section with_lang.
       | Nunsupported_function note => "?" ++ note
       end.
 
-    Definition with_space (b : bs) : bs :=
-      match b with
-      | BS.EmptyString => ""
-      | _ => " " ++ b
-      end.
+    Definition with_space (b : PrimString.string) : PrimString.string :=
+      if bool_decide (b = "") then "" else " " ++ b.
 
-    Definition printFQ (fq : function_qualifiers.t) : bs :=
+    Definition printFQ (fq : function_qualifiers.t) : PrimString.string :=
       let c := if function_qualifiers.is_const fq then ["const"] else [] in
       let v := if function_qualifiers.is_volatile fq then ["volatile"] else [] in
       let vc := match function_qualifiers.vc_of fq with
@@ -108,22 +102,22 @@ Section with_lang.
                 | Lvalue => ["&"]
                 | Xvalue => ["&&"]
                 end in
-      BS.concat " " $ (c ++ v ++ vc)%list.
+      concat $ join_sep " " $ (c ++ v ++ vc)%list.
 
-    Definition printAN (an : atomic_name_ type) : bs :=
+    Definition printAN (an : atomic_name_ type) : PrimString.string :=
       match an with
       | Nid id => id
       | Nfunction quals nm args =>
-          printFN nm ++ (parens $ BS.concat ", " $ printType <$> args) ++ with_space (printFQ quals)
+          printFN nm ++ (parens $ concat $ join_sep ", " $ printType <$> args) ++ with_space (printFQ quals)
       | Nanon n => "@" ++ showN n
       | Nanonymous => "(anon)"
       | Nfirst_decl n => "#" ++ n
       | Nfirst_child n => "." ++ n
       | Nunsupported_atomic note => "?" ++ note
-      end%bs.
+      end.
   End atomic_name.
 
-  Fixpoint topName (nm : name) : option bs :=
+  Fixpoint topName (nm : name) : option PrimString.string :=
     match nm with
     | Nglobal (Nid id) => Some id
     | Nscoped _ (Nid id) => Some id
@@ -131,7 +125,7 @@ Section with_lang.
     | _ => None
     end.
 
-  Definition printUO (o : overloadable.RUnOp) : bs :=
+  Definition printUO (o : overloadable.RUnOp) : PrimString.string :=
     match o with
     | overloadable.Rpreinc => "(++_)"
     | overloadable.Rpostinc => "(_++)"
@@ -149,7 +143,7 @@ Section with_lang.
         end
     end.
 
-  Definition printBO (o : overloadable.RBinOp) : bs :=
+  Definition printBO (o : overloadable.RBinOp) : PrimString.string :=
     let printBO o :=
       match o with
       | Badd => "+"
@@ -181,31 +175,27 @@ Section with_lang.
     | overloadable.Rsubscript => "[]"
     end.
 
-  Section printTA.
-    Context (printN : name -> bs) (printT : type -> bs) (printE : Expr -> bs).
-
-    Fixpoint printTA (ta : temp_arg_ name type Expr) : list bs :=
-      match ta with
-      | Atype t => [printT t]
-      | Avalue e => [printE e]
-      | Apack ls => concat (List.map printTA ls)
-      | Atemplate n => ["<>" ++ printN n]
-      | Aunsupported note => [note]
-      end.
-  End printTA.
-
-  Fixpoint printN (nm : name) : bs :=
+  Fixpoint printN (nm : name) : PrimString.string :=
     match nm with
     | Nglobal an => printAN printT None an
     | Ndependent an => printT an
     | Nscoped base Nanonymous => printN base
     | Nscoped base n => printN base ++ "::" ++ printAN printT (topName base) n
     | Ninst base i =>
-        printN base ++ angles (BS.concat ", " $ concat (List.map (printTA printN printT printE) i))
+        printN base ++ angles (concat $ join_sep ", " $ List.concat (List.map printTA i))
     | Nunsupported note => "?" ++ note
     end
 
-  with printT (ty : type) : bs :=
+  with printTA (ta : temp_arg' lang.cpp) : list PrimString.string :=
+      match ta with
+      | Atype t => [printT t]
+      | Avalue e => [printE e]
+      | Apack_expansion ls => "(...)" ::  List.concat (List.map printTA ls)
+      | Atemplate n => ["<>" ++ printN n]
+      | Aunsupported note => [note]
+      end
+
+  with printT (ty : type) : PrimString.string :=
     match ty with
     | Tint => "int"
     | Tuint => "unsigned int"
@@ -236,7 +226,7 @@ Section with_lang.
     | Trv_ref t => printT t ++ "&&"
     | Tmember_pointer cls t => printT t ++ " " ++ printT cls ++ "::*"
     | Tqualified q t =>
-        BS.concat " " $ (printT t :: (if q_const q then ["const"] else []) ++
+        concat $ join_sep " " $ (printT t :: (if q_const q then ["const"] else []) ++
         (if q_volatile q then ["volatile"] else []))%list
     | Tvoid => "void"
     | Tarray t n => printT t ++ "[" ++ showN n ++ "]"
@@ -247,7 +237,7 @@ Section with_lang.
     | Tnamed nm | Tenum nm => printN nm
     | Tfunction ft =>
         (parens $ printT ft.(ft_return) ++ "*") ++
-        (parens $ BS.concat ", " $ printT <$> ft.(ft_params))
+        (parens $ concat $ join_sep ", " $ printT <$> ft.(ft_params))
     | Tarch _ note => "?" ++ note
     | Tunsupported note => "?" ++ note
     | Tparam nm => nm
@@ -261,7 +251,7 @@ Section with_lang.
     | Tresult_parenlist _ _
     | Tresult_member _ _ => "!nyi"
     end
-  with printE (e : Expr) : bs :=
+  with printE (e : Expr) : PrimString.string :=
     match e with
     | Eglobal nm _ => printN nm
     | _ => "!nyi"
@@ -269,11 +259,11 @@ Section with_lang.
 
 End with_lang.
 
-Definition print_name (input : name) : list Byte.byte :=
-  BS.print $ printN input.
+Definition print_name (input : name) : PrimString.string :=
+  printN input.
 
-Definition TEST (nm : name) (result : bs) : Prop :=
-  BS.parse (print_name nm) = result.
+Definition TEST (nm : name) (result : PrimString.string) : Prop :=
+  (print_name nm) = result.
 
 Succeed Example _0 : TEST (Nglobal $ Nid "foo") "foo" := eq_refl.
 Succeed Example _0 : TEST (Nglobal $ Nfunction function_qualifiers.N (Nop OOPlusPlus) []) "operator++()" := eq_refl.

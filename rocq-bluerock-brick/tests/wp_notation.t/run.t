@@ -1,7 +1,7 @@
   $ . ../setup-project.sh
   $ dune build test.vo
-  "~~~TESTING COMPACT NOTATIONS~~~"%bs
-       : bs
+  "~~~TESTING COMPACT NOTATIONS~~~"%pstring
+       : PrimString.string
   NOTATION_wp_nowrap =
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
@@ -525,8 +525,8 @@
   
   Arguments NOTATION_wp_initialize_wrap ti _Σ Σ σ tu 
     p p' p'' p''' this Q%function_scope
-  "~~~TESTING Verbose NOTATIONS~~~"%bs
-       : bs
+  "~~~TESTING Verbose NOTATIONS~~~"%pstring
+       : PrimString.string
   NOTATION_wp_nowrap =
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 

@@ -140,11 +140,20 @@ Module MTraverse.
 
     Fixpoint traverseN (n : name' lang1) : F (name' lang2) :=
       match n with
-      | Ninst n xs => Ninst <$> traverseN n <*> traverse (T:=eta list) (temp_arg.traverse traverseN traverseT traverseE) xs
+      | Ninst n xs => Ninst <$> traverseN n <*> traverse (T:=eta list) traverseTA xs
       | Nglobal c => Nglobal <$> atomic_name.traverse traverseT c
       | Ndependent t => Ndependent <$> traverseT t
       | Nscoped n c => Nscoped <$> traverseN n <*> atomic_name.traverse traverseT c
       | Nunsupported msg => mret $ Nunsupported msg
+      end
+
+    with traverseTA (a : temp_arg' lang1) : F (temp_arg' lang2) :=
+      match a with
+      | Atype t => Atype <$> traverseT t
+      | Avalue e => Avalue <$> traverseE e
+      | Apack_expansion ls => Apack_expansion <$> UPoly.traverse (T:=eta list) (F:=F) traverseTA ls
+      | Atemplate n => Atemplate <$> traverseN n
+      | Aunsupported msg => mret $ Aunsupported msg
       end
 
     with traverseT (t : type' lang1) : F (type' lang2) :=

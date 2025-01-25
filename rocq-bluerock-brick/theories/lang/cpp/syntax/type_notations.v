@@ -8,7 +8,6 @@ Require Import bedrock.lang.cpp.syntax.core.
 Require Import bedrock.lang.cpp.syntax.notations.
 
 #[local] Open Scope Z_scope.
-#[local] Open Scope bs_scope.
 
 Module Export TypeNotationsInterface.
   Declare Custom Entry CPP_type.
@@ -114,7 +113,7 @@ Module Export TypeNotations.
          , ty custom CPP_type
          , n constr
          , format "'[' ty [ n ] ']'", only printing).
-  Notation "nm" := (Tnamed nm%bs) (in custom CPP_type at level 0, nm constr, only printing).
+  Notation "nm" := (Tnamed nm%pstring) (in custom CPP_type at level 0, nm constr, only printing).
   Notation "'extern' cc '???()' '->' rty"
       := (@Tfunction _ (@FunctionType _ cc Ar_Definite rty nil))
          ( in custom CPP_type at level 100
@@ -149,7 +148,7 @@ Module Export TypeNotations.
          , only printing).
   Notation "'bool'" := Tbool (in custom CPP_type at level 0, only printing).
   Notation "'ptr[' nm ']<' ty '>'"
-      := (Tmember_pointer nm%bs ty)
+      := (Tmember_pointer nm ty)
          ( in custom CPP_type at level 100
          , nm constr
          , ty custom CPP_type
@@ -171,13 +170,13 @@ Module Export TypeNotations.
          , only printing).
   Notation "'nullptr_t'" := Tnullptr (in custom CPP_type at level 0, only printing).
   Notation "'{arch:' nm '}'"
-      := (Tarch None nm%bs)
+      := (Tarch None nm)
          ( in custom CPP_type at level 0
          , nm constr
          , format "'[hv' {arch:  nm } ']'"
          , only printing).
   Notation "'{arch:' nm ';' 'size:' sz '}'"
-      := (Tarch (Some sz) nm%bs)
+      := (Tarch (Some sz) nm)
          ( in custom CPP_type at level 0
          , sz constr
          , nm constr
@@ -260,7 +259,7 @@ Module Export TypeNotationsParsing.
          , ty custom CPP_type
          , n constr
          , format "'[' ty [ n ] ']'").
-  Notation "nm" := (Tnamed nm%bs) (in custom CPP_type at level 0, nm constr).
+  Notation "nm" := (Tnamed nm) (in custom CPP_type at level 0, nm constr).
   Notation "'extern' cc '???()' '->' rty"
       := (@Tfunction cc Ar_Definite rty nil)
          ( in custom CPP_type at level 100
@@ -291,7 +290,7 @@ Module Export TypeNotationsParsing.
          , format "'[' extern  cc  ???( '[hv' aty1 ,  '/' .. ,  '/' aty2 ']' )(...)  ->  rty ']'").
   Notation "'bool'" := Tbool (in custom CPP_type at level 0).
   Notation "'ptr[' nm ']<' ty '>'"
-      := (Tmember_pointer nm%bs ty)
+      := (Tmember_pointer nm ty)
          ( in custom CPP_type at level 100
          , nm constr
          , ty custom CPP_type
@@ -310,12 +309,12 @@ Module Export TypeNotationsParsing.
          , format "'[' ( qual  ty ) ']'").
   Notation "'nullptr_t'" := Tnullptr (in custom CPP_type at level 0).
   Notation "'arch:{{' nm '}}'"
-      := (Tarch None nm%bs)
+      := (Tarch None nm)
          ( in custom CPP_type at level 0
          , nm constr
          , format "'[hv' arch:{{ nm }} ']'").
   Notation "'arch:{{' nm ';' 'size:' sz '}}'"
-      := (Tarch (Some sz) nm%bs)
+      := (Tarch (Some sz) nm)
          ( in custom CPP_type at level 0
          , sz constr
          , nm constr

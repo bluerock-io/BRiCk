@@ -509,7 +509,7 @@ printTemplateArgument(CoqPrinter& print, const TemplateArgument& arg,
 		});
 
 	case TemplateArgument::ArgKind::Pack: {
-		guard::ctor _(print, "Apack", false);
+		guard::ctor _(print, "Apack_expansion", false);
 		return print.list(arg.getPackAsArray(), [&](auto value) {
 			printTemplateArgument(print, value, cprint, loc);
 		});
