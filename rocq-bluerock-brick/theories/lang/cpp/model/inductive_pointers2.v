@@ -97,8 +97,6 @@ Module PTRS_IMPL <: PTRS_INTF.
     move=> x y z. apply rtc_transitive.
   Qed.
 
-  Definition roff_canon := nf roff_rw_global.
-
   Lemma singleton_offset_canon :
     ∀ o,
       (¬∃ ty, o = o_sub_ ty 0) ->
@@ -384,11 +382,6 @@ Module PTRS_IMPL <: PTRS_INTF.
           rewrite -H; [|done..].
           apply rtc_once.
           by exists [], (o_derived_ base0 derived0 :: l), [o_sub_ ty 0], [].
-        }
-        {
-          subst.
-          apply: rtc_l. 2: by apply: H.
-          by exists [], (o_invalid_ :: l), [o_sub_ ty 0], [].
         }
         {
           clear H1.
@@ -1540,6 +1533,18 @@ Module PTRS_IMPL <: PTRS_INTF.
     by destruct m.
   Qed.
 
+  Lemma canon_uncons :
+    ∀ o os,
+      roff_canon_syn (o :: os) ->
+      roff_canon_syn os.
+  Proof.
+    move=> o os H.
+    remember (o :: os).
+    destruct H; try done;
+    inversion Heql; subst;
+    (constructor || done).
+  Qed.
+
   (* TODO:
     this doesn't quite work. imagine this case for instance:
       o1 = [o_sub_ FOO 2]
@@ -1558,7 +1563,9 @@ Module PTRS_IMPL <: PTRS_INTF.
   *)
   Equations eval_offset_dot_aux σ (o1 o2 : raw_offset)
       (H : roff_canon o1)
-      (H0 : roff_canon o2) :
+      (H0 : roff_canon o2)
+      (Hn1 : eval_offset_aux σ o1 ≠ None)
+      (Hn2 : eval_offset_aux σ o2 ≠ None) :
       eval_offset_aux σ (normalize (o1 ++ o2)) =
       add_opt (eval_offset_aux σ o1) (eval_offset_aux σ o2)
       by wf (length o1) lt :=
@@ -1600,30 +1607,214 @@ Module PTRS_IMPL <: PTRS_INTF.
         {
           destruct o; simpl;
           simp normalize;
-          repeat case_match;
-          simpl; subst;
+          try (
+            repeat case_match;
+            simpl in *; subst;
+            try match goal with
+            | H : ¬∃ ty, o_sub_ _ 0 = o_sub_ ty 0 |- _ =>
+              exfalso; apply H; repeat eexists
+            end;
+            repeat (
+              rewrite bind_assoc;
+              simpl; f_equal
+            ); simpl;
+            unfold o_sub_off in *;
+            repeat destruct (size_of σ _);
+            simpl in *; try done;
+            unfold o_field_off in *;
+            try destruct f; simpl in *; try done;
+            unfold offset_of in *;
+            try destruct (glob_def σ f);
+            try destruct g; simpl in *; try done;
+            try destruct (find_assoc_list _ _);
+            simpl in *; try done; try extensionality o;
+            unfold o_base_off in *; try destruct (parent_offset _ _ _);
+            simpl in *; try done; unfold mret, option_ret;
+            repeat f_equal; lia
+          ).
+          {
+            case_match; subst.
+            { exfalso. apply: H. repeat eexists. }
+            simpl in *. unfold o_sub_off in *.
+            case_match; subst.
+            {
+              case_match.
+              {
+                destruct (size_of σ ty0);
+                simpl in *. 2: done.
+                {
+                  assert (z0 = -z) by lia.
+                  subst. unfold mret, option_ret.
+                  simpl. repeat f_equal. lia.
+                }
+              }
+              {
+                simpl. unfold o_sub_off.
+                destruct (size_of σ ty0);
+                simpl in *. 2: done.
+                unfold mret, option_ret.
+                f_equal. lia.
+              }
+            }
+            {
+              case_match; subst; simpl;
+              unfold o_sub_off;
+              destruct (size_of σ ty);
+              destruct (size_of σ ty0);
+              simpl in *; try done.
+              {
+                exfalso. apply H0.
+                repeat eexists.
+              }
+              { f_equal. lia. }
+            }
+          }
+        }
+        {
+          destruct o; simpl in *;
+          simp normalize in *;
           try match goal with
-          | H : ¬∃ ty, o_sub_ _ 0 = o_sub_ ty 0 |- _ =>
+          | H : ¬∃ i ty, o_sub_ _ _ = o_sub_ ty i |- _ =>
             exfalso; apply H; repeat eexists
           end;
-          repeat (
-            rewrite bind_assoc;
-            simpl; f_equal
-          ); simpl.
-          {
-            destruct (o_field_off σ f); simpl;
-            extensionality o. 2: done.
-            replace (o + 0 + (z0 + 0))
-            with    (o + (z0 + 0))
-            by lia.
-            done.
-          }
-          all: admit.
+          case_match; simpl in *;
+          try destruct (o_field_off σ f);
+          simpl in *; unfold o_sub_off in *;
+          destruct (size_of σ ty0);
+          simpl in *; try done;
+          rewrite eval_offset_resp_norm;
+          try match goal with
+          | H : roff_canon_syn (_ :: ?os) |- roff_canon ?os =>
+            rewrite canon_syn_sem_eqv;
+            eapply canon_uncons;
+            exact H
+          | H : roff_canon_syn ?os |- roff_canon ?os =>
+            by rewrite canon_syn_sem_eqv
+          end; simpl;
+          destruct (eval_offset_aux σ os);
+          simpl in *; try done;
+          unfold o_base_off, o_derived_off in *;
+          try destruct (parent_offset σ derived base);
+          simpl in *; try done;
+          unfold mret, option_ret;
+          f_equal; lia.
         }
-        all: admit.
+        {
+          destruct o; simpl in *;
+          simp normalize in *;
+          try match goal with
+          | H : ¬∃ i ty, o_sub_ _ _ = o_sub_ ty i |- _ =>
+            exfalso; apply H; repeat eexists
+          end;
+          case_match; simpl in *;
+          try destruct (o_field_off σ f);
+          simpl in *; unfold o_sub_off in *;
+          destruct (size_of σ ty0);
+          destruct (size_of σ ty);
+          simpl in *; try done;
+          rewrite eval_offset_resp_norm;
+          try match goal with
+          | H : roff_canon_syn (_ :: ?os) |- roff_canon ?os =>
+            rewrite canon_syn_sem_eqv;
+            eapply canon_uncons;
+            exact H
+          | H : roff_canon_syn ?os |- roff_canon ?os =>
+            by rewrite canon_syn_sem_eqv
+          end; simpl;
+          destruct (eval_offset_aux σ os);
+          simpl in *; try done;
+          unfold o_base_off, o_derived_off in *;
+          try destruct (parent_offset σ derived base);
+          simpl in *; try done;
+          unfold mret, option_ret;
+          f_equal; lia.
+        }
+        {
+          simpl in *;
+          simp normalize in *;
+          try match goal with
+          | H : ¬∃ i ty, o_sub_ _ _ = o_sub_ ty i |- _ =>
+            exfalso; apply H; repeat eexists
+          end;
+          try case_match; simpl in *;
+          try destruct (o_field_off σ f);
+          simpl in *; unfold o_sub_off in *;
+          destruct (size_of σ ty);
+          simpl in *; try done;
+          rewrite eval_offset_resp_norm;
+          try match goal with
+          | H : roff_canon_syn (_ :: ?os) |- roff_canon ?os =>
+            rewrite canon_syn_sem_eqv;
+            eapply canon_uncons;
+            exact H
+          | H : roff_canon_syn ?os |- roff_canon ?os =>
+            by rewrite canon_syn_sem_eqv
+          end; simpl.
+          f_equal. extensionality o.
+          f_equal. lia.
+        }
+        {
+          simpl in *;
+          simp normalize in *;
+          try match goal with
+          | H : ¬∃ i ty, o_sub_ _ _ = o_sub_ ty i |- _ =>
+            exfalso; apply H; repeat eexists
+          end;
+          try case_match; simpl in *;
+          try destruct (o_field_off σ f);
+          simpl in *; unfold o_sub_off in *;
+          destruct (size_of σ ty);
+          simpl in *; try done;
+          rewrite eval_offset_resp_norm;
+          f_equal. extensionality o'.
+          f_equal. lia.
+          rewrite canon_syn_sem_eqv.
+          by constructor.
+        }
+        {
+          simpl in *;
+          simp normalize in *;
+          try match goal with
+          | H : ¬∃ i ty, o_sub_ _ _ = o_sub_ ty i |- _ =>
+            exfalso; apply H; repeat eexists
+          end;
+          try case_match; simpl in *;
+          try destruct (o_field_off σ f);
+          simpl in *; unfold o_sub_off in *;
+          destruct (size_of σ ty);
+          simpl in *; try done;
+          rewrite eval_offset_resp_norm;
+          f_equal. extensionality o'.
+          f_equal. lia.
+          rewrite canon_syn_sem_eqv.
+          by constructor.
+        }
       }
       {
-        admit.
+        destruct Hc2; simpl in *;
+        simp normalize; simpl.
+        {
+          rewrite bind_assoc.
+          f_equal. extensionality o.
+          simpl. f_equal. lia.
+        }
+        {
+          destruct o; simpl; simp normalize;
+          repeat case_match; simpl;
+          unfold o_base_off, o_derived_off in *;
+          try match goal with
+          | H : _ /\ _ |- _ => destruct H; subst
+          end;
+          destruct (parent_offset σ derived base);
+          try destruct (parent_offset σ derived0 base0);
+          simpl in *; try done;
+          try destruct (o_field_off _ _);
+          simpl in *; try done;
+          unfold o_sub_off in *;
+          try destruct (size_of σ ty);
+          simpl in *; try done;
+          f_equal; lia.
+        }
       }
       {
         admit.

@@ -334,8 +334,10 @@ Module Type PTRS.
 
   (* [eval_offset] respects the monoidal structure of [offset]s *)
   Axiom eval_offset_dot : ∀ σ (o1 o2 : offset),
-    eval_offset σ (o1 ,, o2) =
-    add_opt (eval_offset σ o1) (eval_offset σ o2).
+    ∀ s1 s2,
+      eval_offset σ o1 = Some s1 ->
+      eval_offset σ o2 = Some s2 ->
+      eval_offset σ (o1 ,, o2) = Some (s1 + s2).
 End PTRS.
 
 Module Type PTRS_DERIVED (Import P : PTRS).
@@ -404,7 +406,8 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     red; unfold ptr_cong; intros p; exists p, (.[ Tbyte ! 0 ]), (.[ Tbyte ! 0]).
     intuition; try solve [rewrite o_sub_0; auto; rewrite offset_ptr_id//].
     unfold offset_cong; apply same_property_iff.
-    rewrite eval_o_sub/= Z.mul_0_r; eauto.
+    rewrite eval_o_sub. simpl. rewrite Z.mul_0_r; eauto.
+    done.
   Qed.
 
   #[global] Instance ptr_cong_sym {σ : genv} : Symmetric (ptr_cong σ).
