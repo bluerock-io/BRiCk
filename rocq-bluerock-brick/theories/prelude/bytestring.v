@@ -23,8 +23,6 @@ Defined.
 
 #[global] Instance bytestring_eq_dec : EqDecision bs := BS.eq_dec.
 #[global] Instance bytestring_inhabited : Inhabited bs := populate ""%bs.
-#[global] Instance bytestring_countable : Countable bs.
-Proof. apply (inj_countable' BS.print BS.parse), BS.print_parse_inv. Defined.
 
 #[global] Instance byte_to_N_inj : Inj eq eq Byte.to_N.
 Proof. intros ?? E; apply (inj Some). by rewrite <-!Byte.of_to_N, E. Qed.
@@ -137,6 +135,9 @@ Module Import BS.
   Definition of_N_decimal (n : N) : bs :=
     pp_N_aux (S $ N.to_nat $ N.log2 n) n BS.EmptyString.
 End BS.
+
+#[global] Instance bytestring_countable : Countable bs.
+Proof. apply (inj_countable' BS.to_string BS.of_string), BS.of_string_to_string_inv. Defined.
 
 (* stdpp-specific. *)
 Notation "N .@@ x" := (ndot (A := bs) N x%bs)
