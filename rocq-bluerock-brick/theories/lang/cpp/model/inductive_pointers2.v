@@ -340,67 +340,137 @@ Module PTRS_IMPL <: PTRS_INTF.
 
     #[local] Hint Constructors roff_rw_local : core.
 
-    Section norm_sound. (* <- Now unnecessary *)
-      Lemma norm_sound :
-        ∀ os, roff_rw os (normalize os).
-      Proof.
-        move=> os.
-        funelim (normalize os);
-        simp normalize in *; repeat case_match.
-        all: try by [|rewrite -H| rewrite -H0|rewrite -H1].
-        {
-          subst.
-          apply rtc_once.
-          by exists [], [], [o_sub_ ty 0], [].
-        }
-        {
-          subst.
-          rewrite -H; last done.
-          apply rtc_once.
-          by exists [], (o_field_ f :: l), [o_sub_ ty 0], [].
-        }
-        {
-          subst.
-          rewrite -H; last done.
-          apply rtc_once.
-          by exists [], (o_sub_ ty2 i2 :: os), [o_sub_ ty1 0], [].
-        }
-        {
-          subst.
-          rewrite -H0; [|done..].
-          apply rtc_once.
-          by exists [], os, [o_sub_ ty2 i1; o_sub_ ty2 i2], [o_sub_ ty2 (i1 + i2)].
-        }
-        {
-          subst.
-          rewrite -H; [|done..].
-          apply rtc_once.
-          by exists [], (o_base_ derived base :: l), [o_sub_ ty 0], [].
-        }
-        {
-          subst.
-          rewrite -H; [|done..].
-          apply rtc_once.
-          by exists [], (o_derived_ base0 derived0 :: l), [o_sub_ ty 0], [].
-        }
-        {
-          clear H1.
-          move: a => [Hbase Hder].
-          subst.
-          rewrite -H; last done.
-          apply rtc_once.
-          by exists [], os, [o_base_ der2 base2; o_derived_ base2 der2], [].
-        }
-        {
-          clear H1.
-          move: a => [Hbase Hder].
-          subst.
-          rewrite -H //.
-          apply: rtc_once.
-          by exists [], os, [o_derived_ base2 der2; o_base_ der2 base2], [].
-        }
-      Qed.
-    End norm_sound.
+    Lemma norm_sound :
+      ∀ os, roff_rw os (normalize os).
+    Proof.
+      move=> os.
+      funelim (normalize os);
+      simp normalize in *; repeat case_match.
+      all: try by [|rewrite -H| rewrite -H0|rewrite -H1].
+      {
+        subst.
+        apply rtc_once.
+        by exists [], [], [o_sub_ ty 0], [].
+      }
+      {
+        subst.
+        rewrite -H; last done.
+        apply rtc_once.
+        by exists [], (o_field_ f :: l), [o_sub_ ty 0], [].
+      }
+      {
+        subst.
+        rewrite -H; last done.
+        apply rtc_once.
+        by exists [], (o_sub_ ty2 i2 :: os), [o_sub_ ty1 0], [].
+      }
+      {
+        subst.
+        rewrite -H0; [|done..].
+        apply rtc_once.
+        by exists [], os, [o_sub_ ty2 i1; o_sub_ ty2 i2], [o_sub_ ty2 (i1 + i2)].
+      }
+      {
+        subst.
+        rewrite -H; [|done..].
+        apply rtc_once.
+        by exists [], (o_base_ derived base :: l), [o_sub_ ty 0], [].
+      }
+      {
+        subst.
+        rewrite -H; [|done..].
+        apply rtc_once.
+        by exists [], (o_derived_ base0 derived0 :: l), [o_sub_ ty 0], [].
+      }
+      {
+        clear H1.
+        move: a => [Hbase Hder].
+        subst.
+        rewrite -H; last done.
+        apply rtc_once.
+        by exists [], os, [o_base_ der2 base2; o_derived_ base2 der2], [].
+      }
+      {
+        clear H1.
+        move: a => [Hbase Hder].
+        subst.
+        rewrite -H //.
+        apply: rtc_once.
+        by exists [], os, [o_derived_ base2 der2; o_base_ der2 base2], [].
+      }
+    Qed.
+
+    Lemma simp_norm_sub0 :
+      ∀ ty os,
+        normalize (o_sub_ ty 0 :: os) = normalize os.
+    Proof.
+      move=> ty os.
+      induction os; simpl.
+      {
+        simp normalize.
+        case_match.
+        { by simp normalize. }
+        { done. }
+      }
+      destruct a;
+      simp normalize;
+      by case_match.
+    Qed.
+
+    Lemma simp_norm_sub_else :
+      ∀ ty i o os,
+        i ≠ 0 ->
+        ¬(∃ i ty, o = o_sub_ ty i) ->
+        normalize (o_sub_ ty i :: o :: os) =
+        o_sub_ ty i :: normalize (o :: os).
+    Proof.
+      move=> ty i o os Hne1 Hne2.
+      destruct o; simp normalize;
+      repeat case_match;
+      subst; try done.
+      {
+        exfalso. apply Hne2.
+        repeat eexists.
+      }
+    Qed.
+
+    Lemma simp_norm_base_else :
+      ∀ der base o os,
+        o ≠ o_derived_ base der ->
+        normalize (o_base_ der base :: o :: os) =
+        o_base_ der base :: normalize (o :: os).
+    Proof.
+      move=> der base o os Hne.
+      destruct o; simp normalize;
+      repeat case_match; try done.
+      destruct a. by subst.
+    Qed.
+
+    Lemma simp_norm_der_else :
+      ∀ base der o os,
+        o ≠ o_base_ der base ->
+        normalize (o_derived_ base der :: o :: os) =
+        o_derived_ base der :: normalize (o :: os).
+    Proof.
+      move=> base der o os Hne.
+      destruct o; simp normalize;
+      repeat case_match; try done.
+      destruct a. by subst.
+    Qed.
+
+    Lemma norm_invol :
+      ∀ os,
+        roff_canon os ->
+        normalize os = os.
+    Proof.
+    Admitted.
+
+    Goal ∃ x n, normalize (o_sub_ Tint 2 :: o_derived_ n n :: o_base_ n n :: o_sub_ Tint 2 :: []) = x.
+    eexists _, _. simp normalize.
+    repeat case_match.
+    { done. }
+    { done. }
+    2:{ exfalso. by apply n0. }
 
     Lemma norm_complete :
       ∀ o1 o2,
@@ -409,13 +479,61 @@ Module PTRS_IMPL <: PTRS_INTF.
         normalize o1 = o2.
     Proof.
       move=> o1 o2 Hrw Hc.
+      induction Hrw.
+      { by apply norm_invol. }
+      {
+        rewrite -{}IHHrw. 2: done. clear - H.
+        move: H => [l [r [s [t [H1 [H2 H3]]]]]].
+        subst. funelim (normalize l); simpl in *;
+        simp normalize; repeat case_match; subst.
+        {
+          destruct H3; simpl;
+          simp normalize;
+          repeat case_match;
+          try destruct a; subst; try done;
+          try match goal with
+          | H : ¬(?x = ?x /\ ?y = ?y) |- _ =>
+            exfalso; by apply H
+          end.
+          by rewrite simp_norm_sub0.
+        }
+        all: repeat rewrite simp_norm_sub0.
+        all: try (
+          (erewrite H; done) ||
+          (erewrite H0; done) ||
+          (erewrite H1; done)
+        ).
+        {
+          assert (normalize (s ++ r) = normalize (t ++ r)).
+          { by apply H0. }
+          destruct H3; simpl in *.
+          {
+            
+          }
+        }
+        all: admit.
+      }
+
+    Equations norm_canon_aux (os : raw_offset) :
+      roff_canon_syn (normalize os)
+      by wf (length os) lt :=
+    norm_canon_aux os := _.
+    Next Obligation.
+      destruct os.
+      {
+        simp normalize.
+        constructor.
+      }
+      destruct r; simp normalize.
     Admitted.
 
     Lemma norm_canon :
       ∀ os, roff_canon (normalize os).
     Proof.
       move=> os.
-    Admitted.
+      rewrite canon_syn_sem_eqv.
+      apply norm_canon_aux.
+    Qed.
 
     Lemma norm_rel :
       ∀ o1 o2,
@@ -456,23 +574,6 @@ Module PTRS_IMPL <: PTRS_INTF.
       split.
       { constructor. }
       { done. }
-    Qed.
-
-    Lemma simp_norm_sub0 :
-      ∀ ty os,
-        normalize (o_sub_ ty 0 :: os) = normalize os.
-    Proof.
-      move=> ty os.
-      induction os; simpl.
-      {
-        simp normalize.
-        case_match.
-        { by simp normalize. }
-        { done. }
-      }
-      destruct a;
-      simp normalize;
-      by case_match.
     Qed.
 
     Lemma roff_rw_uncons_help_nil :
@@ -1569,7 +1670,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       eval_offset_aux σ (normalize (o1 ++ o2)) =
       add_opt (eval_offset_aux σ o1) (eval_offset_aux σ o2)
       by wf (length o1) lt :=
-      eval_offset_dot_aux σ o1 o2 := _.
+      eval_offset_dot_aux σ o1 o2 H H0 Hn1 Hn2 := _.
   Next Obligation.
     unfold add_opt, liftM2 in *.
     move: H H0.
@@ -1815,19 +1916,181 @@ Module PTRS_IMPL <: PTRS_INTF.
           simpl in *; try done;
           f_equal; lia.
         }
+        {
+          rewrite eval_offset_resp_norm.
+          2:{
+            rewrite canon_syn_sem_eqv.
+            by constructor.
+          }
+          rewrite bind_assoc.
+          unfold o_base_off in *.
+          destruct (parent_offset σ derived base);
+          simpl in *; try done. f_equal.
+          extensionality o'. f_equal. lia.
+        }
+        {
+          rewrite eval_offset_resp_norm.
+          2: by rewrite canon_syn_sem_eqv.
+          rewrite bind_assoc.
+          unfold o_base_off in *.
+          destruct (parent_offset σ derived base);
+          simpl in *; try done. f_equal.
+          extensionality o'. f_equal. lia.
+        }
+        {
+          rewrite eval_offset_resp_norm.
+          2:{
+            rewrite canon_syn_sem_eqv.
+            by constructor.
+          }
+          rewrite bind_assoc.
+          unfold o_base_off in *.
+          destruct (parent_offset σ derived base);
+          simpl in *; try done. f_equal.
+          extensionality o'. f_equal. lia.
+        }
+        case_match.
+        {
+          destruct a. subst.
+          rewrite eval_offset_resp_norm.
+          2: by rewrite canon_syn_sem_eqv.
+          unfold o_base_off, o_derived_off in *.
+          destruct (parent_offset σ derived base);
+          simpl in *; try done.
+          repeat rewrite bind_assoc.
+          f_equal. extensionality o'.
+          destruct (eval_offset_aux σ os);
+          simpl in *; try done.
+          f_equal. lia.
+        }
+        {
+          simpl. rewrite bind_assoc.
+          f_equal. extensionality o'.
+          rewrite eval_offset_resp_norm.
+          2:{
+            rewrite canon_syn_sem_eqv.
+            by constructor.
+          }
+          simpl. repeat rewrite bind_assoc.
+          f_equal. extensionality x. simpl.
+          f_equal. extensionality y.
+          f_equal. lia.
+        }
       }
       {
-        admit.
+        destruct Hc2; simpl in *;
+        simp normalize; simpl.
+        {
+          rewrite bind_assoc.
+          f_equal. extensionality o.
+          simpl. f_equal. lia.
+        }
+        {
+          destruct o; simpl in *;
+          simp normalize; simpl;
+          try case_match;
+          try match goal with
+          | H : _ /\ _ |- _ =>
+            destruct H; subst
+          end; subst; simpl;
+          unfold o_base_off, o_derived_off in *;
+          try destruct (parent_offset σ derived base);
+          try destruct (parent_offset σ derived0 base0);
+          simpl in *; try done;
+          try destruct (o_field_off _ _);
+          simpl in *; try done;
+          unfold o_sub_off in *;
+          try destruct (size_of σ ty);
+          simpl in *; try done;
+          simpl in *; try done;
+          f_equal; lia.
+        }
+        {
+          simpl. rewrite bind_assoc.
+          f_equal. extensionality o'.
+          rewrite eval_offset_resp_norm.
+          2:{
+            rewrite canon_syn_sem_eqv.
+            by constructor.
+          }
+          simpl. repeat rewrite bind_assoc.
+          f_equal. extensionality x. simpl.
+          f_equal. extensionality y.
+          f_equal. lia.
+        }
+        {
+          rewrite eval_offset_resp_norm.
+          2: by rewrite canon_syn_sem_eqv.
+          rewrite bind_assoc.
+          unfold o_derived_off in *.
+          destruct (parent_offset σ derived base);
+          simpl in *; try done. f_equal.
+          extensionality o'. f_equal. lia.
+        }
+        case_match.
+        {
+          destruct a. subst.
+          rewrite eval_offset_resp_norm.
+          2: by rewrite canon_syn_sem_eqv.
+          unfold o_base_off, o_derived_off in *.
+          destruct (parent_offset σ der base0);
+          simpl in *; try done.
+          repeat rewrite bind_assoc.
+          f_equal. extensionality o'.
+          destruct (eval_offset_aux σ os);
+          simpl in *; try done.
+          f_equal. lia.
+        }
+        {
+          simpl. rewrite bind_assoc.
+          f_equal. extensionality o'.
+          rewrite eval_offset_resp_norm.
+          2:{
+            rewrite canon_syn_sem_eqv.
+            by constructor.
+          }
+          simpl. repeat rewrite bind_assoc.
+          f_equal. extensionality x. simpl.
+          f_equal. extensionality y.
+          f_equal. lia.
+        }
+        {
+          rewrite bind_assoc. f_equal.
+          rewrite eval_offset_resp_norm.
+          2:{
+            rewrite canon_syn_sem_eqv.
+            by constructor.
+          }
+          simpl. extensionality o'.
+          repeat rewrite bind_assoc.
+          f_equal. extensionality o''.
+          simpl. f_equal. extensionality o'''.
+          f_equal. lia.
+        }
       }
     }
     {
       rewrite simp_norm_canon_sub. 2: done. simpl.
       change (normalize (o :: os ++ o2))
       with   (normalize ((o :: os) ++ o2)).
-      rewrite eval_offset_dot_aux.
-      2:{ simpl. lia. }
-      2:{ by rewrite canon_syn_sem_eqv. }
-      2:{ by rewrite canon_syn_sem_eqv. }
+      eassert (eval_offset_aux σ (normalize ((o :: os) ++ o2)) = _).
+      {
+        apply eval_offset_dot_aux.
+        { by rewrite canon_syn_sem_eqv. }
+        { by rewrite canon_syn_sem_eqv. }
+        {
+          clear - Hn1. simpl in *.
+          destruct (o_sub_off _ _ _);
+          simpl in *; try done.
+          destruct (eval_offset_seg _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux _ _);
+          simpl in *; done.
+        }
+        { done. }
+        { simpl. lia. }
+      }
+      rewrite H1. clear H1.
       destruct (o_sub_off σ ty i); simpl.
       2:{ done. }
       destruct (eval_offset_seg σ o); simpl.
@@ -1846,10 +2109,22 @@ Module PTRS_IMPL <: PTRS_INTF.
     }
     {
       simp normalize. simpl.
-      rewrite eval_offset_dot_aux.
-      2:{ simpl. lia. }
-      2:{ by rewrite canon_syn_sem_eqv. }
-      2:{ by rewrite canon_syn_sem_eqv. }
+      eassert (eval_offset_aux σ (normalize (os ++ o2)) = _).
+      {
+        apply eval_offset_dot_aux.
+        { by rewrite canon_syn_sem_eqv. }
+        { by rewrite canon_syn_sem_eqv. }
+        {
+          simpl in *.
+          destruct (o_field_off _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux _ _);
+          simpl in *; done.
+        }
+        { done. }
+        { simpl. lia. }
+      }
+      rewrite H. clear H.
       destruct (o_field_off σ f); simpl.
       2:{ done. }
       destruct (eval_offset_aux σ os); simpl.
@@ -1859,16 +2134,30 @@ Module PTRS_IMPL <: PTRS_INTF.
       replace (z + (z0 + z1))
       with    (z + z0 + z1)
       by lia.
-      { done. }
+      done.
     }
     {
       rewrite simp_norm_canon_base. 2: done. simpl.
       change (normalize (o :: os ++ o2))
       with   (normalize ((o :: os) ++ o2)).
-      rewrite eval_offset_dot_aux.
-      2:{ simpl. lia. }
-      2:{ by rewrite canon_syn_sem_eqv. }
-      2:{ by rewrite canon_syn_sem_eqv. }
+      eassert (eval_offset_aux σ (normalize ((o :: os) ++ o2)) = _).
+      {
+        apply eval_offset_dot_aux.
+        { by rewrite canon_syn_sem_eqv. }
+        { by rewrite canon_syn_sem_eqv. }
+        {
+          simpl in *.
+          destruct (o_base_off _ _ _);
+          simpl in *; try done.
+          destruct (eval_offset_seg _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux _ _);
+          simpl in *; done.
+        }
+        { done. }
+        { simpl. lia. }
+      }
+      rewrite H0. clear H0.
       destruct (o_base_off σ der base); simpl.
       2:{ done. }
       destruct (eval_offset_seg σ o); simpl.
@@ -1888,10 +2177,24 @@ Module PTRS_IMPL <: PTRS_INTF.
       rewrite simp_norm_canon_der. 2: done. simpl.
       change (normalize (o :: os ++ o2))
       with   (normalize ((o :: os) ++ o2)).
-      rewrite eval_offset_dot_aux.
-      2:{ simpl. lia. }
-      2:{ by rewrite canon_syn_sem_eqv. }
-      2:{ by rewrite canon_syn_sem_eqv. }
+      eassert (eval_offset_aux σ (normalize ((o :: os) ++ o2)) = _).
+      {
+        apply eval_offset_dot_aux.
+        { by rewrite canon_syn_sem_eqv. }
+        { by rewrite canon_syn_sem_eqv. }
+        {
+          simpl in *.
+          destruct (o_derived_off _ _ _);
+          simpl in *; try done.
+          destruct (eval_offset_seg _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux _ _);
+          simpl in *; done.
+        }
+        { done. }
+        { simpl. lia. }
+      }
+      rewrite H0. clear H0.
       destruct (o_derived_off σ base der); simpl.
       2:{ done. }
       destruct (eval_offset_seg σ o); simpl.
@@ -1907,16 +2210,21 @@ Module PTRS_IMPL <: PTRS_INTF.
         done.
       }
     }
-  Admitted.
+  Qed.
 
   Lemma eval_offset_dot :
-    ∀ σ (o1 o2 : offset),
-      eval_offset σ (o1 ,, o2) =
-      add_opt (eval_offset σ o1) (eval_offset σ o2).
+    ∀ σ (o1 o2 : offset) s1 s2,
+    eval_offset σ o1 = Some s1 ->
+    eval_offset σ o2 = Some s2 ->
+    eval_offset σ (o1 ,, o2) = Some (s1 + s2).
   Proof.
     UNFOLD_dot. rewrite /eval_offset.
-    move=> σ [o1 H1] [o2 H2]. simpl.
-    induction o1; simpl.
+    move=> σ [o1 H1] [o2 H2] s1 s2 H3 H4. simpl in *.
+    rewrite eval_offset_dot_aux; try done.
+    { by rewrite H3 H4. }
+    { by rewrite H3. }
+    { by rewrite H4. }
+  Qed.
 
   Definition ptr_vaddr (p : ptr) : option vaddr :=
     match p with
