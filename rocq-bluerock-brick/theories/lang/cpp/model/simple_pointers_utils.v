@@ -12,7 +12,9 @@ Require Import bedrock.prelude.addr.
 Require Import bedrock.prelude.option.
 Require Import bedrock.prelude.avl.
 Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.values.
+Require Import bedrock.lang.cpp.semantics.types.
+Require Import bedrock.lang.cpp.semantics.genv.
+Require Import bedrock.lang.cpp.semantics.alloc_id.
 
 Implicit Types (σ : genv).
 #[local] Close Scope nat_scope.
@@ -105,23 +107,3 @@ Definition global_ptr (tu : translation_unit) (o : obj_name) : ptr :=
   let obj : option ObjValue := tu !! o in
   let p := Npos (encode obj) in (mkptr p p).
 *)
-
-Module Type PTRS_DERIVED_MIXIN (Import P : PTRS).
-  Definition same_alloc : ptr -> ptr -> Prop := same_property ptr_alloc_id.
-  Lemma same_alloc_eq : same_alloc = same_property ptr_alloc_id.
-  Proof. done. Qed.
-
-  Definition same_address : ptr -> ptr -> Prop := same_property ptr_vaddr.
-  Lemma same_address_eq : same_address = same_property ptr_vaddr.
-  Proof. done. Qed.
-
-  Definition pinned_ptr_pure (va : vaddr) (p : ptr) := ptr_vaddr p = Some va.
-  Lemma pinned_ptr_pure_eq :
-    pinned_ptr_pure = fun (va : vaddr) (p : ptr) => ptr_vaddr p = Some va.
-  Proof. done. Qed.
-End PTRS_DERIVED_MIXIN.
-
-(* Double-check [PTRS_DERIVED_MIXIN] matches its interface. *)
-Module PTRS_DERIVED_TEST (P : PTRS) : PTRS_DERIVED P.
-Include PTRS_DERIVED_MIXIN P.
-End PTRS_DERIVED_TEST.

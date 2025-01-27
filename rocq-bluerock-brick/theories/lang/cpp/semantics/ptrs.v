@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2020-2023 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -21,6 +21,7 @@ Require Import bedrock.prelude.numbers.
 Require Import bedrock.lang.cpp.syntax.
 Require Export bedrock.lang.cpp.semantics.types.
 Require Export bedrock.lang.cpp.semantics.genv.
+Require Export bedrock.lang.cpp.semantics.alloc_id.
 
 (* We only load Iris to declare trivial OFEs over pointers via [leibnizO]. *)
 Require Import iris.algebra.ofe.
@@ -28,18 +29,6 @@ Require Import iris.algebra.ofe.
 #[local] Close Scope nat_scope.
 #[local] Open Scope Z_scope.
 Implicit Types (σ : genv).
-
-(** ** Allocation IDs.
-    We use them to model pointer provenance, following Cerberus.
- *)
-Record alloc_id := MkAllocId { alloc_id_car : N }.
-
-#[global] Instance MkAllocId_inj : Inj (=) (=) MkAllocId.
-Proof. by intros ?? [=]. Qed.
-#[global] Instance alloc_id_eq_dec : EqDecision alloc_id.
-Proof. solve_decision. Qed.
-#[global] Instance alloc_id_countable : Countable alloc_id.
-Proof. by apply: (inj_countable' alloc_id_car MkAllocId) => -[?]. Qed.
 
 Module Type PTRS_SYNTAX_INPUTS.
   Parameter ptr : Set.
@@ -342,6 +331,26 @@ Module Type PTRS_DERIVED (Import P : PTRS).
   Axiom same_address_eq : same_address = same_property ptr_vaddr.
 
 End PTRS_DERIVED.
+
+Module Type PTRS_DERIVED_MIXIN (Import P : PTRS).
+  Definition same_alloc : ptr -> ptr -> Prop := same_property ptr_alloc_id.
+  Lemma same_alloc_eq : same_alloc = same_property ptr_alloc_id.
+  Proof. done. Qed.
+
+  Definition same_address : ptr -> ptr -> Prop := same_property ptr_vaddr.
+  Lemma same_address_eq : same_address = same_property ptr_vaddr.
+  Proof. done. Qed.
+
+  Definition pinned_ptr_pure (va : vaddr) (p : ptr) := ptr_vaddr p = Some va.
+  Lemma pinned_ptr_pure_eq :
+    pinned_ptr_pure = fun (va : vaddr) (p : ptr) => ptr_vaddr p = Some va.
+  Proof. done. Qed.
+End PTRS_DERIVED_MIXIN.
+
+(* Double-check [PTRS_DERIVED_MIXIN] matches its interface. *)
+Module PTRS_DERIVED_TEST (P : PTRS) : PTRS_DERIVED P.
+Include PTRS_DERIVED_MIXIN P.
+End PTRS_DERIVED_TEST.
 
 Module Type PTRS_INTF_MINIMAL := PTRS <+ PTRS_DERIVED.
 
