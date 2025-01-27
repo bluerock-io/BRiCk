@@ -246,11 +246,65 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   Section norm_def.
 
-    Definition normalize : raw_offset -> raw_offset.
+    Equations find_redex (os : raw_offset)
+      : option (raw_offset * raw_offset * raw_offset * raw_offset)
+      by wf (length os) :=
+    | [] :=
+        None
+    | o_sub_ ty 0 :: os :=
+        Some ([], os, [o_sub_ ty 0], [])
+    | o_sub_ ty1 i1 :: o_sub_ ty2 i2 :: os :=
+        if decide (ty1 = ty2) then
+          Some ([], os, [o_sub_ ty1 i1; o_sub_ ty2 i2], [o_sub_ ty1 (i1 + i2)])
+        else
+          '(l, r, s, t) ← find_redex (o_sub_ ty2 i2 :: os);
+          Some (o_sub_ ty1 i1 :: l, r, s, t)
+    | o_base_ der1 base1 :: o_derived_ base2 der2 :: os =>
+        if decide (der1 = der2 /\ base1 = base2) then
+          Some ([], os, [o_base_ der1 base1; o_derived_ base2 der2], [])
+        else
+          '(l, r, s, t) ← find_redex (o_derived_ base2 der2 :: os);
+          Some (o_base_ der1 base1 :: l, r, s, t)
+    | o_derived_ base1 der1 :: o_base_ der2 base2 :: os =>
+        if decide (der1 = der2 /\ base1 = base2) then
+          Some ([], os, [o_derived_ base1 der1; o_base_ der2 base2], [])
+        else
+          '(l, r, s, t) ← find_redex (o_base_ der2 base2 :: os);
+          Some (o_derived_ base1 der1 :: l, r, s, t)
+    | o :: os =>
+        '(l, r, s, t) ← find_redex os;
+        Some (o :: l, r, s, t).
+
+    Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
+    normalize os =>
+      match find_redex os with
+      | Some (l, r, s, t) => normalize (l ++ t ++ r)
+      | None => os
+      end.
+    Next Obligation.
+    (* todo: Coq generalizes too much *)
+    Admitted.
+    
+    Equations find_redex_pass_correct (os : raw_offset) :
+      ∀ l s r t,
+        find_redex os = Some (l, s, r, t) ->
+        os = l ++ s ++ r /\
+        roff_rw_local s t
+      by wf (length os) lt :=
+    find_redex_pass_correct os l s r t H := _.
+    Next Obligation.
+      funelim (find_redex os); simpl in *;
+      simp find_redex in *; try done.
     Admitted.
 
-    Lemma norm_compute :
-      
+    Lemma find_redex_fail_correct :
+      ∀ os,
+        find_redex os = None ->
+        ¬∃ l s r t,
+            os = l ++ s ++ r /\
+            roff_rw_local s t.
+    Proof.
+    Admitted.      
 
     Lemma norm_sound :
       ∀ os1 os2,
