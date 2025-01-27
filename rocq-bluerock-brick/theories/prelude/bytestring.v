@@ -22,7 +22,7 @@ Proof.
 Defined.
 
 #[global] Instance bytestring_eq_dec : EqDecision bs := BS.eq_dec.
-#[global] Instance bytestring_inhabited : Inhabited bs := populate ""%bs.
+#[global] Instance bytestring_inhabited : Inhabited bs. Proof. exact (populate ""%bs). Qed.
 
 #[global] Instance byte_to_N_inj : Inj eq eq Byte.to_N.
 Proof. intros ?? E; apply (inj Some). by rewrite <-!Byte.of_to_N, E. Qed.
