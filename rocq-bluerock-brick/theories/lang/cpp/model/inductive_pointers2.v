@@ -275,6 +275,99 @@ Module PTRS_IMPL <: PTRS_INTF.
         '(l, r, s, t) ← find_redex os;
         Some (o :: l, r, s, t).
 
+    Lemma find_redex_ind :
+      ∀ P :
+        raw_offset ->
+        option (raw_offset * raw_offset * raw_offset * raw_offset) ->
+        Prop,
+      (P [] None) ->
+      (∀ ty os,
+        P
+          (o_sub_ ty 0 :: os)
+          (Some ([], os, [o_sub_ ty 0], []))) ->
+      (∀ ty i1 i2 os,
+        P
+          (o_sub_ ty i1 :: o_sub_ ty i2 :: os)
+          (Some ([], os, [o_sub_ ty i1; o_sub_ ty i2], [o_sub_ ty (i1 + i2)]))) ->
+      (∀ der base os,
+        P
+          (o_base_ der base :: o_derived_ base der :: os)
+          (Some ([], os, [o_base_ der base; o_derived_ base der], []))) ->
+      (∀ base der os,
+        P
+          (o_derived_ base der :: o_base_ der base :: os)
+          (Some ([], os, [o_derived_ base der; o_base_ der base], []))) ->
+      (∀ o os l r s t,
+        P os (Some (l, r, s, t)) ->
+        P (o :: os) (Some (o :: l, r, s, t))) ->
+      (∀ o os,
+        ¬(∃ ty, o = o_sub_ ty 0) ->
+        ¬(∃ ty i1 i2 r, o :: os = o_sub_ ty i1 :: o_sub_ ty i2 :: r) ->
+        ¬(∃ der base r, o :: os = o_base_ der base :: o_derived_ base der :: r) ->
+        ¬(∃ base der r, o :: os = o_derived_ base der :: o_base_ der base :: r) ->
+        P os None ->
+        P (o :: os) None) ->
+      ∀ os, P os (find_redex os).
+    Proof.
+    Ltac dex :=
+      let H0 := fresh in
+      move=> H0;
+      repeat match goal with
+      | H : ∃ x, ?P |- _ => destruct H
+      | H : ?x = ?y |- _ => inversion H; subst; done
+      end.
+      move=> P Pnil Ps0 Pss Pbd Pdb Pks Pkn os.
+      funelim (find_redex os); simp find_redex in *;
+      try case_match; subst; clear Heqcall; simpl in *.
+      all:
+        repeat match type of H with
+        | ∀ x : ?A, _ =>
+          match goal with
+          | H2 : ?A |- _ => specialize (H H2)
+          end
+        end.
+      all: try (
+        destruct (find_redex _); simpl in *;
+        (
+          repeat match goal with
+          | H : _ * _ |- _ => destruct H
+          end; by apply Pks, H
+        ||
+        apply Pkn; (dex || done)
+        )
+      ).
+      all: try (apply Pkn; (dex || done)).
+      { apply Pss. }
+      { apply Pss. }
+      { destruct a. subst. apply Pbd. }
+      {
+        destruct (find_redex _); simpl in *.
+        {
+          repeat match goal with
+          | H : _ * _ |- _ => destruct H
+          end; by apply Pks, H.
+        }
+        {
+          apply Pkn; (dex || done).
+          inversion H1. subst. by apply n.
+        }
+      }
+      { destruct a. subst. apply Pdb. }
+      {
+        destruct (find_redex _); simpl in *.
+        {
+          repeat match goal with
+          | H : _ * _ |- _ => destruct H
+          end; by apply Pks, H.
+        }
+        {
+          apply Pkn; (dex || done).
+          inversion H1. subst. by apply n.
+        }
+      }
+    Qed.
+
+
     Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
     normalize os =>
       match find_redex os with
@@ -285,26 +378,80 @@ Module PTRS_IMPL <: PTRS_INTF.
     (* todo: Coq generalizes too much *)
     Admitted.
     
-    Equations find_redex_pass_correct (os : raw_offset) :
-      ∀ l s r t,
-        find_redex os = Some (l, s, r, t) ->
+    Lemma find_redex_pass_correct :
+      ∀ os l s r t,
+        find_redex os = Some (l, r, s, t) ->
         os = l ++ s ++ r /\
-        roff_rw_local s t
-      by wf (length os) lt :=
-    find_redex_pass_correct os l s r t H := _.
-    Next Obligation.
-      funelim (find_redex os); simpl in *;
-      simp find_redex in *; try done.
-    Admitted.
+        roff_rw_local s t.
+    Proof.
+      move=> os.
+      apply find_redex_ind; clear.
+      { done. }
+      {
+        move=> ty os l r s t H.
+        inversion H; subst.
+        repeat constructor.
+      }
+      {
+        move=> ty i1 i2 os l r s t H.
+        inversion H. subst.
+        repeat constructor.
+      }
+      {
+        move=> der base os l r s t H.
+        inversion H. subst.
+        repeat constructor.
+      }
+      {
+        move=> base der os l r s t H.
+        inversion H. subst.
+        repeat constructor.
+      }
+      {
+        move=> o os l r s t H1 l' s' r' t' H2.
+        inversion H2. subst. simpl in *.
+        specialize (H1 _ _ _ _ eq_refl).
+        move: H1 => [Hos Hrw]. by subst.
+      }
+      { done. }
+    Qed.
 
     Lemma find_redex_fail_correct :
       ∀ os,
         find_redex os = None ->
-        ¬∃ l s r t,
+        ¬∃ l r s t,
             os = l ++ s ++ r /\
             roff_rw_local s t.
     Proof.
-    Admitted.      
+      move=> os.
+      apply find_redex_ind;
+      clear; try done.
+      {
+        move=> _ [l [r [s [t [Heq Hrw]]]]].
+        destruct l; simpl in *; try done.
+        destruct s; simpl in *; try done.
+        subst. inversion Hrw.
+      }
+      {
+        move=> o os Hns0 Hnss Hnbd Hndb IH.
+        move=> _ [l [r [s [t [Heq Hrw]]]]].
+        destruct l; simpl in *.
+        {
+          destruct Hrw; simpl in *;
+          inversion Heq; subst.
+          { apply Hndb. repeat eexists. }
+          { apply Hnbd. repeat eexists. }
+          { apply Hns0. repeat eexists. }
+          { apply Hnss. repeat eexists. }
+        }
+        {
+          inversion Heq. subst.
+          apply IH.
+          { done. }
+          { by exists l, r, s, t. }
+        }
+      }
+    Qed.
 
     Lemma norm_sound :
       ∀ os1 os2,
