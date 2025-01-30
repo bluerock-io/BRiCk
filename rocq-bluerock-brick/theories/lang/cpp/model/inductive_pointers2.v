@@ -274,6 +274,14 @@ Module PTRS_IMPL <: PTRS_INTF.
     | o :: os =>
         '(l, r, s, t) ← find_redex os;
         Some (o :: l, r, s, t).
+    
+    Ltac dex :=
+      let H0 := fresh in
+      move=> H0;
+      repeat match goal with
+      | H : ∃ x, ?P |- _ => destruct H
+      | H : ?x = ?y |- _ => inversion H; subst; done
+      end.
 
     Lemma find_redex_ind :
       ∀ P :
@@ -309,13 +317,6 @@ Module PTRS_IMPL <: PTRS_INTF.
         P (o :: os) None) ->
       ∀ os, P os (find_redex os).
     Proof.
-    Ltac dex :=
-      let H0 := fresh in
-      move=> H0;
-      repeat match goal with
-      | H : ∃ x, ?P |- _ => destruct H
-      | H : ?x = ?y |- _ => inversion H; subst; done
-      end.
       move=> P Pnil Ps0 Pss Pbd Pdb Pks Pkn os.
       funelim (find_redex os); simp find_redex in *;
       try case_match; subst; clear Heqcall; simpl in *.
@@ -367,7 +368,6 @@ Module PTRS_IMPL <: PTRS_INTF.
       }
     Qed.
 
-
     Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
     normalize os =>
       match find_redex os with
@@ -378,7 +378,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     (* todo: Coq generalizes too much *)
     Admitted.
     
-    Lemma find_redex_pass_correct :
+    Lemma find_redex_pass :
       ∀ os l s r t,
         find_redex os = Some (l, r, s, t) ->
         os = l ++ s ++ r /\
@@ -416,7 +416,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       { done. }
     Qed.
 
-    Lemma find_redex_fail_correct :
+    Lemma find_redex_fail :
       ∀ os,
         find_redex os = None ->
         ¬∃ l r s t,
@@ -454,35 +454,106 @@ Module PTRS_IMPL <: PTRS_INTF.
     Qed.
 
     Lemma norm_sound :
-      ∀ os1 os2,
-        roff_rw os1 (normalize os2).
-    Admitted.
+      ∀ os ,
+        roff_rw os (normalize os).
+    Proof.
+      move=> os.
+      funelim (normalize os).
+      remember (find_redex os).
+      symmetry in Heqo. destruct o.
+      {
+        destruct p, p, p.
+        apply find_redex_pass in Heqo.
+        move: Heqo => [Heq Hrw]. subst.
+        apply: rtc_l. 2: by apply: H.
+        by exists r1, r2, r0, r.
+      }
+      { done. }
+    Qed.
+
+    Lemma norm_canon :
+      ∀ os, roff_canon (normalize os).
+    Proof.
+      move=> os.
+      funelim (normalize os).
+      remember (find_redex os).
+      symmetry in Heqo. destruct o.
+      {
+        destruct p, p, p.
+        apply find_redex_pass in Heqo.
+        move: Heqo => [Heq Hrw]. subst.
+        apply H; done.
+      }
+      {
+        clear - Heqo.
+        apply find_redex_fail in Heqo.
+        move=> [y [l [r [s [t [Hos [Hy Hrw]]]]]]].
+        apply Heqo. by exists l, r, s, t.
+      }
+    Qed.
+
+    Lemma app_const_inj {A} :
+      ∀ xs ys zs : list A,
+        xs ++ ys = xs ++ zs ->
+        ys = zs.
+    Proof.
+      move=> xs ys zs H.
+      induction xs.
+      { done. }
+      {
+        apply IHxs.
+        by inversion H.
+      }
+    Qed.
+
+    Lemma canon_uncons :
+      ∀ o os,
+        roff_canon (o :: os) ->
+        roff_canon os.
+    Proof.
+      move=> o os H1 H2. apply: H1.
+      move: H2 => [y [l [r [s [t [H1 [H2 H3]]]]]]].
+      subst. by exists (o :: l ++ t ++ r), (o :: l), r, s, t.
+    Qed.
+
+    Lemma norm_invol :
+      ∀ os,
+        roff_canon os ->
+        normalize os = os.
+    Proof.
+      move=> os H. funelim (normalize os).
+      clear Heqcall. remember (find_redex os).
+      symmetry in Heqo. destruct o. 2: done.
+      destruct p, p, p. exfalso. apply: H0.
+      apply find_redex_pass in Heqo.
+      move: Heqo => [Heq Hrw]. subst.
+      by exists (r1 ++ r ++ r2), r1, r2, r0, r.
+    Qed.
 
     Lemma norm_complete :
       ∀ os1 os2,
         roff_rw os1 os2 ->
         roff_canon os2 ->
         normalize os1 = os2.
-    Admitted.
-
-    Lemma norm_canon :
-      ∀ os, roff_canon (normalize os).
-    Admitted.
+    Proof.
+      move=> os1 os2 Hrw Hc.
+      induction Hrw.
+      { by apply norm_invol. }
+      {
+        rewrite <- IHHrw.
+        2: done. clear IHHrw Hc Hrw.
+        move: H => [l [r [s [t [Hx [Hy Hrw]]]]]]. subst.
+        funelim (normalize (l ++ s ++ r)).
+        clear Heqcall. etrans.
+        2: by apply: H. clear H.
+        funelim (normalize (l ++ s ++ r)).
+        done.
+      }
+    Qed.
 
   End norm_def.
 
   Section norm_lemmas.
-
-    Lemma norm_rw_derive :
-      ∀ os1 os2,
-        roff_rw os1 os2 ->
-        normalize os1 = normalize os2.
-    Proof.
-      move=> os1 os2 H.
-      apply norm_complete.
-      { apply norm_sound. }
-      { apply norm_canon. }
-    Qed.
 
     Lemma norm_rel :
       ∀ os1 os2,
@@ -499,6 +570,22 @@ Module PTRS_IMPL <: PTRS_INTF.
         apply norm_complete;
         by destruct H.
       }
+    Qed.
+
+    Lemma norm_rw_derive :
+      ∀ os1 os2,
+        roff_rw os1 os2 ->
+        normalize os1 = normalize os2.
+    Proof.
+      move=> os1 os2 H.
+      apply norm_complete.
+      {
+        remember (normalize os2).
+        symmetry in Heqr.
+        rewrite norm_rel in Heqr.
+        etrans. exact: H. by destruct Heqr.
+      }
+      { apply norm_canon. }
     Qed.
   
   End norm_lemmas.
@@ -561,41 +648,6 @@ Module PTRS_IMPL <: PTRS_INTF.
 
     #[local] Hint Constructors roff_rw_local : core.
 
-    (* #[global] Instance normalize_mono :
-      Proper (roff_rw ==> roff_rw) normalize.
-    Proof.
-      move=> o1 o2 E.
-      move E1: (normalize o1) => o1'.
-      move E2: (normalize o2) => o2'.
-      move: E1 E2 => /norm_rel [E1 C1] /norm_rel [E2 C2].
-      rewrite -E2 -E.
-      (* only works for symmetric closure. *)
-    Abort. *)
-
-    Lemma norm_invol :
-      ∀ os,
-        roff_canon os ->
-        normalize os = os.
-    Proof.
-      move=> o H.
-      apply norm_complete.
-      { constructor. }
-      { done. }
-    Qed.
-
-    Lemma rw_bwd_r :
-      ∀ o1 o2 o2' o3,
-        roff_canon o3 ->
-        roff_rw o2 o2' ->
-        roff_rw (o1 ++ o2) o3 ->
-        roff_rw (o1 ++ o2') o3.
-    Proof.
-      move=> o1 o2 o2' o3 Hc H1 H2.
-      induction H1. done.
-      move: H => [l [r [s [t [Hx [Hy Hrw]]]]]].
-      subst. apply: IHrtc. admit.
-    Admitted.
-
     Lemma norm_absorb_l :
       ∀ o1 o2,
         normalize (o1 ++ normalize o2) = normalize (o1 ++ o2).
@@ -614,20 +666,6 @@ Module PTRS_IMPL <: PTRS_INTF.
       }
       { apply: norm_canon. }
     Qed.
-
-    Lemma rw_bwd_l :
-      ∀ o1 o1' o2 o3,
-        roff_canon o3 ->
-        roff_rw o1 o1' ->
-        roff_rw (o1 ++ o2) o3 ->
-        roff_rw (o1' ++ o2) o3.
-    Proof.
-      move=> o1 o1' o2 o3 Hc H1 H2.
-      induction H1. done.
-      apply: IHrtc.
-      move: H => [l [r [s [t [Hx [Hy Hrw]]]]]].
-      subst. admit.
-    Admitted.
 
     Lemma norm_absorb_r :
       ∀ o1 o2,
