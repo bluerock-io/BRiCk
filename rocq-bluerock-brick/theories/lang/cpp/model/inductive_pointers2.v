@@ -492,20 +492,6 @@ Module PTRS_IMPL <: PTRS_INTF.
       }
     Qed.
 
-    Lemma app_const_inj {A} :
-      ∀ xs ys zs : list A,
-        xs ++ ys = xs ++ zs ->
-        ys = zs.
-    Proof.
-      move=> xs ys zs H.
-      induction xs.
-      { done. }
-      {
-        apply IHxs.
-        by inversion H.
-      }
-    Qed.
-
     Lemma canon_uncons :
       ∀ o os,
         roff_canon (o :: os) ->
@@ -653,18 +639,11 @@ Module PTRS_IMPL <: PTRS_INTF.
         normalize (o1 ++ normalize o2) = normalize (o1 ++ o2).
     Proof.
       move=> o1 o2.
-      rewrite norm_rel.
-      split.
-      {
-        remember (normalize o2) as o2n.
-        symmetry in Heqo2n. rewrite norm_rel in Heqo2n.
-        remember (normalize (o1 ++ o2)) as ocn.
-        symmetry in Heqocn. rewrite norm_rel in Heqocn.
-        move: Heqo2n => [Hrw0 Hc0].
-        move: Heqocn => [Hrw1 Hc1].
-        apply: rw_bwd_r; done.
-      }
-      { apply: norm_canon. }
+      symmetry.
+      apply norm_rw_derive.
+      apply roff_rw_cong.
+      { done. }
+      { apply norm_sound. }
     Qed.
 
     Lemma norm_absorb_r :
@@ -672,18 +651,11 @@ Module PTRS_IMPL <: PTRS_INTF.
         normalize (normalize o1 ++ o2) = normalize (o1 ++ o2).
     Proof.
       move=> o1 o2.
-      rewrite norm_rel.
-      split.
-      {
-        remember (normalize o1) as o1n.
-        symmetry in Heqo1n. rewrite norm_rel in Heqo1n.
-        remember (normalize (o1 ++ o2)) as ocn.
-        symmetry in Heqocn. rewrite norm_rel in Heqocn.
-        move: Heqo1n => [Hrw0 Hc0].
-        move: Heqocn => [Hrw1 Hc1].
-        apply: rw_bwd_l; done.
-      }
-      { apply: norm_canon. }
+      symmetry.
+      apply norm_rw_derive.
+      apply roff_rw_cong.
+      { apply norm_sound. }
+      { done. }
     Qed.
 
   End rw_lemmas.
@@ -933,14 +905,34 @@ Module PTRS_IMPL <: PTRS_INTF.
   Proof.
     UNFOLD_dot.
     move=> i j ty.
-    rewrite /__o_dot /o_sub.
-    repeat case_match;
-    subst; try lia;
-    rewrite /o_id; simpl in *;
-    apply: sig_eq; try done;
-    simp normalize;
-    repeat case_match; try done.
-    { by replace (i + 0) with i by lia. }
+    rewrite /__o_dot /o_sub /o_id.
+    repeat case_match; subst;
+    try lia; apply sig_eq; simpl.
+    { by simp normalize. }
+    { simp normalize. by destruct j. }
+    { simp normalize. by destruct i. }
+    {
+      simp normalize.
+      destruct i; try done;
+      simp find_redex;
+      repeat case_match;
+      subst; try done;
+      inversion H2; subst;
+      rewrite e; simpl;
+      by simp normalize.
+    }
+    {
+      simp normalize.
+      destruct i; try done;
+      simp find_redex;
+      repeat case_match;
+      subst; try done;
+      inversion H2; subst;
+      try destruct (Z.pos p + j);
+      try destruct (Z.neg p + j);
+      simpl; try done;
+      by simp normalize.
+    }
   Qed.
 
   Definition ptr_alloc_id (p : ptr) : option alloc_id :=
@@ -1030,16 +1022,90 @@ Module PTRS_IMPL <: PTRS_INTF.
     by destruct m.
   Qed.
 
-  Lemma canon_uncons :
-    ∀ o os,
-      roff_canon_syn (o :: os) ->
-      roff_canon_syn os.
+  Lemma norm_resp_errors :
+    ∀ σ os,
+      eval_offset_aux σ (normalize os) ≠ None ->
+      eval_offset_aux σ os ≠ None.
   Proof.
-    move=> o os H.
-    remember (o :: os).
-    destruct H; try done;
-    inversion Heql; subst;
-    (constructor || done).
+    move=> σ os Hn.
+    funelim (normalize os).
+  Admitted.
+
+  Lemma norm_resp_eval_offset :
+    ∀ σ os,
+      eval_offset_aux σ os ≠ None ->
+      eval_offset_aux σ (normalize os) = eval_offset_aux σ os.
+  Proof.
+    move=> σ os s.
+    funelim (normalize os).
+    have IH :
+      ∀ os,
+        eval_offset_aux σ os ≠ None ->
+        eval_offset_aux σ (normalize os) = eval_offset_aux σ os.
+    { intros. by apply H with (l:=[]) (t:=[]). }
+    generalize dependent s.
+    clear - IH. apply find_redex_ind;
+    intros; simpl in *.
+    { done. }
+    {
+      unfold o_sub_off in *.
+      destruct (size_of σ ty); simpl in *; try done.
+      rewrite IH; destruct (eval_offset_aux σ os0);
+      simpl in *; done.
+    }
+    {
+      rewrite IH; simpl in *;
+      unfold o_sub_off in *;
+      destruct (size_of σ ty);
+      simpl in *; try done;
+      destruct (eval_offset_aux σ os0);
+      simpl in *; try done;
+      f_equal; lia.
+    }
+    {
+      simpl in *. rewrite IH;
+      unfold o_base_off, o_derived_off in *;
+      destruct (parent_offset σ der base);
+      simpl in *; try done;
+      destruct (eval_offset_aux σ os0);
+      simpl in *; try done.
+      f_equal. lia.
+    }
+    {
+      simpl in *. rewrite IH;
+      unfold o_base_off, o_derived_off in *;
+      destruct (parent_offset σ der base);
+      simpl in *; try done;
+      destruct (eval_offset_aux σ os0);
+      simpl in *; try done.
+      f_equal. lia.
+    }
+    {
+      simpl in *.
+      destruct (eval_offset_aux σ os0);
+      simpl in *; try done.
+      2: by destruct (eval_offset_seg σ o).
+      have H1 : Some z ≠ None by done.
+      apply H in H1. clear H.
+      have ? : eval_offset_aux σ (l ++ t ++ r) ≠ None.
+      {
+        apply norm_resp_errors.
+        by rewrite H1.
+      }
+      rewrite IH.
+      2:{
+        simpl.
+        destruct (eval_offset_seg σ o);
+        simpl in *; try done.
+        by destruct (eval_offset_aux σ (l ++ t ++ r)).
+      }
+      rewrite IH in H1; try done.
+      simpl.
+      destruct (eval_offset_seg σ o);
+      simpl in *; try done.
+      by rewrite H1.
+    }
+    { done. }
   Qed.
 
   Lemma eval_offset_dot :
@@ -1049,10 +1115,51 @@ Module PTRS_IMPL <: PTRS_INTF.
     eval_offset σ (o1 ,, o2) = Some (s1 + s2).
   Proof.
     UNFOLD_dot. rewrite /eval_offset.
-    move=> σ [o1 H1] [o2 H2] s1 s2 H3 H4. simpl in *.
-    remember (normalize (o1 ++ o2)). symmetry in Heqr.
-    rewrite norm_rel in Heqr. move: Heqr => [Hrw Hc].
-
+    move=> σ [o1 H1] [o2 H2] s1 s2 H3 H4.
+    simpl in *. clear - H3 H4.
+    rewrite norm_resp_eval_offset.
+    2:{
+      generalize dependent s1.
+      induction o1; simpl in *.
+      { by rewrite H4. }
+      {
+        destruct (eval_offset_seg σ a);
+        simpl in *; try done.
+        destruct (eval_offset_aux σ (o1 ++ o2)).
+        { done. }
+        {
+          intros. exfalso.
+          eapply IHo1 with (s1:= s1 - z).
+          {
+            destruct (eval_offset_aux σ o1);
+            simpl in *; try done.
+            inversion H3. subst.
+            f_equal. lia.
+          }
+          { done. }
+        }
+      }
+    }
+    generalize dependent s1.
+    induction o1; simpl in *;
+    intros.
+    {
+      rewrite H4.
+      inversion H3.
+      subst. f_equal.
+    }
+    {
+      destruct (eval_offset_seg σ a);
+      simpl in *; try done.
+      rewrite (IHo1 (s1 - z)).
+      2:{
+        destruct (eval_offset_aux σ o1);
+        simpl in *; try done.
+        inversion H3. subst.
+        f_equal. lia.
+      }
+      simpl. f_equal. lia.
+    }
   Qed.
 
   Definition ptr_vaddr (p : ptr) : option vaddr :=
