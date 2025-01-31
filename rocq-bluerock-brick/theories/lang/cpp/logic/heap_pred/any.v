@@ -210,16 +210,24 @@ Section with_cpp.
     rewrite /primitiveR/=. eauto.
   Qed.
 
-  Lemma primR_anyR : ∀ t q v,
-      primR t q v |-- anyR t q.
+  Lemma initializedR_anyR : ∀ t q v,
+      initializedR t q v |-- anyR t q.
   Proof.
     intros.
-    rewrite primR.unlock.
-    iIntros "(%&#HT&Hp)".
+    rewrite initializedR.unlock.
+    iIntros "(#HT&Hp)".
     iDestruct (observe [| has_type_prop _ _ |] with "HT") as %Ht.
     rewrite tptsto_fuzzyR.unlock.
     iDestruct "Hp" as (?) "[% Hp]".
     rewrite -tptstoR_anyR_val. eauto.
+  Qed.
+
+  Lemma primR_anyR : ∀ t q v,
+      primR t q v |-- anyR t q.
+  Proof.
+    intros.
+    rewrite primR.unlock initializedR_anyR.
+    iIntros "[% $]".
   Qed.
   Lemma uninitR_anyR : ∀ t q,
       uninitR t q |-- anyR t q.
