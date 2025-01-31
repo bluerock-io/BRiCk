@@ -568,7 +568,7 @@ Module decltype.
             | _ => mfail
             end
         | Estring chars t =>
-            mret $ Tref $ Tarray (Tconst t) (1 + list_numbers.lengthN chars)
+            mret $ Tref $ Tarray (Tconst t) (1 + literal_string.lengthN chars)
         | Eint _ t =>
             let* _ := guard (t ∈ [Tchar;Tuchar;Tschar;Tshort;Tushort;Tint;Tuint;Tlong;Tulong;Tlonglong;Tulonglong]) in
             mret t

@@ -8,6 +8,7 @@ Require Import bedrock.lang.cpp.syntax.prelude.
 Require Export bedrock.lang.cpp.syntax.preliminary.
 Require Export bedrock.lang.cpp.syntax.overloadable.
 Require Import bedrock.lang.cpp.syntax.notations.
+Require Export bedrock.lang.cpp.syntax.literal_string.
 Require Import PrimInt63.
 
 #[local] Set Primitive Projections.
@@ -434,7 +435,7 @@ program because, in part, C++ has no type for references to members.
 | Eglobal_member (gn : name') (ty : type')
 
 | Echar (c : N) (t : type')
-| Estring (s : list N) (t : type')
+| Estring (s : literal_string.t) (t : type')
 | Eint (n : Z) (t : type')
 | Ebool (b : bool)
 | Eunop (op : UnOp) (e : Expr') (t : type')

@@ -1141,23 +1141,24 @@ Require Import bedrock.lang.cpp.logic.core_string.
 Section core_string.
   Context `{Σ : cpp_logic} {σ : genv}.
 
-  Lemma string_bytesR_zstringR bytes q :
-    zstring.WF char_type.Cchar (bytes ++ [0%N]) ->
-    string_bytesR char_type.Cchar q bytes -|- zstring.R char_type.Cchar q (bytes ++ [0]%N).
+  Lemma string_bytesR_zstringR str q :
+    zstring.WF char_type.Cchar (literal_string.to_list_N str ++ [0%N]) ->
+    string_bytesR char_type.Cchar q str -|- zstring.R char_type.Cchar q (literal_string.to_list_N str ++ [0]%N).
   Proof.
     intros HWF.
     apply Rep_equiv_at => p.
     rewrite /zstring.R string_bytesR.unlock /= _at_sep _at_only_provable.
     rewrite only_provable_True // right_id; f_equiv.
+    move: (literal_string.to_list_N _) HWF => bytes HWF.
     elim: bytes HWF => [|b bs IH] /= HWF.
     by rewrite !(arrayR_cons, arrayR_nil) !N_to_char_Cchar_eq.
     move: HWF => /zstring.WF_cons' [_ [/has_type_prop_char' /= Hbt Hbs]].
     rewrite !(arrayR_cons, arrayR_nil) -IH ?N_to_char_Cchar_eq //; lia.
   Qed.
 
-  Lemma string_bytesR_cstringR bytes q :
-    zstring.WF char_type.Cchar (bytes ++ [0%N]) ->
-    string_bytesR char_type.Cchar q bytes -|- cstring.R q (cstring._from_zstring (bytes ++ [0%N])).
+  Lemma string_bytesR_cstringR str q :
+    zstring.WF char_type.Cchar (literal_string.to_list_N str ++ [0%N]) ->
+    string_bytesR char_type.Cchar q str -|- cstring.R q (cstring._from_zstring (literal_string.to_list_N str ++ [0%N])).
   Proof.
     intros HWF.
     by rewrite string_bytesR_zstringR // /cstring.R cstring.to_from_zstring.
