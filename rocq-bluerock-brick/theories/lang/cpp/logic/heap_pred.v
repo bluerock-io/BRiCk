@@ -72,7 +72,7 @@ Section with_cpp.
   Qed.
   Lemma tptsto_fuzzyR_Vvoid_primR q : tptsto_fuzzyR Tvoid q Vvoid -|- primR Tvoid q Vvoid.
   Proof.
-    rewrite primR.unlock. rewrite left_id.
+    rewrite primR.unlock initializedR.unlock. rewrite left_id.
     by rewrite has_type_void pureR_only_provable only_provable_True// left_id.
   Qed.
   Lemma tptstoR_Vvoid_primR q : tptstoR Tvoid q Vvoid -|- primR Tvoid q Vvoid.
@@ -91,7 +91,7 @@ Section with_cpp.
     ~~ is_raw_or_undef v -> tptsto_fuzzyR ty q v -|- primR ty q v.
   Proof.
     split'; try apply primR_tptsto_fuzzyR.
-    rewrite primR.unlock. iIntros "R".
+    rewrite primR.unlock initializedR.unlock. iIntros "R".
     iDestruct (observe_elim (pureR $ has_type_or_undef _ _) with "R") as "($ & #T)".
     rewrite has_type_or_undef_unfold.
     rewrite pureR_or pureR_only_provable. iDestruct "T" as "[$ | ->]".

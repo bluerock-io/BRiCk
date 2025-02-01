@@ -1241,7 +1241,7 @@ Module type.
 
     #[local] Definition tag_direct (i : PrimInt63.int) : _ + positive :=
       inl i.
-    Arguments tag_direct _%uint63.
+    Arguments tag_direct _%_uint63.
 
     #[local] Definition FIRST_INT_TAG : PrimInt63.int :=
       3.

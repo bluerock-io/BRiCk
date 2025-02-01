@@ -587,7 +587,7 @@ Module Type Expr.
         (
           letI* a, free := wp_glval e in
           Exists v,
-          (Exists q, a |-> tptsto_fuzzyR (erase_qualifiers $ type_of e) q v ** True) //\\
+          (Exists q, a |-> initializedR (erase_qualifiers $ type_of e) q v ** True) //\\
           Q v free
         ) |-- wp_operand (Ecast Cl2r e) Q.
 
@@ -601,7 +601,9 @@ Module Type Expr.
     Proof.
       intros. rewrite -wp_operand_cast_l2r. iIntros "wp".
       iApply (wp_glval_wand with "wp"). iIntros (p f) "?".
-      by setoid_rewrite primR_tptsto_fuzzyR.
+      iStopProof. f_equiv; intro. f_equiv. f_equiv; intro.
+      f_equiv. rewrite _at_primR _at_initializedR.
+      iIntros "(_ & $ & $)".
     Qed.
 
     Lemma wp_operand_cast_l2r_raw : forall (e : Expr) Q,
@@ -612,8 +614,13 @@ Module Type Expr.
       |-- wp_operand (Ecast Cl2r e) Q.
     Proof.
       intros. rewrite -wp_operand_cast_l2r /=. iIntros "wp".
-      iApply (wp_glval_wand with "wp"). iIntros (p f) "(%r & ?)".
-      iExists (Vraw r). rewrite H. by rewrite rawR.unlock.
+      iApply (wp_glval_wand with "wp"). iIntros (p f) "(%r & H)".
+      iExists (Vraw r). rewrite H.
+      iStopProof. f_equiv. f_equiv; intro. f_equiv.
+      iIntros "X".
+      iDestruct (observe (has_type _ _) with "X" ) as "#?".
+      rewrite rawR.unlock initializedR.unlock _at_sep _at_pureR /=.
+      iFrame "∗#".
     Qed.
 
     (** No-op casts [Cnoop] are casts that only affect the type and not the value.
