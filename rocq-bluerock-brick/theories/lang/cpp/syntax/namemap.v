@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2024 BlueRock Security, Inc.
+ * Copyright (c) 2024-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -35,7 +35,7 @@ Module Import internal.
     End Compare.
     Module Key := OrderedType_from_Alt Compare.
     Lemma eqL : forall a b, Key.eq a b -> @eq _ a b.
-    Proof. (* proof the comparison equality is Leibnize equality *) Admitted.
+    Proof. apply leibniz_cmp_eq; refine _. Qed.
     Include FMapAVL.Make Key.
     Include FMapExtra.MIXIN Key.
     Include FMapExtra.MIXIN_LEIBNIZ Key.
