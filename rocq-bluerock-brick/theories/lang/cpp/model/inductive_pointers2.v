@@ -368,16 +368,6 @@ Module PTRS_IMPL <: PTRS_INTF.
       }
     Qed.
 
-    Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
-    normalize os =>
-      match find_redex os with
-      | Some (l, r, s, t) => normalize (l ++ t ++ r)
-      | None => os
-      end.
-    Next Obligation.
-    (* todo: Coq generalizes too much *)
-    Admitted.
-    
     Lemma find_redex_pass :
       ∀ os l s r t,
         find_redex os = Some (l, r, s, t) ->
@@ -452,6 +442,27 @@ Module PTRS_IMPL <: PTRS_INTF.
         }
       }
     Qed.
+    
+    Lemma length_app {A} :
+      ∀ xs ys : list A,
+        length (xs ++ ys) = (length xs + length ys)%nat.
+    Proof.
+      move=> xs ys.
+      induction xs; simpl; auto.
+    Qed.
+    Check existT.
+
+    Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
+    normalize os with (existT (find_redex os) eq_refl) => {
+      normalize os (existT (Some (l, r, s, t)) H) => normalize (l ++ t ++ r);
+      normalize os (existT None H) => os
+    }.
+    Next Obligation.
+      apply find_redex_pass in H.
+      move: H => [Heq Hrw]. subst.
+      repeat rewrite length_app.
+      destruct Hrw; simpl; lia.
+    Qed.
 
     Lemma norm_sound :
       ∀ os ,
@@ -462,11 +473,11 @@ Module PTRS_IMPL <: PTRS_INTF.
       remember (find_redex os).
       symmetry in Heqo. destruct o.
       {
-        destruct p, p, p.
+        destruct p, p, p. inversion H.
         apply find_redex_pass in Heqo.
         move: Heqo => [Heq Hrw]. subst.
-        apply: rtc_l. 2: by apply: H.
-        by exists r1, r2, r0, r.
+        apply: rtc_l. 2: apply H0.
+        by exists l, r, s, t.
       }
       { done. }
     Qed.
@@ -1022,15 +1033,6 @@ Module PTRS_IMPL <: PTRS_INTF.
     by destruct m.
   Qed.
 
-  Lemma norm_resp_errors :
-    ∀ σ os,
-      eval_offset_aux σ (normalize os) ≠ None ->
-      eval_offset_aux σ os ≠ None.
-  Proof.
-    move=> σ os Hn.
-    funelim (normalize os).
-  Admitted.
-
   Lemma norm_resp_eval_offset :
     ∀ σ os,
       eval_offset_aux σ os ≠ None ->
@@ -1038,74 +1040,101 @@ Module PTRS_IMPL <: PTRS_INTF.
   Proof.
     move=> σ os s.
     funelim (normalize os).
-    have IH :
-      ∀ os,
-        eval_offset_aux σ os ≠ None ->
-        eval_offset_aux σ (normalize os) = eval_offset_aux σ os.
-    { intros. by apply H with (l:=[]) (t:=[]). }
-    generalize dependent s.
-    clear - IH. apply find_redex_ind;
-    intros; simpl in *.
-    { done. }
-    {
-      unfold o_sub_off in *.
-      destruct (size_of σ ty); simpl in *; try done.
-      rewrite IH; destruct (eval_offset_aux σ os0);
-      simpl in *; done.
-    }
-    {
-      rewrite IH; simpl in *;
-      unfold o_sub_off in *;
-      destruct (size_of σ ty);
-      simpl in *; try done;
-      destruct (eval_offset_aux σ os0);
-      simpl in *; try done;
-      f_equal; lia.
-    }
-    {
-      simpl in *. rewrite IH;
-      unfold o_base_off, o_derived_off in *;
-      destruct (parent_offset σ der base);
-      simpl in *; try done;
-      destruct (eval_offset_aux σ os0);
-      simpl in *; try done.
-      f_equal. lia.
-    }
-    {
-      simpl in *. rewrite IH;
-      unfold o_base_off, o_derived_off in *;
-      destruct (parent_offset σ der base);
-      simpl in *; try done;
-      destruct (eval_offset_aux σ os0);
-      simpl in *; try done.
-      f_equal. lia.
-    }
-    {
+    2: done. clear H1.
+    apply find_redex_pass in H.
+    move: H => [Heq Hrw]. subst.
+    clear - Hrw s0 H0.
+    rewrite H0; clear H0.
+    2:{
+      induction l;
       simpl in *.
-      destruct (eval_offset_aux σ os0);
-      simpl in *; try done.
-      2: by destruct (eval_offset_seg σ o).
-      have H1 : Some z ≠ None by done.
-      apply H in H1. clear H.
-      have ? : eval_offset_aux σ (l ++ t ++ r) ≠ None.
       {
-        apply norm_resp_errors.
-        by rewrite H1.
+        destruct Hrw;
+        simpl in *.
+        {
+          unfold o_derived_off, o_base_off in *.
+          destruct (parent_offset _ _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux σ r);
+          simpl in *; done.
+        }
+        {
+          unfold o_derived_off, o_base_off in *.
+          destruct (parent_offset _ _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux σ r);
+          simpl in *; done.
+        }
+        {
+          unfold o_sub_off in *.
+          destruct (size_of _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux _ _);
+          simpl in *; done.
+        }
+        {
+          unfold o_sub_off in *.
+          destruct (size_of _ _);
+          simpl in *; try done.
+          destruct (eval_offset_aux _ _);
+          simpl in *; done.
+        }
       }
-      rewrite IH.
-      2:{
-        simpl.
-        destruct (eval_offset_seg σ o);
+      {
+        destruct (eval_offset_seg σ a);
         simpl in *; try done.
-        by destruct (eval_offset_aux σ (l ++ t ++ r)).
+        destruct (eval_offset_aux σ (l ++ s ++ r));
+        simpl in *; try done.
+        assert (Some z0 ≠ None) by done.
+        apply IHl in H.
+        destruct (eval_offset_aux _ _);
+        simpl in *; done.
       }
-      rewrite IH in H1; try done.
-      simpl.
-      destruct (eval_offset_seg σ o);
-      simpl in *; try done.
-      by rewrite H1.
     }
-    { done. }
+    induction l;
+    simpl in *.
+    {
+      destruct Hrw;
+      simpl in *.
+      {
+        unfold o_derived_off, o_base_off in *.
+        destruct (parent_offset _ _ _);
+        simpl in *; try done.
+        destruct (eval_offset_aux σ r);
+        simpl in *; try done.
+        f_equal. lia.
+      }
+      {
+        unfold o_derived_off, o_base_off in *.
+        destruct (parent_offset _ _ _);
+        simpl in *; try done.
+        destruct (eval_offset_aux σ r);
+        simpl in *; try done.
+        f_equal. lia.
+      }
+      {
+        unfold o_sub_off in *.
+        destruct (size_of _ _);
+        simpl in *; try done.
+        destruct (eval_offset_aux _ _);
+        simpl in *; done.
+      }
+      {
+        unfold o_sub_off in *.
+        destruct (size_of _ _);
+        simpl in *; try done.
+        destruct (eval_offset_aux _ _);
+        simpl in *; try done.
+        f_equal. lia.
+      }
+    }
+    {
+      destruct (eval_offset_seg σ a);
+      simpl in *; try done.
+      destruct (eval_offset_aux σ (l ++ s ++ r));
+      simpl in *; try done.
+      by rewrite IHl.
+    }
   Qed.
 
   Lemma eval_offset_dot :
