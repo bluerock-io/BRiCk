@@ -294,6 +294,7 @@ Module PTRS_IMPL <: PTRS_INTF.
           (o_sub_ ty 0 :: os)
           (Some ([], os, [o_sub_ ty 0], []))) ->
       (∀ ty i1 i2 os,
+        i1 ≠ 0 ->
         P
           (o_sub_ ty i1 :: o_sub_ ty i2 :: os)
           (Some ([], os, [o_sub_ ty i1; o_sub_ ty i2], [o_sub_ ty (i1 + i2)]))) ->
@@ -338,8 +339,8 @@ Module PTRS_IMPL <: PTRS_INTF.
         )
       ).
       all: try (apply Pkn; (dex || done)).
-      { apply Pss. }
-      { apply Pss. }
+      { by apply Pss. }
+      { by apply Pss. }
       { destruct a. subst. apply Pbd. }
       {
         destruct (find_redex _); simpl in *.
@@ -383,8 +384,8 @@ Module PTRS_IMPL <: PTRS_INTF.
         repeat constructor.
       }
       {
-        move=> ty i1 i2 os l r s t H.
-        inversion H. subst.
+        move=> ty i1 i2 os H1 l r s t H2.
+        inversion H2. subst.
         repeat constructor.
       }
       {
@@ -450,8 +451,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       move=> xs ys.
       induction xs; simpl; auto.
     Qed.
-    Check existT.
-
+    
     Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
     normalize os with (existT (find_redex os) eq_refl) => {
       normalize os (existT (Some (l, r, s, t)) H) => normalize (l ++ t ++ r);
@@ -464,18 +464,51 @@ Module PTRS_IMPL <: PTRS_INTF.
       destruct Hrw; simpl; lia.
     Qed.
 
+    Lemma norm_eager :
+      ∀ s t r,
+        roff_rw_local s t ->
+        normalize (s ++ r) = normalize (t ++ r).
+    Proof.
+      move=> s t r H.
+      funelim (normalize (s ++ r)).
+      {
+        clear H0 H1 Heqcall.
+        destruct H2; simpl in *;
+        simp find_redex in *;
+        try case_match;
+        try match goal with
+        | H : ¬(?x = ?x /\ ?y = ?y) |- _ =>
+          exfalso; by apply H
+        end;
+        inversion H;
+        subst; simpl;
+        try done.
+        {
+          destruct n1; simpl in *;
+          simp find_redex in *;
+          try case_match; try done;
+          inversion H1; subst;
+          simpl; done.
+        }
+      }
+      {
+        clear - H H1.
+        apply find_redex_fail in H.
+        exfalso. apply: H.
+        by exists [], r, s, t.
+      }
+    Qed.
+
     Lemma norm_sound :
       ∀ os ,
         roff_rw os (normalize os).
     Proof.
       move=> os.
       funelim (normalize os).
-      remember (find_redex os).
-      symmetry in Heqo. destruct o.
       {
-        destruct p, p, p. inversion H.
-        apply find_redex_pass in Heqo.
-        move: Heqo => [Heq Hrw]. subst.
+        clear H1.
+        apply find_redex_pass in H.
+        move: H => [Heq Hrw]. subst.
         apply: rtc_l. 2: apply H0.
         by exists l, r, s, t.
       }
@@ -487,19 +520,17 @@ Module PTRS_IMPL <: PTRS_INTF.
     Proof.
       move=> os.
       funelim (normalize os).
-      remember (find_redex os).
-      symmetry in Heqo. destruct o.
       {
-        destruct p, p, p.
-        apply find_redex_pass in Heqo.
-        move: Heqo => [Heq Hrw]. subst.
-        apply H; done.
+        clear H1.
+        apply find_redex_pass in H.
+        move: H => [Heq Hrw]. subst.
+        done.
       }
       {
-        clear - Heqo.
-        apply find_redex_fail in Heqo.
+        clear - H.
+        apply find_redex_fail in H.
         move=> [y [l [r [s [t [Hos [Hy Hrw]]]]]]].
-        apply Heqo. by exists l, r, s, t.
+        apply H. by exists l, r, s, t.
       }
     Qed.
 
@@ -515,17 +546,70 @@ Module PTRS_IMPL <: PTRS_INTF.
 
     Lemma norm_invol :
       ∀ os,
-        roff_canon os ->
-        normalize os = os.
+        roff_canon os <-> normalize os = os.
     Proof.
-      move=> os H. funelim (normalize os).
-      clear Heqcall. remember (find_redex os).
-      symmetry in Heqo. destruct o. 2: done.
-      destruct p, p, p. exfalso. apply: H0.
-      apply find_redex_pass in Heqo.
-      move: Heqo => [Heq Hrw]. subst.
-      by exists (r1 ++ r ++ r2), r1, r2, r0, r.
+      move=> os.
+      split; move=> H.
+      {
+        funelim (normalize os).
+        clear Heqcall H1. 2: done.
+        exfalso. apply: H2.
+        apply find_redex_pass in H.
+        move: H => [Heq Hrw]. subst.
+        by exists (l ++ t ++ r), l, r, s, t.
+      }
+      {
+        move: H.
+        funelim (normalize os);
+        intros; subst.
+        {
+          clear H1 Heqcall.
+          apply find_redex_pass in H.
+          move: H => [Heq Hrw]. clear H0.
+          assert (roff_canon (l ++ s ++ r)).
+          {
+            rewrite -Heq.
+            apply norm_canon.
+          }
+          exfalso. apply H.
+          by exists (l ++ t ++ r), l, r, s, t.
+        }
+        {
+          clear - H.
+          apply find_redex_fail in H.
+          move=> [y [l [r [s [t [H1 [H2 H3]]]]]]].
+          apply: H. subst. repeat eexists; done.
+        }
+      }
     Qed.
+
+    Equations norm_complete_aux l r s t :
+      roff_rw_local s t ->
+      normalize (l ++ s ++ r) = normalize (l ++ t ++ r)
+      by wf (length l) lt :=
+    norm_complete_aux l r s t H := _.
+    Next Obligation.
+      have H1 :
+        (∃ ls lt lr, l = ls ++ lr /\ roff_rw_local ls lt) \/
+        ¬∃ ls lt lr, l = ls ++ lr /\ roff_rw_local ls lt.
+      {
+        admit.
+      }
+      destruct H1.
+      {
+        move: H0 => [ls [lt [lr [Hl Hrw]]]].
+        subst. do 2 rewrite -app_assoc.
+        rewrite (norm_eager _ lt). 2: done.
+        rewrite (norm_eager _ lt). 2: done.
+        do 2 rewrite (app_assoc lt).
+        apply norm_complete_aux.
+        { done. }
+        {
+          destruct Hrw;
+          simpl; lia.
+        }
+      }
+    Admitted.
 
     Lemma norm_complete :
       ∀ os1 os2,
@@ -537,14 +621,10 @@ Module PTRS_IMPL <: PTRS_INTF.
       induction Hrw.
       { by apply norm_invol. }
       {
-        rewrite <- IHHrw.
+        rewrite -IHHrw.
         2: done. clear IHHrw Hc Hrw.
-        move: H => [l [r [s [t [Hx [Hy Hrw]]]]]]. subst.
-        funelim (normalize (l ++ s ++ r)).
-        clear Heqcall. etrans.
-        2: by apply: H. clear H.
-        funelim (normalize (l ++ s ++ r)).
-        done.
+        move: H => [l [r [s [t [Hx [Hy Hrw]]]]]].
+        subst. clear z. by apply norm_complete_aux.
       }
     Qed.
 
@@ -739,7 +819,8 @@ Module PTRS_IMPL <: PTRS_INTF.
     move=> [o H].
     rewrite /o_id /__o_dot.
     simpl. apply: sig_eq.
-    by rewrite app_nil_r norm_invol.
+    rewrite app_nil_r.
+    by apply norm_invol.
   Qed.
 
   Lemma dot_assoc : Assoc (=) o_dot.
@@ -759,7 +840,8 @@ Module PTRS_IMPL <: PTRS_INTF.
     { easy. }
     {
       f_equal. apply: sig_eq.
-      by rewrite app_nil_r norm_invol.
+      rewrite app_nil_r.
+      by apply norm_invol.
     }
   Qed.
 
@@ -923,26 +1005,20 @@ Module PTRS_IMPL <: PTRS_INTF.
     { simp normalize. by destruct j. }
     { simp normalize. by destruct i. }
     {
-      simp normalize.
-      destruct i; try done;
-      simp find_redex;
-      repeat case_match;
-      subst; try done;
-      inversion H2; subst;
-      rewrite e; simpl;
-      by simp normalize.
+      change [o_sub_ ty i; o_sub_ ty j]
+      with  ([o_sub_ ty i; o_sub_ ty j] ++ []).
+      rewrite (norm_eager _ [o_sub_ ty (i + j)]).
+      2: constructor.
+      rewrite e (norm_eager _ []).
+      2: constructor.
+      simpl. by simp normalize.
     }
     {
-      simp normalize.
-      destruct i; try done;
-      simp find_redex;
-      repeat case_match;
-      subst; try done;
-      inversion H2; subst;
-      try destruct (Z.pos p + j);
-      try destruct (Z.neg p + j);
-      simpl; try done;
-      by simp normalize.
+      change [o_sub_ ty i; o_sub_ ty j]
+      with  ([o_sub_ ty i; o_sub_ ty j] ++ []).
+      rewrite (norm_eager _ [o_sub_ ty (i + j)]).
+      2: constructor. simpl.
+      destruct (i + j); done.
     }
   Qed.
 
@@ -1022,7 +1098,9 @@ Module PTRS_IMPL <: PTRS_INTF.
       eval_offset_aux σ (normalize os) = eval_offset_aux σ os.
   Proof.
     move=> σ os Hc.
-    by rewrite norm_invol.
+    have H : normalize os = os
+      by apply norm_invol.
+    by rewrite H.
   Qed.
 
   Lemma bind_assoc {A} :
