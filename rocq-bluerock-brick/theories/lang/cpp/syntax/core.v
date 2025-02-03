@@ -212,7 +212,8 @@ Atomic names are effectively path components.
 *)
 Variant atomic_name_ {type : Set} : Set :=
 (** Named things *)
-| Nid (_ : ident)	(** namespace, struct, union, typedef, variable, member, ... *)
+| Nid (_ : ident)	(** namespace, struct, union, typedef, variable, member,
+                      and <<extern "C">> symbols... *)
 (**
 TODO (Discuss): Do we need to distinguish templated functions by their
 return types?
