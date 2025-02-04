@@ -156,9 +156,9 @@ Section with_cpp.
       (TprimR : forall q ty, Timeless (R q ty)) : forall q ty, Timeless (typeR q ty).
     Proof.
       move=> q ty; revert q; induction ty; simpl; intros; refine _.
-      (*rewrite /struct_defR/union_defR.
+      rewrite /struct_defR/union_defR.
       repeat (case_match; refine _).
-    Qed. *) Admitted.
+    Qed.
 
     #[local] Instance typeR_valid
       (TprimR : forall q ty, Observe validR (R q ty)) : forall q ty, Observe validR (typeR q ty).
