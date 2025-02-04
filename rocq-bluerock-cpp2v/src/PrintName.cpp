@@ -643,6 +643,10 @@ printFunctionName(CoqPrinter& print, const FunctionDecl& decl,
 		guard::ctor _(print, "Nunsupported_atomic", false);
 		return print.str(what);
 	};
+	if (decl.isExternC()) {
+		guard::ctor _(print, "Nid", false);
+		return print.str(decl.getName());
+	}
 	auto name = decl.getDeclName();
 	switch (name.getNameKind()) {
 
