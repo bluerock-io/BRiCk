@@ -948,7 +948,7 @@ Proof. induction ty; simpl; intros; eauto. Qed.
 (**
 Formalizes https://eel.is/c++draft/basic.types.general#term.scalar.type.
 *)
-Definition scalar_type (ty : type) : bool :=
+Definition is_scalar_type (ty : type) : bool :=
   match drop_qualifiers ty with
   | Tnullptr | Tptr _
   | Tmember_pointer _ _
@@ -959,8 +959,14 @@ Definition scalar_type (ty : type) : bool :=
   | _ => false
   end.
 Lemma scalar_type_erase_drop ty :
-  scalar_type (erase_qualifiers ty) = scalar_type (drop_qualifiers ty).
+  is_scalar_type (erase_qualifiers ty) = is_scalar_type (drop_qualifiers ty).
 Proof. by induction ty. Qed.
+Lemma scalar_type_erase ty :
+  is_scalar_type (erase_qualifiers ty) = is_scalar_type ty.
+Proof. rewrite /is_scalar_type. induction ty; simpl; auto. Qed.
+Lemma scalar_type_drop ty :
+  is_scalar_type (drop_qualifiers ty) = is_scalar_type ty.
+Proof. rewrite /is_scalar_type. induction ty; simpl; auto. Qed.
 
 (**
 [is_value_type t] returns [true] if [t] has value semantics. A value
@@ -1252,3 +1258,7 @@ Notation as_ref := (as_ref' (fun u => u) Tvoid).
 Notation as_ref_option := (as_ref' Some None).
 #[global] Hint Resolve is_qualified_decompose_type | 0 : core.
 #[global] Hint Resolve is_qualified_drop_qualifiers | 0 : core.
+
+(* Deprecations *)
+#[global,deprecated(note="use [is_scalar_type].",since="20250203")]
+Notation scalar_type := is_scalar_type (only parsing).
