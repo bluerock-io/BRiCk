@@ -157,16 +157,18 @@ function type."
 | Tqualified_func_param cc ar ret q t args args' :
   Tfunction (@FunctionType _ cc ar ret (args ++ Tqualified q t :: args')) ≡ Tfunction (@FunctionType _ cc ar ret (args ++ t :: args'))
 
-(** Equivalence *)
+(* Equivalence *)
 | type_equiv_refl t : t ≡ t
 | type_equiv_sym t u : t ≡ u -> u ≡ t
 | type_equiv_trans t u v : t ≡ u -> u ≡ v -> t ≡ v
 
-(** Compatibility *)
+(* Compatibility *)
 | Tptr_proper : Proper (equiv ==> equiv) Tptr
 | Tref_proper : Proper (equiv ==> equiv) Tref
 | Trv_ref_proper : Proper (equiv ==> equiv) Trv_ref
 | Tarray_proper : Proper (equiv ==> eq ==> equiv) Tarray
+| Tincomplete_array_proper : Proper (equiv ==> equiv) Tincomplete_array
+| Tvariable_array_proper : Proper (equiv ==> eq ==> equiv) Tvariable_array
 (* | Tfunction_proper cc ar : Proper (equiv ==> equiv ==> equiv) (@Tfunction lang cc ar) *)
 | Tmember_pointer_proper gn : Proper (equiv ==> equiv) (Tmember_pointer gn)
 | Tqualified_proper q : Proper (equiv ==> equiv) (Tqualified q)
@@ -537,7 +539,8 @@ Lemma drop_qualifiers_Tnullptr : forall [ty],
     drop_qualifiers ty = Tnullptr -> erase_qualifiers ty = Tnullptr.
 Proof. induction ty; simpl; intros; try congruence; eauto. Qed.
 
-(** simplify instances where you have [drop_qualifiers ty = Txxx ..] for some [Txxx]. *)
+(** simplify instances where you have [drop_qualifiers ty = Txxx ..]
+    for some [Txxx]. *)
 (* Same order as above, for easier review. *)
 Ltac simpl_drop_qualifiers :=
   match goal with
@@ -1205,14 +1208,12 @@ Qed.
     normalized to [Tref].
 
     Concrete examples of the above are:
-    - <<const int x = 1>>           -- [tptsto Tint (cQp.m 1) _ 1]
-    - <<const int* x = nullptr>>    -- [tptsto (Tptr Tint) (cQp.m 1) _ nullptr]
-    - <<int* const x = nullptr>>    -- [tptsto (Tptr Tint) (cQp.c 1) _ nullptr]
+    - <<const int x = 1>>           -- [tptsto "int" (cQp.c 1) _ 1]
+    - <<const int* x = nullptr>>    -- [tptsto "int*" (cQp.m 1) _ nullptr]
+    - <<int* const x = nullptr>>    -- [tptsto "int*" (cQp.c 1) _ nullptr]
     - <<volatile int x = 0>>        -- not represted using [tptsto]
-    - <<volatile int* p = nullptr>> -- [tptsto (Tptr Tint) (cQp.m 1) _ nullptr]
-    - <<int&& r = ..>>              -- [tptsto (Tref Tint) (cQp.m 1) _ _]
-
-    TODO: this probably belongs in [syntax/types.v].
+    - <<volatile int* p = nullptr>> -- [tptsto "int*" (cQp.m 1) _ nullptr]
+    - <<int&& r = ..>>              -- [tptsto "int&" (cQp.m 1) _ _]
  *)
 Definition heap_type : Set := type.
 Definition is_heap_type (t : type) : bool :=
@@ -1228,7 +1229,8 @@ Definition to_heap_type (t : type) : heap_type :=
   | Trv_ref t => Tref t
   | t => t
   end.
-Lemma to_heap_type_qualified cv t : to_heap_type (Tqualified cv t) = to_heap_type t.
+Lemma to_heap_type_qualified cv t :
+  to_heap_type (Tqualified cv t) = to_heap_type t.
 Proof. done. Qed.
 
 Lemma heap_type_not_qualified cv t : is_heap_type (Tqualified cv t) -> False.
