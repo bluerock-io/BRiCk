@@ -344,9 +344,13 @@ Module LevelEnv.
     ).
 
   Ltac2 @ external make_evar_in_level_env_ocaml :
-     bool -> rel_decl list -> constr -> evar * constr array :=
+     bool -> bool -> rel_decl list -> constr -> evar * constr array :=
     "ltac2_extensions" "make_evar_in_level_env".
 
   Ltac2 make_evar_in_level_env (tc_cand : bool) (env : t) (ty : constr) :=
-    make_evar_in_level_env_ocaml tc_cand (env.(decls)) ty.
+    make_evar_in_level_env_ocaml false tc_cand (env.(decls)) ty.
+
+  Ltac2 make_evar_in_level_env_no_goal (tc_cand : bool) (env : t) (ty : constr) :=
+    make_evar_in_level_env_ocaml true tc_cand (env.(decls)) ty.
+
 End LevelEnv.
