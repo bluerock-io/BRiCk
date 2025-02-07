@@ -42,18 +42,18 @@ Module WpTestDefns.
 
   Section Special.
     Definition NOTATION_wp_atomic_nil M Q :=
-      wp_atom M AO__atomic_load ty [] Q.
+      wp_atom M "__atomic_load" ty [] Q.
     Definition NOTATION_wp_atomic_cons_nowrap M Q :=
-      wp_atom M AO__atomic_load ty [Vundef; Vundef; Vundef] Q.
+      wp_atom M "__atomic_load" ty [Vundef; Vundef; Vundef] Q.
     Definition NOTATION_wp_atomic_cons_wrap M Q :=
-      wp_atom M AO__atomic_load ty [Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vint 1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089] Q.
+      wp_atom M "__atomic_load" ty [Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vint 1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089] Q.
 
     Definition NOTATION_wp_builtin_nil Q :=
-      wp_builtin Bin_popcount ty [] Q.
+      wp_builtin "__builtin_popcount" ty [] Q.
     Definition NOTATION_wp_builtin_cons_nowrap Q :=
-      wp_builtin Bin_popcount ty [Vundef; Vundef; Vundef] Q.
+      wp_builtin "__builtin_popcount" ty [Vundef; Vundef; Vundef] Q.
     Definition NOTATION_wp_builtin_cons_wrap Q :=
-      wp_builtin Bin_popcount ty [Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vint 1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089] Q.
+      wp_builtin "__builtin_popcount" ty [Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vint 1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089] Q.
   End Special.
 
   Section Cleanup.

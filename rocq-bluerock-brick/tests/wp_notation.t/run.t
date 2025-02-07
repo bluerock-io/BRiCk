@@ -84,7 +84,7 @@
     this decl%CPP_stmt_scope Q%function_scope
   NOTATION_wp_atomic_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
-    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"}) {e: {?: AO__atomic_load}()}
+    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"}) {e: "__atomic_load"()}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -93,7 +93,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-      {e: {?: AO__atomic_load}(Vundef, Vundef, Vundef)}
+      {e: "__atomic_load"(Vundef, Vundef, Vundef)}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -102,14 +102,14 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-      {e: {?: AO__atomic_load}(Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
+      {e: "__atomic_load"(Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -117,7 +117,7 @@
   NOTATION_wp_builtin_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (Q : val → epred),
-    ::wpBuiltin (Type ↦ {?: "void*"}) {e: __builtin_popcount()}
+    ::wpBuiltin (Type ↦ {?: "void*"}) {e: "__builtin_popcount"()}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -126,7 +126,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
-      (Type ↦ {?: "void*"}) {e: __builtin_popcount(Vundef, Vundef, Vundef)}
+      (Type ↦ {?: "void*"}) {e: "__builtin_popcount"(Vundef, Vundef, Vundef)}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -136,14 +136,14 @@
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
       (Type ↦ {?: "void*"}) 
-      {e: __builtin_popcount(Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
+      {e: "__builtin_popcount"(Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -612,7 +612,7 @@
     this decl%CPP_stmt_scope Q%function_scope
   NOTATION_wp_atomic_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
-    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"})  {e: AO__atomic_load()} Q
+    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"})  {e: "__atomic_load"()} Q
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -621,7 +621,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-       {e: AO__atomic_load(Vundef, Vundef, Vundef)}
+       {e: "__atomic_load"(Vundef, Vundef, Vundef)}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
@@ -631,7 +631,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-       {e: AO__atomic_load(Vundef,
+       {e: "__atomic_load"(Vundef,
                            Vundef,
                            Vundef,
                            Vundef,
@@ -647,7 +647,7 @@
   NOTATION_wp_builtin_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (Q : val → epred),
-    ::wpBuiltin (Type ↦ {?: "void*"}) {e: {e: __builtin_popcount}()} Q
+    ::wpBuiltin (Type ↦ {?: "void*"}) {e: "__builtin_popcount"%pstring()} Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -657,7 +657,7 @@
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
       (Type ↦ {?: "void*"}) 
-      {e: {e: __builtin_popcount}(Vundef, Vundef, Vundef)}
+      {e: "__builtin_popcount"%pstring(Vundef, Vundef, Vundef)}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
@@ -668,14 +668,14 @@
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
       (Type ↦ {?: "void*"}) 
-      {e: {e: __builtin_popcount}(Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
+      {e: "__builtin_popcount"%pstring(Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred

@@ -573,60 +573,24 @@ Module evaluation_order.
 End evaluation_order.
 
 (** ** Atomic Builtins *)
-Variant AtomicOp : Set :=
-| AO__atomic_load
-| AO__atomic_load_n
-| AO__atomic_store
-| AO__atomic_store_n
-| AO__atomic_compare_exchange
-| AO__atomic_compare_exchange_n
-| AO__atomic_exchange
-| AO__atomic_exchange_n
-| AO__atomic_fetch_add
-| AO__atomic_fetch_sub
-| AO__atomic_fetch_and
-| AO__atomic_fetch_or
-| AO__atomic_fetch_xor
-| AO__atomic_fetch_nand
-| AO__atomic_add_fetch
-| AO__atomic_sub_fetch
-| AO__atomic_and_fetch
-| AO__atomic_or_fetch
-| AO__atomic_xor_fetch
-| AO__atomic_nand_fetch
-.
-#[global] Instance: EqDecision AtomicOp.
-Proof. solve_decision. Defined.
+Module AtomicOp.
+  Definition t : Set := PrimString.string.
+  Definition compare : t -> t -> _ := PrimString.compare.
+  #[global] Instance t_eqdec: EqDecision t :=
+    eqdec_pstring.
+End AtomicOp.
+#[global] Notation AtomicOp := AtomicOp.t.
+#[global] Bind Scope pstring_scope with AtomicOp.t.
 
 (** ** Builtins *)
-Variant BuiltinFn : Set :=
-| Bin_alloca
-| Bin_alloca_with_align
-| Bin_launder
-| Bin_expect
-| Bin_unreachable
-| Bin_trap
-| Bin_bswap16
-| Bin_bswap32
-| Bin_bswap64
-| Bin_bzero
-| Bin_ffs
-| Bin_ffsl
-| Bin_ffsll
-| Bin_clz
-| Bin_clzl
-| Bin_clzll
-| Bin_ctz
-| Bin_ctzl
-| Bin_ctzll
-| Bin_popcount
-| Bin_popcountl
-| Bin_memcmp
-| Bin_memset
-| Bin_unknown (_ : bs)
-.
-#[global] Instance: EqDecision BuiltinFn.
-Proof. solve_decision. Defined.
+Module BuiltinFn.
+  Definition t : Set := PrimString.string.
+  Definition compare : t -> t -> _ := PrimString.compare.
+  #[global] Instance t_eqdec: EqDecision t :=
+    eqdec_pstring.
+End BuiltinFn.
+#[global] Notation BuiltinFn := BuiltinFn.t.
+#[global] Bind Scope pstring_scope with BuiltinFn.t.
 
 (** ** Dispatch type, i.e. <<virtual>> or <<static>> *)
 Variant dispatch_type : Set := Virtual | Direct.
