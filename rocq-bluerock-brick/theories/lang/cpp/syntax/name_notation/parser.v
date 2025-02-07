@@ -432,7 +432,17 @@ Module parser.
      | _ => None
      end.
 
-    (* name components basically amount to atomic names with an optional template
+   Fixpoint template_arg (fuel : nat) : M (temp_arg' lang) :=
+     (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) <|>
+     (Apack <$> (spaced "...<" *>
+      match fuel with
+      | S fuel =>
+          sepBy (op_token ",") (template_arg fuel)
+      | _ => mfail
+      end
+      <* spaced ">")).
+
+   (* name components basically amount to atomic names with an optional template
        specialization after them. They are complex because function names include their
        arguments.
      *)
@@ -491,8 +501,7 @@ Module parser.
         end
       in
       let* template_args :=
-        let template_arg :=
-          (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) in
+        let template_arg := template_arg 10 in
         optional (quoted (spaced "<") (spaced ">") $ sepBy (op_token ",") template_arg) in
       let parse_args : M _ :=
         optional (let* '(args, arity) := parse_args false in
@@ -520,7 +529,8 @@ Module parser.
                                         (const Tlong <$> keyword "l");
                                         (const Tulonglong <$> keyword "ull");
                                         (const Tulong <$> keyword "ul");
-                                        (const Tuint <$> keyword "u")]) in
+                                        (const Tuint <$> keyword "u");
+                                        (const Tbool <$> keyword "b")]) in
         let ty :=
           match suffix with
           | None => Tint
@@ -683,6 +693,13 @@ Module Type TESTS.
 
   Succeed Example _0 : TEST_type "enum E()" (Tfunction (FunctionType (Tenum (Nglobal (Nid "E"))) [])) := eq_refl.
   Succeed Example _0 : TEST_type "enum NS::E()" (Tfunction (FunctionType (Tenum (Nscoped (Nglobal (Nid "NS")) (Nid "E"))) [])) := eq_refl.
+
+  Succeed Example _0 : TEST "C<1b, 0b>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tbool); Avalue (Eint 0 Tbool)]) := eq_refl.
+  Succeed Example _0 : TEST "C<1, 0>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Avalue (Eint 0 Tint)]) := eq_refl.
+
+  Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
+  Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
+
 
   (* known issues *)
 

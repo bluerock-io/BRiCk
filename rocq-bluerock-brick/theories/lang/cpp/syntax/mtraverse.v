@@ -151,7 +151,7 @@ Module MTraverse.
       match a with
       | Atype t => Atype <$> traverseT t
       | Avalue e => Avalue <$> traverseE e
-      | Apack_expansion ls => Apack_expansion <$> UPoly.traverse (T:=eta list) (F:=F) traverseTA ls
+      | Apack ls => Apack <$> UPoly.traverse (T:=eta list) (F:=F) traverseTA ls
       | Atemplate n => Atemplate <$> traverseN n
       | Aunsupported msg => mret $ Aunsupported msg
       end

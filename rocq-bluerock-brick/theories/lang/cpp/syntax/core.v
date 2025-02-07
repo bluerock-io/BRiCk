@@ -71,6 +71,12 @@ End function_type.
 
 (** ** Templates *)
 
+(** Template parameters
+    - <<typename T>> would be represented as [Ptype "T"]
+    - <<int X>> would be represented as [Pvalue "X" Tint]
+
+    <<typename T...>> and <<int X...>> are not currently supported.
+ *)
 Variant temp_param_ {type : Set} : Set :=
 | Ptype (_ : ident)
 | Pvalue (_ : ident) (_ : type)
@@ -340,10 +346,19 @@ Inductive name' {lang : lang.t} : Set :=
 | Nscoped (n : name') (c : atomic_name_ type')	(* <<n::c>> *)
 | Nunsupported (_ : PrimString.string)
 
+(** Template arguments
+    - <<int>> would be represented as [Atype Tint]
+    - <<1>> would be represented as [Avalue (Eint 1 Tint)]
+    - <<int, char>> as the instantiation of a template parameter pack
+      would be represented as [Apack [Atype Tint; Atype Tchar]].
+      C++ requires these to be uniform, i.e. you can not mix [Avalue] and [Atype].
+      We can enforce this if we want in the future.
+    - <<T>> for <<T>> of template type would be represented as [Atemplate T]
+ *)
 with temp_arg' {lang : lang.t} : Set :=
 | Atype (_ : type')
 | Avalue (_ : Expr')
-| Apack_expansion (_ : list temp_arg') (* TODO: this is incorrect, it needs a pack expansion pattern *)
+| Apack (_ : list temp_arg') (* See <https://en.cppreference.com/w/cpp/language/pack> *)
 | Atemplate (_ : name')
 | Aunsupported (_ : PrimString.string)
 
@@ -899,7 +914,7 @@ with is_dependentTA {lang} (t : temp_arg' lang) : bool :=
   match t with
   | Atype t => is_dependentT t
   | Avalue e => is_dependentE e
-  | Apack_expansion tas => List.existsb is_dependentTA tas
+  | Apack tas => List.existsb is_dependentTA tas
   | Atemplate nm => is_dependentN nm
   | Aunsupported _ => false
   end
@@ -1046,3 +1061,5 @@ with is_dependentS {lang} (s : Stmt' lang) : bool :=
   | Sgoto _ => false
   | Sunsupported _ => false
   end.
+
+#[global,deprecated(note="use [Apack].",since="20250206")] Notation Apack_expansion := Apack (only parsing).
