@@ -673,7 +673,7 @@ Module temp_arg.
       match p with
       | Atype _ => 1
       | Avalue _ => 2
-      | Apack_expansion _ => 3
+      | Apack _ => 3
       | Atemplate _ => 4
       | Aunsupported _ => 5
       end.
@@ -689,7 +689,7 @@ Module temp_arg.
       match p with
       | Atype t => t
       | Avalue e => e
-      | Apack_expansion ls => ls
+      | Apack ls => ls
       | Atemplate n => n
       | Aunsupported msg => msg
       end.
@@ -709,7 +709,7 @@ Module temp_arg.
       match p with
       | Atype t => compare_ctor compare (Reduce (tag (Atype t))) (fun _ => Reduce (data (Atype t)))
       | Avalue e => compare_ctor compare (Reduce (tag (Avalue e))) (fun _ => Reduce (data (Avalue e)))
-      | Apack_expansion ls => compare_ctor compare (Reduce (tag (Apack_expansion ls))) (fun _ => Reduce (data (Apack_expansion ls)))
+      | Apack ls => compare_ctor compare (Reduce (tag (Apack ls))) (fun _ => Reduce (data (Apack ls)))
       | Atemplate n => compare_ctor compare (Reduce (tag (Atemplate n))) (fun _ => Reduce (data (Atemplate n)))
       | Aunsupported msg => compare_ctor compare (Reduce (tag (Aunsupported msg))) (fun _ => Reduce (data (Aunsupported msg)))
       end.

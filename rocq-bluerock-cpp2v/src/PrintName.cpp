@@ -391,6 +391,7 @@ printTemplateParameter(CoqPrinter& print, const NamedDecl* pdecl,
 					   bool as_arg = false) {
 	if (ClangPrinter::debug && cprint.trace(Trace::Name))
 		cprint.trace("printTemplateParameter", loc::of(pdecl));
+	always_assert(pdecl->isTemplateParameter() && "template parameter");
 
 	auto unsupported = [&](StringRef msg) -> auto& {
 		auto loc = loc::refine(gloc, pdecl);
@@ -509,7 +510,7 @@ printTemplateArgument(CoqPrinter& print, const TemplateArgument& arg,
 		});
 
 	case TemplateArgument::ArgKind::Pack: {
-		guard::ctor _(print, "Apack_expansion", false);
+		guard::ctor _(print, "Apack", false);
 		return print.list(arg.getPackAsArray(), [&](auto value) {
 			printTemplateArgument(print, value, cprint, loc);
 		});

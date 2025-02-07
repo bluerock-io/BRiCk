@@ -45,7 +45,7 @@ Section with_monad.
       match a with
       | Atype t => type t
       | Avalue e => expr e
-      | Apack_expansion xs => List.forallb temp_arg xs
+      | Apack xs => List.forallb temp_arg xs
       | Atemplate n => name n
       | Aunsupported _ => FAIL
       end.

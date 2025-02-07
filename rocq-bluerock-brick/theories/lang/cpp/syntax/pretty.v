@@ -184,7 +184,7 @@ Section with_lang.
       match ta with
       | Atype t => [printT t]
       | Avalue e => [printE e]
-      | Apack_expansion ls => "(...)" ::  List.concat (List.map printTA ls)
+      | Apack ls => List.concat (List.map printTA ls)
       | Atemplate n => ["<>" ++ printN n]
       | Aunsupported note => [note]
       end

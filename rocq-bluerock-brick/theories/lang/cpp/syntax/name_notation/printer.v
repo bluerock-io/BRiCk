@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2024 BlueRock Security, Inc.
+ * Copyright (c) 2024-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -149,11 +149,12 @@ Section with_lang.
     | Nscoped base n =>
         (fun b n => b ++ "::" ++ n) <$> printN "" base <*> printAN printT (topName base) inst n
     | Ninst base i =>
-        let printTA ta :=
+        let fix printTA ta :=
           match ta with
           | Atype t => printT t
           | Avalue e => printE e
-          | Apack_expansion _ => mfail
+          | Apack ts =>
+              ((fun tas => "..." ++ (angles $ sepBy ", " tas)) <$> traverse printTA ts)
           | Atemplate _ => mfail
           | Aunsupported note => mfail
           end
@@ -261,6 +262,7 @@ Section with_lang.
         | Tulong => mret "ul"
         | Tlonglong => mret "ll"
         | Tulonglong => mret "ull"
+        | Tbool => mret "b"
         | _ => mfail
         end
     | Ebool b => mret $ if b then "true" else "false"
@@ -333,4 +335,9 @@ Module Type TESTS.
   Succeed Example _0 : TEST "f<int>(int(*)())" (Ninst (Nglobal $ Nfunction function_qualifiers.N "f" [Tptr (Tfunction (FunctionType Tint []))]) [Atype Tint]) := eq_refl.
   Succeed Example _0 : TEST "f<int>(int())" (Ninst (Nglobal $ Nfunction function_qualifiers.N "f" [Tfunction (FunctionType Tint [])]) [Atype Tint]) := eq_refl.
   Succeed Example _0 : TEST "f<int>(int(int))" (Ninst (Nglobal $ Nfunction function_qualifiers.N "f" [Tfunction (FunctionType Tint [Tint])]) [Atype Tint]) := eq_refl.
+
+  Succeed Example _0 : TEST "C<1b, 0b>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tbool); Avalue (Eint 0 Tbool)]) := eq_refl.
+  Succeed Example _0 : TEST "C<1, 0>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Avalue (Eint 0 Tint)]) := eq_refl.
+  Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
+
 End TESTS.
