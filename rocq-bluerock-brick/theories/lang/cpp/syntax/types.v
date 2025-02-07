@@ -961,13 +961,13 @@ Definition is_scalar_type (ty : type) : bool :=
   | Tnum _ _ | Tenum _ => true
   | _ => false
   end.
-Lemma scalar_type_erase_drop ty :
+Lemma is_scalar_type_erase_drop ty :
   is_scalar_type (erase_qualifiers ty) = is_scalar_type (drop_qualifiers ty).
 Proof. by induction ty. Qed.
-Lemma scalar_type_erase ty :
+Lemma is_scalar_type_erase ty :
   is_scalar_type (erase_qualifiers ty) = is_scalar_type ty.
 Proof. rewrite /is_scalar_type. induction ty; simpl; auto. Qed.
-Lemma scalar_type_drop ty :
+Lemma is_scalar_type_drop ty :
   is_scalar_type (drop_qualifiers ty) = is_scalar_type ty.
 Proof. rewrite /is_scalar_type. induction ty; simpl; auto. Qed.
 
