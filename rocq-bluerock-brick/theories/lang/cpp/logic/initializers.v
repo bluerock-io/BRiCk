@@ -843,7 +843,7 @@ Section wp_initialize.
   | WpInitVolatile cv ty' : (cv, ty') = decompose_type ty ->
                             q_volatile cv ->
                           wp_initialize_decomp_spec tu ρ ty addr init Q False
-  | WpInitScalar cv ty' : scalar_type ty' ->
+  | WpInitScalar cv ty' : is_scalar_type ty' ->
                          (cv, ty') = decompose_type ty ->
                          ~~q_volatile cv ->
                          wp_initialize_decomp_spec tu ρ ty addr init Q (
