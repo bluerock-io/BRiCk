@@ -1439,7 +1439,7 @@ Module Type Expr.
 
     Lemma zero_init_val_is_scalar ty v : zero_init_val ty = Some v -> is_scalar_type ty = true.
     Proof.
-      rewrite /zero_init_val/scalar_type/representation_type /=. destruct (drop_qualifiers ty) eqn:Hdrop => //; eauto.
+      rewrite /zero_init_val/is_scalar_type/representation_type /=. destruct (drop_qualifiers ty) eqn:Hdrop => //; eauto.
     Qed.
 
     Lemma well_typed_zero_init_val (MOD : tu ⊧ resolve) : forall ty v,
