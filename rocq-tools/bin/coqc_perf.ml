@@ -66,7 +66,7 @@ let (cmd, files) =
         {glob; perf; summary; log; stdout; stderr}
       in
       let env =
-        "COQ_PROFILE_COMPONENTS=command" ::
+        "ROCQ_PROFILE_COMPONENTS=command" ::
         ("BR_LOG_FILE=" ^ Filename.quote files.log) ::
         []
       in

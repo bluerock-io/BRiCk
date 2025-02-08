@@ -17,9 +17,9 @@ Module FSet.
     Export Ltac2.FSet.Tags.
 
     Ltac2 @ external reference_tag : Std.reference FSet.Tags.tag :=
-      "coq-core.plugins.ltac2" "fmap_reference_tag".
+      "rocq-runtime.plugins.ltac2" "fmap_reference_tag".
 
     Ltac2 @ external evar_tag : evar FSet.Tags.tag :=
-      "coq-core.plugins.ltac2" "fmap_evar_tag".
+      "rocq-runtime.plugins.ltac2" "fmap_evar_tag".
   End Tags.
 End FSet.
