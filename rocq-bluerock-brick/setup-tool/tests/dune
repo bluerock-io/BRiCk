@@ -9,5 +9,5 @@
   (package rocq-bluerock-brick)
   (package rocq-bluerock-cpp2v)
   (package rocq-upoly)
-  (package coq-equations)
+  (package rocq-equations)
   setup.sh))
