@@ -7,8 +7,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (K : Kpred),
     ::wpS
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {s: ($"foo" + $"bar");
           break;
           continue;
@@ -28,7 +27,7 @@
     ::wpS
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {s: ($"foo" + $"bar");
           break;
           continue;
@@ -72,9 +71,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (decl : VarDecl) (Q : region → FreeTemps → epred),
     ::wpD
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
-      decl
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}] decl
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
            → translation_unit
@@ -84,7 +81,7 @@
     this decl%CPP_stmt_scope Q%function_scope
   NOTATION_wp_atomic_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
-    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"}) {e: {?: AO__atomic_load}()}
+    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"}) {e: "__atomic_load"()}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -93,7 +90,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-      {e: {?: AO__atomic_load}(Vundef, Vundef, Vundef)}
+      {e: "__atomic_load"(Vundef, Vundef, Vundef)}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -102,14 +99,14 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-      {e: {?: AO__atomic_load}(Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               Vundef,
-                               1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
+      {e: "__atomic_load"(Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          Vundef,
+                          1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -117,7 +114,7 @@
   NOTATION_wp_builtin_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (Q : val → epred),
-    ::wpBuiltin (Type ↦ {?: "void*"}) {e: __builtin_popcount()}
+    ::wpBuiltin (Type ↦ {?: "void*"}) {e: "__builtin_popcount"()}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -126,7 +123,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
-      (Type ↦ {?: "void*"}) {e: __builtin_popcount(Vundef, Vundef, Vundef)}
+      (Type ↦ {?: "void*"}) {e: "__builtin_popcount"(Vundef, Vundef, Vundef)}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -136,14 +133,14 @@
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
       (Type ↦ {?: "void*"}) 
-      {e: __builtin_popcount(Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             Vundef,
-                             1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
+      {e: "__builtin_popcount"(Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               Vundef,
+                               1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -212,8 +209,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpL
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -228,7 +224,7 @@
     ::wpL
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -242,8 +238,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : FreeTemps → epred),
     ::wpPRᵢ
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       (Pointer ↦ this) 
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -258,7 +253,7 @@
     ::wpPRᵢ
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       (Pointer ↦ this) 
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -273,8 +268,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpPR
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -289,7 +283,7 @@
     ::wpPR
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -303,8 +297,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : val → FreeTemps → epred),
     ::wpOperand
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -319,7 +312,7 @@
     ::wpOperand
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -333,8 +326,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpX
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -349,7 +341,7 @@
     ::wpX
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -363,8 +355,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpGL
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -379,7 +370,7 @@
     ::wpGL
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -393,7 +384,7 @@
     (σ : genv) (tu : translation_unit) (p this : ptr) 
     (Q : FreeTemps → mpred),
     ::wpGLₓ
-      [region: "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            cpp_logic ti _Σ
@@ -405,7 +396,7 @@
     (σ : genv) (tu : translation_unit) (p this : ptr) 
     (Q : FreeTemps → mpred),
     ::wpGLₓ
-      [region: "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            cpp_logic ti _Σ
@@ -450,8 +441,7 @@
     (tys_ar : evaluation_order.t) (es : list (wp.WPE.M ptr)) 
     (Q : list decltype * function_arity),
     ::wpArgs
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
            → translation_unit
@@ -476,7 +466,7 @@
     ::wpArgs
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
            → translation_unit
@@ -501,7 +491,7 @@
     (σ : genv) (tu : translation_unit) (p this : ptr) 
     (Q : FreeTemps → epred),
     ::wpInitialize
-      [region: "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "foo" @ p; [this := this]; return {?: "void*"}]
       (p |-> type_ptrR {?: "void*"})
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -515,7 +505,7 @@
     ::wpInitialize
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       (p |-> type_ptrR {?: "void*"})
       {e: ($"foo" + $"bar")}
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -532,8 +522,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (K : Kpred),
     ::wpS
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {s: ($"foo" + $"bar");
           break;
           continue;
@@ -554,7 +543,7 @@
     ::wpS
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {s: ($"foo" + $"bar");
           break;
           continue;
@@ -599,9 +588,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (decl : VarDecl) (Q : region → FreeTemps → epred),
     ::wpD
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
-      decl
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}] decl
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -612,7 +599,7 @@
     this decl%CPP_stmt_scope Q%function_scope
   NOTATION_wp_atomic_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
-    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"})  {e: AO__atomic_load()} Q
+    ::wpAtomic (Mask ↦ M; Type ↦ {?: "void*"})  {e: "__atomic_load"()} Q
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
   
@@ -621,7 +608,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-       {e: AO__atomic_load(Vundef, Vundef, Vundef)}
+       {e: "__atomic_load"(Vundef, Vundef, Vundef)}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors),
            genv → coPset → (val → mpred) → mpred
@@ -631,7 +618,7 @@
   λ (ti : biIndex) (_Σ : gFunctors) (σ : genv) (M : coPset) (Q : val → mpred),
     ::wpAtomic
       (Mask ↦ M; Type ↦ {?: "void*"}) 
-       {e: AO__atomic_load(Vundef,
+       {e: "__atomic_load"(Vundef,
                            Vundef,
                            Vundef,
                            Vundef,
@@ -647,7 +634,7 @@
   NOTATION_wp_builtin_nil =
   λ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ) 
     (σ : genv) (Q : val → epred),
-    ::wpBuiltin (Type ↦ {?: "void*"}) {e: {e: __builtin_popcount}()} Q
+    ::wpBuiltin (Type ↦ {?: "void*"}) {e: "__builtin_popcount"%pstring()} Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
   
@@ -657,7 +644,7 @@
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
       (Type ↦ {?: "void*"}) 
-      {e: {e: __builtin_popcount}(Vundef, Vundef, Vundef)}
+      {e: "__builtin_popcount"%pstring(Vundef, Vundef, Vundef)}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
@@ -668,14 +655,14 @@
     (σ : genv) (Q : val → epred),
     ::wpBuiltin
       (Type ↦ {?: "void*"}) 
-      {e: {e: __builtin_popcount}(Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  Vundef,
-                                  1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
+      {e: "__builtin_popcount"%pstring(Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       Vundef,
+                                       1123784018923740981723509817230984710298374098123740981723490817230984710293840891273489012734089%Z)}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv → (val → epred) → mpred
@@ -726,8 +713,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpL
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -743,7 +729,7 @@
     ::wpL
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -758,8 +744,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : FreeTemps → epred),
     ::wpPRᵢ
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       (Pointer ↦ this) 
       {e: ($"foo" + $"bar")}
       Q
@@ -775,7 +760,7 @@
     ::wpPRᵢ
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       (Pointer ↦ this) 
       {e: ($"foo" + $"bar")}
       Q
@@ -791,8 +776,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpPR
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -808,7 +792,7 @@
     ::wpPR
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -823,8 +807,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : val → FreeTemps → epred),
     ::wpOperand
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -840,7 +823,7 @@
     ::wpOperand
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -855,8 +838,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpX
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -872,7 +854,7 @@
     ::wpX
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -887,8 +869,7 @@
     (σ : genv) (tu : translation_unit) (p p' this : ptr) 
     (Q : ptr → FreeTemps → epred),
     ::wpGL
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -904,7 +885,7 @@
     ::wpGL
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
@@ -919,7 +900,7 @@
     (σ : genv) (tu : translation_unit) (p this : ptr) 
     (Q : FreeTemps → mpred),
     ::wpGLₓ
-      [region: "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors),
@@ -932,7 +913,7 @@
     (σ : genv) (tu : translation_unit) (p this : ptr) 
     (Q : FreeTemps → mpred),
     ::wpGLₓ
-      [region: "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "foo" @ p; [this := this]; return {?: "void*"}]
       {e: ($"foo" + $"bar")}
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors),
@@ -978,8 +959,7 @@
     (tys_ar : evaluation_order.t) (es : list (wp.WPE.M ptr)) 
     (Q : list decltype * function_arity),
     ::wpArgs
-      [region:
-        "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "bar" @ p'; "foo" @ p; [this := this]; return {?: "void*"}]
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -1005,7 +985,7 @@
     ::wpArgs
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       Q
        : ∀ (ti : biIndex) (_Σ : gFunctors) (Σ : cpp_logic ti _Σ),
            genv
@@ -1031,7 +1011,7 @@
     (σ : genv) (tu : translation_unit) (p this : ptr) 
     (Q : FreeTemps → epred),
     ::wpInitialize
-      [region: "foo" @ p; [this := this]; return {?: "void*"%cpp_type}]
+      [region: "foo" @ p; [this := this]; return {?: "void*"}]
       (p |-> type_ptrR {?: "void*"})
       {e: ($"foo" + $"bar")}
       Q
@@ -1046,7 +1026,7 @@
     ::wpInitialize
       [region:
         "qux" @ p'''; "baz" @ p''; "bar" @ p'; "foo" @ p; 
-        [this := this]; return {?: "void*"%cpp_type}]
+        [this := this]; return {?: "void*"}]
       (p |-> type_ptrR {?: "void*"})
       {e: ($"foo" + $"bar")}
       Q

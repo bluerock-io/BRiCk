@@ -830,6 +830,9 @@ Definition f_name {lang} (t : field' lang) : atomic_name' lang :=
 #[global] Bind Scope cpp_name_scope with globname'.
 #[global] Bind Scope cpp_name_scope with obj_name'.
 #[global] Bind Scope cpp_name_scope with classname'.
+#[global] Bind Scope cpp_type_scope with exprtype'.
+#[global] Bind Scope cpp_type_scope with decltype'.
+#[global] Bind Scope cpp_type_scope with functype'.
 
 (** ** Derived forms *)
 Notation Tconst_volatile := (Tqualified QCV).

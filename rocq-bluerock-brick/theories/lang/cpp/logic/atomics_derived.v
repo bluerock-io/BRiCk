@@ -36,7 +36,7 @@ Section cmpxchg_derived.
           << (* atomic post-cond: latest value is desired *)
               _eqv p |-> primR ty (cQp.mut 1) (Vint desired),
             COMM (_eqv expected_p |-> primR ty (cQp.mut 1) (Vint v) -* Q (Vbool true)) >>
-      |-- wp_atom' AO__atomic_compare_exchange_n ty
+      |-- wp_atom' "__atomic_compare_exchange_n" ty
                   (p::succmemord::expected_p::failmemord::Vint desired::weak::nil) Q.
   Proof.
     intros. iIntros "(F1 & F2 & F3 & Hex & AU)".
@@ -64,7 +64,7 @@ Section cmpxchg_derived.
       AU1 << _eqv p |-> primR ty (cQp.mut 1) (Vint v) >> @M,∅
           << _eqv p |-> primR ty (cQp.mut 1) (Vint v),
             COMM (_eqv val_p |-> primR ty (cQp.mut 1) (Vint v) -* Q (Vbool false)) >>
-      |-- wp_atom' AO__atomic_compare_exchange_n ty
+      |-- wp_atom' "__atomic_compare_exchange_n" ty
                   (p::succmemord::val_p::failmemord::Vint desired::weak::nil) Q.
   Proof.
     intros. iIntros "(? & ? & ? & % & ? & AU)".
@@ -94,7 +94,7 @@ Section cmpxchg_derived.
               _eqv p |-> primR ty (cQp.mut 1) (Vint desired),
             COMM (_eqv expected_p |-> primR ty (cQp.mut 1) (Vint expected) **
                   _eqv desired_p |-> primR ty q (Vint desired) -* Q (Vbool true)) >>
-      |-- wp_atom' AO__atomic_compare_exchange ty
+      |-- wp_atom' "__atomic_compare_exchange" ty
                   (p::succmemord::expected_p::failmemord::desired_p::weak::nil) Q.
   Proof.
     intros. iIntros "(? & ? & ? & ? & AU)".
@@ -123,7 +123,7 @@ Section cmpxchg_derived.
           << _eqv p |-> primR ty (cQp.mut 1) (Vint v),
             COMM (_eqv expected_p |-> primR ty (cQp.mut 1) (Vint v) **
                   _eqv desired_p |-> primR ty q (Vint desired) -* Q (Vbool false)) >>
-      |-- wp_atom' AO__atomic_compare_exchange ty
+      |-- wp_atom' "__atomic_compare_exchange" ty
                   (p::succmemord::expected_p::failmemord::desired_p::weak::nil) Q.
   Proof.
     intros. iIntros "(? & ? & ? & % & ? & AU)".

@@ -509,36 +509,6 @@ Module ExprNotations.
          , e custom CPP_expr at level 200
          , only printing).
 
-  Notation "'__builtin_alloca'" := (Bin_alloca) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_alloca_with_align'" := (Bin_alloca_with_align) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_launder'" := (Bin_launder) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_expect'" := (Bin_expect) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_unreachable'" := (Bin_unreachable) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_trap'" := (Bin_trap) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_bswap16'" := (Bin_bswap16) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_bswap32'" := (Bin_bswap32) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_bswap64'" := (Bin_bswap64) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_bzero'" := (Bin_bzero) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_memcmp'" := (Bin_memcmp) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_memset'" := (Bin_memset) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_ffs'" := (Bin_ffs) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_ffsl'" := (Bin_ffsl) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_ffsll'" := (Bin_ffsll) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_clz'" := (Bin_clz) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_clzl'" := (Bin_clzl) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_clzll'" := (Bin_clzll) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_ctz'" := (Bin_ctz) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_ctzl'" := (Bin_ctzl) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_ctzll'" := (Bin_ctzll) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_popcount'" := (Bin_popcount) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_popcountl'" := (Bin_popcountl) ( in custom CPP_expr at level 0, only printing).
-  Notation "'__builtin_UNKNOWN_' nm"
-      := (Bin_unknown nm)
-         ( in custom CPP_expr at level 0
-         , nm constr
-         , format "'[' __builtin_UNKNOWN_ nm ']'"
-         , only printing).
-
   (* TODO (JH): [Eatomic] *)
 
   Notation "'__builtin_vaarg(' e , t )"

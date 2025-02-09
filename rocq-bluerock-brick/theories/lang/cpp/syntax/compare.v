@@ -555,12 +555,6 @@ Module operator_impl.
 End operator_impl.
 #[global] Instance operator_impl_compare {A B : Set} `{!Compare A, !Compare B} : Compare (operator_impl.t A B) := operator_impl.compare compare compare.
 
-Module AtomicOp.
-  #[prefix="", only(tag)] derive AtomicOp.
-
-  Definition compare (x y : AtomicOp) : comparison :=
-    Pos.compare (tag x) (tag y).
-End AtomicOp.
 #[global] Instance AtomicOp_compare : Compare AtomicOp := AtomicOp.compare.
 
 Module calling_conv.
