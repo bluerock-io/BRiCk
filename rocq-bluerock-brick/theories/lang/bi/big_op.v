@@ -331,4 +331,6 @@ Section power.
   #[global] Instance power_or_affine : CLOSED Affine bi_or.
   Proof. intros. apply: power_closed. Qed.
 
+  Lemma power_sep_emp n : emp ⊣⊢@{PROP} emp ^^ n.
+  Proof. by rewrite power_unit. Qed.
 End power.
