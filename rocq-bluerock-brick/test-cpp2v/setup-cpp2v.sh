@@ -1,5 +1,5 @@
 export COQPATH="$DUNE_SOURCEROOT/_build/install/default/lib/coq/user-contrib"
-export COQLIB="$DUNE_SOURCEROOT/_build/install/default/lib/coq"
+export ROCQLIB="$DUNE_SOURCEROOT/_build/install/default/lib/coq"
 
 COQC_ARGS="-w -notation-overridden -w -notation-incompatible-prefix"
 
