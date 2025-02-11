@@ -64,7 +64,7 @@ rst_prolog = """
 needs_sphinx = '2.3.1'
 
 sertop_args = []
-coqpaths = os.environ.get("COQPATH", "").split(':')
+coqpaths = os.environ.get("ROCQPATH", "").split(':')
 for coqpath in coqpaths:
     if coqpath.strip() == '':
         continue

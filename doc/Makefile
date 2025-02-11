@@ -18,7 +18,7 @@ ROCQLIB       = ${PWD}/../../../_build/install/default/lib/coq
 ######################################################################
 
 # Sphinx-related variables
-SPHINXENV:=COQBIN="$(COQBIN)" ROCQLIB="$(ROCQLIB)" COQPATH="$(COQPATH):$(COQPATHEXTRA)"
+SPHINXENV:=COQBIN="$(COQBIN)" ROCQLIB="$(ROCQLIB)" ROCQPATH="$(ROCQPATH):$(COQPATHEXTRA)"
 SPHINXWARNERROR ?= 1
 ifeq ($(SPHINXWARNERROR),1)
 SPHINXOPTS= -W
