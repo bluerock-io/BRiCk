@@ -86,3 +86,23 @@ Module DecomposeProj_Tests.
     Goal True. test 't2. Qed.
   End Prim.
 End DecomposeProj_Tests.
+
+
+Module Vars_Test.
+  Import Ltac2.
+  Import printf.Printf.
+
+  #[projections(primitive)]
+  Record ty (u : unit) := R { f : unit }.
+
+  Lemma test u (r : ty u) : @f u r = tt.
+  Proof.
+    intros.
+    Control.enter (fun () =>
+      let g := Control.goal () in
+      let v := Constr.Vars.vars_really_needed g in
+      Control.assert_true (FSet.mem @u v)
+    ).
+  Abort.
+
+End Vars_Test.

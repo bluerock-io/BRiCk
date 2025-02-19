@@ -203,6 +203,49 @@ let _ =
   go 0 c;
   S.elements !rels
 
+
+let vars_of_constr c =
+  let names = ref Names.Id.Set.empty in
+  let rec go level c =
+    match Constr.kind c with
+    | Constr.Var(n) -> names := Names.Id.Set.add n !names
+    | _             -> Constr.iter_with_binders (fun level -> level + 1) go level c
+  in
+  go 0 c;
+  !names
+
+let _ =
+  define "vars_vars" (constr @-> eret valexpr) @@ fun c _ sigma ->
+  let c = EConstr.to_constr ~abort_on_undefined_evars:false sigma c in
+  let names = vars_of_constr c in
+  let tag = Tac2core.ident_map_tag in
+  let tag_set tag s = Tac2ffi.repr_of Tac2core.set_repr (Tac2core.TaggedSet (tag,s)) in
+  tag_set tag names
+
+let _ =
+  define "vars_really_needed_unsafe" (constr @-> tac valexpr) @@ fun c ->
+  TacUtil.evar_map >>= fun sigma ->
+  TacUtil.env >>= fun env ->
+  let c = EConstr.Unsafe.to_constr c in
+  let names = vars_of_constr c in
+  let named = Context.Named.map_het (EConstr.ERelevance.make) (EConstr.of_constr) (Environ.named_context env) in
+  let names = Names.Id.Set.of_list @@ Termops.dependency_closure env sigma named names in
+  let tag = Tac2core.ident_map_tag in
+  let tag_set tag s = Tac2ffi.repr_of Tac2core.set_repr (Tac2core.TaggedSet (tag,s)) in
+  Proofview.tclUNIT (tag_set tag names)
+
+let _ =
+  define "vars_really_needed" (constr @-> tac valexpr) @@ fun c ->
+  TacUtil.evar_map >>= fun sigma ->
+  TacUtil.env >>= fun env ->
+  let c = EConstr.to_constr ~abort_on_undefined_evars:false sigma c in
+  let names = vars_of_constr c in
+  let named = Context.Named.map_het (EConstr.ERelevance.make) (EConstr.of_constr) (Environ.named_context env) in
+  let names = Names.Id.Set.of_list @@ Termops.dependency_closure env sigma named names in
+  let tag = Tac2core.ident_map_tag in
+  let tag_set tag s = Tac2ffi.repr_of Tac2core.set_repr (Tac2core.TaggedSet (tag,s)) in
+  Proofview.tclUNIT (tag_set tag names)
+
 let _ =
   define "entirely_closed" (constr @-> eret bool) @@ fun c env sigma ->
   let exception Fail in

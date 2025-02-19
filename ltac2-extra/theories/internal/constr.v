@@ -9,6 +9,7 @@ Require Import bedrock.ltac2.extra.internal.plugin.
 Require Import bedrock.ltac2.extra.internal.init.
 Require Import bedrock.ltac2.extra.internal.misc.
 Require Import bedrock.ltac2.extra.internal.printf.
+Require Ltac2.FSet.
 
 (* NOTE: When using [Constr.Unsafe], [Constr.Unsafe.check] will enforce sane
    universe constraints on _output_ constructors, as will code like
@@ -53,6 +54,15 @@ Module Constr.
 
     Ltac2 @ external rels : constr -> int list :=
       "ltac2_extensions" "vars_rels".
+
+    Ltac2 @ external vars : constr -> ident FSet.t :=
+      "ltac2_extensions" "vars_vars".
+
+    Ltac2 @ external vars_really_needed : constr -> ident FSet.t :=
+      "ltac2_extensions" "vars_really_needed".
+
+    Ltac2 @ external vars_really_needed_unsafe : constr -> ident FSet.t :=
+      "ltac2_extensions" "vars_really_needed_unsafe".
   End Vars.
 
   Module Binder.
