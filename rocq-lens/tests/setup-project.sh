@@ -1,7 +1,7 @@
 cat > dune <<EOF
 (coq.theory
  (name test)
- (theories Lens Lens.Elpi elpi elpi_elpi elpi.apps.derive stdpp Ltac2))
+ (theories Lens Lens.Elpi elpi elpi_elpi elpi.apps.derive Stdlib stdpp Ltac2))
 EOF
 
 cat > dune-project <<EOF

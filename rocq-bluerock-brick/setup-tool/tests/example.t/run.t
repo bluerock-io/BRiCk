@@ -102,6 +102,7 @@
    (package dummy)
    (flags (:standard -w -notation-incompatible-prefix))
    (theories
+    Stdlib
     stdpp
     iris
     elpi
