@@ -1355,7 +1355,7 @@ public:
 					<< "\n";
 			print.ctor("Eunsupported");
 			print.output() << "\"UnaryExprOrTypeTraitExpr(" << expr->getKind()
-						   << "\")" << fmt::nbsp;
+						   << ")\"" << fmt::nbsp;
 			done(expr);
 		}
 		}
