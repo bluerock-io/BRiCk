@@ -506,6 +506,12 @@ Module Constr.
       Ltac2 @ external of_projection : constr -> projection_info option :=
         "ltac2_extensions" "decompose_proj".
     End Destruct.
+
+    (** [compare] is an unsafe comparison operator that is also used in
+        [ConstrSet] and [ConstrMap]. Use at your own peril. *)
+    Ltac2 @ external compare : constr -> constr -> int :=
+      "br.Constr" "compare".
+
   End Unsafe.
 
   Ltac2 @external is_class : Std.reference -> bool :=

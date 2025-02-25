@@ -33,6 +33,11 @@ let evar_tag : _ Tac2core.map_tag =
     let valmap_eq = Util.Refl
   end)
 
+(* [compare] must be kept in sync with whatever is used in [ConstrSet] and [ConstrMap] *)
+let _ =
+  define Tac2expr.{ mltac_plugin = "br.Constr"; mltac_tactic = "compare" } (valexpr @-> valexpr @-> eret int) @@ fun c1 c2 _ sigma ->
+    Constr.compare (to_constr sigma c1) (to_constr sigma c2)
+
 module ConstrSet = struct
   include Set.Make(Constr)
 
