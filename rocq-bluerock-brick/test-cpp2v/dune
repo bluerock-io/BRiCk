@@ -5,4 +5,7 @@
   (package coq-stdlib)
   (package rocq-upoly)
   (package rocq-bluerock-brick)
-  setup-project.sh))
+  (package rocq-bluerock-cpp2v)
+  setup-project.sh
+  setup-cpp2v.sh
+  setup-name-test.sh))
