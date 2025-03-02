@@ -19,7 +19,6 @@ Require Import bedrock.prelude.base.
 Require Import bedrock.prelude.addr.
 Require Import bedrock.prelude.avl.
 Require Import bedrock.prelude.bytestring.
-Require Import bedrock.prelude.option.
 Require Import bedrock.prelude.numbers.
 
 Require Import bedrock.lang.cpp.syntax.
@@ -243,6 +242,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       now apply proj1_sig_eq in H.
     }
   Qed.
+  #[global] Declare Instance offset_countable : Countable offset.
 
   Section norm_def.
 
@@ -1028,8 +1028,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     | _ => None
     end.
   
-  Definition null_alloc_id : alloc_id.
-  Admitted.
+  Definition null_alloc_id : alloc_id := null_alloc_id.
   Lemma ptr_alloc_id_nullptr :
     ptr_alloc_id nullptr = Some null_alloc_id.
   Admitted.
@@ -1269,18 +1268,71 @@ Module PTRS_IMPL <: PTRS_INTF.
     }
   Qed.
 
-  Definition ptr_vaddr (p : ptr) : option vaddr :=
+  Definition ptr_vaddr σ (p : ptr) : option vaddr :=
     match p with
     | invalid_ptr_ => None
-    | offset_ptr p (exist _ o _) =>
-      foldr
-        (λ off ova, Some 1)
-        (match p with
-        | nullptr_ => Some 0%N
-        | fun_ptr_ tu o => Some (global_ptr_encode_vaddr o)
-        | global_ptr_ tu o => Some (global_ptr_encode_vaddr o)
-        | alloc_ptr_ aid va => Some va
-        end)
-        o
+    | offset_ptr p o =>
+      match eval_offset σ o with
+      | None => None
+      | Some o =>
+        let c : N := match p with
+        | nullptr_ => 0%N
+        | fun_ptr_ tu o => global_ptr_encode_vaddr o
+        | global_ptr_ tu o => global_ptr_encode_vaddr o
+        | alloc_ptr_ aid va => va
+        end in
+        match o with
+        | Z.pos o => Some (c + Npos o)%N
+        | _ => None
+        end
+      end
     end.
+  
+  Lemma ptr_vaddr_resp_leq :
+    ∀ σ1 σ2,
+      genv_leq σ1 σ2 ->
+      @ptr_vaddr σ1 = @ptr_vaddr σ2.
+  Proof.
+    move=> σ1 σ2 H.
+    rewrite /ptr_vaddr.
+    extensionality p.
+    destruct p. easy.
+  Admitted.
+  
+  Lemma ptr_vaddr_nullptr :
+    ∀ σ, @ptr_vaddr σ nullptr = Some 0%N.
+  Proof.
+  Admitted.
+
+  Lemma ptr_vaddr_o_sub_eq :
+    ∀ p σ ty n1 n2 sz,
+      size_of σ ty = Some sz -> (sz > 0)%N ->
+      same_property (@ptr_vaddr σ) (p ,, o_sub ty n1) (p ,, o_sub ty n2) ->
+      n1 = n2.
+  Admitted.
+
+  Lemma global_ptr_nonnull_addr :
+    ∀ σ tu o, @ptr_vaddr σ (global_ptr tu o) <> Some 0%N.
+  Admitted.
+
+  Lemma global_ptr_nonnull_aid :
+    ∀ tu o,
+      ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
+  Admitted.
+
+  Lemma global_ptr_inj :
+    ∀ tu, Inj (=) (=) (global_ptr tu).
+  Admitted.
+  
+  Lemma global_ptr_addr_inj :
+    ∀ σ tu, Inj (=) (=) (λ o, @ptr_vaddr σ (global_ptr tu o)).
+  Admitted.
+
+  Lemma global_ptr_aid_inj :
+    ∀ tu, Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
+  Admitted.
+  #[global] Existing Instances global_ptr_inj global_ptr_addr_inj global_ptr_aid_inj.
+  
+  Include PTRS_DERIVED.
+  Include PTRS_MIXIN.
 End PTRS_IMPL.

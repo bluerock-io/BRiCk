@@ -21,6 +21,7 @@ Require Import bedrock.prelude.numbers.
 Require Import bedrock.lang.cpp.syntax.
 Require Export bedrock.lang.cpp.semantics.types.
 Require Export bedrock.lang.cpp.semantics.genv.
+Require Export bedrock.lang.cpp.semantics.alloc_id.
 
 (* We only load Iris to declare trivial OFEs over pointers via [leibnizO]. *)
 Require Import iris.algebra.ofe.
@@ -28,18 +29,6 @@ Require Import iris.algebra.ofe.
 #[local] Close Scope nat_scope.
 #[local] Open Scope Z_scope.
 Implicit Types (σ : genv).
-
-(** ** Allocation IDs.
-    We use them to model pointer provenance, following Cerberus.
- *)
-Record alloc_id := MkAllocId { alloc_id_car : N }.
-
-#[global] Instance MkAllocId_inj : Inj (=) (=) MkAllocId.
-Proof. by intros ?? [=]. Qed.
-#[global] Instance alloc_id_eq_dec : EqDecision alloc_id.
-Proof. solve_decision. Qed.
-#[global] Instance alloc_id_countable : Countable alloc_id.
-Proof. by apply: (inj_countable' alloc_id_car MkAllocId) => -[?]. Qed.
 
 Module Type PTRS_SYNTAX_INPUTS.
   Parameter ptr : Set.
