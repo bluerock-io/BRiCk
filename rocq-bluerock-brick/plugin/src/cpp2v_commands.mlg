@@ -1,0 +1,17 @@
+(*
+ * Copyright (c) 2025 BlueRock Security, Inc.
+ * This software is distributed under the terms of the BedRock Open-Source License.
+ * See the LICENSE-BedRock file in the repository root for details.
+ *)
+
+DECLARE PLUGIN "rocq-bluerock-brick.plugin"
+
+{
+open Stdarg
+open Procq.Constr
+}
+
+VERNAC COMMAND EXTEND Cpp CLASSIFIED AS SIDEFF
+| [ "cpp.tu" ident(name) "abi" constr(abi) "defns" constr_list(defns) ] ->
+  { Cpp2v.cpp_command name abi defns }
+END
