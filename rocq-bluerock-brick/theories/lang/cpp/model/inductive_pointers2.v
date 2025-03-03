@@ -1282,6 +1282,7 @@ Module PTRS_IMPL <: PTRS_INTF.
         | alloc_ptr_ aid va => va
         end in
         match o with
+        | Z0 => Some 0%N
         | Z.pos o => Some (c + Npos o)%N
         | _ => None
         end
@@ -1301,8 +1302,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   
   Lemma ptr_vaddr_nullptr :
     ∀ σ, @ptr_vaddr σ nullptr = Some 0%N.
-  Proof.
-  Admitted.
+  Proof. done. Qed.
 
   Lemma ptr_vaddr_o_sub_eq :
     ∀ p σ ty n1 n2 sz,
