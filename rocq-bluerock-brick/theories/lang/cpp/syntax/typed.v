@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2023-2024 BlueRock Security, Inc.
+ * Copyright (c) 2023-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -330,6 +330,13 @@ Module decltype.
                                     mret ()
             ) t) dt
         in
+        let ptr_conv dt t :=
+              qual_norm (fun dq dt => qual_norm (fun q t =>
+                                                let* _ := guard (tq_le q dq) in
+                                                let* _ := guard (dt = t \/ dt = Tvoid) in
+                                                mret ()
+                                     ) t) dt
+        in
         trace (Can_initialize dt t) $
           match drop_qualifiers dt , drop_qualifiers t with
           | Tref dt , Tref t
@@ -339,6 +346,8 @@ Module decltype.
               if is_const dt
               then ref_conv dt t
               else mfail
+          | Tptr dt , Tptr t =>
+              ptr_conv dt t
           | dt , t =>
               let* _ := guard (dt = t) in mret ()
           end.
