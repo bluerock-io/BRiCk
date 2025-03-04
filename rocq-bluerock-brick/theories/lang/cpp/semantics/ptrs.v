@@ -218,6 +218,7 @@ Module Type PTRS.
      then [p ,, o_field cls f] points to [p -> f].
    *)
   Parameter o_field : genv -> field -> offset.
+  #[global] Arguments o_field _ _%_cpp_field_scope.
 
   #[global] Notation "p ., o" := (_dot p (o_field _ o))
     (at level 11, left associativity, only parsing) : stdpp_scope.

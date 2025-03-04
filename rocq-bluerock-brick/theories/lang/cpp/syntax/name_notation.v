@@ -14,7 +14,6 @@ Bind Scope cpp_name_scope with core.name.
 Definition parse_name (s : PrimString.string) := parser.parse_name s.
 #[local]
 Definition print_name (bs : core.name) := printer.print_name bs.
-String Notation core.name parse_name print_name : cpp_name_scope.
 
 (* Name Aliases *)
 Bind Scope cpp_name_scope with core.globname.
@@ -34,6 +33,9 @@ Definition field_printer (f : core.field) : option PrimString.string :=
   | _ => None
   end.
 String Notation core.field field_parser field_printer : cpp_field_scope.
+(* NOTE: this needs to be registered **after** the parser for fields *)
+String Notation core.name parse_name print_name : cpp_name_scope.
+
 
 Fail Check "foo"%cpp_field.
 Succeed Example _0 : "foo"%cpp_name = "foo"%cpp_name := eq_refl.
