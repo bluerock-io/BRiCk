@@ -1,10 +1,13 @@
 (*
- * Copyright (c) 2024 BlueRock Security, Inc.
+ * Copyright (c) 2024-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Ltac2.Ltac2.
 Require Export bedrock.prelude.base.	(* for, e.g., <<::>> *)
+Require Import Stdlib.Numbers.Cyclic.Int63.PrimInt63.
+Require Import bedrock.prelude.parray.
+Require Import bedrock.prelude.uint63.
 Require Export Stdlib.Strings.PrimString.
 Require Import bedrock.prelude.avl.
 Require Export bedrock.lang.cpp.syntax. (* NOTE: too much *)
@@ -92,13 +95,23 @@ Module Import translation_unit.
   Definition _skip : t :=
     fun s t dups k => k s t dups.
 
-  Fixpoint decls' (ds : list t) : t :=
-    match ds with
-    | nil => fun s t dups k => k s t dups
-    | d :: ds => fun s t dups k => d s t dups (fun s t dups' => decls' ds s t dups' k)
+  Fixpoint array_fold {A B}
+    (f : A -> B -> B) (ar : PArray.array A) (fuel : nat) (i : PrimInt63.int) (acc : B) : B :=
+    match fuel with
+    | 0 => acc
+    | S fuel =>
+        array_fold f ar fuel (PrimInt63.add i 1) (f (PArray.get ar i) acc)
     end.
 
-  Definition decls (ds : list t) (e : endian) : translation_unit * list name :=
+  Definition abi_type := endian.
+
+  Definition decls' (ds : PArray.array t) : t :=
+    array_fold (fun (X Y : t) s t dups K => X s t dups (fun s t dups => Y s t dups K))
+      ds
+      (Z.to_nat (Uint63.to_Z (PArray.length ds))) 0%uint63
+      (fun s t dups k => k s t dups).
+
+  Definition decls (ds : PArray.array t) (e : abi_type) : translation_unit * list name :=
     decls' ds ∅ ∅ [] $ fun s t => pair {|
       symbols := NM.from_raw s;
       types := NM.from_raw t;
@@ -106,17 +119,8 @@ Module Import translation_unit.
       byte_order := e;
     |}.
 
-  (*
-  Definition the_tu (result : translation_unit * list name)
-    : match result.2 with
-      | [] => translation_unit
-      | _ => unit
-      end :=
-    match result.2 as X return match X with [] => translation_unit | _ => unit end with
-    | [] => result.1
-    | _ => tt
-    end.
-   *)
+  Definition list_decls (ls : list translation_unit.t) :=
+    decls $ PArray.of_list _skip ls.
 
   Module make.
     Import Ltac2.Ltac2.
@@ -127,7 +131,7 @@ Module Import translation_unit.
      *)
     Ltac2 check_translation_unit (tu : preterm) (en : preterm) :=
       let endian := Constr.Pretype.pretype Constr.Pretype.Flags.constr_flags (Constr.Pretype.expected_oftype '(endian)) en in
-      let tu := Constr.Pretype.pretype Constr.Pretype.Flags.constr_flags (Constr.Pretype.expected_oftype '(list t)) tu in
+      let tu := Constr.Pretype.pretype Constr.Pretype.Flags.constr_flags (Constr.Pretype.expected_oftype '(PArray.array t)) tu in
       let term := Constr.Unsafe.make (Constr.Unsafe.App ('decls) (Array.of_list [tu; endian])) in
       let rtu := Std.eval_vm None term in
       lazy_match! rtu with

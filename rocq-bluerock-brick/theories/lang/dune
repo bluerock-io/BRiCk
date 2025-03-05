@@ -2,4 +2,5 @@
 (coq.theory
  (name bedrock.lang)
  (package rocq-bluerock-brick)
+ (plugins rocq-bluerock-brick.plugin)
  (theories bedrock.prelude iris stdpp elpi Ltac2))
