@@ -19,20 +19,20 @@ Module Uint63.
   Notation sup_intZ := 9223372036854775808%Z.
 
   (** Returns a sequence of [n] integers, from [start] to [start + n - 1] (up to conversions). *)
-  Fixpoint intseq (start : int) (n : nat) : list int :=
+  Fixpoint seq_int (start : int) (n : nat) : list int :=
     match n with
     | 0 => []
-    | S n => start :: intseq (Uint63.succ start) n
+    | S n => start :: seq_int (Uint63.succ start) n
     end%nat.
 
-  Lemma intseq_length start n : List.length (intseq start n) = n.
+  Lemma seq_int_length start n : List.length (seq_int start n) = n.
   Proof.
     elim: n start => [|n IHn] start //.
     by rewrite /= IHn.
   Qed.
 
-  Lemma intseq_nth start n k d :
-    nth k (intseq start n) d =
+  Lemma seq_int_nth start n k d :
+    nth k (seq_int start n) d =
       if decide (k < n) then
         (start + of_Z k)%uint63
       else
@@ -41,7 +41,7 @@ Module Uint63.
     elim: n start k d => [|n IHn] start k d //.
     - case_decide => //.
       + lia.
-      + rewrite nth_overflow // intseq_length. lia.
+      + rewrite nth_overflow // seq_int_length. lia.
     - case: k.
       + cbn; case_decide; lia.
       + intros. cbn. rewrite {}IHn.

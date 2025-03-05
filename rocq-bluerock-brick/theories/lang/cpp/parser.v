@@ -117,16 +117,8 @@ Module Import translation_unit.
       byte_order := e;
     |}.
 
-  #[program]
   Definition list_decls (ls : list translation_unit.t) :=
-    match ls as ls return match ls with | [] => unit | _ => endian -> _ end with
-    | [] => tt
-    | ls => match PArray.of_list_nodef ls as x return x = Some _ -> _ with
-            | Some arr => fun _ => decls arr
-            | None => _
-            end eq_refl
-    end.
-  Next Obligation. discriminate. Qed.
+    decls $ PArray.of_list _skip ls.
 
 
   Module make.
