@@ -825,7 +825,6 @@ Definition f_name {lang} (t : field' lang) : atomic_name' lang :=
   | Nscoped _ n => n
   | _ => Nunsupported_atomic "not a field"
   end.
-#[global] Bind Scope cpp_field_scope with field'.
 #[global] Bind Scope cpp_name_scope with name'.
 #[global] Bind Scope cpp_name_scope with globname'.
 #[global] Bind Scope cpp_name_scope with obj_name'.
