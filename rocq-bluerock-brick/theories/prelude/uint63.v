@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import bedrock.prelude.base.
-Require Coq.Numbers.BinNums.
-Require Coq.Numbers.Cyclic.Int63.Uint63.
-Require Coq.micromega.ZifyUint63.
+Require Stdlib.Numbers.BinNums.
+Require Stdlib.Numbers.Cyclic.Int63.Uint63.
+Require Stdlib.micromega.ZifyUint63.
 
 #[local] Open Scope Z_scope.
 
@@ -18,7 +18,8 @@ Module Uint63.
   Notation max_intZ := 9223372036854775807%Z.
   Notation sup_intZ := 9223372036854775808%Z.
 
-  Fixpoint intseq (start : int) (n : nat) :=
+  (** Returns a sequence of [n] integers, from [start] to [start + n - 1] (up to conversions). *)
+  Fixpoint intseq (start : int) (n : nat) : list int :=
     match n with
     | 0 => []
     | S n => start :: intseq (Uint63.succ start) n

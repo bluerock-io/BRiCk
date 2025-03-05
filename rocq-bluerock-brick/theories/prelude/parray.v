@@ -34,6 +34,7 @@ Module PArray.
         | S n => go n (i + 1)%uint63 (PArray.get a i :: acc)
         end.
 
+    #[local]
     Lemma to_list_aux_P a : forall n i acc,
       to_list_aux a n i acc = (List.map (fun i => PArray.get a i) (List.rev (intseq i n))) ++ acc.
     Proof.
@@ -43,7 +44,7 @@ Module PArray.
       f_equal.
     Qed.
 
-    Definition to_list a : list A  :=
+    Definition to_list (a : array A) : list A  :=
       let len := PArray.length a in
       PArray.default a :: to_list_aux a (Z.to_nat (Uint63.to_Z len)) 0%uint63 [].
 
@@ -221,19 +222,18 @@ Module PArray.
       match eqs s1 s2 with
       | right H => right _
       | left H =>
-      let d1 := PArray.default a1 in
-      let d2 := PArray.default a2 in
-      match decide (d1 = d2) with
-      | right H => right _
-      | left H =>
-      let n := s1 in
-      match eq_dec_partial a1 a2 (Z.to_nat (to_Z n)) with
-      | right _ => right _
-      | left H => left _
-      end
-      end
-      end
-    .
+        let d1 := PArray.default a1 in
+        let d2 := PArray.default a2 in
+        match decide (d1 = d2) with
+        | right H => right _
+        | left H =>
+          let n := s1 in
+          match eq_dec_partial a1 a2 (Z.to_nat (to_Z n)) with
+          | right _ => right _
+          | left H => left _
+          end
+        end
+      end.
     Next Obligation.
       intros.
       apply PArray.array_ext.
