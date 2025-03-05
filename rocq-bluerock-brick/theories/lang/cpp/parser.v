@@ -96,12 +96,14 @@ Module Import translation_unit.
     fun s t dups k => k s t dups.
 
   Fixpoint array_fold {A B}
-    (f : A -> B -> B) (ar : PArray.array A)  (fuel : nat) (i : PrimInt63.int) (acc : B) : B :=
+    (f : A -> B -> B) (ar : PArray.array A) (fuel : nat) (i : PrimInt63.int) (acc : B) : B :=
     match fuel with
     | 0 => acc
     | S fuel =>
         array_fold f ar fuel (PrimInt63.add i 1) (f (PArray.get ar i) acc)
     end.
+
+  Definition abi_type := endian.
 
   Definition decls' (ds : PArray.array t) : t :=
     array_fold (fun (X Y : t) s t dups K => X s t dups (fun s t dups => Y s t dups K))
@@ -109,7 +111,7 @@ Module Import translation_unit.
       (Z.to_nat (Uint63.to_Z (PArray.length ds))) 0%uint63
       (fun s t dups k => k s t dups).
 
-  Definition decls (ds : PArray.array t) (e : endian) : translation_unit * list name :=
+  Definition decls (ds : PArray.array t) (e : abi_type) : translation_unit * list name :=
     decls' ds ∅ ∅ [] $ fun s t => pair {|
       symbols := NM.from_raw s;
       types := NM.from_raw t;
@@ -119,7 +121,6 @@ Module Import translation_unit.
 
   Definition list_decls (ls : list translation_unit.t) :=
     decls $ PArray.of_list _skip ls.
-
 
   Module make.
     Import Ltac2.Ltac2.

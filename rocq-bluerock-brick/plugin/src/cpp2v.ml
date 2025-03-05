@@ -17,11 +17,16 @@ let to_econstr t =
     Feedback.msg_debug Pp.(Names.GlobRef.print t) ;
     assert false
 
-let type_of_ref t =
+let decl_of_ref t =
   match lib_ref t with
   | Names.GlobRef.ConstRef c ->
     let decl = Global.lookup_constant c in
-    decl.const_type
+    decl
+  | _ -> assert false
+
+let force_body (t : _ Declarations.pconstant_body) =
+  match t.const_body with
+  | Declarations.Def d -> d
   | _ -> assert false
 
 let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_expr list) =
@@ -30,7 +35,7 @@ let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_e
   let e_decl = to_econstr (lib_ref "t") in
   let e_decl_skip = to_econstr (lib_ref "skip") in
   let inst =
-    match Constr.kind (type_of_ref "empty_array") with
+    match Constr.kind (decl_of_ref "empty_array").const_type with
     | Constr.App (f, _) ->
       begin
         match Constr.kind f with
@@ -61,8 +66,8 @@ let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_e
     EConstr.mkApp (to_econstr (lib_ref "decls"), [| body ; abi |])
   in
   let body =
-    let rt = to_econstr (lib_ref "result_type") in
-    Vnorm.cbv_vm env evd body rt
+    let rt = force_body (decl_of_ref "result_type") in
+    Vnorm.cbv_vm env evd body (EConstr.of_constr rt)
   in
   match EConstr.kind evd body with
   | Constr.App (_, [| _ ; _ ; body ; err |]) ->
