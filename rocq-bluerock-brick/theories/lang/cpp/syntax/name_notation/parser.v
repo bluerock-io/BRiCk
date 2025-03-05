@@ -609,6 +609,8 @@ Module internal.
 
   End with_lang.
 
+  #[global] Arguments Result : clear implicits.
+
   Definition check (tu : translation_unit) (n : name) :=
     match tu.(types) !! n with
     | None => Unknown
@@ -620,7 +622,7 @@ Module internal.
         | _ => NoCheck
         end
     end.
-  Definition no_check {lang : lang.t} : name' lang -> @Result lang :=
+  Definition no_check {lang : lang.t} : name' lang -> Result lang :=
     fun _ => NoCheck.
 
 End internal.

@@ -36,6 +36,7 @@ Module Import translation_unit.
 
   #[global] Instance raw_structured_insert : forall {T}, Insert globname T (NM.Raw.t T) := _.
 
+  (** This representation is isomorphic to [translation_unit * list name] as shown by [decls]. *)
   Definition t : Type :=
     raw_symbol_table -> raw_type_table -> list name ->
     (raw_symbol_table -> raw_type_table -> list name -> translation_unit * list name) ->
@@ -47,6 +48,7 @@ Module Import translation_unit.
     else if sub_module.ObjValue_le b a then Some a
          else None.
 
+  (** Constructs a [translation_unit.t] with _one_ symbol, mapping [n] to [v]. *)
   Definition _symbols (n : name) (v : ObjValue) : t :=
     fun s t dups k =>
       match s !! n with
@@ -62,6 +64,7 @@ Module Import translation_unit.
     else if sub_module.GlobDecl_le b a then Some a
          else None.
 
+  (** Constructs a [translation_unit.t] with _one_ type, mapping [n] to [v]. *)
   Definition _types (n : name) (v : GlobDecl) : t :=
     fun s t dups k =>
       if bool_decide (Gtypedef (Tnamed n) = v \/ Gtypedef (Tenum n) = v)
@@ -85,6 +88,7 @@ Module Import translation_unit.
   Definition _aliases (n : name) (ty : type) : t :=
     _types n (Gtypedef ty).
 
+  (** Constructs an empty [translation_unit.t]. *)
   Definition _skip : t :=
     fun s t dups k => k s t dups.
 
