@@ -159,7 +159,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 
 		print.output() << "Require Import bedrock.lang.cpp.parser.plugin.cpp2v."
 					   << fmt::line;
-		print.output() << "cpp.tu module" << fmt::indent << fmt::line;
+		print.output() << "cpp.prog module" << fmt::indent << fmt::line;
 		if (ctxt->getTargetInfo().isBigEndian()) {
 			print.output() << "abi Big" << fmt::line;
 		} else {

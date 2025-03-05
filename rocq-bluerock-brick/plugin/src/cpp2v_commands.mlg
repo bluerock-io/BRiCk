@@ -12,6 +12,6 @@ open Procq.Constr
 }
 
 VERNAC COMMAND EXTEND Cpp CLASSIFIED AS SIDEFF
-| [ "cpp.tu" ident(name) "abi" constr(abi) "defns" constr_list(defns) ] ->
+| [ "cpp.prog" ident(name) "abi" constr(abi) "defns" constr_list(defns) ] ->
   { Cpp2v.cpp_command name abi defns }
 END
