@@ -15,7 +15,7 @@ Require Import bedrock.lang.cpp.syntax.types.
 Require Import Stdlib.Strings.PrimString.
 Require Import bedrock.prelude.pstring.
 Require Import Stdlib.Numbers.Cyclic.Int63.Uint63.
-
+Require Import bedrock.lang.cpp.syntax.translation_unit.
 
 (** ** A parser for C++ names.
 
@@ -33,7 +33,7 @@ Definition ident_char (b : PrimString.char63) : bool :=
 Definition digit_char (b : char63) : bool :=
   (("0".(char63_wrap) ≤? b) && (b ≤? "9".(char63_wrap)))%char63%uint63.
 
-Module parser.
+Module internal.
   Import parsec.
   Import UPoly.
 
@@ -285,6 +285,14 @@ Module parser.
     Notation type := (type' lang).
     Notation name := (name' lang).
 
+    Variant Result : Set :=
+    | NoCheck
+    | Unknown
+    | Alias (_ : type)
+    | IsEnum
+    | IsStruct.
+    Variable resolve_name : name -> Result.
+
     (** classification of names based to account for destructors and overloadable
         operators. *)
     Variant name_type : Set :=
@@ -362,8 +370,29 @@ Module parser.
         in
         fold_left (fun t f => f t) <$> star (entry 100).
 
-    Definition build_named_type (ctor : name -> type) (n : name) : type :=
-      ctor n.
+      Definition name_for_parse (def : name -> type) (opt : option ()) (nm : name) : M type :=
+        match resolve_name nm return M type with
+        | NoCheck => mret $ def nm
+        | Alias ty => mret ty
+        | IsEnum => match def nm return M type with
+                    | Tenum _ as def => mret def
+                    | Tnamed _ =>
+                        match opt with
+                        | None => mret $ Tenum nm
+                        | _ => mfail
+                        end
+                    | _ => mfail
+                    end
+        | IsStruct => match def nm with
+                      | Tnamed _ as def => mret def
+                      | Tenum _ => match opt with
+                                   | None => mret $ Tnamed nm
+                                   | _ => mfail
+                                   end
+                      | _ => mfail
+                      end
+        | Unknown => mfail
+        end.
 
     (* The core parsers are based on fuel to handle the mutual recursion *)
     Definition parse_type' : M type :=
@@ -374,9 +403,9 @@ Module parser.
       let build_named_type ctor nm :=
         match nm with
         | Nglobal (Nfunction function_qualifiers.N nm args) =>
-            Tfunction $ FunctionType (ctor $ Nglobal $ Nid nm) args
+            (fun x => Tfunction $ FunctionType x args) <$> (ctor $ Nglobal $ Nid nm)
         | Nscoped scp (Nfunction function_qualifiers.N nm args) =>
-            Tfunction $ FunctionType (ctor $ Nscoped scp (Nid nm)) args
+            (fun x => Tfunction $ FunctionType x args) <$> (ctor $ Nscoped scp (Nid nm))
         | _ => ctor nm
         end
       in
@@ -385,9 +414,11 @@ Module parser.
         (commit (exact "(") (fun _ => parse_type () <* exact ")")
          $ commit (exact "$") (fun _ => Tparam <$> ident)
          $ commit (exact "#" <|> keyword "enum")
-                (fun _ => build_named_type Tenum <$> parse_name ())
-         $ let* _ := optional (keyword "struct" <|> keyword "class") in
-           (build_named_type Tnamed <$> parse_name ()))
+                (fun e => let* n := parse_name () in
+                     build_named_type (name_for_parse Tenum (Some e)) n)
+         $ let* kw := optional (keyword "struct" <|> keyword "class") in
+           let* n := parse_name () in
+           build_named_type (name_for_parse Tnamed kw) n)
       in
       let* post := parse_postfix_type in
       mret $ post (List.fold_right (fun f x => f x) t quals).
@@ -578,13 +609,35 @@ Module parser.
 
   End with_lang.
 
-End parser.
+  #[global] Arguments Result : clear implicits.
+
+  Definition check (tu : translation_unit) (n : name) :=
+    match tu.(types) !! n with
+    | None => Unknown
+    | Some gd =>
+        match gd with
+        | Gunion _ | Gstruct _ => IsStruct
+        | Genum _ _ => IsEnum
+        | Gtypedef t => Alias t
+        | _ => NoCheck
+        end
+    end.
+  Definition no_check {lang : lang.t} : name' lang -> Result lang :=
+    fun _ => NoCheck.
+
+End internal.
+
+Definition parse_name_with (tu : translation_unit) (input : PrimString.string) : option name :=
+  internal.run_full (internal.parse_name (internal.check tu) 1000) input.
+
+Definition parse_type_with (tu : translation_unit) (input : PrimString.string) : option type :=
+  internal.run_full (internal.parse_type (internal.check tu) 1000) input.
 
 Definition parse_name (input : PrimString.string) : option name :=
-  parser.run_full (parser.parse_name 1000) input.
+  internal.run_full (internal.parse_name internal.no_check 1000) input.
 
 Definition parse_type (input : PrimString.string) : option type :=
-  parser.run_full (parser.parse_type 1000) input.
+  internal.run_full (internal.parse_type internal.no_check 1000) input.
 
 Module Type TESTS.
   #[local] Definition TEST (input : PrimString.string) (nm : name) : Prop :=
