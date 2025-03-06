@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2021-2024
+ * Copyright (C) BlueRock Security Inc. 2021-2025
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -474,6 +474,47 @@ Proof. case: b; naive_solver. Qed.
 
 Lemma N_b2n_1 b : N.b2n b = 1%N <-> b.
 Proof. by case: b. Qed.
+
+
+(** Division and Modulo over power *)
+Lemma N_mod_div_pow (s m k n : N) :
+  (n ≤ m)%N ->
+  (s = s `mod` k^m + (s `div` k^m) * k^(m-n) * k^n)%N.
+Proof.
+  intros Let0.
+  set p := (s `div` k^m)%N.
+  rewrite -N.mul_assoc -N.pow_add_r N.sub_add; last lia.
+  rewrite N.add_comm N.mul_comm. apply N.Div0.div_mod.
+Qed.
+
+Lemma N_mod_div_mod_pow (s m k n : N) :
+  (n < m)%N -> k ≠ 0%N ->
+  ( s           `div` k^n `mod` k =
+    s `mod` k^m `div` k^n `mod` k)%N.
+Proof.
+  intros Let0 NE0.
+  set smm := (s `mod` k^m)%N.
+
+  rewrite {1}(N_mod_div_pow s m k n); last lia.
+  rewrite N.add_comm N.div_add_l; last lia.
+  rewrite N.Div0.add_mod.
+
+  set sdm := (s `div` k^m)%N.
+  rewrite (_: sdm * k^(m - n) = sdm * k^(m - n- 1) * k)%N; last first.
+  { rewrite -N.mul_assoc -{3}(N.pow_1_r k) -(N.pow_add_r _ _ 1).
+    rewrite N.sub_add //. lia. }
+  by rewrite N.Div0.mod_mul N.add_0_l N.Div0.mod_mod.
+Qed.
+
+Lemma N_mod_div_mod_pow2 (s n m k : N) :
+  (n < m)%N ->
+  ( s               `div` 2^(n*k) `mod` 2^k =
+    s `mod` 2^(m*k) `div` 2^(n*k) `mod` 2^k)%N.
+Proof.
+  intros.
+  rewrite (N.mul_comm m) (N.mul_comm n) !N.pow_mul_r.
+  apply N_mod_div_mod_pow; lia.
+Qed.
 
 (** [pow2N n]'s output term has size exponential in [n], and simplifying
 callers is even worse; so we seal it. *)
