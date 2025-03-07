@@ -21,7 +21,7 @@ cat > dune <<EOF
 (coq.theory
  (name test)
  (theories
-  stdpp iris elpi elpi_elpi Ltac2
+  Stdlib stdpp iris elpi elpi_elpi Ltac2
   bedrock.upoly bedrock.prelude bedrock.lang Lens Lens.Elpi))
 EOF
 
@@ -30,6 +30,6 @@ cat > dune-project <<EOF
 (using coq 0.8)
 EOF
 
-export COQPATH="$DUNE_SOURCEROOT/_build/install/default/lib/coq/user-contrib"
-export COQLIB="$DUNE_SOURCEROOT/_build/install/default/lib/coq"
+export ROCQPATH="$DUNE_SOURCEROOT/_build/install/default/lib/coq/user-contrib"
+export ROCQLIB="$DUNE_SOURCEROOT/_build/install/default/lib/coq"
 export DUNE_CACHE=disabled

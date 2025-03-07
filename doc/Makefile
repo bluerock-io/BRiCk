@@ -9,7 +9,7 @@ ALECTRYON = $(shell which alectryon)
 export ALECTRYON
 
 COQBIN       = ${PWD}/../../../_build/install/default/bin
-COQLIB       = ${PWD}/../../../_build/install/default/lib/coq
+ROCQLIB       = ${PWD}/../../../_build/install/default/lib/coq
 # NOTE: We will likely want to re-enable this when we have a src/ subdirectory
 #COQPATHEXTRA = $(ROOT_DIR)/src
 
@@ -18,7 +18,7 @@ COQLIB       = ${PWD}/../../../_build/install/default/lib/coq
 ######################################################################
 
 # Sphinx-related variables
-SPHINXENV:=COQBIN="$(COQBIN)" COQLIB="$(COQLIB)" COQPATH="$(COQPATH):$(COQPATHEXTRA)"
+SPHINXENV:=COQBIN="$(COQBIN)" ROCQLIB="$(ROCQLIB)" ROCQPATH="$(ROCQPATH):$(COQPATHEXTRA)"
 SPHINXWARNERROR ?= 1
 ifeq ($(SPHINXWARNERROR),1)
 SPHINXOPTS= -W
@@ -68,7 +68,7 @@ doc: doc-private
 redoc: clean doc
 
 refman-public-%:
-	@echo $(COQBIN) $(COQLIB)
+	@echo $(COQBIN) $(ROCQLIB)
 	@echo 'SPHINXBUILD sphinx ($*)'
 	$(HIDE)$(SPHINXENV) $(SPHINXBUILD) -b $* \
 		$(ALLSPHINXOPTS) sphinx $(SPHINXBUILDDIR)/$*

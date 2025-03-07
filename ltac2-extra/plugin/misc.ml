@@ -239,8 +239,6 @@ let relevance =
   in
   make_repr of_relevance to_relevance
 
-let binder = Tac2ffi.repr_ext val_binder
-
 let _ =
   define "debug_print" (constr @-> ret pp) @@ fun c ->
   Constr.debug_print (EConstr.Unsafe.to_constr c)
@@ -273,10 +271,6 @@ let _ =
 
 (* Pretyping *)
 
-let of_preterm c = of_ext val_preterm c
-let to_preterm c = to_ext val_preterm c
-let preterm = Tac2ffi.repr_ext val_preterm
-let ltac1 = Tac2ffi.repr_ext Tac2ffi.val_ltac1
 let _ =
   define "constr_pretype_at" (option bool @-> option constr @-> preterm @-> tac valexpr) @@ fun use_tc ty c ->
     Tac2core.pf_apply @@ fun env sigma ->
@@ -331,8 +325,8 @@ module RelDecl = struct
   let of_val : Tac2val.valexpr -> t = fun v ->
     let open Tac2ffi in
     match v with
-    | ValBlk(0, [|b|]   ) -> Assum(to_ext val_binder b)
-    | ValBlk(1, [|b; t|]) -> Def(to_ext val_binder b, to_constr t)
+    | ValBlk(0, [|b|]   ) -> Assum(repr_to binder b)
+    | ValBlk(1, [|b; t|]) -> Def(repr_to binder b, to_constr t)
     | _                   -> assert false
 
   let to_val : t -> Tac2val.valexpr = fun _ -> assert false
@@ -464,8 +458,7 @@ let _ =
   in
   let modes =
     let modes = List.map Hints.Hint_db.modes dbs in
-    let union = Names.GlobRef.Map.union (fun _ m1 m2 -> Some (m1 @ m2)) in
-    List.fold_left union Names.GlobRef.Map.empty modes
+    List.fold_left Hints.Modes.union Hints.Modes.empty modes
   in
   Class_tactics.Search.eauto_tac (modes, st) ~unique ~only_classes
     ~best_effort ~strategy ~depth ~dep dbs
@@ -547,7 +540,6 @@ let _ =
   try Proofview.tclUNIT (Bytes.sub s pos len) with Invalid_argument _ -> Tac2core.throw err_outofbounds
 
 (* TransparentState *)
-let transparent_state = Tac2ffi.repr_ext Tac2ffi.val_transparent_state
 let _ =
   define "transparent_state_of_db" (ident @-> ret transparent_state) @@ fun db ->
   let db = Hints.searchtable_map (Names.Id.to_string db) in

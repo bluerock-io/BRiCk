@@ -2,5 +2,5 @@
 (coq.theory
  (name bedrock.ltac2.extra)
  (package ltac2-extra)
- (theories Ltac2)
+ (theories Ltac2 Stdlib)
  (plugins ltac2-extra.plugin))
