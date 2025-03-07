@@ -138,13 +138,13 @@ Module SimpleCPP_BASE <: CPP_LOGIC_CLASS.
          to the code stored at that location *)
     ; derivationsG : inG Σ (gmapUR ptr (cfractionalR (leibnizO (globname * list globname))))
     ; has_inv' : invGS Σ
-    ; has_cinv' : cinvG Σ
+    ; has_brG' : br.ghost.G Σ
     }.
 
   Definition cppPreG : gFunctors -> Type := cppG'.
 
   Definition has_inv Σ : cppPreG Σ -> invGS Σ := @has_inv' Σ.
-  Definition has_cinv Σ : cppPreG Σ -> cinvG Σ := @has_cinv' Σ.
+  Definition has_brG Σ : cppPreG Σ -> br.ghost.G Σ := @has_brG' Σ.
 
   Include CPP_LOGIC_CLASS_MIXIN.
 
