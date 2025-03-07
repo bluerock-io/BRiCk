@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2020 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -14,12 +14,13 @@ Require Import iris.bi.monpred.
 Require Import bedrock.prelude.base.
 Require Import bedrock.lang.bi.prelude.
 Require Export bedrock.lang.base_logic.mpred.
+Require Export bedrock.lang.algebra.commons.
 Import ChargeNotation.
 
 Module Type CPP_LOGIC_CLASS_BASE.
   Parameter cppPreG : gFunctors -> Type.
   Axiom has_inv : forall Σ, cppPreG Σ -> invGS Σ.
-  Axiom has_cinv : forall Σ, cppPreG Σ -> cinvG Σ.
+  Axiom has_brG : forall Σ, cppPreG Σ -> br.ghost.G Σ.
 
   Parameter _cpp_ghost : Type.
 End CPP_LOGIC_CLASS_BASE.
@@ -36,9 +37,16 @@ Module Type CPP_LOGIC_CLASS_MIXIN (Import CC : CPP_LOGIC_CLASS_BASE).
 
   #[global] Instance cpp_has_inv `{!cpp_logic thread_info _Σ} : invGS _Σ
     := has_inv _Σ cpp_has_cppG.
-  #[global] Instance cpp_has_cinv `{!cpp_logic thread_info _Σ} : cinvG _Σ
-    := has_cinv _Σ cpp_has_cppG.
-  #[global] Hint Opaque cpp_has_inv cpp_has_cinv : typeclass_instances br_opacity.
+
+  #[global] Instance cpp_has_br_ghost `{!cpp_logic thread_info _Σ} : br.ghost.G _Σ
+    := has_brG _Σ cpp_has_cppG.
+
+  #[local] Existing Instance br.ghost.frac_inG.
+  #[global] Instance cpp_has_cinv `{!cpp_logic thread_info _Σ} : cinvG _Σ.
+  Proof. constructor. apply _. Qed.
+
+  #[global] Hint Opaque cpp_has_inv cpp_has_br_ghost cpp_has_cinv
+  : typeclass_instances br_opacity.
 
 End CPP_LOGIC_CLASS_MIXIN.
 
