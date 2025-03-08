@@ -5,8 +5,8 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import iris.proofmode.tactics.
 Require Import Stdlib.Strings.PrimString.
+Require Import bedrock.prelude.base.
 Require Export bedrock.prelude.tactics.base_dbs.
 
 Export PStringNotations.
@@ -69,7 +69,7 @@ Module Binder.
 End Binder.
 
 (* [TCForceEq] disregards typeclass_instances opacity.  *)
-Inductive TCForceEq {A : Type} (x : A) : A → Prop :=  TCForceEq_refl : TCForceEq x x.
+Inductive TCForceEq {A : Type} (x : A) : A -> Prop :=  TCForceEq_refl : TCForceEq x x.
 Existing Class TCForceEq.
 #[global] Hint Extern 100 (TCForceEq ?x _) => refine (TCForceEq_refl x) : typeclass_instances.
 
@@ -79,41 +79,6 @@ Class IdOfBS (name : string) (ident : () -> ()) := ID_OF_BS {}.
 
 #[global] Hint Extern 100 (IdOfBS ?name _) =>
   refine (@ID_OF_BS name ltac:(Binder.id_of name)) : typeclass_instances.
-
-#[global] Instance from_forall_named_binder {PROP:bi} {A} {name} {id}
-  {Φ : NamedBinder A name -> PROP}
-  {Φ' : A -> PROP} :
-  IdOfBS name id ->
-  TCForceEq Φ Φ' ->
-  FromForall (∀ x : NamedBinder A name, Φ x) Φ' id | 0.
-Proof. move => _ ->. by rewrite /FromForall. Qed.
-
-#[global] Instance into_exist_named_binder {PROP:bi} {A} {name} {id}
-  {Φ : NamedBinder A name -> PROP}
-  {Φ' : A -> PROP} :
-  IdOfBS name id ->
-  TCForceEq Φ Φ' ->
-  IntoExist (∃ x : NamedBinder A name, Φ x) Φ' id | 0.
-Proof. move => _ ->. by rewrite /IntoExist. Qed.
-
-Module Type Test.
-  Tactic Notation "test" ident(name) := (assert (name = ()) by (destruct name; reflexivity)).
-
-  Goal forall {PROP:bi}, ⊢@{PROP} ∀ x : NamedBinder unit "name", False.
-  Proof.
-    intros PROP.
-    (* The name returned in [FromForall] is only honored if we explicitly introduce [(?)] *)
-    assert_fails (iIntros; test name).
-    assert_succeeds (iIntros (?); test name).
-  Abort.
-
-  Goal forall {PROP:bi}, (∃ x : NamedBinder unit "name", False) ⊢@{PROP} False.
-  Proof.
-    intros PROP.
-    assert_succeeds (iIntros "[% ?]"; test name).
-    assert_succeeds (iIntros "H"; iDestruct "H" as (?) "H"; test name).
-  Abort.
-End Test.
 
 (** Infrastructure to get names into terms using Ltac2 and a type class called [Binder] *)
 Section Binder.
