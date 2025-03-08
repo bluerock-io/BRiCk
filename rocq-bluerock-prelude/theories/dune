@@ -1,9 +1,9 @@
 (include_subdirs qualified)
 (coq.theory
  (name bedrock.prelude)
- (package rocq-bluerock-brick)
+ (package rocq-bluerock-prelude)
  (theories
-  iris stdpp
+  stdpp
   bedrock.upoly
   elpi elpi.apps.locker elpi.apps.NES
   Lens Lens.Elpi Ltac2))
