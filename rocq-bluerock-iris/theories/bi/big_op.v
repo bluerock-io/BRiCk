@@ -4,12 +4,12 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.lang.algebra.big_op.
+Require Export bedrock.iris.extra.algebra.big_op.
 Require Export iris.bi.big_op.
 
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.observe.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Import ChargeNotation.
 
 (** ** Lists *)

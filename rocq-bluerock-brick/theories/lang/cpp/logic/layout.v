@@ -6,7 +6,7 @@
 Require Import bedrock.prelude.base.
 Require Import bedrock.prelude.numbers.
 Require Import bedrock.prelude.list.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
 Require Import bedrock.lang.cpp.arith.z_to_bytes.
 Require Import bedrock.lang.cpp.syntax.
@@ -18,7 +18,7 @@ Require Import bedrock.lang.cpp.semantics.
 Require Import bedrock.lang.cpp.logic.arr.
 Require Export bedrock.lang.cpp.logic.raw.
 
-Require Import bedrock.lang.bi.linearity.
+Require Import bedrock.iris.extra.bi.linearity.
 
 Section with_Σ.
   Context `{Σ : cpp_logic} {σ : genv}.

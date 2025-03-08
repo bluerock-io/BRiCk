@@ -11,8 +11,8 @@ Require Export bedrock.prelude.base.
 Require Export bedrock.prelude.gmap.
 Require Export bedrock.prelude.letstar.
 Require Export bedrock.prelude.list_numbers.
-Require Export bedrock.lang.bi.only_provable.
-Require Export bedrock.lang.bi.derived_laws.
+Require Export bedrock.iris.extra.bi.only_provable.
+Require Export bedrock.iris.extra.bi.derived_laws.
 
 #[global] Instance into_pure_emp PROP : IntoPure (PROP := PROP) emp True.
 Proof. by rewrite /IntoPure (bi.pure_intro True emp). Qed.

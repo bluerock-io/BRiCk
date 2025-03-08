@@ -3,11 +3,11 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.bi.ChargeCompat.
-Require Import bedrock.lang.bi.telescopes.
+Require Import bedrock.iris.extra.bi.ChargeCompat.
+Require Import bedrock.iris.extra.bi.telescopes.
 Require Import bedrock.lang.cpp.logic.entailsN.
-Require Import bedrock.lang.bi.errors.
-Require Import bedrock.lang.proofmode.proofmode.	(** Early to get the right [ident] *)
+Require Import bedrock.iris.extra.bi.errors.
+Require Import bedrock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
 Require Import bedrock.lang.cpp.logic.
 Require Import bedrock.lang.cpp.specs.cpp_specs.
 

@@ -29,7 +29,7 @@
  *)
 
 Require Export stdpp.coGset.
-Require Export bedrock.lang.algebra.base.
+Require Export bedrock.iris.extra.algebra.base.
 
 (** Misplaced: Upstream to [iris.algebra.coGset]? *)
 

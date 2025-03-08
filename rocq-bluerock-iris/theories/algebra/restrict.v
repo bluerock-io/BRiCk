@@ -6,7 +6,7 @@
  *)
 
 Require Export bedrock.prelude.base.
-Require Export bedrock.lang.algebra.base.
+Require Export bedrock.iris.extra.algebra.base.
 
 #[local] Definition resource' (A : Type) : cmra := exclR (leibnizO A).
 #[global] Notation resource A := (Reduce (resource' A)) (only parsing).

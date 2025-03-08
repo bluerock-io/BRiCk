@@ -6,10 +6,10 @@
  *)
 
 Require Export bedrock.lang.cpp.algebra.cfrac.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.split_andb.
-Require Import bedrock.lang.bi.split_frac.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.split_andb.
+Require Import bedrock.iris.extra.bi.split_frac.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Import ChargeNotation.
 
 #[local] Set Printing Coercions.

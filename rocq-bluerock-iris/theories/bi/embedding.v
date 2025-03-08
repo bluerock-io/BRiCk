@@ -4,7 +4,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Export iris.bi.embedding.
-Require Import bedrock.lang.bi.prelude.
+Require Import bedrock.iris.extra.bi.prelude.
 
 (** * Composing embeddings *)
 (** Given embeddings [Embed PROP1 PROP2] and [Embed PROP2 PROP3],

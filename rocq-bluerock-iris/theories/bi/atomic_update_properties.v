@@ -7,11 +7,11 @@
 Require Import stdpp.coPset.
 Require Import iris.bi.lib.fixpoint.
 Require Import iris.bi.lib.laterable.
-Require Import bedrock.lang.bi.derived_laws.
-Require Export bedrock.lang.bi.atomic_update.
-Require Import bedrock.lang.bi.telescopes.
-Require Import bedrock.lang.bi.fupd_iff.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.derived_laws.
+Require Export bedrock.iris.extra.bi.atomic_update.
+Require Import bedrock.iris.extra.bi.telescopes.
+Require Import bedrock.iris.extra.bi.fupd_iff.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Set Default Proof Using "Type".
 
 Local Tactic Notation "iSplit" "?" := repeat iSplit.

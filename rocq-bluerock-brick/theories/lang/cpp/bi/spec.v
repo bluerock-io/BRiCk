@@ -5,7 +5,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.lang.bi.spec.
+Require Export bedrock.iris.extra.bi.spec.
 
 Require Export bedrock.lang.cpp.bi.spec.typed.
 Require Export bedrock.lang.cpp.bi.spec.cfrac_splittable.

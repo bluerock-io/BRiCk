@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import bedrock.prelude.base.
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.bi.ChargeCompat.
-Require Import bedrock.lang.bi.errors.
+Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.ChargeCompat.
+Require Import bedrock.iris.extra.bi.errors.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.semantics.
 Require Import bedrock.lang.cpp.arith.builtins.

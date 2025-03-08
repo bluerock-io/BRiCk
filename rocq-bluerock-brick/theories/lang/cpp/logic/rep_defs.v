@@ -9,8 +9,8 @@ This file defines the core type [Rep] of representation predicates.
 TODO: merge back into [rep.v]?
 *)
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.monpred.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.monpred.
 Require Import bedrock.lang.cpp.semantics.values.
 Require Import bedrock.lang.cpp.logic.mpred.
 

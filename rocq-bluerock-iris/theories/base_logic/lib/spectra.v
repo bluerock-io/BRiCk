@@ -25,18 +25,18 @@ Require Import bedrock.prelude.fin_sets.
 Require Import bedrock.prelude.bytestring.
 Require Import bedrock.prelude.tactics.proper.
 
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.bi.big_op.
-Require Import bedrock.lang.bi.atomic_commit.
-Require Import bedrock.lang.bi.atomic_update_properties.
-Require Import bedrock.lang.bi.spec.knowledge.
-Require Import bedrock.lang.bi.prop_constraints.
-Require Import bedrock.lang.bi.invariants.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.observe.
+Require Import bedrock.iris.extra.bi.big_op.
+Require Import bedrock.iris.extra.bi.atomic_commit.
+Require Import bedrock.iris.extra.bi.atomic_update_properties.
+Require Import bedrock.iris.extra.bi.spec.knowledge.
+Require Import bedrock.iris.extra.bi.prop_constraints.
+Require Import bedrock.iris.extra.bi.invariants.
 
-Require Export bedrock.lang.base_logic.lib.auth_set.
-Require Import bedrock.lang.proofmode.fancy_updates.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Export bedrock.iris.extra.base_logic.lib.auth_set.
+Require Import bedrock.iris.extra.proofmode.fancy_updates.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
 Import ChargeNotation.
 

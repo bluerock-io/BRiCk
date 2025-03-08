@@ -5,7 +5,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import iris.bi.monpred.
-Require Import bedrock.lang.bi.entailsN.
+Require Import bedrock.iris.extra.bi.entailsN.
 
 (** [monPred I PROP] supports [entailsN] if [PROP] does *)
 Section monPred_entailsN.

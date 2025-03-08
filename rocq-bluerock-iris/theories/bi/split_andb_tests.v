@@ -6,7 +6,7 @@
  *)
 
 Require Import bedrock.prelude.base.
-Require Import bedrock.lang.bi.split_andb.
+Require Import bedrock.iris.extra.bi.split_andb.
 
 (**
 [Split b b1 b2] succeeds if [SplitAndB b] outputs [b1], [b2].

@@ -6,9 +6,9 @@
 
 Require Export iris.bi.lib.fractional.
 
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.observe.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
 (** * Simple extensions to iris.bi.lib.fractional *)
 (**

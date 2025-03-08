@@ -10,10 +10,10 @@ Require Import iris.si_logic.bi.
 Require Import iris.bi.monpred.
 Require Import iris.base_logic.lib.own.
 
-Require Import bedrock.lang.bi.embedding.
-Require Import bedrock.lang.bi.own.
-Require Import bedrock.lang.bi.weakly_objective.
-Require Import bedrock.lang.base_logic.iprop_own.
+Require Import bedrock.iris.extra.bi.embedding.
+Require Import bedrock.iris.extra.bi.own.
+Require Import bedrock.iris.extra.bi.weakly_objective.
+Require Import bedrock.iris.extra.base_logic.iprop_own.
 
 (* Instances for monpred *)
 

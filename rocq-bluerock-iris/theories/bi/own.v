@@ -26,7 +26,7 @@
 
   TODO: These should be upstreamed to Iris's code base. **)
 
-Require Export bedrock.lang.si_logic.bi.
+Require Export bedrock.iris.extra.si_logic.bi.
 
 Require Import iris.algebra.proofmode_classes.
 Require Import iris.proofmode.classes.
@@ -192,7 +192,7 @@ Section own_valid.
 End own_valid.
 
 Import iris.bi.derived_laws.bi.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
 Section update.
   Context `{!BiBUpd PROP} `{!HasOwn PROP A} `{!HasOwnUpd PROP A}.
@@ -319,7 +319,7 @@ Section proofmode_instances.
   Qed.
 End proofmode_instances.
 
-Require Import bedrock.lang.bi.only_provable.
+Require Import bedrock.iris.extra.bi.only_provable.
 
 Section update_only_provable.
   Context `{!BiBUpd PROP} `{!HasOwn PROP A} `{!HasOwnUpd PROP A}.

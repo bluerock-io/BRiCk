@@ -24,13 +24,13 @@ Require Import stdpp.coPset.
 Require Import stdpp.namespaces.
 Require Import iris.bi.lib.fixpoint.
 Require Import iris.proofmode.coq_tactics.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import iris.proofmode.reduction.
 Require Import iris.prelude.options.
 Require Import iris.bi.lib.atomic.
 
-Require Export bedrock.lang.bi.laterable.
-Require Import bedrock.lang.bi.telescopes.
+Require Export bedrock.iris.extra.bi.laterable.
+Require Import bedrock.iris.extra.bi.telescopes.
 
 (** Conveniently split a conjunction on both assumption and conclusion. *)
 Local Tactic Notation "iSplitWith" constr(H) :=

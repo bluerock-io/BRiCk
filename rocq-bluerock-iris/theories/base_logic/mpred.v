@@ -20,10 +20,10 @@ Require Import iris.base_logic.lib.cancelable_invariants.
 Require Import iris.bi.monpred.
 
 Require Import bedrock.prelude.base.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.entailsN.
-Require Import bedrock.lang.bi.monpred_entailsN.
-Require Import bedrock.lang.base_logic.upred_entailsN.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.entailsN.
+Require Import bedrock.iris.extra.bi.monpred_entailsN.
+Require Import bedrock.iris.extra.base_logic.upred_entailsN.
 Import ChargeNotation.
 
 Section mpred.

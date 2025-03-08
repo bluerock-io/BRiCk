@@ -19,8 +19,8 @@
  *)
 Require Export iris.bi.lib.atomic.
 Require Import iris.bi.lib.fixpoint.
-Require Import bedrock.lang.bi.telescopes.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.telescopes.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Set Default Proof Using "Type".
 
 (** * Small improvements to atomic updates *)

@@ -5,7 +5,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.lang.bi.fractional.
+Require Export bedrock.iris.extra.bi.fractional.
 
 Require Import bedrock.prelude.numbers.
 

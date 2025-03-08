@@ -14,8 +14,8 @@
 
 Require Import iris.bi.bi.
 Require Import bedrock.prelude.bytestring_core.
-Require Export bedrock.prelude.named_binder.
-Require Import bedrock.lang.bi.only_provable.
+Require Export bedrock.iris.extra.proofmode.named_binder.
+Require Import bedrock.iris.extra.bi.only_provable.
 Require Import bedrock.lang.cpp.specs.spec_notations.
 
 Section with_prop.

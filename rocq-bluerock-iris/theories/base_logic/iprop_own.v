@@ -6,11 +6,11 @@
 
 (** Own instances for iProp **)
 (* TODO: these should be upstreamed to Iris. *)
-Require Export bedrock.lang.si_logic.bi.
+Require Export bedrock.iris.extra.si_logic.bi.
 
 Require Export iris.base_logic.lib.own. (* << exporting [inG] and [gFunctors] *)
 
-Require Export bedrock.lang.bi.own.
+Require Export bedrock.iris.extra.bi.own.
 
 (* Instances for iProp *)
 

@@ -5,8 +5,8 @@
  *)
 
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.bi.errors.
+Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.errors.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.semantics.
 Require Import bedrock.lang.cpp.logic.pred.

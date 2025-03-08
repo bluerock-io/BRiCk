@@ -12,8 +12,8 @@ lang/bi/prop_constraints.v
 
 *)
 
-Require Import bedrock.iris.base_logic.own_instances.
-Require Import bedrock.iris.bi.prop_constraints.
+Require Import bedrock.iris.extra.base_logic.own_instances.
+Require Import bedrock.iris.extra.bi.prop_constraints.
 Require Import bedrock.lang.cpp.logic.pred.
 
 #[global] Instance mpred_ghostly `{ cpp_logic } : Ghostly mpredI :=

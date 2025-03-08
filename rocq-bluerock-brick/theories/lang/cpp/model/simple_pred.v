@@ -8,12 +8,12 @@ Require Import iris.algebra.gmap.
 Require Import iris.algebra.lib.frac_auth.
 Require Import iris.bi.monpred.
 Require Import iris.bi.lib.fractional.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.lang.bi.fractional.
-Require Import bedrock.lang.bi.cancelable_invariants.
+Require Import bedrock.iris.extra.bi.fractional.
+Require Import bedrock.iris.extra.bi.cancelable_invariants.
 Require Import bedrock.lang.cpp.bi.cfractional.
-Require Import bedrock.lang.base_logic.own_instances.
+Require Import bedrock.iris.extra.base_logic.own_instances.
 
 Require Import bedrock.prelude.base.
 Require Import bedrock.prelude.option.

@@ -8,15 +8,15 @@ Require Import stdpp.finite.
 Require Import iris.algebra.dfrac.
 Require Import iris.algebra.lib.gmap_view.
 Require Import bedrock.prelude.base.
-Require Import bedrock.lang.algebra.excl_auth.
-Require Import bedrock.lang.algebra.frac_auth.
-Require Import bedrock.lang.algebra.dfrac_agree.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.si_logic.bi.
-Require Import bedrock.lang.bi.own.
-Require Import bedrock.lang.bi.includedI.
-Require Import bedrock.lang.bi.embedding.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.algebra.excl_auth.
+Require Import bedrock.iris.extra.algebra.frac_auth.
+Require Import bedrock.iris.extra.algebra.dfrac_agree.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.si_logic.bi.
+Require Import bedrock.iris.extra.bi.own.
+Require Import bedrock.iris.extra.bi.includedI.
+Require Import bedrock.iris.extra.bi.embedding.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Set Printing Coercions.
 
 Implicit Types (p q : Qp) (dp dq : dfrac).

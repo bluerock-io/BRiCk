@@ -6,7 +6,7 @@
  *)
 
 Require Export iris.algebra.big_op.
-Require Export bedrock.lang.algebra.monoid.
+Require Export bedrock.iris.extra.algebra.monoid.
 
 Require Import bedrock.prelude.numbers.
 Require Import bedrock.prelude.list_numbers.

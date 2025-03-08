@@ -21,16 +21,16 @@
  *)
 
 
-Require Import bedrock.lang.bi.monpred.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.monpred.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import iris.proofmode.monpred.
 
-Require Import bedrock.lang.bi.only_provable.
-Require Import bedrock.lang.bi.invariants.
-Require Import bedrock.lang.bi.na_invariants.
-Require Import bedrock.lang.bi.cancelable_invariants.
-Require Import bedrock.lang.bi.weakly_objective.
-Require Import bedrock.lang.base_logic.monpred_own.
+Require Import bedrock.iris.extra.bi.only_provable.
+Require Import bedrock.iris.extra.bi.invariants.
+Require Import bedrock.iris.extra.bi.na_invariants.
+Require Import bedrock.iris.extra.bi.cancelable_invariants.
+Require Import bedrock.iris.extra.bi.weakly_objective.
+Require Import bedrock.iris.extra.base_logic.monpred_own.
 
 (*** Invariants for monPred **)
 

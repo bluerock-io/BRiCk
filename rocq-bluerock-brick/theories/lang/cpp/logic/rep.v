@@ -8,14 +8,14 @@
 For an introduction see
 [fmdeps/cpp2v-core/theories/noimport/doc/cpp/howto_sequential.v]. *)
 
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.bi.fractional.
+Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.fractional.
 
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.only_provable.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.bi.laterable.
-Require Export bedrock.lang.bi.monpred.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.only_provable.
+Require Import bedrock.iris.extra.bi.observe.
+Require Import bedrock.iris.extra.bi.laterable.
+Require Export bedrock.iris.extra.bi.monpred.
 (** ^^ Delicate; export canonical structure (CS) for [monPred].
 Export order can affect CS inference. *)
 

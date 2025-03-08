@@ -21,12 +21,12 @@
  *)
 
 (* The iProp instances for invariants. *)
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.lang.bi.na_invariants.
-Require Import bedrock.lang.bi.cancelable_invariants.
-Require Import bedrock.lang.bi.invariants.
-Require Import bedrock.lang.base_logic.iprop_own.
+Require Import bedrock.iris.extra.bi.na_invariants.
+Require Import bedrock.iris.extra.bi.cancelable_invariants.
+Require Import bedrock.iris.extra.bi.invariants.
+Require Import bedrock.iris.extra.base_logic.iprop_own.
 
 (*** Invariants for iProp **)
 (* Copy from

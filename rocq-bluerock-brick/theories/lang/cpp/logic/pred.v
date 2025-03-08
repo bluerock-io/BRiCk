@@ -14,9 +14,9 @@
 Require Import elpi.apps.locker.locker.
 Require Export bedrock.prelude.addr.
 
-Require Export bedrock.lang.bi.prelude.
-Require Export bedrock.lang.bi.observe.
-Require Export bedrock.lang.bi.spec.knowledge.
+Require Export bedrock.iris.extra.bi.prelude.
+Require Export bedrock.iris.extra.bi.observe.
+Require Export bedrock.iris.extra.bi.spec.knowledge.
 Require Export bedrock.lang.cpp.reserved_notation.
 Require Export bedrock.lang.cpp.logic.mpred.
 Require Export bedrock.lang.cpp.logic.rep.
@@ -31,10 +31,10 @@ Require Export bedrock.lang.cpp.bi.cfractional.
 Require Export iris.base_logic.lib.iprop.
 (* TODO: ^^ only needed to export uPredI, should be removed. *)
 Require Import iris.bi.lib.fractional.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.lang.bi.na_invariants.
-Require Import bedrock.lang.bi.cancelable_invariants.
+Require Import bedrock.iris.extra.bi.na_invariants.
+Require Import bedrock.iris.extra.bi.cancelable_invariants.
 Export ChargeNotation.
 Require Import bedrock.lang.cpp.bi.cfractional.
 

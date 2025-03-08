@@ -6,7 +6,7 @@
  *)
 Require Import stdpp.namespaces.
 Require Import iris.bi.derived_laws.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import iris.proofmode.classes.
 
 Implicit Types (E : coPset).

@@ -7,12 +7,12 @@
 (** NOTE FOR MAINTAINTERS: This is the central authority for controlling the
   right own instances to use. *)
 
-Require Export bedrock.lang.si_logic.bi. (** <- exporting [siProp] *)
+Require Export bedrock.iris.extra.si_logic.bi. (** <- exporting [siProp] *)
 Require Export iris.base_logic.lib.own. (* <- exporting [inG] and [gFunctors] *)
-Require Export bedrock.lang.bi.own. (* <- general [own]. *)
+Require Export bedrock.iris.extra.bi.own. (* <- general [own]. *)
 
 (** Own instances for iProp, currently not exported **)
-(* Require Export bedrock.lang.base_logic.iprop_own. *)
+(* Require Export bedrock.iris.extra.base_logic.iprop_own. *)
 
 (** Own instances for monPred, currently exported. **)
-Require Export bedrock.lang.base_logic.monpred_own.
+Require Export bedrock.iris.extra.base_logic.monpred_own.

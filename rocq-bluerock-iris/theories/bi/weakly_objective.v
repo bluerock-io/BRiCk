@@ -6,10 +6,10 @@
  *)
 
 Require Import iris.bi.monpred.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import iris.proofmode.monpred.
 
-Require Import bedrock.lang.bi.only_provable.
+Require Import bedrock.iris.extra.bi.only_provable.
 
 Set Default Proof Using "Type".
 Set Suggest Proof Using.

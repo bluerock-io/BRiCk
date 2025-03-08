@@ -13,10 +13,10 @@ technically, they have [#[export]] visibility.
 *)
 
 Require Import bedrock.prelude.base.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.only_provable.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.only_provable.
 Require Import iris.bi.monpred.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import iris.bi.lib.laterable.
 
 (* Disable [BiAffine uPred] *)

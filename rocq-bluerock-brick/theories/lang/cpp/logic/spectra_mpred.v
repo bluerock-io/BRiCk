@@ -5,13 +5,13 @@
  * See the LICENSE file in the repository root for details.
  *)
 
- (*** mpred's instance of the Spectra framework *)
+(*** mpred's instance of the Spectra framework *)
 
 Require Import bedrock.lang.cpp.
 
-Require Export bedrock.lang.base_logic.lib.spectra.
-Require Import bedrock.lang.base_logic.mpred_prop.
-Require Import bedrock.lang.base_logic.invariants.
+Require Export bedrock.iris.extra.base_logic.lib.spectra.
+Require Import bedrock.lang.cpp.logic.mpred_prop.
+Require Import bedrock.iris.extra.base_logic.invariants.
 
 (** Conversion from Σ-dependent definitions to BI-dependent ones *)
 #[local] Instance ΣG_G `{!cpp_logic ti Σ}

@@ -5,10 +5,10 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.bi.derived_laws.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.bi.fractional.
-Require Import bedrock.lang.bi.monpred.
+Require Import bedrock.iris.extra.bi.derived_laws.
+Require Import bedrock.iris.extra.bi.observe.
+Require Import bedrock.iris.extra.bi.fractional.
+Require Import bedrock.iris.extra.bi.monpred.
 (**
 NOTE: The preceding modules include inner modules "nary" to enable the
 following exports, which in turn keep this module backwards compatible
@@ -22,7 +22,7 @@ test involving two files:
 <<
   (* prelude.v *)
   Require Export bedrock.lang.cpp.logic.pred.
-  Require Export bedrock.lang.bi.spec.nary_classes.
+  Require Export bedrock.iris.extra.bi.spec.nary_classes.
 
   (** test.v *)
   Require Import prelude.

@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.bi.ChargeCompat.
-Require Import bedrock.lang.bi.atomic1.
+Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.ChargeCompat.
+Require Import bedrock.iris.extra.bi.atomic1.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.semantics.
 Require Import bedrock.lang.cpp.logic.pred.
@@ -15,7 +15,7 @@ Require Import bedrock.lang.cpp.logic.heap_pred.
 Require Import bedrock.lang.cpp.logic.wp.
 Require Import bedrock.lang.cpp.logic.call.
 
-Export bedrock.lang.bi.atomic1.
+Export bedrock.iris.extra.bi.atomic1.
 
 #[local] Open Scope Z_scope.
 

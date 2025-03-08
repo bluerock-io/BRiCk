@@ -7,8 +7,8 @@
 
 Require Export stdpp.propset.
 
-Require Export bedrock.lang.algebra.base.
-Require Import bedrock.lang.algebra.restrict.
+Require Export bedrock.iris.extra.algebra.base.
+Require Import bedrock.iris.extra.algebra.restrict.
 
 Set Default Proof Using "Type".
 
