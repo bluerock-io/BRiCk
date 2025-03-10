@@ -89,7 +89,7 @@ Module afrac.
     Proof.
       (**
       TODO (PDS): own_frac_auth_frag_frac_agree_L missing in
-      bedrock.lang.proofmode.own_obs
+      bedrock.iris.extra.proofmode.own_obs
       *)
       rewrite frag.unlock.
       intros. iIntros "F1 F2".

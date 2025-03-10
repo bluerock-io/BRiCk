@@ -5,7 +5,12 @@
 (generate_opam_files)
 
 (maintainers
- "Gregory Malecha <gregory@bluerock.io>")
+  "Gregory Malecha <gregory@bluerock.io>"
+  "Paolo Giarrusso <paolo@bluerock.io>"
+  "Jan-Oliver Kaiser <janno@bluerock.io>"
+  "Hai Dang <hai@bluerock.io>"
+  "Simon Hudon <simon@bluerock.io>"
+)
 
 (authors
  "Gregory Malecha <gregory@bluerock.io>"

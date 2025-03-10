@@ -5,7 +5,12 @@
 (generate_opam_files)
 
 (maintainers
- "Gregory Malecha <gregory@bluerock.io>")
+  "Gregory Malecha <gregory@bluerock.io>"
+  "Paolo Giarrusso <paolo@bluerock.io>"
+  "Jan-Oliver Kaiser <janno@bluerock.io>"
+  "Hai Dang <hai@bluerock.io>"
+  "Simon Hudon <simon@bluerock.io>"
+)
 
 (authors
  "Gregory Malecha <gregory@bluerock.io>"
@@ -25,7 +30,7 @@
 
 (package
  (name rocq-bluerock-iris)
- (synopsis "BlueRock's extensions to iris")
+ (synopsis "BlueRock's extensions to Iris")
  (depends
   coq
   rocq-upoly
@@ -33,6 +38,5 @@
   coq-iris
   rocq-lens
   rocq-lens-elpi
-  (rocq-bluerock-cpp2v :with-test)
   elpi
   coq-elpi))

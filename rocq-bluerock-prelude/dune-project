@@ -5,7 +5,12 @@
 (generate_opam_files)
 
 (maintainers
- "Gregory Malecha <gregory@bluerock.io>")
+ "Gregory Malecha <gregory@bluerock.io>"
+ "Paolo Giarrusso <paolo@bluerock.io>"
+ "Jan-Oliver Kaiser <janno@bluerock.io>"
+ "Hai Dang <hai@bluerock.io>"
+ "Simon Hudon <simon@bluerock.io>"
+)
 
 (authors
  "Gregory Malecha <gregory@bluerock.io>"
@@ -25,13 +30,12 @@
 
 (package
  (name rocq-bluerock-prelude)
- (synopsis "BlueRock's extensions to the stdpp prelude")
+ (synopsis "BlueRock's prelude (extensions to stdpp)")
  (depends
   coq
   rocq-upoly
   coq-stdpp
   rocq-lens
   rocq-lens-elpi
-  (rocq-bluerock-cpp2v :with-test)
   elpi
   coq-elpi))
