@@ -7,7 +7,7 @@
 
 (*** mpred's instance of the Spectra framework *)
 
-Require Import bedrock.lang.cpp.
+Require Import bedrock.lang.cpp.cpp.
 
 Require Export bedrock.iris.extra.base_logic.lib.spectra.
 Require Import bedrock.lang.cpp.logic.mpred_prop.
