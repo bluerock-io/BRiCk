@@ -12,7 +12,7 @@ Require Import iris.algebra.lib.mono_nat.
 Require Import iris.base_logic.lib.own.
 
 Require Import bedrock.lang.algebra.excl_auth.
-
+Require Import bedrock.lang.algebra.frac_auth.
 
 (** A collection of commonly used CMRAs that should be available everywhere. *)
 
@@ -36,6 +36,8 @@ Module br.
     ; excl_auth_N_inG : inG Σ (excl_authR NO)
     ; excl_auth_Z_inG : inG Σ (excl_authR ZO)
 
+    ; frac_auth_agree_N_inG : inG Σ (frac_authR (agreeR NO))
+
     }.
 
     Definition Σ : gFunctors := #[
@@ -54,6 +56,8 @@ Module br.
     ; GFunctor (excl_authR natO)
     ; GFunctor (excl_authR NO)
     ; GFunctor (excl_authR ZO)
+
+    ; GFunctor (frac_authR (agreeR NO))
 
     ].
 
