@@ -8,7 +8,7 @@
 
 (rule
   (target coqc_perf_dummy.ml)
-  (deps %{bin:rocq} (package rocq-core))
+  (deps (package rocq-core))
   (action (run touch %{target}))
 )
 
