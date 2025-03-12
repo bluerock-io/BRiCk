@@ -2,12 +2,12 @@
 (executable
  (name coqc_perf)
  (public_name coqc-perf)
- (modules coqc_perf coqc_perf_dummy)
+ (modules coqc_perf rocq_dummy)
  (package rocq-tools)
  (libraries rocq_tools camlzip))
 
 (rule
-  (target coqc_perf_dummy.ml)
+  (target rocq_dummy.ml)
   (deps (package rocq-core))
   (action (run touch %{target}))
 )
@@ -79,7 +79,7 @@
 (executable
  (name coqdep_werr)
  (public_name coqdep-werr)
- (modules coqdep_werr)
+ (modules coqdep_werr rocq_dummy)
  (package rocq-tools)
  (libraries rocq_tools))
 
