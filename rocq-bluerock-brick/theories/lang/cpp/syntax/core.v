@@ -494,8 +494,7 @@ Should be [gn : classname]
 
 | Enew (new_fn : name' * type') (new_args : list Expr') (pass_align : new_form)
   (alloc_ty : type') (array_size : option Expr') (init : option Expr')
-| Edelete (is_array : bool) (del_fn : name' * type')
-  (arg : Expr') (deleted_type : type')
+| Edelete (is_array : bool) (del_fn : name') (arg : Expr') (deleted_type : type')
 | Eandclean (e : Expr')
 | Ematerialize_temp (e : Expr') (vc : ValCat)
   (* ^^ [Ematerialize_temp] is can be an lvalue in the following program:
@@ -1006,7 +1005,7 @@ with is_dependentE (e : Expr) : bool :=
   | Einitlist_union f oe t => option.existsb is_dependentE oe || is_dependentT t
 
   | Enew p es _ t e1 e2 => is_dependentN p.1 || is_dependentT p.2 || existsb is_dependentE es || is_dependentT t || option.existsb is_dependentE e1 || option.existsb is_dependentE e2
-  | Edelete _ p e t => is_dependentN p.1 || is_dependentT p.2 || is_dependentE e || is_dependentT t
+  | Edelete _ p e t => is_dependentN p || is_dependentE e || is_dependentT t
   | Eandclean e => is_dependentE e
   | Ematerialize_temp e _ => is_dependentE e
   | Eatomic _ es t => existsb is_dependentE es || is_dependentT t

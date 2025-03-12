@@ -26,10 +26,8 @@ Require Import bedrock.lang.cpp.logic.const.
 #[local] Notation Tdestroying_delete_t := "std::destroying_delete_t"%cpp_type.
 
 (* The type of the information in the AST about the default delete operator
-   NOTE: in practice, we could probably drop the [type] here since we always
-   have access to the translation unit.
  *)
-#[local] Notation DEFAULT_DELETE := (name * type)%type (only parsing).
+#[local] Notation DEFAULT_DELETE := (name)%type (only parsing).
 
 Import linearity.
 
@@ -540,28 +538,21 @@ Module Type Expr__newdelete.
    *)
   Definition delete_for (array : bool) (tu : translation_unit) (default_delete : DEFAULT_DELETE) (ty : type)
     : option (obj_name * delete_operator.t) :=
-    let del '(fn, fty) :=
-      pair fn <$> delete_operator.classify fty
-    in
     let del_of_name nm :=
-      match tu.(symbols) !! nm with
-      | Some del_fn =>
-          del (nm, type_of_value del_fn)
-      | None => None
-      end
+      pair nm <$> (tu.(symbols) !! nm >>= fun del_fn => delete_operator.classify (type_of_value del_fn))
     in
     match erase_qualifiers ty with
     | Tnamed cls =>
         match tu.(types) !! cls with
         | Some (Gstruct s) =>
-            from_option del_of_name (del default_delete) s.(s_delete)
+            del_of_name $ default default_delete s.(s_delete)
         | Some (Gunion u) =>
-            from_option del_of_name (del default_delete) u.(u_delete)
+            del_of_name $ default default_delete u.(u_delete)
         | Some (Genum _ _) =>
-            del default_delete
+            del_of_name default_delete
         | _ => None
         end
-    | _ => del default_delete
+    | _ => del_of_name default_delete
     end.
 
   (** Invoke the delete operator <<del_op.1>> on the pointer <<p>> for the type <<obj_type>>.
@@ -634,7 +625,7 @@ Module Type Expr__newdelete.
       here.
    *)
   Definition wp_delete_obj `{Σ : cpp_logic} {σ : genv} (array : bool) (tu : translation_unit)
-    (default_delete : name * type) (obj_type : type)
+    (default_delete : DEFAULT_DELETE) (obj_type : type)
     (obj_ptr : ptr) (Q : mpred) : mpred :=
     match delete_for false tu default_delete obj_type with
     | None => ERROR ("wp_delete_obj: failed to find <<operator delete>> for type"%pstring, obj_type)
