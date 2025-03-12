@@ -1,8 +1,8 @@
 (cram
  (applies_to :whole_subtree)
  (deps
-  (package coq-core)
-  (package coq-stdlib)
+  (package rocq-core)
+  (package rocq-stdlib)
   (package rocq-upoly)
   (package rocq-bluerock-brick)
   setup-project.sh))
