@@ -5,6 +5,7 @@
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
+Require Ltac2.Pstring.
 Require Import bedrock.ltac2.extra.internal.plugin.
 Require Import bedrock.ltac2.extra.internal.init.
 Require Import bedrock.ltac2.extra.internal.misc.
@@ -302,6 +303,14 @@ Module Constr.
     Ltac2 make_array (u : instance) (cs : constr array)
         (def : constr) (t : constr) : constr :=
       make (Array u cs def t).
+
+    Ltac2 make_string (s : string) :=
+      match Pstring.of_string s with
+      | Some p => make (String p)
+      | None => Control.throw_invalid_argument "Invalid primitive string: %s" s
+      end.
+
+    Ltac2 make_pstring (p : pstring) := make (String p).
 
     (** ** Declarations *)
     (**
