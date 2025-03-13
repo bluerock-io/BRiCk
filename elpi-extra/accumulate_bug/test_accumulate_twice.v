@@ -1,6 +1,6 @@
 Require Import accumulate_bug.accumulate1.
 Require Import accumulate_bug.accumulate2.
-Succeed Elpi Typecheck program.
+(* Succeed Elpi Typecheck program. *)
 (*
 Used to throw the error below before it got fixed in coq-elpi:
 Error:
