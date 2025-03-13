@@ -293,9 +293,9 @@ namespace attr {
 
   parse-list L E F O :-
     path.nil Nil,
-    internal.path Nil =>
-    internal.error E =>
-    continue-parsing L F O',
+    ( internal.path Nil =>
+      internal.error E =>
+      continue-parsing L F O'),
     std.rev O' O.
 
   parse E F ElpiOpts O :- std.do! [
