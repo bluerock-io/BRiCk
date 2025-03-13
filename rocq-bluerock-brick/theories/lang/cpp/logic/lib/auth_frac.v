@@ -53,38 +53,45 @@ Module afrac.
   #[global] Instance gname_countable A : Countable (gname A) := _.
 
   (** Predicates *)
+  mlock
+  Definition auth {A} {thread_info : biIndex} {Σ} `{!afrac.G A Σ}
+      (g : gname A) (q : Qp) (x : A) : mpred :=
+    own g (●F{q} (to_agree (A:=leibnizO A) x)).
+
+  mlock
+  Definition frag {A} {thread_info : biIndex} {Σ} `{!afrac.G A Σ}
+      (g : gname A) (q : Qp) (x : A) : mpred :=
+    own g (◯F{q} (to_agree (A:=leibnizO A) x)).
 
   Section defs.
     Context {A} {thread_info : biIndex} {Σ} `{!afrac.G A Σ}.
 
     #[local] Notation to_agree := (to_agree (A:=leibnizO A)).
 
-    Definition auth (g : gname A) (q : Qp) (x : A) : mpred :=
-      own g (●F{q} (to_agree x)).
-
-    Definition frag (g : gname A) (q : Qp) (x : A) : mpred :=
-      own g (◯F{q} (to_agree x)).
-
-    #[global] Instance auth_objective : Objective3 auth := _.
+    #[global] Instance auth_objective : Objective3 auth.
+    Proof. rewrite auth.unlock. apply _. Qed.
     #[global] Instance auth_frac g : FracSplittable_1 (auth g).
-    Proof. solve_frac. Qed.
+    Proof. rewrite auth.unlock. solve_frac. Qed.
     #[global] Instance auth_agree g : AgreeF1 (auth g).
     Proof.
       (**
       TODO (PDS): Shouldn't need to expose [to_agree].
       *)
+      rewrite auth.unlock.
       intros. rewrite -(inj_iff to_agree). apply _.
     Qed.
 
-    #[global] Instance frag_objective : Objective3 frag := _.
+    #[global] Instance frag_objective : Objective3 frag.
+    Proof. rewrite frag.unlock. apply _. Qed.
     #[global] Instance frag_frac g : FracSplittable_1 (frag g).
-    Proof. solve_frac. Qed.
+    Proof. rewrite frag.unlock. solve_frac. Qed.
     #[global] Instance frag_agree g : AgreeF1 (frag g).
     Proof.
       (**
       TODO (PDS): own_frac_auth_frag_frac_agree_L missing in
       bedrock.lang.proofmode.own_obs
       *)
+      rewrite frag.unlock.
       intros. iIntros "F1 F2".
       iDestruct (own_valid_2 with "F1 F2") as %Hv. iModIntro. iPureIntro.
       move: Hv. rewrite -frac_auth_frag_op frac_auth_frag_valid=>-[] _.
@@ -97,6 +104,7 @@ Module afrac.
       (**
       TODO (PDS): Problem with [own_frac_auth_agree_L]
       *)
+      rewrite auth.unlock frag.unlock.
       intros. iIntros "A F".
       iDestruct (observe_2 [| _ ≼ _ |] with "A F") as %Hinc.
       iModIntro. iPureIntro. move: Hinc.
@@ -126,6 +134,7 @@ Module afrac.
 
     Lemma alloc x : |-- |==> Exists g, OWN g x.
     Proof.
+      rewrite auth.unlock frag.unlock.
       iMod (own_alloc (●F{1} (to_agree x) ⋅ ◯F{1} (to_agree x))) as (g) "[A F]".
       { by apply frac_auth_valid. }
       iExists g. by iFrame "A F".
@@ -134,9 +143,12 @@ Module afrac.
     Lemma update g x y :
       |-- auth g 1 x -* frag g 1 x -* |==> OWN g y.
     Proof.
+      rewrite auth.unlock frag.unlock.
       iIntros "A F". iMod (own_update_2 with "A F") as "[$$]"; last done.
       by apply frac_auth_update_1.
     Qed.
   End defs.
 
+  #[global] Opaque gname.
+  #[global] Hint Opaque gname auth frag : br_opacity typeclass_instances.
 End afrac.
