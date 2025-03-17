@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/sh -v
 get_srcs() {
-  find . -iname '*.v' -type f
+  find . -type f \( -iname '*.v' -o -iname '*.rst' \)
 }
 get_dunes() {
  find . -iname dune
