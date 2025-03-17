@@ -12,9 +12,9 @@ Require Import iris.base_logic.lib.cancelable_invariants.
 Require Import iris.bi.monpred.
 
 Require Import bedrock.prelude.base.
-Require Import bedrock.lang.bi.prelude.
-Require Export bedrock.lang.base_logic.mpred.
-Require Export bedrock.lang.algebra.commons.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Export bedrock.iris.extra.base_logic.mpred.
+Require Export bedrock.iris.extra.algebra.commons.
 Import ChargeNotation.
 
 Module Type CPP_LOGIC_CLASS_BASE.

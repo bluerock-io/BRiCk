@@ -5,8 +5,8 @@
  *)
 Require Import iris.proofmode.tactics.
 Require Import bedrock.prelude.named_binder.
-Require Import bedrock.lang.algebra.telescopes.
-Require Import bedrock.lang.bi.telescopes.
+Require Import bedrock.iris.extra.algebra.telescopes.
+Require Import bedrock.iris.extra.bi.telescopes.
 Require Import bedrock.lang.cpp.logic.entailsN.
 Require Import bedrock.lang.cpp.specs.classy.
 

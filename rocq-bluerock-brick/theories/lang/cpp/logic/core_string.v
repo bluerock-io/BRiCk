@@ -5,10 +5,10 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.observe.
 Require Import bedrock.lang.cpp.semantics.values.
 Require Import bedrock.lang.cpp.logic.arr.
 Require Import bedrock.lang.cpp.logic.heap_pred.

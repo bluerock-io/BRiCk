@@ -26,7 +26,7 @@ Require Import bedrock.lang.cpp.logic.core_string.
 Require Import bedrock.lang.cpp.logic.translation_unit.
 Require Import bedrock.lang.cpp.logic.dispatch.
 Require Import bedrock.lang.cpp.logic.func.
-Require Import bedrock.lang.bi.errors.
+Require Import bedrock.iris.extra.bi.errors.
 
 Module Type Expr.
   (* Needed for [Unfold wp_test] *)

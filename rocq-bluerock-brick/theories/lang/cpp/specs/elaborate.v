@@ -7,7 +7,7 @@
 (** Functionality to elaborate specifications that are written to take
     operands (i.e. [val]) and convert them to take materialized values.
  *)
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.logic.
 Require Import bedrock.lang.cpp.semantics.

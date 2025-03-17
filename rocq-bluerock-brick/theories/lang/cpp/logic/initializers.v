@@ -4,12 +4,12 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import Stdlib.Lists.List.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import bedrock.prelude.numbers.
 Require Import bedrock.prelude.bool.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.bi.errors.
+Require Import bedrock.iris.extra.bi.errors.
 Require Import bedrock.lang.cpp.logic.pred.
 Require Import bedrock.lang.cpp.logic.path_pred.
 Require Import bedrock.lang.cpp.logic.heap_pred.

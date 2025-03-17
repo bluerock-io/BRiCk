@@ -6,7 +6,7 @@
  *)
 Require Import bedrock.lang.cpp.semantics.values.
 Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import iris.proofmode.classes.
 
 (** * Proof mode instances *)

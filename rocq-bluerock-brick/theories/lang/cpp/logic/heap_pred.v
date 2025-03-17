@@ -5,8 +5,8 @@
  *)
 Require Export elpi.apps.locker.locker.
 
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.bi.fractional.
+Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.fractional.
 
 Require Import bedrock.lang.cpp.bi.cfractional.
 Require Import bedrock.lang.cpp.semantics.

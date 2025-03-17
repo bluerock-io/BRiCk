@@ -7,11 +7,11 @@
 Require Import Stdlib.ZArith.BinInt.
 Require Import Stdlib.Lists.List.
 
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
 Require Import bedrock.prelude.base.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.observe.
 Require Import bedrock.lang.cpp.semantics.values.
 Require Import bedrock.lang.cpp.logic.arr.
 Require Import bedrock.lang.cpp.logic.heap_pred.

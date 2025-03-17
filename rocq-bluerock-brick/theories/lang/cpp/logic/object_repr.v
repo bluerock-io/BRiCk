@@ -10,10 +10,10 @@
     [rawR]/[rawsR] - which are wrappers around [Vraw] [val]ues and lists of them,
     respectively - are used to refer to and manipulate these "object representations".
  *)
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 Require Import bedrock.prelude.base.
 
-Require Import bedrock.lang.bi.big_op.
+Require Import bedrock.iris.extra.bi.big_op.
 Require Import bedrock.lang.cpp.semantics.
 Require Import bedrock.lang.cpp.logic.arr.
 Require Import bedrock.lang.cpp.logic.pred.

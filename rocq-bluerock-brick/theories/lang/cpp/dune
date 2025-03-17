@@ -1,0 +1,6 @@
+(include_subdirs qualified)
+(coq.theory
+  (name bedrock.lang.cpp)
+  (package rocq-bluerock-brick)
+  (plugins rocq-bluerock-brick.plugin)
+  (theories bedrock.prelude bedrock.iris.extra iris stdpp elpi Ltac2))

@@ -1,4 +1,4 @@
-Require Import bedrock.lang.cpp.
+Require Import bedrock.lang.cpp.cpp.
 
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.

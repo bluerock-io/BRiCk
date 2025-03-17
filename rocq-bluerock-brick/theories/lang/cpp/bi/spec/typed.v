@@ -1,5 +1,5 @@
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
+Require Import bedrock.iris.extra.bi.prelude.
+Require Import bedrock.iris.extra.bi.observe.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.logic.heap_pred.
 

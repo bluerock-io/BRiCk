@@ -6,12 +6,12 @@
  *)
 
 Require Import iris.algebra.agree.
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.bi.spec.frac_splittable.
+Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bedrock.iris.extra.bi.spec.frac_splittable.
 Require Import bedrock.lang.cpp.logic.
-Require Import bedrock.lang.algebra.frac_auth.
-Require Import bedrock.lang.base_logic.own_instances.
-Require Import bedrock.lang.proofmode.own_obs.
+Require Import bedrock.iris.extra.algebra.frac_auth.
+Require Import bedrock.iris.extra.base_logic.own_instances.
+Require Import bedrock.iris.extra.proofmode.own_obs.
 
 Set Printing Coercions.
 
@@ -89,7 +89,7 @@ Module afrac.
     Proof.
       (**
       TODO (PDS): own_frac_auth_frag_frac_agree_L missing in
-      bedrock.lang.proofmode.own_obs
+      bedrock.iris.extra.proofmode.own_obs
       *)
       rewrite frag.unlock.
       intros. iIntros "F1 F2".

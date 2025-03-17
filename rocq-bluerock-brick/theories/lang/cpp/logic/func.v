@@ -5,9 +5,9 @@
  *)
 
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.lang.proofmode.proofmode.	(** Early to get the right [ident] *)
-Require Import bedrock.lang.bi.ChargeCompat.
-Require Import bedrock.lang.bi.errors.
+Require Import bedrock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
+Require Import bedrock.iris.extra.bi.ChargeCompat.
+Require Import bedrock.iris.extra.bi.errors.
 Require Import bedrock.lang.cpp.logic.entailsN.
 Require Import bedrock.lang.cpp.syntax.
 Require Import bedrock.lang.cpp.semantics.

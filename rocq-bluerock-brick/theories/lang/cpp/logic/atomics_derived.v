@@ -12,7 +12,7 @@ Require Import bedrock.lang.cpp.logic.heap_pred.
 Require Import bedrock.lang.cpp.logic.wp.
 Require Import bedrock.lang.cpp.logic.atomics.
 
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bedrock.iris.extra.proofmode.proofmode.
 
 Section cmpxchg_derived.
   Context `{Σ : cpp_logic} {resolve:genv}.
