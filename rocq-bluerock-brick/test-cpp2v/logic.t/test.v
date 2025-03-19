@@ -1,4 +1,4 @@
-Require Import bedrock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.logic.
 
 Section with_Σ.
   Context `{Σ : !cpp_logic thread_info _Σ}.

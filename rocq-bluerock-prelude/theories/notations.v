@@ -6,7 +6,7 @@
 
 (** Alternative ASCII notations for stdpp. *)
 Require Import stdpp.base.
-Require Export bedrock.prelude.reserved_notation.
+Require Export bluerock.prelude.reserved_notation.
 
 Infix "==" := (≡) (at level 70, no associativity, only parsing) : stdpp_scope.
 

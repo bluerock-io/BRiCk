@@ -7,7 +7,7 @@ open Procq.Constr
 open Stdarg
 
 let lib_ref t =
-  Rocqlib.lib_ref ("bedrock.lang.cpp.parser.translation_unit." ^ t)
+  Rocqlib.lib_ref ("bluerock.lang.cpp.parser.translation_unit." ^ t)
 
 let to_econstr t =
   match t with

@@ -4,9 +4,9 @@
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.prelude.
-Require Import bedrock.prelude.finite.
-Require Import bedrock.prelude.elpi.derive.
+Require Import bluerock.prelude.prelude.
+Require Import bluerock.prelude.finite.
+Require Import bluerock.prelude.elpi.derive.
 
 Module Type Alias.
   Variant T := A | B.

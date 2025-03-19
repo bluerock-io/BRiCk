@@ -5,17 +5,17 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import stdpp.prelude.
-Require Import bedrock.prelude.base.
-Require Import bedrock.upoly.upoly.
-Require Import bedrock.upoly.option.
-Require Import bedrock.upoly.list.
-Require Import bedrock.prelude.parsec.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Import bedrock.lang.cpp.syntax.types.
+Require Import bluerock.prelude.base.
+Require Import bluerock.upoly.upoly.
+Require Import bluerock.upoly.option.
+Require Import bluerock.upoly.list.
+Require Import bluerock.prelude.parsec.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.types.
 Require Import Stdlib.Strings.PrimString.
-Require Import bedrock.prelude.pstring.
+Require Import bluerock.prelude.pstring.
 Require Import Stdlib.Numbers.Cyclic.Int63.Uint63.
-Require Import bedrock.lang.cpp.syntax.translation_unit.
+Require Import bluerock.lang.cpp.syntax.translation_unit.
 
 (** ** A parser for C++ names.
 

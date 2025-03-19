@@ -11,7 +11,7 @@ extension of Rocq.
 *)
 
 Require Export Stdlib.Logic.FunctionalExtensionality.
-Require Import bedrock.prelude.base.
+Require Import bluerock.prelude.base.
 
 Ltac funext := apply: functional_extensionality.
 Ltac funext_dep := apply: functional_extensionality_dep.

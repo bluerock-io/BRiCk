@@ -5,7 +5,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.ltac2.extra.extra.
+Require Import bluerock.ltac2.extra.extra.
 
 Declare ML Module "ltac2-logger.plugin".
 

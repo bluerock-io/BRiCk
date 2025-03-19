@@ -6,11 +6,11 @@
  *)
 
 Require Export iris.algebra.big_op.
-Require Export bedrock.iris.extra.algebra.monoid.
+Require Export bluerock.iris.extra.algebra.monoid.
 
-Require Import bedrock.prelude.numbers.
-Require Import bedrock.prelude.list_numbers.
-Require Import bedrock.prelude.fin_sets.
+Require Import bluerock.prelude.numbers.
+Require Import bluerock.prelude.list_numbers.
+Require Import bluerock.prelude.fin_sets.
 
 (** * Big ops *)
 

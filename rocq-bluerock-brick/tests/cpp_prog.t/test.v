@@ -1,5 +1,5 @@
-Require Import bedrock.lang.cpp.parser.
-Require Import bedrock.lang.cpp.parser.plugin.cpp2v.
+Require Import bluerock.lang.cpp.parser.
+Require Import bluerock.lang.cpp.parser.plugin.cpp2v.
 
 cpp.prog module
   abi Little

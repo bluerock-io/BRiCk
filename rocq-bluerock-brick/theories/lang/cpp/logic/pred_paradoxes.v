@@ -4,12 +4,12 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 (* Demonstrate paradoxes from alluring but incorrect axioms. *)
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.prelude.base.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.prelude.base.
 
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.syntax.
 
 (* TODO: disable paradoxes
 Section with_cpp.

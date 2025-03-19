@@ -4,11 +4,11 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.syntax.prelude.
-Require Export bedrock.lang.cpp.syntax.preliminary.
-Require Export bedrock.lang.cpp.syntax.overloadable.
-Require Import bedrock.lang.cpp.syntax.notations.
-Require Export bedrock.lang.cpp.syntax.literal_string.
+Require Import bluerock.lang.cpp.syntax.prelude.
+Require Export bluerock.lang.cpp.syntax.preliminary.
+Require Export bluerock.lang.cpp.syntax.overloadable.
+Require Import bluerock.lang.cpp.syntax.notations.
+Require Export bluerock.lang.cpp.syntax.literal_string.
 Require Import PrimInt63.
 
 #[local] Set Primitive Projections.

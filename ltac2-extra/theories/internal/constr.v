@@ -6,10 +6,10 @@
  *)
 
 Require Ltac2.Pstring.
-Require Import bedrock.ltac2.extra.internal.plugin.
-Require Import bedrock.ltac2.extra.internal.init.
-Require Import bedrock.ltac2.extra.internal.misc.
-Require Import bedrock.ltac2.extra.internal.printf.
+Require Import bluerock.ltac2.extra.internal.plugin.
+Require Import bluerock.ltac2.extra.internal.init.
+Require Import bluerock.ltac2.extra.internal.misc.
+Require Import bluerock.ltac2.extra.internal.printf.
 Require Ltac2.FSet.
 
 (* NOTE: When using [Constr.Unsafe], [Constr.Unsafe.check] will enforce sane

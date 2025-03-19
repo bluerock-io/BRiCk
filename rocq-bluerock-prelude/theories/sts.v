@@ -6,10 +6,10 @@
  *)
 
 Require Import stdpp.propset.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.finite.
-Require Import bedrock.prelude.functions.
-Require Import bedrock.prelude.lens.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.finite.
+Require Import bluerock.prelude.functions.
+Require Import bluerock.prelude.lens.
 
 Import LensNotations.
 #[local] Open Scope lens_scope.

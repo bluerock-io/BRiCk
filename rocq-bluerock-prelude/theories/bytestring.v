@@ -6,7 +6,7 @@
 Require Import stdpp.countable.
 Require Import stdpp.strings.
 Require Import stdpp.namespaces.
-Require Export bedrock.prelude.bytestring_core.
+Require Export bluerock.prelude.bytestring_core.
 
 #[local] Set Default Proof Using "Type".
 

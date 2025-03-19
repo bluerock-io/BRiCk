@@ -19,9 +19,9 @@
  *)
 
 Require Export stdpp.list.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.numbers.
-Export bedrock.prelude.base.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.numbers.
+Export bluerock.prelude.base.
 
 (** * Small extensions to [stdpp.list]. *)
 

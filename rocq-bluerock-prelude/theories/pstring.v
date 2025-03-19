@@ -30,7 +30,7 @@ Require Import stdpp.numbers.
 Require Import stdpp.relations.
 Require Import stdpp.countable.
 Require Import stdpp.finite.
-Require Import bedrock.prelude.base.
+Require Import bluerock.prelude.base.
 
 Export PrimString.PStringNotations.
 

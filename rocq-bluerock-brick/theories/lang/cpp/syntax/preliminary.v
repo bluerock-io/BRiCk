@@ -5,9 +5,9 @@
  *)
 
 Require Import stdpp.strings.
-Require Export bedrock.prelude.pstring.
-Require Import bedrock.lang.cpp.syntax.prelude.
-Require Export bedrock.lang.cpp.arith.types.
+Require Export bluerock.prelude.pstring.
+Require Import bluerock.lang.cpp.syntax.prelude.
+Require Export bluerock.lang.cpp.arith.types.
 
 
 (* TODO: is this worth its own file? *)

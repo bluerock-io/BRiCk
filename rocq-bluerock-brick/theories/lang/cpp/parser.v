@@ -4,22 +4,22 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Ltac2.Ltac2.
-Require Export bedrock.prelude.base.	(* for, e.g., <<::>> *)
+Require Export bluerock.prelude.base.	(* for, e.g., <<::>> *)
 Require Import Stdlib.Numbers.Cyclic.Int63.PrimInt63.
-Require Import bedrock.prelude.parray.
-Require Import bedrock.prelude.uint63.
+Require Import bluerock.prelude.parray.
+Require Import bluerock.prelude.uint63.
 Require Export Stdlib.Strings.PrimString.
-Require Import bedrock.prelude.avl.
-Require Export bedrock.lang.cpp.syntax. (* NOTE: too much *)
-Require bedrock.lang.cpp.semantics.sub_module.
-Require Export bedrock.lang.cpp.parser.stmt.
-Require Import bedrock.lang.cpp.parser.lang.
-Require Import bedrock.lang.cpp.parser.type.
-Require Import bedrock.lang.cpp.parser.name.
-Require Import bedrock.lang.cpp.parser.expr.
-Require Import bedrock.lang.cpp.parser.decl.
-Require Import bedrock.lang.cpp.parser.notation.
-Require Import bedrock.lang.cpp.parser.reduction.
+Require Import bluerock.prelude.avl.
+Require Export bluerock.lang.cpp.syntax. (* NOTE: too much *)
+Require bluerock.lang.cpp.semantics.sub_module.
+Require Export bluerock.lang.cpp.parser.stmt.
+Require Import bluerock.lang.cpp.parser.lang.
+Require Import bluerock.lang.cpp.parser.type.
+Require Import bluerock.lang.cpp.parser.name.
+Require Import bluerock.lang.cpp.parser.expr.
+Require Import bluerock.lang.cpp.parser.decl.
+Require Import bluerock.lang.cpp.parser.notation.
+Require Import bluerock.lang.cpp.parser.reduction.
 
 #[local] Definition parser_lang : lang.t := lang.cpp.
 Include ParserName.

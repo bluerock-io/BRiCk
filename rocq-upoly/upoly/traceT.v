@@ -5,10 +5,10 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.upoly.prelude.
-Require Import bedrock.upoly.base.
-Require Import bedrock.upoly.UTypes.
-Require bedrock.upoly.trace.
+Require Import bluerock.upoly.prelude.
+Require Import bluerock.upoly.base.
+Require Import bluerock.upoly.UTypes.
+Require bluerock.upoly.trace.
 Import UPoly.
 
 (** * Trace monad transformer *)

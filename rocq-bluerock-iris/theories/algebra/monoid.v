@@ -7,8 +7,8 @@
 
 Require Export iris.algebra.monoid.
 
-Require Import bedrock.prelude.reserved_notation.
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.reserved_notation.
+Require Import bluerock.prelude.numbers.
 
 (** * Powers in monoids *)
 (** Overview:

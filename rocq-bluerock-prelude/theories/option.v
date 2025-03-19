@@ -18,8 +18,8 @@
  *)
 
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.bool.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.bool.
 
 Module option.
   Definition existsb {A} (f : A -> bool) (m : option A) : bool :=

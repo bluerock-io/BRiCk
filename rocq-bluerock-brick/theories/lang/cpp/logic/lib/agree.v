@@ -6,10 +6,10 @@
  *)
 
 Require Import iris.algebra.agree.
-Require Import bedrock.iris.extra.bi.spec.knowledge.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.iris.extra.base_logic.own_instances.
-Require Import bedrock.iris.extra.proofmode.own_obs.
+Require Import bluerock.iris.extra.bi.spec.knowledge.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.iris.extra.base_logic.own_instances.
+Require Import bluerock.iris.extra.proofmode.own_obs.
 
 Set Printing Coercions.
 

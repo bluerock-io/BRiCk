@@ -3,22 +3,22 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.numbers.
-Require Import bedrock.prelude.list.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.numbers.
+Require Import bluerock.prelude.list.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.lang.cpp.arith.z_to_bytes.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.translation_unit.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.arr.
-Require Export bedrock.lang.cpp.logic.raw.
+Require Import bluerock.lang.cpp.arith.z_to_bytes.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.translation_unit.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.arr.
+Require Export bluerock.lang.cpp.logic.raw.
 
-Require Import bedrock.iris.extra.bi.linearity.
+Require Import bluerock.iris.extra.bi.linearity.
 
 Section with_Σ.
   Context `{Σ : cpp_logic} {σ : genv}.

@@ -6,8 +6,8 @@
  *)
 
 Require Import Stdlib.Strings.PrimString.
-Require Import bedrock.prelude.base.
-Require Export bedrock.prelude.tactics.base_dbs.
+Require Import bluerock.prelude.base.
+Require Export bluerock.prelude.tactics.base_dbs.
 
 Export PStringNotations.
 

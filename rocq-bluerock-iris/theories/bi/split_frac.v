@@ -5,9 +5,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.iris.extra.bi.fractional.
+Require Export bluerock.iris.extra.bi.fractional.
 
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.numbers.
 
 (** * Splitting and combining fractions *)
 (**

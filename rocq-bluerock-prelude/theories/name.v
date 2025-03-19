@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1 WITH BedRock Exception for use
  * over network, see repository root for details.
  *)
-Require Import bedrock.prelude.finite.
+Require Import bluerock.prelude.finite.
 
 Class Names (T : Set) := mkNames {
   #[global] name_eq_dec :: EqDecision T ;

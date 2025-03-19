@@ -89,9 +89,9 @@
     elpi_elpi
     Lens
     Ltac2
-    bedrock.upoly
-    bedrock.prelude
-    bedrock.lang))
+    bluerock.upoly
+    bluerock.prelude
+    bluerock.lang))
   (rule
    (targets code.v names.v)
    (deps

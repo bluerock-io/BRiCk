@@ -7,26 +7,26 @@
  * Semantics of expressions
  * (expressed in weakest pre-condition style)
  *)
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.numbers.
 Require Import iris.proofmode.tactics.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.raw.
-Require Import bedrock.lang.cpp.logic.const.
-Require Import bedrock.lang.cpp.logic.operator.
-Require Import bedrock.lang.cpp.logic.destroy.
-Require Import bedrock.lang.cpp.logic.initializers.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.call.
-Require Import bedrock.lang.cpp.logic.core_string.
-Require Import bedrock.lang.cpp.logic.translation_unit.
-Require Import bedrock.lang.cpp.logic.dispatch.
-Require Import bedrock.lang.cpp.logic.func.
-Require Import bedrock.iris.extra.bi.errors.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.raw.
+Require Import bluerock.lang.cpp.logic.const.
+Require Import bluerock.lang.cpp.logic.operator.
+Require Import bluerock.lang.cpp.logic.destroy.
+Require Import bluerock.lang.cpp.logic.initializers.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.call.
+Require Import bluerock.lang.cpp.logic.core_string.
+Require Import bluerock.lang.cpp.logic.translation_unit.
+Require Import bluerock.lang.cpp.logic.dispatch.
+Require Import bluerock.lang.cpp.logic.func.
+Require Import bluerock.iris.extra.bi.errors.
 
 Module Type Expr.
   (* Needed for [Unfold wp_test] *)

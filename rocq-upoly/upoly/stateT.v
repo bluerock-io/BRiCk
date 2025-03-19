@@ -5,11 +5,11 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.upoly.prelude.
-Require Import bedrock.upoly.base.
-Require Import bedrock.upoly.UTypes.
-Require Import bedrock.upoly.prod.
-Require bedrock.upoly.readerT.
+Require Import bluerock.upoly.prelude.
+Require Import bluerock.upoly.base.
+Require Import bluerock.upoly.UTypes.
+Require Import bluerock.upoly.prod.
+Require bluerock.upoly.readerT.
 Import UPoly.
 
 (** * State monad transformer *)

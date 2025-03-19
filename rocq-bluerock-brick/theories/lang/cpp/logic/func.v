@@ -5,24 +5,24 @@
  *)
 
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
-Require Import bedrock.iris.extra.bi.ChargeCompat.
-Require Import bedrock.iris.extra.bi.errors.
-Require Import bedrock.lang.cpp.logic.entailsN.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.rep_proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
+Require Import bluerock.iris.extra.bi.ChargeCompat.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.lang.cpp.logic.entailsN.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.rep_proofmode.
 
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.builtins.
-Require Import bedrock.lang.cpp.logic.cptr.
-Require Import bedrock.lang.cpp.logic.const.
-Require Import bedrock.lang.cpp.logic.initializers.
-Require Import bedrock.lang.cpp.logic.translation_unit.
-Require Import bedrock.lang.cpp.logic.destroy.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.builtins.
+Require Import bluerock.lang.cpp.logic.cptr.
+Require Import bluerock.lang.cpp.logic.const.
+Require Import bluerock.lang.cpp.logic.initializers.
+Require Import bluerock.lang.cpp.logic.translation_unit.
+Require Import bluerock.lang.cpp.logic.destroy.
 
 (* UPSTREAM. *)
 Lemma wand_frame {PROP : bi} (R Q Q' : PROP) :

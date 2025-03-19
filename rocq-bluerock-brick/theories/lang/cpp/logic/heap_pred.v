@@ -5,30 +5,30 @@
  *)
 Require Export elpi.apps.locker.locker.
 
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.iris.extra.bi.fractional.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.fractional.
 
-Require Import bedrock.lang.cpp.bi.cfractional.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.bi.cfractional.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
 
-Export bedrock.lang.cpp.logic.pred.
+Export bluerock.lang.cpp.logic.pred.
 (* ^^ Should this be exported? this file is supposed to provide wrappers
    so that clients do not work directly with [pred.v] *)
-Export bedrock.lang.cpp.algebra.cfrac.
+Export bluerock.lang.cpp.algebra.cfrac.
 
-Require Export bedrock.lang.cpp.logic.heap_pred.aggregate.
-Require Export bedrock.lang.cpp.logic.heap_pred.any.
-Require Export bedrock.lang.cpp.logic.heap_pred.block.
-Require Export bedrock.lang.cpp.logic.heap_pred.everywhere.
-Require Export bedrock.lang.cpp.logic.heap_pred.null.
-Require Export bedrock.lang.cpp.logic.heap_pred.prim.
-Require Export bedrock.lang.cpp.logic.heap_pred.simple.
-Require Export bedrock.lang.cpp.logic.heap_pred.tptsto.
-Require Export bedrock.lang.cpp.logic.heap_pred.uninit.
-Require Export bedrock.lang.cpp.logic.heap_pred.valid.
+Require Export bluerock.lang.cpp.logic.heap_pred.aggregate.
+Require Export bluerock.lang.cpp.logic.heap_pred.any.
+Require Export bluerock.lang.cpp.logic.heap_pred.block.
+Require Export bluerock.lang.cpp.logic.heap_pred.everywhere.
+Require Export bluerock.lang.cpp.logic.heap_pred.null.
+Require Export bluerock.lang.cpp.logic.heap_pred.prim.
+Require Export bluerock.lang.cpp.logic.heap_pred.simple.
+Require Export bluerock.lang.cpp.logic.heap_pred.tptsto.
+Require Export bluerock.lang.cpp.logic.heap_pred.uninit.
+Require Export bluerock.lang.cpp.logic.heap_pred.valid.
 
 #[local] Set Printing Coercions.
 

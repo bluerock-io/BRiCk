@@ -4,7 +4,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.prelude.
+Require Import bluerock.prelude.prelude.
 
 (** ** Errors *)
 (**

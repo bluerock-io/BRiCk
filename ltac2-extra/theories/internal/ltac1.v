@@ -5,10 +5,10 @@
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.ltac2.extra.internal.init.
-Require Import bedrock.ltac2.extra.internal.constr.
-Require Import bedrock.ltac2.extra.internal.string.
-Require Import bedrock.ltac2.extra.internal.option.
+Require Import bluerock.ltac2.extra.internal.init.
+Require Import bluerock.ltac2.extra.internal.constr.
+Require Import bluerock.ltac2.extra.internal.string.
+Require Import bluerock.ltac2.extra.internal.option.
 
 (** Minor extensions to [Ltac2.Ltac1] *)
 Module Ltac1.

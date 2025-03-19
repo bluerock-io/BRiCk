@@ -40,7 +40,7 @@ let command : bool -> unit = fun debug ->
     let dune_file = Filename.concat gen_dir "dune" in
     let default_theories =
       [ "Stdlib"; "stdpp"; "iris"; "elpi"; "elpi_elpi"; "Lens"; "Ltac2";
-        "bedrock.upoly"; "bedrock.prelude"; "bedrock.lang" ]
+        "bluerock.upoly"; "bluerock.prelude"; "bluerock.lang" ]
     in
     let theories = default_theories @ coq_theories in
     Out_channel.with_open_text dune_file @@ fun oc ->

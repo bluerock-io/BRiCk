@@ -6,12 +6,12 @@
 Require Import stdpp.finite.
 
 Require Import elpi.elpi.
-Require Export bedrock.prelude.elpi.derive.common.
+Require Export bluerock.prelude.elpi.derive.common.
 
-Require Import bedrock.prelude.prelude.
-Require Import bedrock.prelude.elpi.basis.
+Require Import bluerock.prelude.prelude.
+Require Import bluerock.prelude.elpi.basis.
 
-Elpi Accumulate derive File bedrock.basis.elpi.
+Elpi Accumulate derive File bluerock.basis.elpi.
 
 (***************************************************
  Finite
@@ -20,7 +20,7 @@ Elpi Db derive.stdpp.finite.db lp:{{
   pred finite o:gref, o:gref.
   pred finite-done o:gref.
 }}.
-Elpi Accumulate derive.stdpp.finite.db File bedrock.typeclass.elpi.
+Elpi Accumulate derive.stdpp.finite.db File bluerock.typeclass.elpi.
 #[superglobal] Elpi Accumulate derive.stdpp.finite.db lp:{{
   :name "finite-done.typeclass"
   finite-done GR :-
@@ -139,7 +139,7 @@ Elpi Accumulate derive lp:{{
   namespace derive.finite {
     pred main i:gref, i:string, o:list prop.
     main TyGR Prefix Clauses :- std.do! [
-      bedrock.get-indt TyGR VariantI,
+      bluerock.get-indt TyGR VariantI,
       derive-original-gref TyGR OrigGR,
       coq.env.indt VariantI _ _ _ _ Ctors _,
       std.map Ctors (c\ c'\ c' = global (indc c)) CTerms,

@@ -6,7 +6,7 @@
 *)
 Require Export iris.bi.lib.laterable.
 Require Import iris.bi.monpred.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Set Default Proof Using "Type".
 
 (** Replace the TC instance [big_sepL_laterable] with a version that

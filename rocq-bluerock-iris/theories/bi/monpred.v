@@ -6,7 +6,7 @@
 
 Require Export iris.bi.monpred.
 
-Require Import bedrock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.prelude.
 Require Import iris.proofmode.monpred.
 
 Notation "A -mon> B" := (monPred A B%bi_type) : stdpp_scope.

@@ -1,6 +1,6 @@
 (include_subdirs qualified)
 (coq.theory
- (name bedrock.ltac2.llm)
+ (name bluerock.ltac2.llm)
  (package ltac2-llm)
  (theories Ltac2)
  (plugins ltac2-llm-plugin.plugin))

@@ -109,8 +109,8 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 	build_module(decl, mod, filter, specs, compiler_, elaborate_, templates);
 
 	auto parser = [&](CoqPrinter& print) -> auto& {
-		StringRef coqmod(print.templates() ? "bedrock.lang.cpp.mparser" :
-											 "bedrock.lang.cpp.parser");
+		StringRef coqmod(print.templates() ? "bluerock.lang.cpp.mparser" :
+											 "bluerock.lang.cpp.parser");
 		return print.output()
 			   << "Require Import " << coqmod << "." << fmt::line << fmt::line;
 	};
@@ -157,7 +157,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 			print.output() << fmt::line;
 		}
 
-		print.output() << "Require Import bedrock.lang.cpp.parser.plugin.cpp2v."
+		print.output() << "Require Import bluerock.lang.cpp.parser.plugin.cpp2v."
 					   << fmt::line;
 		print.output() << "cpp.prog module" << fmt::indent << fmt::line;
 		if (ctxt->getTargetInfo().isBigEndian()) {
@@ -184,7 +184,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 
 		if (check_types_) {
 			print.output()
-				<< fmt::line << "Require bedrock.lang.cpp.syntax.typed."
+				<< fmt::line << "Require bluerock.lang.cpp.syntax.typed."
 				<< fmt::line
 				<< "Succeed Example well_typed : "
 				   "typed.decltype.check_tu module = trace.Success tt"

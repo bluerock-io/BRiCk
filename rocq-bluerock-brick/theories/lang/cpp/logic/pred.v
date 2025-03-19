@@ -12,35 +12,35 @@
       model.
  *)
 Require Import elpi.apps.locker.locker.
-Require Export bedrock.prelude.addr.
+Require Export bluerock.prelude.addr.
 
-Require Export bedrock.iris.extra.bi.prelude.
-Require Export bedrock.iris.extra.bi.observe.
-Require Export bedrock.iris.extra.bi.spec.knowledge.
-Require Export bedrock.lang.cpp.reserved_notation.
-Require Export bedrock.lang.cpp.logic.mpred.
-Require Export bedrock.lang.cpp.logic.rep.
+Require Export bluerock.iris.extra.bi.prelude.
+Require Export bluerock.iris.extra.bi.observe.
+Require Export bluerock.iris.extra.bi.spec.knowledge.
+Require Export bluerock.lang.cpp.reserved_notation.
+Require Export bluerock.lang.cpp.logic.mpred.
+Require Export bluerock.lang.cpp.logic.rep.
 (** ^^ Delicate; export types and canonical structures (CS) for [monPred], [mpred] and [Rep].
 Export order can affect CS inference. *)
 
-Require Import bedrock.prelude.bytestring.
+Require Import bluerock.prelude.bytestring.
 
-Require Export bedrock.lang.cpp.algebra.cfrac.
-Require Export bedrock.lang.cpp.bi.cfractional.
+Require Export bluerock.lang.cpp.algebra.cfrac.
+Require Export bluerock.lang.cpp.bi.cfractional.
 
 Require Export iris.base_logic.lib.iprop.
 (* TODO: ^^ only needed to export uPredI, should be removed. *)
 Require Import iris.bi.lib.fractional.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.iris.extra.bi.na_invariants.
-Require Import bedrock.iris.extra.bi.cancelable_invariants.
+Require Import bluerock.iris.extra.bi.na_invariants.
+Require Import bluerock.iris.extra.bi.cancelable_invariants.
 Export ChargeNotation.
-Require Import bedrock.lang.cpp.bi.cfractional.
+Require Import bluerock.lang.cpp.bi.cfractional.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.semantics.subtyping.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.semantics.subtyping.
 
 #[local] Set Printing Coercions.
 
@@ -50,7 +50,7 @@ Implicit Types (vt : validity_type) (σ resolve : genv).
 Implicit Types (n : N) (z : Z).
 
 (* Namespace for the invariants of the C++ abstraction's ghost state. *)
-Definition pred_ns : namespace := nroot .@@ "bedrock" .@@ "lang" .@@ "cpp_logic".
+Definition pred_ns : namespace := nroot .@@ "bluerock" .@@ "lang" .@@ "cpp_logic".
 
 (* Used by [has_type_prop_has_type_noptr]. No theory. *)
 Definition nonptr_prim_type {lang} (ty : type' lang) : bool :=

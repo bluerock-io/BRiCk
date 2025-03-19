@@ -6,13 +6,13 @@
 (**
  * reflecting virtual function dispatch in the logic.
  *)
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.translation_unit.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.translation_unit.
 
 Section with_cpp.
   Context `{Σ : cpp_logic}.

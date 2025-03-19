@@ -4,11 +4,11 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import iris.proofmode.tactics.
-Require Import bedrock.prelude.named_binder.
-Require Import bedrock.iris.extra.algebra.telescopes.
-Require Import bedrock.iris.extra.bi.telescopes.
-Require Import bedrock.lang.cpp.logic.entailsN.
-Require Import bedrock.lang.cpp.specs.classy.
+Require Import bluerock.prelude.named_binder.
+Require Import bluerock.iris.extra.algebra.telescopes.
+Require Import bluerock.iris.extra.bi.telescopes.
+Require Import bluerock.lang.cpp.logic.entailsN.
+Require Import bluerock.lang.cpp.specs.classy.
 
 Lemma ex_eq {PROP : bi} {T} (a : T) (P : T -> PROP) :
   (∃ x : T, [| a = x |] ∗ P x) ⊣⊢ P a.
