@@ -2,7 +2,6 @@
  (_
   (binaries
    (../rocq-tools/bin/coqc_perf.exe as coqc)
-   (../rocq-tools/bin/coqdep_werr.exe as coqdep)
-   (./extra/elpidep.sh as elpidep))
+   (../rocq-tools/bin/coqdep_werr.exe as coqdep))
   (coq
    (flags (:standard %{read-lines:../flags/coqc})))))
