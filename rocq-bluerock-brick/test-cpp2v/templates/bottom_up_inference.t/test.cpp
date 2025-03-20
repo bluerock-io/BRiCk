@@ -6,7 +6,7 @@
 
 /*
 Test the bottom-up type inference in our Gallina parser for template
-modules (bedrock.lang.cpp.mparser).
+modules (bluerock.lang.cpp.mparser).
 
 Background: Clang may reasonably delay some type inference in
 templated code until specialization/instantiation time.

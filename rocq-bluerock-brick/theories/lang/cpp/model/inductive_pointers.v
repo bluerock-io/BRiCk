@@ -14,18 +14,18 @@ to be guaranteed.
 *)
 
 Require Import stdpp.gmap.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.addr.
-Require Import bedrock.prelude.avl.
-Require Import bedrock.prelude.bytestring.
-Require Import bedrock.prelude.option.
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.addr.
+Require Import bluerock.prelude.avl.
+Require Import bluerock.prelude.bytestring.
+Require Import bluerock.prelude.option.
+Require Import bluerock.prelude.numbers.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.sub_module.
-Require Import bedrock.lang.cpp.semantics.ptrs.
-Require Import bedrock.lang.cpp.model.simple_pointers_utils.
-Require Import bedrock.lang.cpp.model.inductive_pointers_utils.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.sub_module.
+Require Import bluerock.lang.cpp.semantics.ptrs.
+Require Import bluerock.lang.cpp.model.simple_pointers_utils.
+Require Import bluerock.lang.cpp.model.inductive_pointers_utils.
 
 Implicit Types (σ : genv) (z : Z).
 #[local] Close Scope nat_scope.

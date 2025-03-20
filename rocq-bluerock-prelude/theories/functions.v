@@ -5,8 +5,8 @@
  *)
 
 Require Import stdpp.functions.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.axioms.funext.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.axioms.funext.
 
 (* Belongs in stdpp or prelude. *)
 #[global] Instance fn_lookup_total {A T} : LookupTotal A T (A → T) := λ a f, f a.

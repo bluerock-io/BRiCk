@@ -4,11 +4,11 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.syntax.prelude.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Export bedrock.lang.cpp.syntax.handler.
-Require Import bedrock.lang.cpp.syntax.decl.
-Require Import bedrock.lang.cpp.syntax.translation_unit.
+Require Import bluerock.lang.cpp.syntax.prelude.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Export bluerock.lang.cpp.syntax.handler.
+Require Import bluerock.lang.cpp.syntax.decl.
+Require Import bluerock.lang.cpp.syntax.translation_unit.
 
 Import UPoly.
 

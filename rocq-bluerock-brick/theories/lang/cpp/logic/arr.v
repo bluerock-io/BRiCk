@@ -4,19 +4,19 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.iris.extra.algebra.list.
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.prelude.numbers.
-Require Import bedrock.iris.extra.bi.observe.
-Require Import bedrock.iris.extra.bi.fractional.
-Require Import bedrock.iris.extra.bi.big_op.
-Require Import bedrock.lang.cpp.bi.cfractional.
-Require Import bedrock.lang.cpp.semantics.types.
-Require Import bedrock.lang.cpp.semantics.genv.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.valid.
-Require Import bedrock.lang.cpp.semantics.values.
+Require Import bluerock.iris.extra.algebra.list.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.prelude.numbers.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.iris.extra.bi.fractional.
+Require Import bluerock.iris.extra.bi.big_op.
+Require Import bluerock.lang.cpp.bi.cfractional.
+Require Import bluerock.lang.cpp.semantics.types.
+Require Import bluerock.lang.cpp.semantics.genv.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.valid.
+Require Import bluerock.lang.cpp.semantics.values.
 
 #[local] Set Printing Coercions.	(** Readability *)
 

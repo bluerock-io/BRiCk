@@ -5,7 +5,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Export iris.algebra.lib.frac_auth.
-Require Export bedrock.prelude.base.
+Require Export bluerock.prelude.base.
 Set Printing Coercions.
 
 (** * Extension to [frac_auth] *)

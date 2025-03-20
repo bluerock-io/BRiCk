@@ -4,9 +4,9 @@
  * SPDX-License-Identifier:AGPL-3.0-or-later
  *)
 Require Import stdpp.decidable.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.genv.
-Require Import bedrock.lang.cpp.semantics.subtyping.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.genv.
+Require Import bluerock.lang.cpp.semantics.subtyping.
 
 (** Dispatching to a virtual function contains two pieces:
     1. Finding the correct function to invoke

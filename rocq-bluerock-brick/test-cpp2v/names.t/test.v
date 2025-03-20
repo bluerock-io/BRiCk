@@ -1,6 +1,6 @@
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.cpp.syntax.
-Require bedrock.lang.cpp.syntax.supported.
+Require Import bluerock.prelude.base.
+Require Import bluerock.lang.cpp.syntax.
+Require bluerock.lang.cpp.syntax.supported.
 
 
 Require test.test_cpp.

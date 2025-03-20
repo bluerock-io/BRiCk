@@ -1,8 +1,8 @@
 (include_subdirs qualified)
 
 (coq.theory
- (name bedrock_tests.elpi.extra)
- (theories bedrock.elpi.extra))
+ (name bluerock_tests.elpi.extra)
+ (theories bluerock.elpi.extra))
 
 (rule
  (target dummy.v)

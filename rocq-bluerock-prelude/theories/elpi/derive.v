@@ -8,19 +8,19 @@
 
 (* WARNING: importing [elpi.apps.derive] has the side effect of setting
    [Uniform Inductive Parameters], so each individual extension should
-   instead use [bedrock.prelude.elpi.derive.common]. *)
+   instead use [bluerock.prelude.elpi.derive.common]. *)
 
-Require Export bedrock.prelude.elpi.derive.eq_dec.
+Require Export bluerock.prelude.elpi.derive.eq_dec.
 (*Test Uniform Inductive Parameters.*)
-Require Export bedrock.prelude.elpi.derive.inhabited.
+Require Export bluerock.prelude.elpi.derive.inhabited.
 (*Test Uniform Inductive Parameters.*)
-Require Export bedrock.prelude.elpi.derive.finite.
+Require Export bluerock.prelude.elpi.derive.finite.
 (*Test Uniform Inductive Parameters.*)
-Require Export bedrock.prelude.elpi.derive.countable.
+Require Export bluerock.prelude.elpi.derive.countable.
 (*Test Uniform Inductive Parameters.*)
-Require Export bedrock.prelude.elpi.derive.finite_type.
+Require Export bluerock.prelude.elpi.derive.finite_type.
 (*Test Uniform Inductive Parameters.*)
-Require Export bedrock.prelude.elpi.derive.bitset.
+Require Export bluerock.prelude.elpi.derive.bitset.
 (*Test Uniform Inductive Parameters.*)
-Require Export bedrock.prelude.elpi.derive.lens.
+Require Export bluerock.prelude.elpi.derive.lens.
 (*Test Uniform Inductive Parameters.*)

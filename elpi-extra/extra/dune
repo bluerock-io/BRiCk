@@ -1,9 +1,9 @@
 (include_subdirs qualified)
 
 (coq.theory
- (name bedrock.elpi.extra)
+ (name bluerock.elpi.extra)
  (package elpi-extra)
- (theories elpi elpi.apps.NES bedrock.ltac2.extra))
+ (theories elpi elpi.apps.NES bluerock.ltac2.extra))
 
 (rule
  (target dummy.v)
@@ -15,7 +15,7 @@
    (run coq-dummy-gen %{elpi_files}))))
 
 (install
- (files (glob_files_rec (*.elpi with_prefix coq/user-contrib/bedrock/elpi/extra/)))
+ (files (glob_files_rec (*.elpi with_prefix coq/user-contrib/bluerock/elpi/extra/)))
  (section lib_root)
  (package elpi-extra))
 

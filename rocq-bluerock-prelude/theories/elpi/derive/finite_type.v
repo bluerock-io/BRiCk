@@ -6,12 +6,12 @@
 Require Import stdpp.finite.
 
 Require Import elpi.elpi.
-Require Export bedrock.prelude.elpi.derive.common.
-Require Export bedrock.prelude.elpi.derive.eq_dec.
-Require Export bedrock.prelude.elpi.derive.finite.
+Require Export bluerock.prelude.elpi.derive.common.
+Require Export bluerock.prelude.elpi.derive.eq_dec.
+Require Export bluerock.prelude.elpi.derive.finite.
 
-Require Import bedrock.prelude.elpi.basis.
-Elpi Accumulate derive File bedrock.basis.elpi.
+Require Import bluerock.prelude.elpi.basis.
+Elpi Accumulate derive File bluerock.basis.elpi.
 
 (***************************************************
  Finite Types
@@ -73,7 +73,7 @@ Elpi File derive.finite_type.elpi lp:{{
 }}.
 
 Elpi Accumulate derive File derive.finite_type.elpi.
-Elpi Accumulate derive.finite_type.db File bedrock.typeclass.elpi.
+Elpi Accumulate derive.finite_type.db File bluerock.typeclass.elpi.
 #[superglobal] Elpi Accumulate derive.finite_type.db lp:{{
   namespace derive.finite_type {
     pred to-N i:term, o:term.

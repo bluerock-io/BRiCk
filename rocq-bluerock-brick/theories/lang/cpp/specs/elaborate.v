@@ -7,12 +7,12 @@
 (** Functionality to elaborate specifications that are written to take
     operands (i.e. [val]) and convert them to take materialized values.
  *)
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.logic.
-Require Import bedrock.lang.cpp.semantics.
-Require Export bedrock.lang.cpp.specs.cpp_specs.
-Require Import bedrock.lang.cpp.specs.wp_spec_compat.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.semantics.
+Require Export bluerock.lang.cpp.specs.cpp_specs.
+Require Import bluerock.lang.cpp.specs.wp_spec_compat.
 
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.

@@ -8,18 +8,18 @@ Require Import Stdlib.ZArith.BinInt.
 Require Import Stdlib.Lists.List.
 Require Export Stdlib.Strings.Ascii.
 
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.prelude.stdpp_ssreflect.
-Require Import bedrock.prelude.bytestring.
-Require Import bedrock.prelude.base.
-Require Import bedrock.iris.extra.bi.prelude.
-Require Import bedrock.iris.extra.bi.observe.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.logic.arr.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.mpred.
-Require Import bedrock.lang.cpp.logic.zstring.
+Require Import bluerock.prelude.stdpp_ssreflect.
+Require Import bluerock.prelude.bytestring.
+Require Import bluerock.prelude.base.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.logic.arr.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.mpred.
+Require Import bluerock.lang.cpp.logic.zstring.
 
 Import ChargeNotation.
 #[local] Open Scope Z_scope.
@@ -1136,7 +1136,7 @@ Module cstring.
   End with_Σ.
 End cstring.
 
-Require Import bedrock.lang.cpp.logic.core_string.
+Require Import bluerock.lang.cpp.logic.core_string.
 
 Section core_string.
   Context `{Σ : cpp_logic} {σ : genv}.

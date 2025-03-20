@@ -5,12 +5,12 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.iris.extra.bi.fractional.
+Require Export bluerock.iris.extra.bi.fractional.
 
-Require Import bedrock.iris.extra.bi.prelude.
-Require Import bedrock.iris.extra.bi.observe.
-Require Import bedrock.iris.extra.bi.spec.exclusive.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.iris.extra.bi.spec.exclusive.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
 #[local] Set Primitive Projections.
 #[local] Set Default Proof Using "Type*".

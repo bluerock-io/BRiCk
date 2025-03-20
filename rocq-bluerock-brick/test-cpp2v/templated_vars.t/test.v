@@ -1,4 +1,4 @@
-Require Import bedrock.lang.cpp.syntax.supported.
+Require Import bluerock.lang.cpp.syntax.supported.
 
 Require test.test_cpp.
 

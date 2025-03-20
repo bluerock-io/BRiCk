@@ -5,9 +5,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.iris.extra.bi.prelude.
-Require Import bedrock.lang.cpp.bi.cfractional.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.lang.cpp.bi.cfractional.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Import ChargeNotation.
 
 #[local] Set Printing Coercions.

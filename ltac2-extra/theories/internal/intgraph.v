@@ -6,8 +6,8 @@
  *)
 
 Require Import Ltac2.Ltac2.
-Require Import bedrock.ltac2.extra.internal.list.
-Require Import bedrock.ltac2.extra.internal.control.
+Require Import bluerock.ltac2.extra.internal.list.
+Require Import bluerock.ltac2.extra.internal.control.
 
 
 (** Naive representation of sparse graphs with integer nodes. *)

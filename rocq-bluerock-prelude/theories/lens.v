@@ -11,9 +11,9 @@ Some of them, however, do not satisfy all lens laws ("fake lenses").
 *)
 
 Require Import elpi.apps.NES.NES.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.finite.
-Require Import bedrock.prelude.functions.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.finite.
+Require Import bluerock.prelude.functions.
 Require Export Lens.Lens.
 
 Export LensNotations.
@@ -104,7 +104,7 @@ Section monoid.
       (λ a, a .^ l1 ∪ a .^ l2)
       (λ upd s, s &: l1 %= upd &: l2 %= upd).
 
-  Import bedrock.prelude.axioms.funext.
+  Import bluerock.prelude.axioms.funext.
 
   #[global] Instance lens_left_id `{!LeftId (=@{M}) ∅ (∪)} :
     LeftId (=@{A -l> M}) ∅ (∪).

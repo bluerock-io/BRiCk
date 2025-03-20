@@ -4,9 +4,9 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Export bedrock.lang.cpp.logic.core_string.
-Require Export bedrock.lang.cpp.logic.cstring.
-Require Export bedrock.lang.cpp.logic.zstring.
+Require Export bluerock.lang.cpp.logic.core_string.
+Require Export bluerock.lang.cpp.logic.cstring.
+Require Export bluerock.lang.cpp.logic.zstring.
 
 (** * [cstring]s and [zstring]s
 

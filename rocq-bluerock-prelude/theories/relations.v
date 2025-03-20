@@ -5,7 +5,7 @@
  *)
 
 Require Export stdpp.relations.
-Require Import bedrock.prelude.base.
+Require Import bluerock.prelude.base.
 
 #[global] Instance sc_reflexive `(Reflexive A R) : Reflexive (sc R).
 Proof. intros a. exact: sc_lr. Qed.

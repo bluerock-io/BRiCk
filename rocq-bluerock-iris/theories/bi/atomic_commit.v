@@ -21,9 +21,9 @@
  *)
 Require Import stdpp.coPset stdpp.namespaces.
 Require Export iris.bi.bi iris.bi.updates.
-Require Export bedrock.iris.extra.bi.laterable.
-Require Import bedrock.iris.extra.bi.telescopes.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Export bluerock.iris.extra.bi.laterable.
+Require Import bluerock.iris.extra.bi.telescopes.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Set Default Proof Using "Type".
 
 (** * Atomic commits *)

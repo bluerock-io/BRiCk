@@ -5,11 +5,11 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.lang.cpp.bi.cfractional.
+Require Export bluerock.lang.cpp.bi.cfractional.
 
-Require Import bedrock.iris.extra.bi.prelude.
-Require Import bedrock.iris.extra.bi.observe.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
 #[local] Set Primitive Projections.
 #[local] Set Printing Coercions.

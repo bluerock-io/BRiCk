@@ -5,8 +5,8 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.cpp.bi.split_cfrac.
+Require Import bluerock.prelude.base.
+Require Import bluerock.lang.cpp.bi.split_cfrac.
 
 #[local] Set Printing Coercions.
 

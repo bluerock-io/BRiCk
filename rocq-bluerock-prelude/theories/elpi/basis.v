@@ -9,7 +9,7 @@ Require Import elpi.elpi.
 (*Export this tactic to [typeclass] use sites.*)
 Ltac try_typeclasses_eauto := try typeclasses eauto.
 
-Elpi File bedrock.typeclass.elpi lp:{{
+Elpi File bluerock.typeclass.elpi lp:{{
 
   %% typeclass Db Grafting Done Typeclass Bo
   %% Solve for Bo in (Bo : Typeclass), accumulating Done into Db at Grafting if successful.
@@ -22,7 +22,7 @@ Elpi File bedrock.typeclass.elpi lp:{{
     ].
 }}.
 
-Elpi File bedrock.basis.elpi lp:{{
+Elpi File bluerock.basis.elpi lp:{{
 
   %%% Option utilities
 
@@ -275,7 +275,7 @@ Elpi File bedrock.basis.elpi lp:{{
     coq.say Prefix' Msg L.
   debug _Prefix _Msg _L :- !.
 
-  namespace bedrock {
+  namespace bluerock {
     % get-indt VariantGR Indt: Indt is the body of Inductive type VariantGR.
     % Fails if VariantGR isn't a gref for an inductive, possibly wrapped in a
     % constant.

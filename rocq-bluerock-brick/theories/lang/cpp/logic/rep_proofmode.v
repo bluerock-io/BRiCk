@@ -4,9 +4,9 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Require Import iris.proofmode.classes.
 
 (** * Proof mode instances *)
@@ -24,9 +24,9 @@ proof mode classes. Here's a subset, displayed here for [_at]:
 
 Additional instances are available in
 
-- [bedrock.proofmode.cpp._at_as_Rep]
+- [bluerock.proofmode.cpp._at_as_Rep]
 
-- [bedrock.proofmode.cpp._at_pureR]
+- [bluerock.proofmode.cpp._at_pureR]
 
  *)
 

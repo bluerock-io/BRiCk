@@ -3,15 +3,15 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.initializers.
-Require Import bedrock.prelude.letstar.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.initializers.
+Require Import bluerock.prelude.letstar.
 
 (* BEGIN UPSTREAM *)
 Lemma big_opL_map {PROP : bi} : forall {T U} (g : U -> T) ps (f : nat -> T -> PROP),

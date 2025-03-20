@@ -4,18 +4,18 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import Stdlib.Lists.List.
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.prelude.numbers.
-Require Import bedrock.prelude.bool.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.iris.extra.bi.errors.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.destroy.
-Require Import bedrock.lang.cpp.logic.const.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.prelude.numbers.
+Require Import bluerock.prelude.bool.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.destroy.
+Require Import bluerock.lang.cpp.logic.const.
 
 #[local] Set Printing Coercions.
 

@@ -3,13 +3,13 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.iris.extra.bi.ChargeCompat.
-Require Import bedrock.iris.extra.bi.telescopes.
-Require Import bedrock.lang.cpp.logic.entailsN.
-Require Import bedrock.iris.extra.bi.errors.
-Require Import bedrock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
-Require Import bedrock.lang.cpp.logic.
-Require Import bedrock.lang.cpp.specs.cpp_specs.
+Require Import bluerock.iris.extra.bi.ChargeCompat.
+Require Import bluerock.iris.extra.bi.telescopes.
+Require Import bluerock.lang.cpp.logic.entailsN.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
+Require Import bluerock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.specs.cpp_specs.
 
 #[local] Set Printing Universes.
 #[local] Set Printing Coercions.

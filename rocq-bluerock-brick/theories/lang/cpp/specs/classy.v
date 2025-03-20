@@ -13,10 +13,10 @@
  *)
 
 Require Import iris.bi.bi.
-Require Import bedrock.prelude.bytestring_core.
-Require Export bedrock.iris.extra.proofmode.named_binder.
-Require Import bedrock.iris.extra.bi.only_provable.
-Require Import bedrock.lang.cpp.specs.spec_notations.
+Require Import bluerock.prelude.bytestring_core.
+Require Export bluerock.iris.extra.proofmode.named_binder.
+Require Import bluerock.iris.extra.bi.only_provable.
+Require Import bluerock.lang.cpp.specs.spec_notations.
 
 Section with_prop.
   Context {PROP : bi} {spec_car : Type}.

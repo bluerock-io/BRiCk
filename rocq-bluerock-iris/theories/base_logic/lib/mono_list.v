@@ -17,13 +17,13 @@ It's easy to replace [half] with a fractional ownership.
 Require Import iris.algebra.lib.mono_list.
 
 Require Import iris.base_logic.lib.own. (* for inG *)
-Require Import bedrock.iris.extra.bi.observe.
-Require Import bedrock.iris.extra.bi.only_provable.
-Require Import bedrock.iris.extra.bi.own.
-Require Import bedrock.iris.extra.bi.prop_constraints.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.iris.extra.bi.only_provable.
+Require Import bluerock.iris.extra.bi.own.
+Require Import bluerock.iris.extra.bi.prop_constraints.
 
-Require Import bedrock.iris.extra.bi.spec.knowledge.
-Require Import bedrock.iris.extra.bi.spec.nary_classes.
+Require Import bluerock.iris.extra.bi.spec.knowledge.
+Require Import bluerock.iris.extra.bi.spec.nary_classes.
 
 Require Import iris.proofmode.tactics.
 

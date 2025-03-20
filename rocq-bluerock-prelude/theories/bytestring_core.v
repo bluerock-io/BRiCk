@@ -8,14 +8,14 @@ Require Import Stdlib.NArith.NArith.
 Require Import Stdlib.Structures.OrderedType.
 Require Import Stdlib.micromega.Lia.
 Require Stdlib.Strings.Byte.
-Require Import bedrock.prelude.base.
+Require Import bluerock.prelude.base.
 Import ListNotations.
 
 (** Bytestring core definitions. Depends only on the stdlib, and could in
 principle be upstreamed.
 
 TODO: Some stdpp dependencies have crept in. Move them out, making
-this file compile without <<bedrock.prelude.base>>.
+this file compile without <<bluerock.prelude.base>>.
 *)
 #[local] Set Default Proof Using "Type".
 

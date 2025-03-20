@@ -6,7 +6,7 @@
 
 /** * Options */
 
-accumulate "bedrock.elpi.extra/Program/both/option".	% ../both/option.elpi
+accumulate "bluerock.elpi.extra/Program/both/option".	% ../both/option.elpi
 
 namespace option {
 

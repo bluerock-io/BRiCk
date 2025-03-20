@@ -12,9 +12,9 @@
 
  *)
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.logic.
-Require Import bedrock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.semantics.
 
 Section with_Σ.
   Context `{Σ : cpp_logic}.

@@ -3,10 +3,10 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require bedrock.lang.cpp.syntax.core.
-Require Export bedrock.lang.cpp.syntax.notations.
-Require bedrock.lang.cpp.syntax.name_notation.parser.
-Require bedrock.lang.cpp.syntax.name_notation.printer.
+Require bluerock.lang.cpp.syntax.core.
+Require Export bluerock.lang.cpp.syntax.notations.
+Require bluerock.lang.cpp.syntax.name_notation.parser.
+Require bluerock.lang.cpp.syntax.name_notation.printer.
 
 Bind Scope cpp_name_scope with core.name.
 

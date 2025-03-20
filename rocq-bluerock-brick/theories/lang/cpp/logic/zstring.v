@@ -7,14 +7,14 @@
 Require Import Stdlib.ZArith.BinInt.
 Require Import Stdlib.Lists.List.
 
-Require Import bedrock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.iris.extra.bi.prelude.
-Require Import bedrock.iris.extra.bi.observe.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.logic.arr.
-Require Import bedrock.lang.cpp.logic.heap_pred.
+Require Import bluerock.prelude.base.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.logic.arr.
+Require Import bluerock.lang.cpp.logic.heap_pred.
 
 Import ChargeNotation.
 #[local] Open Scope Z_scope.

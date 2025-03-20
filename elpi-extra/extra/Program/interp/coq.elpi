@@ -6,7 +6,7 @@
 
 /** * Minor extensions to namespace <<coq>> */
 
-accumulate "bedrock.elpi.extra/Program/both/coq".	% ../both/coq.elpi
+accumulate "bluerock.elpi.extra/Program/both/coq".	% ../both/coq.elpi
 
 namespace coq {
 

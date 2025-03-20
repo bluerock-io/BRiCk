@@ -8,12 +8,12 @@ Require Import ssreflect.
 Require Import stdpp.countable.
 
 Require Import elpi.elpi.
-Require Export bedrock.prelude.elpi.derive.common.
-Require Export bedrock.prelude.elpi.derive.eq_dec.
+Require Export bluerock.prelude.elpi.derive.common.
+Require Export bluerock.prelude.elpi.derive.eq_dec.
 
-Require Import bedrock.prelude.elpi.basis.
+Require Import bluerock.prelude.elpi.basis.
 
-Elpi Accumulate derive File bedrock.basis.elpi.
+Elpi Accumulate derive File bluerock.basis.elpi.
 
 (***************************************************
  Countable
@@ -22,7 +22,7 @@ Elpi Db derive.stdpp.countable.db lp:{{
   pred countable o:gref, o:gref.
   pred countable-done o:gref.
 }}.
-Elpi Accumulate derive.stdpp.countable.db File bedrock.typeclass.elpi.
+Elpi Accumulate derive.stdpp.countable.db File bluerock.typeclass.elpi.
 #[superglobal] Elpi Accumulate derive.stdpp.countable.db lp:{{
 
   :name "countable-done.typeclass"
@@ -79,7 +79,7 @@ Elpi File derive.countable.elpi lp:{{
 
     pred mk-countable i:list term, i:string, i:gref, i:gref, o:constant.
     mk-countable Ctors Name VariantGR OrigGR C :- std.do![
-      bedrock.elpi-list->list Ctors CtorList,
+      bluerock.elpi-list->list Ctors CtorList,
       std.assert-ok! (coq.elaborate-skeleton CtorList _ ECtorList) "[mk-countable] failed to elaborate ctors",
       VariantTy = global VariantGR,
       Encode = {{ fun (x : lp:VariantTy) => lp:{{ { to-positive ECtorList {{ x }} VariantTy {{ positive }} } }} }},
@@ -114,7 +114,7 @@ Elpi Accumulate derive lp:{{
   namespace derive.countable {
     pred main i:gref, i:string, o:list prop.
     main TyGR Prefix Clauses :- std.do! [
-      bedrock.get-indt TyGR VariantI,
+      bluerock.get-indt TyGR VariantI,
       derive-original-gref TyGR OrigGR,
       coq.env.indt VariantI _ _ _ _ Ctors _,
       std.map Ctors (c\ c'\ c' = global (indc c)) CTerms,

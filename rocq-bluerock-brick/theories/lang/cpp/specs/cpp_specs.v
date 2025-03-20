@@ -3,13 +3,13 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.prelude.telescopes.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.specs.spec_notations.
-Require Export bedrock.lang.cpp.specs.classy.
+Require Import bluerock.prelude.telescopes.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.specs.spec_notations.
+Require Export bluerock.lang.cpp.specs.classy.
 
-Require Import bedrock.lang.cpp.specs.wp_spec_compat.
+Require Import bluerock.lang.cpp.specs.wp_spec_compat.
 
 Set Printing Universes.
 
@@ -38,7 +38,7 @@ Notation "'\this' this X" := (fun this : ptr => X%pre_spec)
   (at level 10, this ident, X at level 200, only parsing).
 
 (* only needed for examples *)
-Require Import bedrock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.logic.
 
 Section with_Σ.
   Context `{Σ : cpp_logic}.
@@ -106,4 +106,4 @@ Section with_Σ.
 End with_Σ.
 
 Export classy.
-Export bedrock.lang.cpp.specs.wp_spec_compat.
+Export bluerock.lang.cpp.specs.wp_spec_compat.

@@ -1,4 +1,4 @@
 (include_subdirs qualified)
 (coq.theory
- (name bedrock.noimport)
- (theories bedrock.prelude bedrock.iris.extra bedrock.lang.cpp iris stdpp))
+ (name bluerock.noimport)
+ (theories bluerock.prelude bluerock.iris.extra bluerock.lang.cpp iris stdpp))

@@ -5,18 +5,18 @@
  *)
 
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.iris.extra.proofmode.proofmode.
-Require Import bedrock.iris.extra.bi.errors.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.const.
-Require Import bedrock.lang.cpp.logic.dispatch.
-Require Import bedrock.lang.cpp.logic.layout.
-Require Import bedrock.lang.cpp.logic.arr.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.const.
+Require Import bluerock.lang.cpp.logic.dispatch.
+Require Import bluerock.lang.cpp.logic.layout.
+Require Import bluerock.lang.cpp.logic.arr.
 
 #[local] Set Printing Coercions.
 #[local] Infix "|--" := bi_entails.

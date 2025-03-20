@@ -19,7 +19,7 @@
  *)
 
 Require Export stdpp.fin_maps.
-Require Import bedrock.prelude.base.
+Require Import bluerock.prelude.base.
 
 (* TODO upstream to stdpp. *)
 Section fin_maps.

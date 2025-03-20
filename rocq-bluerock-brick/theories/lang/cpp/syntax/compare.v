@@ -4,13 +4,13 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.compare.
-Require Import bedrock.prelude.pstring.
-Require Import bedrock.lang.cpp.syntax.prelude.
-Require Import bedrock.lang.cpp.syntax.preliminary.
-Require Import bedrock.lang.cpp.syntax.overloadable.
-Require Import bedrock.lang.cpp.syntax.literal_string.
-Require Import bedrock.lang.cpp.syntax.core.
+Require Import bluerock.prelude.compare.
+Require Import bluerock.prelude.pstring.
+Require Import bluerock.lang.cpp.syntax.prelude.
+Require Import bluerock.lang.cpp.syntax.preliminary.
+Require Import bluerock.lang.cpp.syntax.overloadable.
+Require Import bluerock.lang.cpp.syntax.literal_string.
+Require Import bluerock.lang.cpp.syntax.core.
 Require Stdlib.Numbers.Cyclic.Int63.PrimInt63.
 
 #[local] Set Primitive Projections.

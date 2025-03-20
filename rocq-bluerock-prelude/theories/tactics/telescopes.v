@@ -5,7 +5,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.telescopes.
+Require Import bluerock.prelude.telescopes.
 
 (** * Telescopes *)
 (**

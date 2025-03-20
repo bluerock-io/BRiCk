@@ -4,10 +4,10 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Export
-        bedrock.lang.cpp.syntax
-        bedrock.lang.cpp.semantics
-        bedrock.lang.cpp.parser
-        bedrock.lang.cpp.logic.
+        bluerock.lang.cpp.syntax
+        bluerock.lang.cpp.semantics
+        bluerock.lang.cpp.parser
+        bluerock.lang.cpp.logic.
 Require Export
-        bedrock.lang.cpp.primitives
-        bedrock.lang.cpp.specs.
+        bluerock.lang.cpp.primitives
+        bluerock.lang.cpp.specs.

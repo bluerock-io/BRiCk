@@ -5,10 +5,10 @@
  *)
 
 Require Import stdpp.fin_map_dom.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.list_numbers.
-Require Import bedrock.prelude.fin_maps.
-Require Import bedrock.prelude.fin_sets.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.list_numbers.
+Require Import bluerock.prelude.fin_maps.
+Require Import bluerock.prelude.fin_sets.
 Section fin_map_dom.
   Context `{FinMapDom K M D}.
   Context {A : Type}.

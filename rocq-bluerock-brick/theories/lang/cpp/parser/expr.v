@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.syntax.types(drop_qualifiers).
-Require Import bedrock.lang.cpp.parser.prelude.
-Require Import bedrock.lang.cpp.parser.lang.
+Require Import bluerock.lang.cpp.syntax.types(drop_qualifiers).
+Require Import bluerock.lang.cpp.parser.prelude.
+Require Import bluerock.lang.cpp.parser.lang.
 
 #[local] Arguments force_some _ {_} : assert.	(** TODO: Upstream? *)
 
