@@ -4,19 +4,19 @@ Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.
 
   Fail Goal forall this : ptr,
-      this ,, _field "foo" |-> anyR "int" (cQp.m 1) |-- emp.
+      this ,, _field "foo" |-> anyR "int" 1$m |-- emp.
 
   Fail Goal forall this : ptr,
-      this ., "foo" |-> anyR "int" (cQp.m 1) |-- emp.
+      this ., "foo" |-> anyR "int" 1$m |-- emp.
 
   Goal forall this : ptr,
-      this ,, _field "C::foo" |-> anyR "int" (cQp.m 1) |-- emp.
+      this ,, _field "C::foo" |-> anyR "int" 1$m |-- emp.
   Proof.
     Show.
   Abort.
 
   Goal forall this : ptr,
-      this ., "C::foo" |-> anyR "int" (cQp.m 1) |-- emp.
+      this ., "C::foo" |-> anyR "int" 1$m |-- emp.
   Proof.
     Show.
   Abort.

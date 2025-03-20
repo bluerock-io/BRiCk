@@ -153,7 +153,7 @@ End KP.
 
 Definition Kreturn_inner `{Σ : cpp_logic, σ : genv} (Q : ptr -> mpred) (rt : ReturnType) : mpred :=
   match rt with
-  | Normal | ReturnVoid => Forall p : ptr, p |-> primR Tvoid (cQp.mut 1) Vvoid -* Q p
+  | Normal | ReturnVoid => Forall p : ptr, p |-> primR Tvoid 1$m Vvoid -* Q p
   | ReturnVal p => Q p
   | _ => False
   end.

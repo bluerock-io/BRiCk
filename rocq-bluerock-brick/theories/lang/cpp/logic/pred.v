@@ -419,7 +419,7 @@ Module Type CPP_LOGIC
         placement [new] over an existing object.
      *)
     Axiom mdc_path_forget : forall σ mdc this p,
-        mdc_path (σ:=σ) this mdc (cQp.m 1) p |-- |={↑pred_ns}=> mdc_path (σ:=σ) this nil (cQp.m 1) p.
+        mdc_path (σ:=σ) this mdc 1$m p |-- |={↑pred_ns}=> mdc_path (σ:=σ) this nil 1$m p.
 
   End with_cpp_logic.
 
