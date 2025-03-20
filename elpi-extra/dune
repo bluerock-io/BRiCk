@@ -1,7 +1,7 @@
 (env
  (_
   (binaries
-   (../rocq-tools/bin/coqc_perf.exe as coqc)
-   (../rocq-tools/bin/coqdep_werr.exe as coqdep))
+   (../rocq-tools/bin/coqc_perf.exe as coqc))
   (coq
+   (coqdep_flags :standard -w +all)
    (flags (:standard %{read-lines:../flags/coqc})))))

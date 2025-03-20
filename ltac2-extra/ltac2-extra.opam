@@ -9,7 +9,7 @@ license: "LicenseRef-BedRock"
 homepage: "https://github.com/bedrocksystems/cpp2v"
 bug-reports: "https://github.com/bedrocksystems/cpp2v/issues"
 depends: [
-  "dune" {>= "3.16"}
+  "dune" {>= "3.17"}
   "coq-core"
   "stdlib-extra"
   "coq-stdlib"
