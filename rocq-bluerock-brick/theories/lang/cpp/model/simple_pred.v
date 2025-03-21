@@ -279,7 +279,7 @@ Module SimpleCPP.
     Theorem not_strictly_valid_ptr_nullptr : strict_valid_ptr nullptr |-- False.
     Proof.
       iDestruct 1 as "[[_ %]|H] /="; first done.
-      iDestruct "H" as (?????) "(_ & _ & _ & %Hne)".
+      by iDestruct "H" as (?????) "(_ & _ & _ & %Hne)".
     Qed.
     Typeclasses Opaque _valid_ptr.
 

@@ -304,7 +304,6 @@ Module Type PTRS.
   (** [eval_offset] and associated axioms are more advanced, only to be used
   in special cases. *)
   (* TODO drop [genv]. *)
-  (* TODO change Z to N *)
   Parameter eval_offset : genv -> offset -> option Z.
 
   Axiom eval_o_sub : forall σ ty (i : Z),

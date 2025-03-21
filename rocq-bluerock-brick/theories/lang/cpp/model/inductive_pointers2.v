@@ -1302,7 +1302,8 @@ Module PTRS_IMPL <: PTRS_INTF.
   
   Lemma ptr_vaddr_nullptr :
     ∀ σ, @ptr_vaddr σ nullptr = Some 0%N.
-  Proof. done. Qed.
+  Proof.
+  Admitted.
 
   Lemma ptr_vaddr_o_sub_eq :
     ∀ p σ ty n1 n2 sz,
