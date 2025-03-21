@@ -5,12 +5,9 @@
  *)
 
 (**
-Another (incomplete) consistency proof for [PTRS], based on Krebbers' PhD thesis, and
-other formal models of C++ using structured pointers.
-This is more complex than [SIMPLE_PTRS_IMPL], but will be necessary to justify [VALID_PTR_AXIOMS].
-
-In this model, all valid pointers have an address pinned, but this is not meant
-to be guaranteed.
+A mostly-complete consistency proof for [PTRS] base upon [inductive_ptrs.v]. The main
+difference is that this file defines offset normalization as a string-rewrite system
+instead of using a Coq function.
 *)
 
 Require Import stdpp.relations.
