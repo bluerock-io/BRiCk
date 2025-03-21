@@ -31,17 +31,28 @@ Module PArray.
       fix go n i acc {struct n} :=
         match n with
         | O => acc
-        | S n => go n (i + 1)%uint63 (PArray.get a i :: acc)
+        | S n => go n (i - 1)%uint63 (PArray.get a i :: acc)
         end.
 
     #[local]
     Lemma to_list_aux_P a : forall n i acc,
-      to_list_aux a n i acc = (List.map (fun i => PArray.get a i) (List.rev (seq_int i n))) ++ acc.
+      to_list_aux a n i acc = List.map (fun i => PArray.get a i) (seq_int (i + 1 - of_nat n) n) ++ acc.
     Proof.
       elim => [//|n IHn] i acc.
-      simpl. rewrite {}IHn.
-      rewrite map_app -!app_assoc.
+      cbn. rewrite {}IHn.
+      rewrite app_comm_cons.
+      rewrite cons_middle.
+      rewrite app_assoc.
       f_equal.
+      have ->: (i + 1 - of_nat (S n) = i - of_nat n)%uint63 by lia.
+      have ->: (i - 1 + 1 - of_nat n = i - of_nat n)%uint63 by lia.
+      clear -n. revert i.
+      induction n => i.
+      - subst. cbn. repeat f_equal. lia.
+      - cbn. f_equal.
+        move: IHn => /(_ i).
+        have ->: (i - of_nat (S n) + 1 = i - of_nat n)%uint63 by lia.
+        done.
     Qed.
 
     (** *** Array -> List *)
@@ -49,7 +60,7 @@ Module PArray.
     (** Converts the array to a list dropping the default element. *)
     Definition to_list (a : array A) : list A  :=
       let len := PArray.length a in
-      to_list_aux a (Z.to_nat (Uint63.to_Z len)) 0%uint63 [].
+      to_list_aux a (Z.to_nat (Uint63.to_Z len)) (len - 1)%uint63 [].
 
     (** Convert an array to a list including the default element of
         the array as the first element of the list.
@@ -58,14 +69,15 @@ Module PArray.
       PArray.default a :: to_list a.
 
     Lemma to_list_P a :
-      to_list a = (List.map (fun i => PArray.get a i) (List.rev (seq_int 0 (Z.to_nat (to_Z (PArray.length a)))))).
+      to_list a = (List.map (fun i => PArray.get a i) (seq_int 0 (Z.to_nat (to_Z (PArray.length a))))).
     Proof.
       unfold to_list.
-      by rewrite to_list_aux_P app_nil_r.
+      rewrite to_list_aux_P app_nil_r.
+      repeat f_equal. lia.
     Qed.
 
     Lemma to_list_with_def_P a :
-      to_list_with_def a = PArray.default a :: (List.map (fun i => PArray.get a i) (List.rev (seq_int 0 (Z.to_nat (to_Z (PArray.length a)))))).
+      to_list_with_def a = PArray.default a :: (List.map (fun i => PArray.get a i) (seq_int 0 (Z.to_nat (to_Z (PArray.length a))))).
     Proof.
       unfold to_list_with_def.
       repeat f_equal. apply to_list_P.
@@ -76,12 +88,13 @@ Module PArray.
     Fixpoint of_list_aux l i a {struct l} :=
       match l with
       | x :: l =>
-          let i := (i - 1)%uint63 in
-          of_list_aux l i (PArray.set a i x)
+          let a := PArray.set a i x in
+          let i := (i + 1)%uint63 in
+          of_list_aux l i a
       | [] => a
       end.
 
-    Lemma of_list_aux_length : forall l i a,
+    Lemma length_of_list_aux : forall l i a,
           length (of_list_aux l i a) = length a.
     Proof.
       elim => [|x l IHl] i a.
@@ -89,7 +102,7 @@ Module PArray.
       - by rewrite IHl length_set.
     Qed.
 
-    Lemma of_list_aux_default : forall l i a,
+    Lemma default_of_list_aux : forall l i a,
           default (of_list_aux l i a) = default a.
     Proof.
       elim => [|x l IHl] i a.
@@ -102,45 +115,133 @@ Module PArray.
       nth n (x :: xs) d = nth (Nat.pred n) xs d.
     Proof. elim: n x xs => [|n IHn] x xs //=. Qed.
 
-    Lemma of_list_aux_P : forall l a i,
-        (List.length l <= to_Z (length a))%Z ->
-        i = of_Z (List.length l) ->
-        forall j,
-          (of_list_aux l i a).[j] =
-            if decide (0 <= to_Z j < (List.length l))%Z then
-              List.nth ((Nat.pred (List.length l)) - Z.to_nat (to_Z j)) l a.[j]
-            else
-              a.[j]
-    .
+    Lemma get_of_list_aux {j} : forall l a i,
+      (Z.of_nat (List.length l) <= to_Z (PArray.length a)) ->
+      (to_Z i + Z.of_nat (List.length l) <= to_Z $ PArray.length a)%Z ->
+      (of_list_aux l i a).[j] =
+        if (i <=? j)%uint63 && (j <? i + of_nat (List.length l))%uint63 then
+          List.nth (to_nat j - to_nat i) l a.[j]
+        else
+          a.[j].
     Proof.
-      elim => [|x l IHl] a i Hl -> j.
-      - simpl. case_decide; last done. done.
-      - simpl in Hl. cbn [of_list_aux].
-        have /leb_spec Hl2:= leb_length a.
-        cbn [List.length].
-        have ->: (of_Z (S (List.length l)) - 1 = of_Z (List.length l))%uint63 by lia.
-        rewrite {}IHl; [|rewrite length_set; lia|lia].
-        have [H|[H|H]] := Ztrichotomy (to_Z j) (List.length l);
-          (case_decide as H1; (try lia); []; case_decide as H2; try lia; []).
-        + rewrite nth_cons; [|lia].
-          rewrite get_set_other; [|lia].
-          f_equal. lia.
-        + rewrite -H in H1 H2 |- *.
-          rewrite of_to_Z get_set_same; [|lia].
-          rewrite [x in nth x](_ : _ = O); [done|lia].
-        + rewrite get_set_other; [done|lia].
+      elim => [|x l IHl] a i; cbn -[nth] => Hl Hi.
+      - by cbn; repeat first [case_decide|case_match].
+      - opose proof * (IHl a.[i<-x] (i + 1)%uint63) as IHl; [rewrite length_set; lia..|].
+        rewrite {}IHl.
+        repeat first [case_decide|case_match];
+        repeat lazymatch goal with
+          | H : _ && _ = true |- _ => apply andb_true_iff in H; destruct H
+          | H : _ && _ = false |- _ => apply andb_false_iff in H; destruct H
+          end.
+        all: try (rewrite !get_set_other; [try first [done|lia]|lia]).
+        + have ->: (to_nat j - to_nat i = S (to_nat j - to_nat (i + 1)))%nat by lia.
+          by rewrite nth_cons.
+        + have ?: i = j by lia. subst.
+          rewrite get_set_same; [|lia].
+          have ->: (to_nat j - to_nat j = 0)%nat by lia.
+          done.
     Qed.
 
     Definition of_list (default : A) (l : list A) : array A :=
       let len := of_nat (List.length l) in
       let a := PArray.make len default in
-      of_list_aux l len a.
+      of_list_aux l 0 a.
+
+    Lemma length_of_list default l :
+      (List.length l <= to_Z max_length)%Z ->
+      length (of_list default l) = of_nat (List.length l).
+    Proof.
+      intros ?.
+      rewrite length_of_list_aux length_make.
+      case_match; lia.
+    Qed.
+
+    Lemma default_of_list def l :
+      default (of_list def l) = def.
+    Proof.
+      by rewrite /of_list default_of_list_aux default_make.
+    Qed.
+
+    Lemma get_of_list def l i:
+      (List.length l <= to_Z max_length)%Z ->
+      get (of_list def l) i = nth (to_nat i) l def.
+    Proof.
+      intros ?.
+      rewrite /of_list get_of_list_aux; last 2 first.
+      { rewrite length_make. case_match; lia. }
+      { rewrite length_make. case_match; lia. }
+      rewrite get_make.
+      case_match;
+        repeat lazymatch goal with
+          | H : _ && _ = true |- _ => apply andb_true_iff in H; destruct H
+          | H : _ && _ = false |- _ => apply andb_false_iff in H; destruct H
+          end.
+      - f_equal; lia.
+      - lia.
+      - rewrite nth_overflow; [done|lia].
+    Qed.
 
     Definition of_list_with_def (l : list A) : option (array A) :=
       match l with
       | default :: l => Some (of_list default l)
       | _ => None
       end.
+
+    Lemma length_of_list_with_def l a:
+      (List.length l <= to_Z max_length)%Z ->
+      of_list_with_def l = Some a ->
+      length a = (of_nat (List.length l) - 1)%uint63.
+    Proof.
+      intros Hl.
+      destruct l; cbn in *; [done|] => [[<-]].
+      rewrite length_of_list; lia.
+    Qed.
+
+    Lemma default_of_list_with_def l a:
+      of_list_with_def l = Some a ->
+      default a = nth 0 l (default a).
+    Proof.
+      destruct l; cbn in *; [done|] => [[<-]].
+      by rewrite default_of_list.
+    Qed.
+
+    Lemma get_of_list_with_def l a i:
+      of_list_with_def l = Some a ->
+      (List.length l <= to_Z max_length)%Z ->
+      get a i = nth (S (to_nat i)) l (default a).
+    Proof.
+      destruct l; cbn -[nth] in *; [done|] => [[<-]] ?.
+      rewrite get_of_list; [|lia].
+      by rewrite default_of_list.
+    Qed.
+
+
+    (* Round trip *)
+    Lemma to_of_list def l :
+      (List.length l <= to_Z max_length)%Z ->
+      to_list (of_list def l) = l.
+    Proof.
+      intros.
+      have Hl: List.length (to_list (of_list def l)) = List.length l.
+      { rewrite to_list_P length_map seq_int_length length_of_list; lia. }
+      apply: (nth_ext _ _ def def); [done|].
+      rewrite Hl.
+      move Hn: (List.length l) Hl H => n Hl H.
+      intros i Hi.
+      rewrite to_list_P.
+      pose p := get (of_list def l).
+      rewrite -/p.
+      have {2}->: def = p (of_nat n).
+      { rewrite /p get_out_of_bounds ?default_of_list // length_of_list; lia. }
+      rewrite map_nth.
+      rewrite length_of_list; [|lia]. rewrite Hn.
+      rewrite seq_int_nth /p.
+      rewrite get_of_list; [|lia].
+      case_decide.
+      { repeat f_equal. lia. }
+      { by rewrite !nth_overflow; [|lia..]. }
+    Qed.
+
   End Lists.
 
 
