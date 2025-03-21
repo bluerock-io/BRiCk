@@ -1282,7 +1282,7 @@ Module PTRS_IMPL <: PTRS_INTF.
         | alloc_ptr_ aid va => va
         end in
         match o with
-        | Z0 => Some 0%N
+        | Z0 => Some c
         | Z.pos o => Some (c + Npos o)%N
         | _ => None
         end
