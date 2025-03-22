@@ -6,10 +6,10 @@
 
 (package
  (name tc-db-info-plugin)
- (synopsis "TODO")
+ (synopsis "Plugin for analyzing hint databases")
  (depends coq-core))
 
 (package
  (name tc-db-info)
- (synopsis "TODO")
+ (synopsis "Tools for analyzing hint databases")
  (depends coq-stdlib tc-db-info-plugin))
