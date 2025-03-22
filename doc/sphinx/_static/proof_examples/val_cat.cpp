@@ -1,5 +1,5 @@
 /*
- * Copyright (C) BedRock Systems Inc. 2019 Gregory Malecha
+ * Copyright (C) BlueRock Security, Inc. 2019 Gregory Malecha
  *
  * SPDX-License-Identifier:MIT-0
  */
