@@ -14,8 +14,8 @@ authors: [
   "Rodolphe Lepigre <rodolphe@bluerock.io>"
 ]
 license: "LGPL-2.1-only"
-homepage: "https://github.com/bedrocksystems/BRiCk"
-bug-reports: "https://github.com/bedrocksystems/BRiCk/issues"
+homepage: "https://github.com/bluerock-io/BRiCk"
+bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [
   "dune" {>= "3.14"}
   "coq-stdpp" {>= "dev.2024-02-09.0.cafd7113"}
@@ -35,4 +35,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/bedrocksystems/BRiCk.git"
+dev-repo: "git+https://github.com/bluerock-io/BRiCk.git"
