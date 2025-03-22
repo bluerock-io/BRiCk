@@ -18,7 +18,7 @@ Register translation_unit.decls as bluerock.lang.cpp.parser.translation_unit.dec
 Definition empty_array := PArray.make 0%uint63 parser.translation_unit._skip.
 Register empty_array as bluerock.lang.cpp.parser.translation_unit.empty_array.
 
-Definition result_type : Type := translation_unit * list name.
+Definition result_type : Type := translation_unit * parser.translation_unit.dup_info.
 Register result_type as bluerock.lang.cpp.parser.translation_unit.result_type.
 
 Declare ML Module "rocq-bluerock-brick.plugin".

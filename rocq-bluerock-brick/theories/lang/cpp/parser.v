@@ -39,11 +39,12 @@ Module Import translation_unit.
 
   #[global] Instance raw_structured_insert : forall {T}, Insert globname T (NM.Raw.t T) := _.
 
+  Definition dup_info := list (name * (GlobDecl + ObjValue)).
   (** This representation is isomorphic to [translation_unit * list name] as shown by [decls]. *)
   Definition t : Type :=
-    raw_symbol_table -> raw_type_table -> list name ->
-    (raw_symbol_table -> raw_type_table -> list name -> translation_unit * list name) ->
-    translation_unit * list name.
+    raw_symbol_table -> raw_type_table -> dup_info ->
+    (raw_symbol_table -> raw_type_table -> dup_info -> translation_unit * dup_info) ->
+    translation_unit * dup_info.
 
   Definition merge_obj_value (a b : ObjValue) : option ObjValue :=
     if sub_module.ObjValue_le a b then
@@ -58,7 +59,7 @@ Module Import translation_unit.
       | None => k (<[n := v]> s) t dups
       | Some v' => match merge_obj_value v v' with
                   | Some v => k (<[n:=v]> s) t dups
-                  | None => k s t (n :: dups)
+                  | None => k s t ((n, inr v) :: (n, inr v') :: dups)
                   end
       end.
   Definition merge_glob_decl (a b : GlobDecl) : option GlobDecl :=
@@ -84,7 +85,7 @@ Module Import translation_unit.
         | None => k s (<[n := v]> t) dups
         | Some v' => match merge_glob_decl v v' with
                     | Some v => k s (<[n:=v]> t) dups
-                    | None => k s t (n :: dups)
+                    | None => k s t ((n, inl v) :: (n, inl v') :: dups)
                     end
         end.
 
@@ -111,7 +112,7 @@ Module Import translation_unit.
       (Z.to_nat (Uint63.to_Z (PArray.length ds))) 0%uint63
       (fun s t dups k => k s t dups).
 
-  Definition decls (ds : PArray.array t) (e : abi_type) : translation_unit * list name :=
+  Definition decls (ds : PArray.array t) (e : abi_type) : translation_unit * dup_info :=
     decls' ds ∅ ∅ [] $ fun s t => pair {|
       symbols := NM.from_raw s;
       types := NM.from_raw t;
