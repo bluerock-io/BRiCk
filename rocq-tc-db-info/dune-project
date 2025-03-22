@@ -10,7 +10,7 @@
 (authors
  "Jan-Oliver Kaiser <janno@bluerock.io>")
 
-(source (github bluerock-io/BRiCk)
+(source (github bluerock-io/BRiCk))
 
 (license LicenseRef-Bedrock)
 
