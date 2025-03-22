@@ -69,17 +69,26 @@ let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_e
     let rt = force_body (decl_of_ref "result_type") in
     Vnorm.cbv_vm env evd body (EConstr.of_constr rt)
   in
+  (* The term should have type <<translation_unit.t * dup_info>>
+     where <<dup_info>> is a list.
+   *)
   match EConstr.kind evd body with
-  | Constr.App (_, [| _ ; _ ; body ; err |]) ->
-    begin
+  | Constr.App (hd, [| _ ; _ ; body ; err |]) when EConstr.isConstruct evd hd ->
+    let _ =
       match EConstr.kind evd err with
-      | Constr.App (_, [| _ |]) ->
-        let cinfo = Declare.CInfo.make ~name ~typ:None () in
-        let info = Declare.Info.make () in
-        let _ =
-          Declare.declare_definition ~info ~cinfo ~opaque:false ~body evd
-        in
+      | Constr.App (hd, [| _ |]) when EConstr.isConstruct evd hd ->
+        (* This is matching for [nil] *)
         ()
-      | _ -> assert false
-    end
-  | _ -> assert false
+      | _ ->
+        (* TODO: it probably makes sense for this to be a fatal error *)
+        Feedback.msg_warning Pp.(str "Duplicate symbols found!" ++ Printer.pr_econstr_env env evd err)
+    in
+    let cinfo = Declare.CInfo.make ~name ~typ:None () in
+    let info = Declare.Info.make () in
+    let _ =
+      Declare.declare_definition ~info ~cinfo ~opaque:false ~body evd
+    in
+    ()
+  | _ ->
+    CErrors.user_err Pp.(str "cpp.prog failed to return a head constructor. Please report!" ++ fnl () ++
+                        Printer.pr_econstr_env env evd body)
