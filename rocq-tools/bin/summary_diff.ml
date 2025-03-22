@@ -16,7 +16,7 @@
  *)
 
 (*
- * Copyright (C) BlueRock Security, Inc. 2022
+ * Copyright (C) 2022 BlueRock Security, Inc.
  *)
 
 (** Short name for a standard formatter. *)
