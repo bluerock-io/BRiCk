@@ -8,7 +8,7 @@
 # General information about the project.
 project = 'BlueRock BRiCk'
 copyright = '2021-24 BlueRock Security'
-author = 'Jasper Haag'
+author = 'The BlueRock FM Team'
 
 version = "0.5.0"
 release = "alpha"

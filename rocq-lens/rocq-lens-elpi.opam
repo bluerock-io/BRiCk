@@ -10,8 +10,8 @@ authors: [
   "Paolo Giarrusso <paolo@bluerock.io>"
 ]
 license: "LGPL-2.1-or-later"
-homepage: "https://github.com/bedrocksystems/BRiCk"
-bug-reports: "https://github.com/bedrocksystems/BRiCk/issues"
+homepage: "https://github.com/bluerock-io/BRiCk"
+bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [
   "dune" {>= "3.14"}
   "rocq-lens"
@@ -32,4 +32,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/bedrocksystems/BRiCk.git"
+dev-repo: "git+https://github.com/bluerock-io/BRiCk.git"

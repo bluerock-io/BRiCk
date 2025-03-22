@@ -12,7 +12,7 @@
 
 (license LGPL-2.1-only)
 
-(source (github bedrocksystems/cpp2v))
+(source (github bluerock-io/BRiCk))
 
 (package
  (name rocq-tools)

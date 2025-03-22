@@ -26,7 +26,7 @@
 
 (license LicenseRef-BedRock)
 
-(source (github bedrocksystems/cpp2v))
+(source (github bluerock-io/BRiCk))
 
 (package
  (name rocq-bluerock-iris)
