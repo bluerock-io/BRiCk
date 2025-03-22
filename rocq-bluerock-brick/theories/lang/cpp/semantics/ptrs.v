@@ -386,6 +386,28 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   #[global] Instance offset_cong_equiv {σ : genv} : RelationClasses.PER (offset_cong σ).
   Proof. apply same_property_per. Qed.
 
+  Lemma offset_cong_partial_reflexive σ o :
+    is_Some (eval_offset σ o) ->
+    offset_cong σ o o.
+  Proof. by move /same_property_reflexive_equiv. Qed.
+
+  Lemma offset_cong_offset2 {σ o1 o2 o3 o4} :
+    offset_cong σ o1 o2 ->
+    offset_cong σ o3 o4 ->
+    offset_cong σ (o1 ,, o3) (o2 ,, o4).
+  Proof.
+    rewrite /offset_cong !same_property_iff.
+    move => [z] [Ho1 Ho2] [z'] [Ho3 Ho4].
+    rewrite !eval_offset_dot Ho1 Ho2 Ho3 Ho4 /=. eauto.
+  Qed.
+
+  Lemma offset_cong_offset {σ o1 o2 o} :
+    is_Some (eval_offset σ o) ->
+    offset_cong σ o1 o2 ->
+    offset_cong σ (o1 ,, o) (o2 ,, o).
+  Proof. intros. exact /offset_cong_offset2 /offset_cong_partial_reflexive. Qed.
+
+
   (** ** [ptr] Congruence
 
      [ptr_cong σ p1 p2] expresses that [p1] and [p2] share a common [ptr] prefix and that
@@ -428,6 +450,32 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Lemma offset_ptr_cong σ (p : ptr) o1 o2 :
     offset_cong σ o1 o2 -> ptr_cong σ (p ,, o1) (p ,, o2).
   Proof. rewrite /ptr_cong. naive_solver. Qed.
+
+  Lemma ptr_cong_offset2 {σ p1 p2 o1 o2} :
+    offset_cong σ o1 o2 ->
+    ptr_cong σ p1 p2 ->
+    ptr_cong σ (p1 ,, o1) (p2 ,, o2).
+  Proof.
+    move => Ho12 [p] [o3] [o4] [->] [->] Ho34.
+    rewrite -!offset_ptr_dot; eexists _, _, _; split_and! => //.
+    exact: (offset_cong_offset2 Ho34 Ho12).
+  Qed.
+
+  Lemma ptr_cong_offset {σ p1 p2 o} :
+    is_Some (eval_offset σ o) ->
+    ptr_cong σ p1 p2 ->
+    ptr_cong σ (p1 ,, o) (p2 ,, o).
+  Proof. intros. apply /ptr_cong_offset2 => //. exact: offset_cong_partial_reflexive. Qed.
+
+  Lemma ptr_cong_o_sub {σ p1 p2 ty i} :
+    is_Some (size_of σ ty) ->
+    ptr_cong σ p1 p2 ->
+    ptr_cong σ (p1 .[ ty ! i ]) (p2 ,, .[ ty ! i ]).
+  Proof.
+    intros [sz Hsz].
+    apply: ptr_cong_offset => //.
+    by rewrite eval_o_sub /= Hsz.
+  Qed.
 
   (** ** [same_address] lemmas *)
 

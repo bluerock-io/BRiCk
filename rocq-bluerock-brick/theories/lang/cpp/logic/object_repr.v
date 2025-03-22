@@ -115,15 +115,7 @@ Section rawsR_transport.
           iDestruct "tptrs" as "#[tptr' tptrs]".
 
           iApply (IHrs with "[tptrs]"); iFrame "#∗".
-          unfold ptr_congP, ptr_cong; iPureIntro.
-          destruct H as [p [o1 [o2 [Ho1 [Ho2 Hoffset_cong]]]]]; subst.
-          exists p, (o1 .[ Tbyte ! 1 ]), (o2 .[ Tbyte ! 1 ]).
-          rewrite ?offset_ptr_dot; intuition.
-          unfold offset_cong in *.
-          apply option.same_property_iff in Hoffset_cong as [? [Ho1 Ho2]].
-          apply option.same_property_iff.
-          rewrite !eval_offset_dot !eval_o_sub Ho1 Ho2 /=.
-          by eauto.
+          iPureIntro. exact: ptr_cong_o_sub.
   Qed.
 End rawsR_transport.
 
@@ -656,15 +648,7 @@ Section blockR_transport.
           -- iFrame "tptrs tptrs'"; unfold ptr_congP.
              iDestruct "cong" as "(%Hcong & _ & _)".
              iSplitR.
-             ++ iPureIntro; unfold ptr_cong in *.
-                destruct Hcong as [p'' [o1 [o2 [-> [-> Hcong]]]]].
-                exists p'', (o1 .[ Tbyte ! 1%N ]), (o2 .[ Tbyte ! 1%N ]).
-                rewrite !offset_ptr_dot; intuition.
-                unfold offset_cong in *.
-                rewrite -> option.same_property_iff in *.
-                destruct Hcong as [z [Ho1 Ho2]].
-                exists (z + 1)%Z; rewrite !eval_offset_dot !eval_o_sub.
-                by rewrite Ho1 Ho2//=.
+             ++ iPureIntro. exact: ptr_cong_o_sub.
              ++ iSplitL "tptrs"; destruct sz' using N.peano_ind; try lia;
                   rewrite seqN_S_start/= o_sub_0; eauto; rewrite !offset_ptr_id.
                 ** by iDestruct "tptrs" as "[$ _]".
