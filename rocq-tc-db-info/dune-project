@@ -4,6 +4,16 @@
 
 (generate_opam_files)
 
+(maintainers
+  "Jan-Oliver Kaiser <janno@bluerock.io>")
+
+(authors
+ "Jan-Oliver Kaiser <janno@bluerock.io>")
+
+(source (github bluerock-io/BRiCk)
+
+(license LicenseRef-Bedrock)
+
 (package
  (name tc-db-info-plugin)
  (synopsis "Plugin for analyzing hint databases")
