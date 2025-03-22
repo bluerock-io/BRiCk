@@ -318,10 +318,12 @@ Module Type PTRS.
     st.(s_layout) = POD \/ st.(s_layout) = Standard ->
     eval_offset σ (o_field σ f) = offset_of σ cls n.
 
-  (* [eval_offset] respects the monoidal structure of [offset]s *)
+  (* [eval_offset] respects the monoidal structure of [offset]s _for well-defined offsets_. *)
   Axiom eval_offset_dot : ∀ σ (o1 o2 : offset),
-    eval_offset σ (o1 ,, o2) =
-    add_opt (eval_offset σ o1) (eval_offset σ o2).
+    ∀ s1 s2,
+      eval_offset σ o1 = Some s1 ->
+      eval_offset σ o2 = Some s2 ->
+      eval_offset σ (o1 ,, o2) = Some (s1 + s2).
 End PTRS.
 
 Module Type PTRS_DERIVED (Import P : PTRS).
@@ -398,7 +400,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Proof.
     rewrite /offset_cong !same_property_iff.
     move => [z] [Ho1 Ho2] [z'] [Ho3 Ho4].
-    rewrite !eval_offset_dot Ho1 Ho2 Ho3 Ho4 /=. eauto.
+    rewrite !(eval_offset_dot _ _ _ z z') //. eauto.
   Qed.
 
   Lemma offset_cong_offset {σ o1 o2 o} :

@@ -507,32 +507,12 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   #[local] Ltac UNFOLD_dot := rewrite _dot.unlock/DOT_dot/=.
 
-  (* [eval_offset] respects the monoidal structure of [offset]s *)
   Lemma eval_offset_dot : ∀ σ (o1 o2 : offset),
-    eval_offset σ (o1 ,, o2) =
-    add_opt (eval_offset σ o1) (eval_offset σ o2).
-  Proof.
-    intros **; UNFOLD_dot.
-    destruct o1 as [[] ?]; destruct o2 as [[] ?]=> //=.
-    - unfold __o_dot, raw_offset_merge, raw_offset_collapse; simpl.
-      unfold eval_offset, eval_raw_offset; simpl.
-      unfold raw_offset_wf, raw_offset_collapse in r0; simpl in r0.
-      rewrite r0/=.
-      destruct (eval_offset_seg o);
-        destruct (foldr (liftM2 Z.add) (Some 0) (map eval_offset_seg l))=> //.
-    - rewrite __o_dot_nil_r.
-      unfold eval_offset, eval_raw_offset=> /=.
-      destruct (liftM2 Z.add (eval_offset_seg o)
-                       (foldr (liftM2 Z.add) (Some 0) (map eval_offset_seg l)))=> //.
-      unfold add_opt; simpl.
-      by rewrite Z.add_0_r.
-    - unfold __o_dot, raw_offset_merge, raw_offset_collapse, eval_offset, eval_raw_offset.
-      unfold proj1_sig; rewrite foldr_app.
-      unfold raw_offset_wf, raw_offset_collapse in *.
-      rewrite !foldr_fmap.
-      rewrite r0.
-      admit.
-  Admitted.
+    ∀ s1 s2,
+      eval_offset σ o1 = Some s1 ->
+      eval_offset σ o2 = Some s2 ->
+      eval_offset σ (o1 ,, o2) = Some (s1 + s2).
+  Proof. Admitted.
 
   #[global] Instance id_dot : LeftId (=) o_id o_dot.
   Proof. UNFOLD_dot. intros o. apply /sig_eq_pi. by case: o. Qed.
