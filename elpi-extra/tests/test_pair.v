@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2024-2025
+ * Copyright (C) BlueRock Security, Inc. 2024-2025
  *
  * SPDX-License-Identifier: LGPL-2.1 WITH BedRock Exception for use over network, see repository root for details.
  *)

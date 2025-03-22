@@ -1,5 +1,5 @@
 /*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) BlueRock Security, Inc. 2024
  *
  * SPDX-License-Identifier:MIT-0
  */
