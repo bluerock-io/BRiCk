@@ -3,7 +3,7 @@ opam-version: "2.0"
 synopsis: "Plugin for analyzing hint databases"
 maintainer: ["Jan-Oliver Kaiser <janno@bluerock.io>"]
 authors: ["Jan-Oliver Kaiser <janno@bluerock.io>"]
-license: "LicenseRef-Bedrock"
+license: "LicenseRef-BedRock"
 homepage: "https://github.com/bluerock-io/BRiCk"
 bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [

@@ -12,7 +12,7 @@
 
 (source (github bluerock-io/BRiCk))
 
-(license LicenseRef-Bedrock)
+(license LicenseRef-BedRock)
 
 (package
  (name tc-db-info-plugin)
