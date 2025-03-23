@@ -943,7 +943,7 @@ mlock Definition exposed_ptr `{cpp_logic} p : mpred :=
   virtual address [va].
   [pinned_ptr] will only hold on pointers that are associated to addresses,
   but other pointers exist. *)
-mlock Definition pinned_ptr `{cpp_logic} (va : vaddr) (p : ptr) : mpred :=
+mlock Definition pinned_ptr `{cpp_logic} {σ} (va : vaddr) (p : ptr) : mpred :=
   [| ptr_vaddr p = Some va |] ** exposed_ptr p.
 
 Notation pinned_ptr_Z va p :=

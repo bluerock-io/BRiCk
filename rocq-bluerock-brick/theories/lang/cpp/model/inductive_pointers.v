@@ -428,7 +428,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     | offset_ptr p o => root_ptr_alloc_id p
     end.
 
-  Definition ptr_vaddr (p : ptr) : option vaddr :=
+  Definition ptr_vaddr {σ} (p : ptr) : option vaddr :=
     match p with
     | invalid_ptr_ => None
     | fun_ptr_ tu o => Some (global_ptr_encode_vaddr o)

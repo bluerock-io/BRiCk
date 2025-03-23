@@ -273,7 +273,7 @@ Module Type PTRS.
       <https://eel.is/c++draft/basic.compound#3>).
       See discussion above.
    *)
-  Parameter ptr_vaddr : ptr -> option vaddr.
+  Parameter ptr_vaddr : ∀ {σ}, ptr -> option vaddr.
 
   (** [eval_offset] and associated axioms are more advanced, only to be used
   in special cases. *)
@@ -330,8 +330,8 @@ Module Type PTRS_DERIVED (Import P : PTRS).
   Parameter same_alloc : ptr -> ptr -> Prop.
   Axiom same_alloc_eq : same_alloc = same_property ptr_alloc_id.
 
-  Parameter same_address : ptr -> ptr -> Prop.
-  Axiom same_address_eq : same_address = same_property ptr_vaddr.
+  Parameter same_address : ∀ {σ}, ptr -> ptr -> Prop.
+  Axiom same_address_eq : ∀ {σ}, same_address = same_property ptr_vaddr.
 
 End PTRS_DERIVED.
 
@@ -340,12 +340,12 @@ Module Type PTRS_DERIVED_MIXIN (Import P : PTRS).
   Lemma same_alloc_eq : same_alloc = same_property ptr_alloc_id.
   Proof. done. Qed.
 
-  Definition same_address : ptr -> ptr -> Prop := same_property ptr_vaddr.
-  Lemma same_address_eq : same_address = same_property ptr_vaddr.
+  Definition same_address {σ} : ptr -> ptr -> Prop := same_property ptr_vaddr.
+  Lemma same_address_eq {σ} : same_address = same_property ptr_vaddr.
   Proof. done. Qed.
 
-  Definition pinned_ptr_pure (va : vaddr) (p : ptr) := ptr_vaddr p = Some va.
-  Lemma pinned_ptr_pure_eq :
+  Definition pinned_ptr_pure {σ} (va : vaddr) (p : ptr) := ptr_vaddr p = Some va.
+  Lemma pinned_ptr_pure_eq {σ} :
     pinned_ptr_pure = fun (va : vaddr) (p : ptr) => ptr_vaddr p = Some va.
   Proof. done. Qed.
 End PTRS_DERIVED_MIXIN.
