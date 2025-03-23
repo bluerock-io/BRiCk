@@ -119,10 +119,9 @@ Module Type CPP_LOGIC
   Section with_cpp_logic.
     Context `{cpp_logic}.
 
-    Axiom _valid_ptr_persistent : forall b p, Persistent (_valid_ptr b p).
-    Axiom _valid_ptr_affine : forall b p, Affine (_valid_ptr b p).
-    Axiom _valid_ptr_timeless : forall b p, Timeless (_valid_ptr b p).
-    #[global] Existing Instances _valid_ptr_persistent _valid_ptr_affine _valid_ptr_timeless.
+    #[global] Declare Instance _valid_ptr_persistent : forall b p, Persistent (_valid_ptr b p).
+    #[global] Declare Instance _valid_ptr_affine : forall b p, Affine (_valid_ptr b p).
+    #[global] Declare Instance _valid_ptr_timeless : forall b p, Timeless (_valid_ptr b p).
 
     Axiom valid_ptr_nullptr : |-- valid_ptr nullptr.
     Axiom not_strictly_valid_ptr_nullptr : strict_valid_ptr nullptr |-- False.
@@ -251,17 +250,15 @@ Module Type CPP_LOGIC
   Section with_cpp_logic.
   Context `{cpp_logic}.
 
-    Axiom provides_storage_persistent :
+    #[global] Declare Instance provides_storage_persistent :
       forall storage_ptr obj_ptr ty,
       Persistent (provides_storage storage_ptr obj_ptr ty).
-    Axiom provides_storage_affine :
+    #[global] Declare Instance provides_storage_affine :
       forall storage_ptr obj_ptr ty,
       Affine (provides_storage storage_ptr obj_ptr ty).
-    Axiom provides_storage_timeless :
+    #[global] Declare Instance provides_storage_timeless :
       forall storage_ptr obj_ptr ty,
       Timeless (provides_storage storage_ptr obj_ptr ty).
-    #[global] Existing Instances provides_storage_persistent provides_storage_affine provides_storage_timeless.
-
   End with_cpp_logic.
 
     (** *** Typed points-to predicate.
@@ -336,8 +333,7 @@ Module Type CPP_LOGIC
   Section with_cpp_logic.
   Context `{cpp_logic}.
 
-    Axiom live_alloc_id_timeless : forall aid, Timeless (live_alloc_id aid).
-    #[global] Existing Instance live_alloc_id_timeless.
+    #[global] Declare Instance live_alloc_id_timeless : forall aid, Timeless (live_alloc_id aid).
 
     Axiom valid_ptr_alloc_id : forall p,
       valid_ptr p |-- [| is_Some (ptr_alloc_id p) |].
@@ -444,27 +440,21 @@ Module Type CPP_LOGIC
       #[local] Notation ctor_at := (ctor_at tu) (only parsing).
       #[local] Notation dtor_at := (dtor_at tu) (only parsing).
 
-      Axiom code_at_persistent : forall f p, Persistent (code_at f p).
-      Axiom code_at_affine : forall f p, Affine (code_at f p).
-      Axiom code_at_timeless : forall f p, Timeless (code_at f p).
+      #[global] Declare Instance code_at_persistent : forall f p, Persistent (code_at f p).
+      #[global] Declare Instance code_at_affine : forall f p, Affine (code_at f p).
+      #[global] Declare Instance code_at_timeless : forall f p, Timeless (code_at f p).
 
-      Axiom method_at_persistent : forall f p, Persistent (method_at f p).
-      Axiom method_at_affine : forall f p, Affine (method_at f p).
-      Axiom method_at_timeless : forall f p, Timeless (method_at f p).
+      #[global] Declare Instance method_at_persistent : forall f p, Persistent (method_at f p).
+      #[global] Declare Instance method_at_affine : forall f p, Affine (method_at f p).
+      #[global] Declare Instance method_at_timeless : forall f p, Timeless (method_at f p).
 
-      Axiom ctor_at_persistent : forall f p, Persistent (ctor_at f p).
-      Axiom ctor_at_affine : forall f p, Affine (ctor_at f p).
-      Axiom ctor_at_timeless : forall f p, Timeless (ctor_at f p).
+      #[global] Declare Instance ctor_at_persistent : forall f p, Persistent (ctor_at f p).
+      #[global] Declare Instance ctor_at_affine : forall f p, Affine (ctor_at f p).
+      #[global] Declare Instance ctor_at_timeless : forall f p, Timeless (ctor_at f p).
 
-      Axiom dtor_at_persistent : forall f p, Persistent (dtor_at f p).
-      Axiom dtor_at_affine : forall f p, Affine (dtor_at f p).
-      Axiom dtor_at_timeless : forall f p, Timeless (dtor_at f p).
-
-      #[global] Existing Instances
-        code_at_persistent code_at_affine code_at_timeless
-        method_at_persistent method_at_affine method_at_timeless
-        ctor_at_persistent ctor_at_affine ctor_at_timeless
-        dtor_at_persistent dtor_at_affine dtor_at_timeless.
+      #[global] Declare Instance dtor_at_persistent : forall f p, Persistent (dtor_at f p).
+      #[global] Declare Instance dtor_at_affine : forall f p, Affine (dtor_at f p).
+      #[global] Declare Instance dtor_at_timeless : forall f p, Timeless (dtor_at f p).
 
       Axiom code_at_live   : forall f p,   code_at f p |-- live_ptr p.
       Axiom method_at_live : forall f p, method_at f p |-- live_ptr p.
@@ -495,16 +485,13 @@ Module Type CPP_LOGIC
       [| 0 <= Z.of_N va - z |]%Z **
       [| ptr_vaddr p = Some (Z.to_N (Z.of_N va - z)) |].
 
-    Axiom provides_storage_same_address : forall storage_ptr obj_ptr ty,
+    #[global] Declare Instance provides_storage_same_address : forall storage_ptr obj_ptr ty,
       Observe [| same_address storage_ptr obj_ptr |] (provides_storage storage_ptr obj_ptr ty).
 
-    Axiom provides_storage_valid_storage_ptr : forall storage_ptr obj_ptr aty,
+    #[global] Declare Instance provides_storage_valid_storage_ptr : forall storage_ptr obj_ptr aty,
       Observe (valid_ptr storage_ptr) (provides_storage storage_ptr obj_ptr aty).
-    Axiom provides_storage_valid_obj_ptr : forall storage_ptr obj_ptr aty,
+    #[global] Declare Instance provides_storage_valid_obj_ptr : forall storage_ptr obj_ptr aty,
       Observe (valid_ptr obj_ptr) (provides_storage storage_ptr obj_ptr aty).
-
-    #[global] Existing Instances provides_storage_same_address
-      provides_storage_valid_storage_ptr provides_storage_valid_obj_ptr.
 
   End with_cpp_logic.
 
@@ -522,14 +509,11 @@ Module Type CPP_LOGIC
   Section with_cpp_logic.
   Context `{cpp_logic}.
 
-    Axiom exposed_aid_persistent : forall aid, Persistent (exposed_aid aid).
-    Axiom exposed_aid_affine : forall aid, Affine (exposed_aid aid).
-    Axiom exposed_aid_timeless : forall aid, Timeless (exposed_aid aid).
+    #[global] Declare Instance exposed_aid_persistent : forall aid, Persistent (exposed_aid aid).
+    #[global] Declare Instance exposed_aid_affine : forall aid, Affine (exposed_aid aid).
+    #[global] Declare Instance exposed_aid_timeless : forall aid, Timeless (exposed_aid aid).
 
     Axiom exposed_aid_null_alloc_id : |-- exposed_aid null_alloc_id.
-
-    #[global] Existing Instances
-      exposed_aid_persistent exposed_aid_affine exposed_aid_timeless.
 
   End with_cpp_logic.
 
@@ -559,13 +543,12 @@ Module Type CPP_LOGIC
   Section with_cpp_logic.
   Context `{cpp_logic} {σ}.
 
-    Axiom type_ptr_persistent : forall p ty,
+    #[global] Declare Instance type_ptr_persistent : forall p ty,
       Persistent (type_ptr ty p).
-    Axiom type_ptr_affine : forall p ty,
+    #[global] Declare Instance type_ptr_affine : forall p ty,
       Affine (type_ptr ty p).
-    Axiom type_ptr_timeless : forall p ty,
+    #[global] Declare Instance type_ptr_timeless : forall p ty,
       Timeless (type_ptr ty p).
-    #[global] Existing Instances type_ptr_persistent type_ptr_affine type_ptr_timeless.
 
     Axiom type_ptr_erase : forall ty p,
         type_ptr ty p -|- type_ptr (erase_qualifiers ty) p.
@@ -576,9 +559,8 @@ Module Type CPP_LOGIC
     Axiom type_ptr_off_nonnull : forall ty p o,
       type_ptr ty (p ,, o) |-- [| p <> nullptr |].
 
-    Axiom tptsto_type_ptr : forall ty q p v,
+    #[global] Declare Instance tptsto_type_ptr : forall ty q p v,
       Observe (type_ptr ty p) (tptsto ty q p v).
-    #[global] Existing Instance tptsto_type_ptr.
 
     (* All objects in the C++ abstract machine have a size
 
