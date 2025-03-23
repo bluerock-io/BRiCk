@@ -239,7 +239,7 @@ Module Type CPP_LOGIC
     (** Formalizes the notion of "provides storage",
     http://eel.is/c++draft/intro.object#def:provides_storage *)
     Parameter provides_storage :
-      forall `{cpp_logic} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
+      forall `{cpp_logic} {σ} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
 
   Section with_cpp_logic.
     Context `{cpp_logic} {σ}.
