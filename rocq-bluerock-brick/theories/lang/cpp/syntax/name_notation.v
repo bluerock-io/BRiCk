@@ -35,6 +35,8 @@ Definition field_printer (f : core.field) : option PrimString.string :=
 String Notation core.field field_parser field_printer : cpp_field_scope.
 (* NOTE: this needs to be registered **after** the parser for fields *)
 String Notation core.name parse_name print_name : cpp_name_scope.
+(* Bind Scope cpp_field_scope with core.field. *)
+(* ^^ Does not work, because core.field coincides with core.name. *)
 
 
 Fail Check "foo"%cpp_field.
