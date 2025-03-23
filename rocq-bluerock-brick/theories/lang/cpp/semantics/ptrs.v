@@ -130,8 +130,7 @@ Module Type PTRS.
 
   #[global] Declare Instance ptr_eq_dec : EqDecision ptr.
 
-  Axiom ptr_countable : Countable ptr.
-  #[global] Existing Instance ptr_countable.
+  #[global] Declare Instance ptr_countable : Countable ptr.
 
   (** * Pointer offsets.
       Offsets represent paths between objects and subobjects.
@@ -146,10 +145,8 @@ Module Type PTRS.
    *)
   Parameter offset : Set.
 
-  Axiom offset_eq_dec : EqDecision offset.
-  #[global] Existing Instance offset_eq_dec.
-  Axiom offset_countable : Countable offset.
-  #[global] Existing Instance offset_countable.
+  #[global] Declare Instance offset_eq_dec : EqDecision offset.
+  #[global] Declare Instance offset_countable : Countable offset.
 
   (** combine an offset and a pointer to get a new pointer;
     this is a right monoid action.
@@ -162,10 +159,9 @@ Module Type PTRS.
   (** Offsets form a monoid *)
   Parameter o_id  : offset.
 
-  Axiom id_dot    : LeftId  (=) o_id o_dot.
-  Axiom dot_id    : RightId (=) o_id o_dot.
-  Axiom dot_assoc : Assoc   (=)      o_dot.
-  #[global] Existing Instances id_dot dot_id dot_assoc.
+  #[global] Declare Instance id_dot    : LeftId  (=) o_id o_dot.
+  #[global] Declare Instance dot_id    : RightId (=) o_id o_dot.
+  #[global] Declare Instance dot_assoc : Assoc   (=)      o_dot.
 
   Axiom offset_ptr_id : forall p : ptr, p ,, o_id = p.
   Axiom offset_ptr_dot : forall (p : ptr) o1 o2,
@@ -284,10 +280,9 @@ Module Type PTRS.
   Axiom global_ptr_nonnull_addr : forall tu o, ptr_vaddr (global_ptr tu o) <> Some 0%N.
   Axiom global_ptr_nonnull_aid : forall tu o, ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
 
-  Axiom global_ptr_inj : forall tu, Inj (=) (=) (global_ptr tu).
-  Axiom global_ptr_addr_inj : forall tu, Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
-  Axiom global_ptr_aid_inj : forall tu, Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
-  #[global] Existing Instances global_ptr_inj global_ptr_addr_inj global_ptr_aid_inj.
+  #[global] Declare Instance global_ptr_inj : forall tu, Inj (=) (=) (global_ptr tu).
+  #[global] Declare Instance global_ptr_addr_inj : forall tu, Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
+  #[global] Declare Instance global_ptr_aid_inj : forall tu, Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
 
   (** Pointers into the same array with the same address have the same index.
   Wrapped by [same_address_o_sub_eq]. *)
