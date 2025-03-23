@@ -134,7 +134,7 @@ Definition default_initialize_body `{Σ : cpp_logic, σ : genv}
   end%pstring%I.
 
 mlock
-  Definition default_initialize `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
+Definition default_initialize `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
   : ∀ (ty : exprtype) (p : ptr) (Q : FreeTemps -> epred), mpred :=
   fix default_initialize ty p Q {struct ty} :=
     Cbn (Reduce (default_initialize_body true) default_initialize tu ty p Q).

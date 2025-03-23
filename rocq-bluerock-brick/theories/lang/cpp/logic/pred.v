@@ -110,15 +110,14 @@ Module Type CPP_LOGIC
       http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2369.pdf for
       discussion in the context of the C standard.
     *)
-    Parameter _valid_ptr : forall `{!cpp_logic thread_info Σ}
-      (vt : validity_type), ptr -> mpred.
+    Parameter _valid_ptr : forall `{cpp_logic} (vt : validity_type) (p : ptr), mpred.
     (* strict validity (not past-the-end) *)
     Notation strict_valid_ptr := (_valid_ptr Strict).
     (* validity (past-the-end allowed) *)
     Notation valid_ptr := (_valid_ptr Relaxed).
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic}.
 
     Axiom _valid_ptr_persistent : forall b p, Persistent (_valid_ptr b p).
     Axiom _valid_ptr_affine : forall b p, Affine (_valid_ptr b p).
@@ -138,7 +137,7 @@ Module Type CPP_LOGIC
     TODO: include in [primR].
     TODO: refine for which types https://bedrocksystems.atlassian.net/browse/FM-3760
     *)
-    Parameter has_type : ∀ `{!cpp_logic thread_info Σ} {σ : genv}, val -> type -> mpred.
+    Parameter has_type : ∀ `{cpp_logic} {σ : genv}, val -> type -> mpred.
 
     #[global] Declare Instance has_type_mono `{cpp_logic} :
       Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@has_type _ _ _).
@@ -172,7 +171,7 @@ Module Type CPP_LOGIC
        [strict_valid_ptr] (which would make it something like a pre-construction
        state of [type_ptr]).
      *)
-    Parameter reference_to : forall `{!cpp_logic thread_info Σ} {σ : genv}, type -> ptr -> mpred.
+    Parameter reference_to : forall `{cpp_logic} {σ : genv}, type -> ptr -> mpred.
 
     #[global] Declare Instance reference_to_mono `{cpp_logic} :
       Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@reference_to _ _ _).
@@ -240,14 +239,14 @@ Module Type CPP_LOGIC
 
     End with_genv.
 
-    Parameter has_type_or_undef : forall `{!cpp_logic thread_info Σ} {σ : genv}, val -> type -> mpred.
+    Parameter has_type_or_undef : forall `{cpp_logic} {σ : genv}, val -> type -> mpred.
     Axiom has_type_or_undef_unfold : forall `{cpp_logic},
         @has_type_or_undef _ _ _ = funI σ v ty => has_type v ty \\// [| v = Vundef |].
 
     (** Formalizes the notion of "provides storage",
     http://eel.is/c++draft/intro.object#def:provides_storage *)
     Parameter provides_storage :
-      forall `{!cpp_logic thread_info Σ} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
+      forall `{cpp_logic} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
 
   Section with_cpp_logic.
   Context `{cpp_logic}.
@@ -284,11 +283,11 @@ Module Type CPP_LOGIC
     We use this predicate both for pointers to actual memory and for pointers to
     C++ locations that are not stored in memory (as an optimization).
     *)
-    Parameter tptsto : forall `{!cpp_logic thread_info Σ} {σ:genv}
+    Parameter tptsto : forall `{cpp_logic} {σ:genv}
       (t : Rtype) (q : cQp.t) (a : ptr) (v : val), mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic}.
 
     #[global] Declare Instance tptsto_valid_type
       : forall {σ:genv} (t : Rtype) (q : cQp.t) (a : ptr) (v : val),
@@ -331,7 +330,7 @@ Module Type CPP_LOGIC
       See https://eel.is/c++draft/basic.stc.general#4 and
       https://eel.is/c++draft/basic.compound#3.1.
     *)
-    Parameter live_alloc_id : forall `{!cpp_logic thread_info Σ},
+    Parameter live_alloc_id : forall `{cpp_logic},
       alloc_id -> mpred.
 
   Section with_cpp_logic.
@@ -402,7 +401,7 @@ Module Type CPP_LOGIC
         Compilers can use the ownership here to represent dynamic dispatch
         tables.
      *)
-    Parameter mdc_path : forall `{!cpp_logic thread_info Σ} {σ : genv}
+    Parameter mdc_path : forall `{cpp_logic} {σ : genv}
         (this : globname) (most_derived : list globname),
         cQp.t -> ptr -> mpred.
 
@@ -428,26 +427,22 @@ Module Type CPP_LOGIC
       note that in the presence of code-loading, function calls will
       require an extra side-condition that the code is loaded.
      *)
-    Parameter code_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Func -> ptr -> mpred.
-    Parameter method_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Method -> ptr -> mpred.
-    Parameter ctor_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Ctor -> ptr -> mpred.
-    Parameter dtor_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Dtor -> ptr -> mpred.
-    #[global] Arguments code_at {_ _ _ σ} tu _ _.
-    #[global] Arguments method_at {_ _ _ σ} tu _ _.
-    #[global] Arguments ctor_at {_ _ _ σ} tu _ _.
-    #[global] Arguments dtor_at {_ _ _ σ} tu _ _.
+    Parameter code_at : forall `{cpp_logic} {σ},
+      translation_unit -> Func -> ptr -> mpred.
+    Parameter method_at : forall `{cpp_logic} {σ},
+      translation_unit -> Method -> ptr -> mpred.
+    Parameter ctor_at : forall `{cpp_logic} {σ},
+      translation_unit -> Ctor -> ptr -> mpred.
+    Parameter dtor_at : forall `{cpp_logic} {σ},
+      translation_unit -> Dtor -> ptr -> mpred.
 
 
     Section with_genv.
       Context `{cpp_logic} {σ : genv} (tu : translation_unit).
-      #[local] Notation code_at := (@code_at _ _ _ σ tu) (only parsing).
-      #[local] Notation method_at := (@method_at _ _ _ σ tu) (only parsing).
-      #[local] Notation ctor_at := (@ctor_at _ _ _ σ tu) (only parsing).
-      #[local] Notation dtor_at := (@dtor_at _ _ _ σ tu) (only parsing).
+      #[local] Notation code_at := (code_at tu) (only parsing).
+      #[local] Notation method_at := (method_at tu) (only parsing).
+      #[local] Notation ctor_at := (ctor_at tu) (only parsing).
+      #[local] Notation dtor_at := (dtor_at tu) (only parsing).
 
       Axiom code_at_persistent : forall f p, Persistent (code_at f p).
       Axiom code_at_affine : forall f p, Affine (code_at f p).
@@ -522,7 +517,7 @@ Module Type CPP_LOGIC
     (http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2577.pdf).
     See https://dl.acm.org/doi/10.1145/3290380 for an introduction.
     *)
-    Parameter exposed_aid : forall `{!cpp_logic thread_info Σ}, alloc_id -> mpred.
+    Parameter exposed_aid : forall `{cpp_logic}, alloc_id -> mpred.
 
   Section with_cpp_logic.
   Context `{cpp_logic}.
@@ -559,7 +554,7 @@ Module Type CPP_LOGIC
       from http://eel.is/c++draft/basic.memobj#basic.life-1 to
       http://eel.is/c++draft/basic.memobj#basic.life-4.
      *)
-    Parameter type_ptr : forall `{!cpp_logic thread_info Σ} {resolve : genv} (c: Rtype), ptr -> mpred.
+    Parameter type_ptr : forall `{cpp_logic} {resolve : genv} (c: Rtype), ptr -> mpred.
 
   Section with_cpp_logic.
   Context `{cpp_logic}.
@@ -802,7 +797,7 @@ Module Type CPP_LOGIC
         This is related to the "construction state" in Tahina's work, i.e.
         <https://inria.hal.science/file/index/docid/674663/filename/cpp-construction.pdf>
      *)
-    Axiom struct_padding : forall `{!cpp_logic thread_info Σ} {σ:genv},
+    Axiom struct_padding : forall `{cpp_logic} {σ:genv},
       ptr -> globname -> cQp.t -> mpred.
 
   Section with_cpp_logic.
@@ -817,14 +812,14 @@ Module Type CPP_LOGIC
 
   End with_cpp_logic.
 
-    (** [union_padding cls q active_member] is [q] ownership of
-     the union padding for union [cls] for the active member
-     [active_member]. When there is no active member the [active_member]
-     is [None], otherwise it is [Some idx] where [idx] is the numeric
-     index of member field.
-     *)
-    Axiom union_padding : forall `{!cpp_logic thread_info Σ} {σ:genv},
-      ptr -> globname -> cQp.t -> option nat -> mpred.
+  (** [union_padding cls q active_member] is [q] ownership of
+    the union padding for union [cls] for the active member
+    [active_member]. When there is no active member the [active_member]
+    is [None], otherwise it is [Some idx] where [idx] is the numeric
+    index of member field.
+    *)
+  Parameter union_padding : forall `{cpp_logic} {σ},
+    ptr -> globname -> cQp.t -> option nat -> mpred.
 
   Section with_cpp_logic.
   Context `{cpp_logic}.
