@@ -248,7 +248,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
     move => σ1 σ2 /Proper_size_of + _ ty -> _ n -> => /(_ ty ty eq_refl).
     rewrite /o_sub /o_sub_off.
     move: (size_of σ1) (size_of σ2) => [sz1|] [sz2|] LE //=; inversion LE; constructor.
-    naive_solver .
+    naive_solver.
   Qed.
 
   (* Not exposed directly, but proof sketch for

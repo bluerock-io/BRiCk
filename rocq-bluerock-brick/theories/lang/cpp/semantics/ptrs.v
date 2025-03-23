@@ -315,11 +315,10 @@ Module Type PTRS.
     eval_offset σ (o_field σ f) = offset_of σ cls n.
 
   (* [eval_offset] respects the monoidal structure of [offset]s _for well-defined offsets_. *)
-  Axiom eval_offset_dot : ∀ σ (o1 o2 : offset),
-    ∀ s1 s2,
-      eval_offset σ o1 = Some s1 ->
-      eval_offset σ o2 = Some s2 ->
-      eval_offset σ (o1 ,, o2) = Some (s1 + s2).
+  Axiom eval_offset_dot : ∀ {σ o1 o2 s1 s2},
+    eval_offset σ o1 = Some s1 ->
+    eval_offset σ o2 = Some s2 ->
+    eval_offset σ (o1 ,, o2) = Some (s1 + s2).
 End PTRS.
 
 Module Type PTRS_DERIVED (Import P : PTRS).
@@ -411,7 +410,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
         p2 = p ,, o2 /\
         offset_cong σ o1 o2.
 
-  Lemma offset_ptr_sub_0 (p : ptr) ty resolve (Hsz : is_Some (size_of resolve ty)) :
+  Lemma offset_ptr_sub_0 {σ} (p : ptr) ty (Hsz : is_Some (size_of σ ty)) :
     p .[ty ! 0] = p.
   Proof. by rewrite o_sub_0 // offset_ptr_id. Qed.
 
@@ -430,7 +429,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Proof.
     rewrite /offset_cong !same_property_iff.
     move => [z] [Ho1 Ho2] [z'] [Ho3 Ho4].
-    rewrite !(eval_offset_dot _ _ _ z z') //. eauto.
+    rewrite !(eval_offset_dot (s1 := z) (s2 := z')) //. eauto.
   Qed.
 
   Lemma offset_cong_offset {σ o1 o2 o} :
@@ -442,9 +441,9 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   #[global] Instance ptr_cong_reflexive {σ} : Reflexive (ptr_cong σ).
   Proof.
     red; unfold ptr_cong; intros p; exists p, (.[ Tbyte ! 0 ]), (.[ Tbyte ! 0]).
-    intuition; try solve [rewrite o_sub_0; auto; rewrite offset_ptr_id//].
+    intuition; try solve [rewrite offset_ptr_sub_0; auto].
     unfold offset_cong; apply same_property_iff.
-    rewrite eval_o_sub/= Z.mul_0_r; eauto.
+    rewrite eval_o_sub /= Z.mul_0_r; eauto.
   Qed.
 
   #[global] Instance ptr_cong_sym {σ} : Symmetric (ptr_cong σ).
@@ -603,8 +602,8 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Definition aligned_ptr_ty {σ} ty p :=
     exists align, align_of ty = Some align /\ aligned_ptr align p.
 
-  Lemma aligned_ptr_ty_erase_qualifiers : forall {σ} p ty,
-      aligned_ptr_ty ty p <-> aligned_ptr_ty (erase_qualifiers ty) p.
+  Lemma aligned_ptr_ty_erase_qualifiers {σ} p ty :
+    aligned_ptr_ty ty p <-> aligned_ptr_ty (erase_qualifiers ty) p.
   Proof.
     rewrite /aligned_ptr_ty; intros. by rewrite -align_of_erase_qualifiers.
   Qed.
