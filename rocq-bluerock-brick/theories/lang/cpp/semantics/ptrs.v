@@ -132,6 +132,36 @@ Module Type PTRS.
 
   #[global] Declare Instance ptr_countable : Countable ptr.
 
+  (** C++ provides a distinguished pointer [nullptr] that is *never
+      dereferenceable*
+      (<https://eel.is/c++draft/basic.compound#3>)
+   *)
+  Parameter nullptr : ptr.
+
+  (** An invalid pointer, included as a sentinel value. Other pointers might
+      be invalid as well; see [_valid_ptr].
+   *)
+  Parameter invalid_ptr : ptr.
+
+  (* Pointer to a C++ "complete object" with external or internal linkage, or
+     to "functions"; even if they are distinct in C/C++ standards (e.g.
+     <https://eel.is/c++draft/basic.pre#:object>
+     <https://eel.is/c++draft/basic.compound#3.1>), we represent them in the same
+     way.
+
+     Since function pointers cannot be offset, offsetting function pointers
+     produces [invalid_ptr], but we haven't needed to expose this.
+   *)
+  (* ^ the address of global variables & functions *)
+  Parameter global_ptr :
+    translation_unit -> name -> ptr.
+    (* Dynamic loading might require adding some abstract [translation_unit_id]. *)
+    (* Might need deferring, as it needs designing a [translation_unit_id];
+     since loading the same translation unit twice can give different
+     addresses. *)
+
+  Axiom global_ptr_nonnull : forall tu o, global_ptr tu o <> nullptr.
+
   (** * Pointer offsets.
       Offsets represent paths between objects and subobjects.
 
@@ -167,35 +197,6 @@ Module Type PTRS.
   Axiom offset_ptr_dot : forall (p : ptr) o1 o2,
     p ,, (o1 ,, o2) = p ,, o1 ,, o2.
 
-  (** C++ provides a distinguished pointer [nullptr] that is *never
-      dereferenceable*
-      (<https://eel.is/c++draft/basic.compound#3>)
-   *)
-  Parameter nullptr : ptr.
-
-  (** An invalid pointer, included as a sentinel value. Other pointers might
-      be invalid as well; see [_valid_ptr].
-   *)
-  Parameter invalid_ptr : ptr.
-
-  (* Pointer to a C++ "complete object" with external or internal linkage, or
-     to "functions"; even if they are distinct in C/C++ standards (e.g.
-     <https://eel.is/c++draft/basic.pre#:object>
-     <https://eel.is/c++draft/basic.compound#3.1>), we represent them in the same
-     way.
-
-     Since function pointers cannot be offset, offsetting function pointers
-     produces [invalid_ptr], but we haven't needed to expose this.
-   *)
-  (* ^ the address of global variables & functions *)
-  Parameter global_ptr :
-    translation_unit -> name -> ptr.
-    (* Dynamic loading might require adding some abstract [translation_unit_id]. *)
-    (* Might need deferring, as it needs designing a [translation_unit_id];
-     since loading the same translation unit twice can give different
-     addresses. *)
-  Axiom global_ptr_nonnull : forall tu o, global_ptr tu o <> nullptr.
-
   (* Other constructors exist, but they are internal to C++ model.
      They include:
      - pointers to local variables (objects with automatic linkage/storage
@@ -228,6 +229,11 @@ Module Type PTRS.
     (at level 11, left associativity, format "p  .[  t  '!'  n  ]") : stdpp_scope.
   #[global] Notation ".[ t ! n ]" := (o_sub _ t n) (at level 11, no associativity, format ".[  t  !  n  ]") : stdpp_scope.
 
+  (** going up and down the class hierarchy, one step at a time;
+  these offsets are only for non-virtual inheritance. *)
+  Parameter o_base : genv -> forall (derived base : name), offset.
+  Parameter o_derived : genv -> forall (base derived : name), offset.
+
   (* [o_sub_0] axiom is required because any object is a 1-object array
      (<https://eel.is/c++draft/expr.add#footnote-80>).
    *)
@@ -235,11 +241,8 @@ Module Type PTRS.
   (* TODO: drop (is_Some (size_of σ ty)) via
      `displacement (o_sub σ ty i) = if (i = 0) then 0 else i * size_of σ ty`
    *)
-
-  (** going up and down the class hierarchy, one step at a time;
-  these offsets are only for non-virtual inheritance. *)
-  Parameter o_base : genv -> forall (derived base : name), offset.
-  Parameter o_derived : genv -> forall (base derived : name), offset.
+  Axiom o_dot_sub : ∀ {σ} i j ty,
+    (o_sub _ ty i) ,, (o_sub _ ty j) = o_sub _ ty (i + j).
 
   (* We're ignoring virtual inheritance here, since we have no plans to
   support it for now, but this might hold there too. *)
@@ -262,6 +265,7 @@ Module Type PTRS.
   Axiom ptr_alloc_id_offset : forall {p o},
     is_Some (ptr_alloc_id (p ,, o)) ->
     ptr_alloc_id (p ,, o) = ptr_alloc_id p.
+  Axiom global_ptr_nonnull_aid : forall tu o, ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
 
   (** Map pointers to the address they represent,
       (<https://eel.is/c++draft/basic.compound#def:represents_the_address>).
@@ -271,6 +275,11 @@ Module Type PTRS.
    *)
   Parameter ptr_vaddr : ptr -> option vaddr.
 
+  (** [eval_offset] and associated axioms are more advanced, only to be used
+  in special cases. *)
+  (* TODO drop [genv]. *)
+  Parameter eval_offset : genv -> offset -> option Z.
+
   (** [ptr_vaddr_nullptr] is not mandated by the standard, but valid across
       compilers we are interested in.
       The closest hint is in <https://eel.is/c++draft/conv.ptr>
@@ -278,7 +287,6 @@ Module Type PTRS.
   Axiom ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
 
   Axiom global_ptr_nonnull_addr : forall tu o, ptr_vaddr (global_ptr tu o) <> Some 0%N.
-  Axiom global_ptr_nonnull_aid : forall tu o, ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
 
   #[global] Declare Instance global_ptr_inj : forall tu, Inj (=) (=) (global_ptr tu).
   #[global] Declare Instance global_ptr_addr_inj : forall tu, Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
@@ -290,13 +298,6 @@ Module Type PTRS.
     size_of σ ty = Some sz -> (sz > 0)%N ->
     same_property ptr_vaddr (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) ->
     n1 = n2.
-  Axiom o_dot_sub : ∀ {σ} i j ty,
-    (o_sub _ ty i) ,, (o_sub _ ty j) = o_sub _ ty (i + j).
-
-  (** [eval_offset] and associated axioms are more advanced, only to be used
-  in special cases. *)
-  (* TODO drop [genv]. *)
-  Parameter eval_offset : genv -> offset -> option Z.
 
   Axiom eval_o_sub : forall σ ty (i : Z),
     eval_offset σ (o_sub σ ty i) =
@@ -354,6 +355,17 @@ Module Type PTRS_INTF_MINIMAL := PTRS <+ PTRS_DERIVED.
 
 Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Implicit Type (p : ptr).
+
+  Notation _id := o_id (only parsing).
+  (** access a field *)
+  Notation _field := (@o_field _) (only parsing).
+  (** subscript an array *)
+  Notation _sub z := (@o_sub _ z) (only parsing).
+  (** [_base derived base] is a cast from derived to base. *)
+  Notation _base := (@o_base _) (only parsing).
+  (** [_derived base derived] is a cast from base to derived *)
+  Notation _derived := (@o_derived _) (only parsing).
+
   (**
   Explictly declare that all Iris equalities on pointers are trivial.
   We only add such explicit declarations as actually needed.
@@ -380,6 +392,29 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Definition offset_cong : genv -> relation offset :=
     fun σ o1 o2 => same_property (eval_offset σ) o1 o2.
 
+  (** ** [ptr] Congruence
+
+     [ptr_cong σ p1 p2] expresses that [p1] and [p2] share a common [ptr] prefix and that
+     [eval_offset σ o1 o2] holds for the suffixes which "complete" p1 and p2.
+
+     Given that [ptr]s have a rich structure, [ptr_cong σ p1 p2] is not generally sufficient to
+     transport resources - when the resources are even transportable in the first place.
+     However, in certain limited circumstances where the integral values of pointers are
+     meaningful - such as reasoning at the level of the byte-representation of an
+     object - [ptr_cong σ p1 p2] (in conjunction with [type_ptr Tbyte p1 ** type_ptr Tbyte p2])
+     /can/ be used to transport select resources.
+   *)
+  Definition ptr_cong : genv -> relation ptr :=
+    fun σ p1 p2 =>
+      exists p o1 o2,
+        p1 = p ,, o1 /\
+        p2 = p ,, o2 /\
+        offset_cong σ o1 o2.
+
+  Lemma offset_ptr_sub_0 (p : ptr) ty resolve (Hsz : is_Some (size_of resolve ty)) :
+    p .[ty ! 0] = p.
+  Proof. by rewrite o_sub_0 // offset_ptr_id. Qed.
+
   #[global] Instance offset_cong_equiv {σ} : RelationClasses.PER (offset_cong σ).
   Proof. apply same_property_per. Qed.
 
@@ -403,26 +438,6 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     offset_cong σ o1 o2 ->
     offset_cong σ (o1 ,, o) (o2 ,, o).
   Proof. intros. exact /offset_cong_offset2 /offset_cong_partial_reflexive. Qed.
-
-
-  (** ** [ptr] Congruence
-
-     [ptr_cong σ p1 p2] expresses that [p1] and [p2] share a common [ptr] prefix and that
-     [eval_offset σ o1 o2] holds for the suffixes which "complete" p1 and p2.
-
-     Given that [ptr]s have a rich structure, [ptr_cong σ p1 p2] is not generally sufficient to
-     transport resources - when the resources are even transportable in the first place.
-     However, in certain limited circumstances where the integral values of pointers are
-     meaningful - such as reasoning at the level of the byte-representation of an
-     object - [ptr_cong σ p1 p2] (in conjunction with [type_ptr Tbyte p1 ** type_ptr Tbyte p2])
-     /can/ be used to transport select resources.
-   *)
-  Definition ptr_cong : genv -> relation ptr :=
-    fun σ p1 p2 =>
-      exists p o1 o2,
-        p1 = p ,, o1 /\
-        p2 = p ,, o2 /\
-        offset_cong σ o1 o2.
 
   #[global] Instance ptr_cong_reflexive {σ} : Reflexive (ptr_cong σ).
   Proof.
@@ -580,10 +595,6 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     same_address (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) -> n1 = n2.
   Proof. rewrite same_address_eq. exact: ptr_vaddr_o_sub_eq. Qed.
 
-  Lemma offset_ptr_sub_0 (p : ptr) ty resolve (Hsz : is_Some (size_of resolve ty)) :
-    p .[ty ! 0] = p.
-  Proof. by rewrite o_sub_0 // offset_ptr_id. Qed.
-
   (** [aligned_ptr] states that the pointer (if it exists in memory) has
   the given alignment.
     *)
@@ -680,16 +691,6 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     directly_derives_tu tu derived base ->
     p ,, o_derived σ base derived ,, o_base σ derived base = p.
   Proof. intros [??%parent_offset_genv_compat]. exact: o_derived_base. Qed.
-
-  Notation _id := o_id (only parsing).
-  (** access a field *)
-  Notation _field := (@o_field _) (only parsing).
-  (** subscript an array *)
-  Notation _sub z := (@o_sub _ z) (only parsing).
-  (** [_base derived base] is a cast from derived to base. *)
-  Notation _base := (@o_base _) (only parsing).
-  (** [_derived base derived] is a cast from base to derived *)
-  Notation _derived := (@o_derived _) (only parsing).
 End PTRS_MIXIN.
 
 Module Type PTRS_INTF := PTRS_INTF_MINIMAL <+ PTRS_MIXIN.
