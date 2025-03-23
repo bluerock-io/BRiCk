@@ -455,32 +455,32 @@ Module PTRS_IMPL <: PTRS_INTF.
   #[global] Instance global_ptr_inj tu : Inj (=) (=) (global_ptr tu) := _.
 
   Section with_genv.
-  Context {σ}.
+    Context {σ}.
 
-  (* Some proofs using these helpers could be shortened, tactic-wise, but I find
-  them clearer this way, and they work in both models. *)
-  Lemma ptr_vaddr_global_ptr tu o :
-    ptr_vaddr (global_ptr tu o) = Some (global_ptr_encode_vaddr o).
-  Proof. done. Qed.
-  Lemma ptr_alloc_id_global_ptr tu o :
-    ptr_alloc_id (global_ptr tu o) = Some (global_ptr_encode_aid o).
-  Proof. done. Qed.
+    (* Some proofs using these helpers could be shortened, tactic-wise, but I find
+    them clearer this way, and they work in both models. *)
+    Lemma ptr_vaddr_global_ptr tu o :
+      ptr_vaddr (global_ptr tu o) = Some (global_ptr_encode_vaddr o).
+    Proof. done. Qed.
+    Lemma ptr_alloc_id_global_ptr tu o :
+      ptr_alloc_id (global_ptr tu o) = Some (global_ptr_encode_aid o).
+    Proof. done. Qed.
 
-  Lemma global_ptr_nonnull_addr tu o : ptr_vaddr (global_ptr tu o) <> Some 0%N.
-  Proof. rewrite ptr_vaddr_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
-  Lemma global_ptr_nonnull_aid tu o : ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
-  Proof. rewrite ptr_alloc_id_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
+    Lemma global_ptr_nonnull_addr tu o : ptr_vaddr (global_ptr tu o) <> Some 0%N.
+    Proof. rewrite ptr_vaddr_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
+    Lemma global_ptr_nonnull_aid tu o : ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
+    Proof. rewrite ptr_alloc_id_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
 
-  #[global] Instance global_ptr_addr_inj tu : Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
-  Proof. intros ??. rewrite !ptr_vaddr_global_ptr. by intros ?%(inj _)%(inj _). Qed.
-  #[global] Instance global_ptr_aid_inj tu : Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
-  Proof. intros ??. rewrite !ptr_alloc_id_global_ptr. by intros ?%(inj _)%(inj _). Qed.
+    #[global] Instance global_ptr_addr_inj tu : Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
+    Proof. intros ??. rewrite !ptr_vaddr_global_ptr. by intros ?%(inj _)%(inj _). Qed.
+    #[global] Instance global_ptr_aid_inj tu : Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
+    Proof. intros ??. rewrite !ptr_alloc_id_global_ptr. by intros ?%(inj _)%(inj _). Qed.
 
-  Lemma ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
-  Proof. done. Qed.
+    Lemma ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
+    Proof. done. Qed.
 
-  Lemma ptr_alloc_id_nullptr : ptr_alloc_id nullptr = Some null_alloc_id.
-  Proof. done. Qed.
+    Lemma ptr_alloc_id_nullptr : ptr_alloc_id nullptr = Some null_alloc_id.
+    Proof. done. Qed.
   End with_genv.
 
   (* Instance ptr_equiv : Equiv ptr := (=).

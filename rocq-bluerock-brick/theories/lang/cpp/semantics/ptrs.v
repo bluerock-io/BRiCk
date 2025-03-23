@@ -283,45 +283,45 @@ Module Type PTRS.
   Section with_genv.
     Context {σ : genv}.
 
-  (** [ptr_vaddr_nullptr] is not mandated by the standard, but valid across
-      compilers we are interested in.
-      The closest hint is in <https://eel.is/c++draft/conv.ptr>
-   *)
-  Axiom ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
+    (** [ptr_vaddr_nullptr] is not mandated by the standard, but valid across
+        compilers we are interested in.
+        The closest hint is in <https://eel.is/c++draft/conv.ptr>
+     *)
+    Axiom ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
 
-  Axiom global_ptr_nonnull_addr : forall tu o, ptr_vaddr (global_ptr tu o) <> Some 0%N.
+    Axiom global_ptr_nonnull_addr : forall tu o, ptr_vaddr (global_ptr tu o) <> Some 0%N.
 
-  #[global] Declare Instance global_ptr_inj : forall tu, Inj (=) (=) (global_ptr tu).
-  #[global] Declare Instance global_ptr_addr_inj : forall tu, Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
-  #[global] Declare Instance global_ptr_aid_inj : forall tu, Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
+    #[global] Declare Instance global_ptr_inj : forall tu, Inj (=) (=) (global_ptr tu).
+    #[global] Declare Instance global_ptr_addr_inj : forall tu, Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
+    #[global] Declare Instance global_ptr_aid_inj : forall tu, Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
 
-  (** Pointers into the same array with the same address have the same index.
-  Wrapped by [same_address_o_sub_eq]. *)
-  Axiom ptr_vaddr_o_sub_eq : forall p ty n1 n2 sz,
-    size_of σ ty = Some sz -> (sz > 0)%N ->
-    same_property ptr_vaddr (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) ->
-    n1 = n2.
+    (** Pointers into the same array with the same address have the same index.
+    Wrapped by [same_address_o_sub_eq]. *)
+    Axiom ptr_vaddr_o_sub_eq : forall p ty n1 n2 sz,
+      size_of σ ty = Some sz -> (sz > 0)%N ->
+      same_property ptr_vaddr (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) ->
+      n1 = n2.
 
-  Axiom eval_o_sub : forall ty (i : Z),
-    eval_offset σ (o_sub σ ty i) =
-      (* This order enables reducing for known ty. *)
-      (fun n => Z.of_N n * i) <$> size_of σ ty.
+    Axiom eval_o_sub : forall ty (i : Z),
+      eval_offset σ (o_sub σ ty i) =
+        (* This order enables reducing for known ty. *)
+        (fun n => Z.of_N n * i) <$> size_of σ ty.
 
-  (**
-  To hide implementation details of the compiler from proofs, we restrict
-  this axiom to POD/Standard-layout structures.
-  *)
-  Axiom eval_o_field : forall f n cls st,
-    f = Field cls n ->
-    glob_def σ cls = Some (Gstruct st) ->
-    st.(s_layout) = POD \/ st.(s_layout) = Standard ->
-    eval_offset σ (o_field σ f) = offset_of σ cls n.
+    (**
+    To hide implementation details of the compiler from proofs, we restrict
+    this axiom to POD/Standard-layout structures.
+    *)
+    Axiom eval_o_field : forall f n cls st,
+      f = Field cls n ->
+      glob_def σ cls = Some (Gstruct st) ->
+      st.(s_layout) = POD \/ st.(s_layout) = Standard ->
+      eval_offset σ (o_field σ f) = offset_of σ cls n.
 
-  (* [eval_offset] respects the monoidal structure of [offset]s _for well-defined offsets_. *)
-  Axiom eval_offset_dot : ∀ {o1 o2 s1 s2},
-    eval_offset σ o1 = Some s1 ->
-    eval_offset σ o2 = Some s2 ->
-    eval_offset σ (o1 ,, o2) = Some (s1 + s2).
+    (* [eval_offset] respects the monoidal structure of [offset]s _for well-defined offsets_. *)
+    Axiom eval_offset_dot : ∀ {o1 o2 s1 s2},
+      eval_offset σ o1 = Some s1 ->
+      eval_offset σ o2 = Some s2 ->
+      eval_offset σ (o1 ,, o2) = Some (s1 + s2).
 
   End with_genv.
 End PTRS.
@@ -418,270 +418,270 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Section with_genv.
     Context {σ : genv}.
 
-  Lemma offset_ptr_sub_0 (p : ptr) ty (Hsz : is_Some (size_of σ ty)) :
-    p .[ty ! 0] = p.
-  Proof. by rewrite o_sub_0 // offset_ptr_id. Qed.
+    Lemma offset_ptr_sub_0 (p : ptr) ty (Hsz : is_Some (size_of σ ty)) :
+      p .[ty ! 0] = p.
+    Proof. by rewrite o_sub_0 // offset_ptr_id. Qed.
 
-  #[global] Instance offset_cong_equiv : RelationClasses.PER (offset_cong σ).
-  Proof. apply same_property_per. Qed.
+    #[global] Instance offset_cong_equiv : RelationClasses.PER (offset_cong σ).
+    Proof. apply same_property_per. Qed.
 
-  Lemma offset_cong_partial_reflexive o :
-    is_Some (eval_offset σ o) ->
-    offset_cong σ o o.
-  Proof. by move /same_property_reflexive_equiv. Qed.
+    Lemma offset_cong_partial_reflexive o :
+      is_Some (eval_offset σ o) ->
+      offset_cong σ o o.
+    Proof. by move /same_property_reflexive_equiv. Qed.
 
-  Lemma offset_cong_offset2 {o1 o2 o3 o4} :
-    offset_cong σ o1 o2 ->
-    offset_cong σ o3 o4 ->
-    offset_cong σ (o1 ,, o3) (o2 ,, o4).
-  Proof.
-    rewrite /offset_cong !same_property_iff.
-    move => [z] [Ho1 Ho2] [z'] [Ho3 Ho4].
-    rewrite !(eval_offset_dot (s1 := z) (s2 := z')) //. eauto.
-  Qed.
+    Lemma offset_cong_offset2 {o1 o2 o3 o4} :
+      offset_cong σ o1 o2 ->
+      offset_cong σ o3 o4 ->
+      offset_cong σ (o1 ,, o3) (o2 ,, o4).
+    Proof.
+      rewrite /offset_cong !same_property_iff.
+      move => [z] [Ho1 Ho2] [z'] [Ho3 Ho4].
+      rewrite !(eval_offset_dot (s1 := z) (s2 := z')) //. eauto.
+    Qed.
 
-  Lemma offset_cong_offset {o1 o2 o} :
-    is_Some (eval_offset σ o) ->
-    offset_cong σ o1 o2 ->
-    offset_cong σ (o1 ,, o) (o2 ,, o).
-  Proof. intros. exact /offset_cong_offset2 /offset_cong_partial_reflexive. Qed.
+    Lemma offset_cong_offset {o1 o2 o} :
+      is_Some (eval_offset σ o) ->
+      offset_cong σ o1 o2 ->
+      offset_cong σ (o1 ,, o) (o2 ,, o).
+    Proof. intros. exact /offset_cong_offset2 /offset_cong_partial_reflexive. Qed.
 
-  #[global] Instance ptr_cong_reflexive : Reflexive (ptr_cong σ).
-  Proof.
-    red; unfold ptr_cong; intros p; exists p, (.[ Tbyte ! 0 ]), (.[ Tbyte ! 0]).
-    intuition; try solve [rewrite offset_ptr_sub_0; auto].
-    unfold offset_cong; apply same_property_iff.
-    rewrite eval_o_sub /= Z.mul_0_r; eauto.
-  Qed.
+    #[global] Instance ptr_cong_reflexive : Reflexive (ptr_cong σ).
+    Proof.
+      red; unfold ptr_cong; intros p; exists p, (.[ Tbyte ! 0 ]), (.[ Tbyte ! 0]).
+      intuition; try solve [rewrite offset_ptr_sub_0; auto].
+      unfold offset_cong; apply same_property_iff.
+      rewrite eval_o_sub /= Z.mul_0_r; eauto.
+    Qed.
 
-  #[global] Instance ptr_cong_sym : Symmetric (ptr_cong σ).
-  Proof.
-    red; unfold ptr_cong.
-    intros p p' [p'' [o1 [o2 [Hp [Hp' Hcong]]]]]; subst.
-    exists p'', o2, o1. naive_solver.
-  Qed.
+    #[global] Instance ptr_cong_sym : Symmetric (ptr_cong σ).
+    Proof.
+      red; unfold ptr_cong.
+      intros p p' [p'' [o1 [o2 [Hp [Hp' Hcong]]]]]; subst.
+      exists p'', o2, o1. naive_solver.
+    Qed.
 
-  (* NOTE (JH): [Transitive] isn't provable without a [ptr_vaddr] side-condition because
-     the intermediate [offset] might not [eval_offset] to [Some] integral value.
-   *)
-  (* #[global] Instance ptr_cong_trans : Transitive (ptr_cong σ). *)
+    (* NOTE (JH): [Transitive] isn't provable without a [ptr_vaddr] side-condition because
+       the intermediate [offset] might not [eval_offset] to [Some] integral value.
+     *)
+    (* #[global] Instance ptr_cong_trans : Transitive (ptr_cong σ). *)
 
-  Lemma offset_ptr_cong (p : ptr) o1 o2 :
-    offset_cong σ o1 o2 -> ptr_cong σ (p ,, o1) (p ,, o2).
-  Proof. rewrite /ptr_cong. naive_solver. Qed.
+    Lemma offset_ptr_cong (p : ptr) o1 o2 :
+      offset_cong σ o1 o2 -> ptr_cong σ (p ,, o1) (p ,, o2).
+    Proof. rewrite /ptr_cong. naive_solver. Qed.
 
-  Lemma ptr_cong_offset2 {p1 p2 o1 o2} :
-    offset_cong σ o1 o2 ->
-    ptr_cong σ p1 p2 ->
-    ptr_cong σ (p1 ,, o1) (p2 ,, o2).
-  Proof.
-    move => Ho12 [p] [o3] [o4] [->] [->] Ho34.
-    rewrite -!offset_ptr_dot; eexists _, _, _; split_and! => //.
-    exact: (offset_cong_offset2 Ho34 Ho12).
-  Qed.
+    Lemma ptr_cong_offset2 {p1 p2 o1 o2} :
+      offset_cong σ o1 o2 ->
+      ptr_cong σ p1 p2 ->
+      ptr_cong σ (p1 ,, o1) (p2 ,, o2).
+    Proof.
+      move => Ho12 [p] [o3] [o4] [->] [->] Ho34.
+      rewrite -!offset_ptr_dot; eexists _, _, _; split_and! => //.
+      exact: (offset_cong_offset2 Ho34 Ho12).
+    Qed.
 
-  Lemma ptr_cong_offset {p1 p2 o} :
-    is_Some (eval_offset σ o) ->
-    ptr_cong σ p1 p2 ->
-    ptr_cong σ (p1 ,, o) (p2 ,, o).
-  Proof. intros. apply /ptr_cong_offset2 => //. exact: offset_cong_partial_reflexive. Qed.
+    Lemma ptr_cong_offset {p1 p2 o} :
+      is_Some (eval_offset σ o) ->
+      ptr_cong σ p1 p2 ->
+      ptr_cong σ (p1 ,, o) (p2 ,, o).
+    Proof. intros. apply /ptr_cong_offset2 => //. exact: offset_cong_partial_reflexive. Qed.
 
-  Lemma ptr_cong_o_sub {p1 p2 ty i} :
-    is_Some (size_of σ ty) ->
-    ptr_cong σ p1 p2 ->
-    ptr_cong σ (p1 .[ ty ! i ]) (p2 ,, .[ ty ! i ]).
-  Proof.
-    intros [sz Hsz].
-    apply: ptr_cong_offset => //.
-    by rewrite eval_o_sub /= Hsz.
-  Qed.
+    Lemma ptr_cong_o_sub {p1 p2 ty i} :
+      is_Some (size_of σ ty) ->
+      ptr_cong σ p1 p2 ->
+      ptr_cong σ (p1 .[ ty ! i ]) (p2 ,, .[ ty ! i ]).
+    Proof.
+      intros [sz Hsz].
+      apply: ptr_cong_offset => //.
+      by rewrite eval_o_sub /= Hsz.
+    Qed.
 
-  (** ** [same_address] lemmas *)
+    (** ** [same_address] lemmas *)
 
-  #[global] Instance same_address_dec : RelDecision same_address.
-  Proof. rewrite same_address_eq. apply _. Qed.
-  #[global] Instance same_address_per : RelationClasses.PER same_address.
-  Proof. rewrite same_address_eq. apply _. Qed.
-  #[global] Instance same_address_RewriteRelation : RewriteRelation same_address := {}.
+    #[global] Instance same_address_dec : RelDecision same_address.
+    Proof. rewrite same_address_eq. apply _. Qed.
+    #[global] Instance same_address_per : RelationClasses.PER same_address.
+    Proof. rewrite same_address_eq. apply _. Qed.
+    #[global] Instance same_address_RewriteRelation : RewriteRelation same_address := {}.
 
-  Lemma same_address_iff p1 p2 :
-    same_address p1 p2 <-> ∃ va, ptr_vaddr p1 = Some va ∧ ptr_vaddr p2 = Some va.
-  Proof. by rewrite same_address_eq same_property_iff. Qed.
+    Lemma same_address_iff p1 p2 :
+      same_address p1 p2 <-> ∃ va, ptr_vaddr p1 = Some va ∧ ptr_vaddr p2 = Some va.
+    Proof. by rewrite same_address_eq same_property_iff. Qed.
 
-  Lemma same_address_intro p1 p2 va :
-    ptr_vaddr p1 = Some va -> ptr_vaddr p2 = Some va -> same_address p1 p2.
-  Proof. rewrite same_address_eq; exact: same_property_intro. Qed.
+    Lemma same_address_intro p1 p2 va :
+      ptr_vaddr p1 = Some va -> ptr_vaddr p2 = Some va -> same_address p1 p2.
+    Proof. rewrite same_address_eq; exact: same_property_intro. Qed.
 
-  Lemma same_address_nullptr_nullptr : same_address nullptr nullptr.
-  Proof. have ? := ptr_vaddr_nullptr. exact: same_address_intro. Qed.
+    Lemma same_address_nullptr_nullptr : same_address nullptr nullptr.
+    Proof. have ? := ptr_vaddr_nullptr. exact: same_address_intro. Qed.
 
-  #[global] Instance ptr_vaddr_proper :
-    Proper (same_address ==> eq) ptr_vaddr.
-  Proof. by intros p1 p2 (va&->&->)%same_address_iff. Qed.
+    #[global] Instance ptr_vaddr_proper :
+      Proper (same_address ==> eq) ptr_vaddr.
+    Proof. by intros p1 p2 (va&->&->)%same_address_iff. Qed.
 
-  #[global] Instance ptr_vaddr_params : Params ptr_vaddr 1 := {}.
-
-
-  (** ** [same_address_bool] lemmas *)
-  Definition same_address_bool p1 p2 := bool_decide (same_address p1 p2).
-
-  #[global] Instance same_address_bool_comm : Comm eq same_address_bool.
-  Proof. move=> p1 p2. exact: bool_decide_ext. Qed.
-
-  Lemma same_address_bool_eq {p1 p2 va1 va2} :
-    ptr_vaddr p1 = Some va1 → ptr_vaddr p2 = Some va2 →
-    same_address_bool p1 p2 = bool_decide (va1 = va2).
-  Proof.
-    intros Hs1 Hs2. apply bool_decide_ext.
-    rewrite same_address_eq same_property_iff. naive_solver.
-  Qed.
-
-  Lemma same_address_bool_partial_reflexive p :
-    is_Some (ptr_vaddr p) ->
-    same_address_bool p p = true.
-  Proof.
-    move=> Hsm. rewrite /same_address_bool bool_decide_true; first done.
-    by rewrite same_address_eq -same_property_reflexive_equiv.
-  Qed.
-
-  (** ** [same_alloc] lemmas *)
-
-  #[global] Instance same_alloc_dec : RelDecision same_alloc.
-  Proof. rewrite same_alloc_eq. apply _. Qed.
-  #[global] Instance same_alloc_per : RelationClasses.PER same_alloc.
-  Proof. rewrite same_alloc_eq. apply _. Qed.
-
-  Lemma same_alloc_iff p1 p2 :
-    same_alloc p1 p2 <-> ∃ aid, ptr_alloc_id p1 = Some aid ∧ ptr_alloc_id p2 = Some aid.
-  Proof. by rewrite same_alloc_eq same_property_iff. Qed.
-
-  Lemma same_alloc_intro p1 p2 aid :
-    ptr_alloc_id p1 = Some aid -> ptr_alloc_id p2 = Some aid -> same_alloc p1 p2.
-  Proof. rewrite same_alloc_eq; exact: same_property_intro. Qed.
-
-  Lemma same_alloc_nullptr_nullptr : same_alloc nullptr nullptr.
-  Proof. have ? := ptr_alloc_id_nullptr. exact: same_alloc_intro. Qed.
+    #[global] Instance ptr_vaddr_params : Params ptr_vaddr 1 := {}.
 
 
+    (** ** [same_address_bool] lemmas *)
+    Definition same_address_bool p1 p2 := bool_decide (same_address p1 p2).
 
-  Lemma ptr_alloc_id_base p o
-    (Hs : is_Some (ptr_alloc_id (p ,, o))) :
-    is_Some (ptr_alloc_id p).
-  Proof. by rewrite -(ptr_alloc_id_offset Hs). Qed.
+    #[global] Instance same_address_bool_comm : Comm eq same_address_bool.
+    Proof. move=> p1 p2. exact: bool_decide_ext. Qed.
 
-  Lemma same_alloc_offset p o
-    (Hs : is_Some (ptr_alloc_id (p ,, o))) :
-    same_alloc p (p ,, o).
-  Proof.
-    case: (Hs) => aid Eq. rewrite same_alloc_iff.
-    exists aid. by rewrite -(ptr_alloc_id_offset Hs).
-  Qed.
+    Lemma same_address_bool_eq {p1 p2 va1 va2} :
+      ptr_vaddr p1 = Some va1 → ptr_vaddr p2 = Some va2 →
+      same_address_bool p1 p2 = bool_decide (va1 = va2).
+    Proof.
+      intros Hs1 Hs2. apply bool_decide_ext.
+      rewrite same_address_eq same_property_iff. naive_solver.
+    Qed.
 
-  Lemma same_alloc_offset_2 p o1 o2 p1 p2
-    (E1 : p1 = p ,, o1) (E2 : p2 = p ,, o2)
-    (Hs1 : is_Some (ptr_alloc_id (p ,, o1)))
-    (Hs2 : is_Some (ptr_alloc_id (p ,, o2))) :
-    same_alloc p1 p2.
-  Proof.
-    subst; move: (Hs1) => [aid Eq]; rewrite same_alloc_iff; exists aid; move: Eq.
-    by rewrite (ptr_alloc_id_offset Hs1) (ptr_alloc_id_offset Hs2).
-  Qed.
+    Lemma same_address_bool_partial_reflexive p :
+      is_Some (ptr_vaddr p) ->
+      same_address_bool p p = true.
+    Proof.
+      move=> Hsm. rewrite /same_address_bool bool_decide_true; first done.
+      by rewrite same_address_eq -same_property_reflexive_equiv.
+    Qed.
 
-  Lemma same_alloc_offset_1 p o
-    (Hs : is_Some (ptr_alloc_id (p ,, o))) :
-    same_alloc p (p ,, o).
-  Proof.
-    apply: (same_alloc_offset_2 p o_id o); rewrite ?offset_ptr_id //.
-    exact: ptr_alloc_id_base Hs.
-  Qed.
+    (** ** [same_alloc] lemmas *)
 
-  (** Pointers into the same array with the same address have the same index.
-  Wrapper by [ptr_vaddr_o_sub_eq]. *)
-  Lemma same_address_o_sub_eq p ty n1 n2 sz :
-    size_of σ ty = Some sz -> (sz > 0)%N ->
-    same_address (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) -> n1 = n2.
-  Proof. rewrite same_address_eq. exact: ptr_vaddr_o_sub_eq. Qed.
+    #[global] Instance same_alloc_dec : RelDecision same_alloc.
+    Proof. rewrite same_alloc_eq. apply _. Qed.
+    #[global] Instance same_alloc_per : RelationClasses.PER same_alloc.
+    Proof. rewrite same_alloc_eq. apply _. Qed.
 
-  (** [aligned_ptr] states that the pointer (if it exists in memory) has
-  the given alignment.
-    *)
-  Definition aligned_ptr align p :=
-    (exists va, ptr_vaddr p = Some va /\ (align | va)%N) \/ ptr_vaddr p = None.
-  Definition aligned_ptr_ty ty p :=
-    exists align, align_of ty = Some align /\ aligned_ptr align p.
+    Lemma same_alloc_iff p1 p2 :
+      same_alloc p1 p2 <-> ∃ aid, ptr_alloc_id p1 = Some aid ∧ ptr_alloc_id p2 = Some aid.
+    Proof. by rewrite same_alloc_eq same_property_iff. Qed.
 
-  Lemma aligned_ptr_ty_erase_qualifiers p ty :
-    aligned_ptr_ty ty p <-> aligned_ptr_ty (erase_qualifiers ty) p.
-  Proof.
-    rewrite /aligned_ptr_ty; intros. by rewrite -align_of_erase_qualifiers.
-  Qed.
+    Lemma same_alloc_intro p1 p2 aid :
+      ptr_alloc_id p1 = Some aid -> ptr_alloc_id p2 = Some aid -> same_alloc p1 p2.
+    Proof. rewrite same_alloc_eq; exact: same_property_intro. Qed.
 
-  #[global] Instance aligned_ptr_divide_mono :
-    Proper (flip N.divide ==> eq ==> impl) aligned_ptr.
-  Proof.
-    move=> m n + _ p ->.
-    rewrite /aligned_ptr => ? [[va [P D]]|]; [left|by right].
-    eexists _; split=> //. by etrans.
-  Qed.
-  #[global] Instance aligned_ptr_divide_flip_mono :
-    Proper (N.divide ==> eq ==> flip impl) aligned_ptr.
-  Proof. solve_proper. Qed.
-  #[global] Instance N_divide_RewriteRelation : RewriteRelation N.divide := {}.
+    Lemma same_alloc_nullptr_nullptr : same_alloc nullptr nullptr.
+    Proof. have ? := ptr_alloc_id_nullptr. exact: same_alloc_intro. Qed.
 
-  Lemma aligned_ptr_divide_weaken m n p :
-    (n | m)%N ->
-    aligned_ptr m p -> aligned_ptr n p.
-  Proof. by move->. Qed.
 
-  Lemma aligned_ptr_mult_weaken_l m n p :
-    aligned_ptr (m * n) p -> aligned_ptr n p.
-  Proof. by apply aligned_ptr_divide_weaken, N.divide_mul_r. Qed.
 
-  Lemma aligned_ptr_mult_weaken_r m n p :
-    aligned_ptr (m * n) p -> aligned_ptr m p.
-  Proof. by apply aligned_ptr_divide_weaken, N.divide_mul_l. Qed.
+    Lemma ptr_alloc_id_base p o
+      (Hs : is_Some (ptr_alloc_id (p ,, o))) :
+      is_Some (ptr_alloc_id p).
+    Proof. by rewrite -(ptr_alloc_id_offset Hs). Qed.
 
-  Lemma aligned_ptr_min p : aligned_ptr 1 p.
-  Proof.
-    rewrite /aligned_ptr.
-    case: ptr_vaddr; [|by eauto] => va.
-    eauto using N.divide_1_l.
-  Qed.
+    Lemma same_alloc_offset p o
+      (Hs : is_Some (ptr_alloc_id (p ,, o))) :
+      same_alloc p (p ,, o).
+    Proof.
+      case: (Hs) => aid Eq. rewrite same_alloc_iff.
+      exists aid. by rewrite -(ptr_alloc_id_offset Hs).
+    Qed.
 
-  Lemma aligned_ptr_ty_mult_weaken m n ty p :
-    align_of ty = Some m -> (n | m)%N ->
-    aligned_ptr_ty ty p -> aligned_ptr n p.
-  Proof.
-    rewrite /aligned_ptr_ty;
-      naive_solver eauto using aligned_ptr_divide_weaken.
-  Qed.
+    Lemma same_alloc_offset_2 p o1 o2 p1 p2
+      (E1 : p1 = p ,, o1) (E2 : p2 = p ,, o2)
+      (Hs1 : is_Some (ptr_alloc_id (p ,, o1)))
+      (Hs2 : is_Some (ptr_alloc_id (p ,, o2))) :
+      same_alloc p1 p2.
+    Proof.
+      subst; move: (Hs1) => [aid Eq]; rewrite same_alloc_iff; exists aid; move: Eq.
+      by rewrite (ptr_alloc_id_offset Hs1) (ptr_alloc_id_offset Hs2).
+    Qed.
 
-  Lemma pinned_ptr_pure_aligned_divide va n p :
-    ptr_vaddr p = Some va ->
-    aligned_ptr n p <-> (n | va)%N.
-  Proof. rewrite /aligned_ptr. naive_solver. Qed.
+    Lemma same_alloc_offset_1 p o
+      (Hs : is_Some (ptr_alloc_id (p ,, o))) :
+      same_alloc p (p ,, o).
+    Proof.
+      apply: (same_alloc_offset_2 p o_id o); rewrite ?offset_ptr_id //.
+      exact: ptr_alloc_id_base Hs.
+    Qed.
 
-  Lemma pinned_ptr_pure_divide_1 va n p ty
-    (Hal : align_of ty = Some n) :
-    aligned_ptr_ty ty p → ptr_vaddr p = Some va → (n | va)%N.
-  Proof.
-    rewrite /aligned_ptr_ty Hal /aligned_ptr /=.
-    naive_solver.
-  Qed.
+    (** Pointers into the same array with the same address have the same index.
+    Wrapper by [ptr_vaddr_o_sub_eq]. *)
+    Lemma same_address_o_sub_eq p ty n1 n2 sz :
+      size_of σ ty = Some sz -> (sz > 0)%N ->
+      same_address (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) -> n1 = n2.
+    Proof. rewrite same_address_eq. exact: ptr_vaddr_o_sub_eq. Qed.
 
-  Lemma o_sub_sub (p : ptr) ty i j :
-    p .[ ty ! i] .[ty ! j] = p .[ ty ! i + j].
-  Proof. by rewrite -offset_ptr_dot o_dot_sub. Qed.
+    (** [aligned_ptr] states that the pointer (if it exists in memory) has
+    the given alignment.
+      *)
+    Definition aligned_ptr align p :=
+      (exists va, ptr_vaddr p = Some va /\ (align | va)%N) \/ ptr_vaddr p = None.
+    Definition aligned_ptr_ty ty p :=
+      exists align, align_of ty = Some align /\ aligned_ptr align p.
 
-  Lemma o_base_derived_tu `{Hσ : !tu ⊧ σ} p base derived :
-    directly_derives_tu tu derived base ->
-    p ,, o_base σ derived base ,, o_derived σ base derived = p.
-  Proof. intros [??%parent_offset_genv_compat]. exact: o_base_derived. Qed.
+    Lemma aligned_ptr_ty_erase_qualifiers p ty :
+      aligned_ptr_ty ty p <-> aligned_ptr_ty (erase_qualifiers ty) p.
+    Proof.
+      rewrite /aligned_ptr_ty; intros. by rewrite -align_of_erase_qualifiers.
+    Qed.
 
-  Lemma o_derived_base_tu `{Hσ : !tu ⊧ σ} p base derived :
-    directly_derives_tu tu derived base ->
-    p ,, o_derived σ base derived ,, o_base σ derived base = p.
-  Proof. intros [??%parent_offset_genv_compat]. exact: o_derived_base. Qed.
+    #[global] Instance aligned_ptr_divide_mono :
+      Proper (flip N.divide ==> eq ==> impl) aligned_ptr.
+    Proof.
+      move=> m n + _ p ->.
+      rewrite /aligned_ptr => ? [[va [P D]]|]; [left|by right].
+      eexists _; split=> //. by etrans.
+    Qed.
+    #[global] Instance aligned_ptr_divide_flip_mono :
+      Proper (N.divide ==> eq ==> flip impl) aligned_ptr.
+    Proof. solve_proper. Qed.
+    #[global] Instance N_divide_RewriteRelation : RewriteRelation N.divide := {}.
+
+    Lemma aligned_ptr_divide_weaken m n p :
+      (n | m)%N ->
+      aligned_ptr m p -> aligned_ptr n p.
+    Proof. by move->. Qed.
+
+    Lemma aligned_ptr_mult_weaken_l m n p :
+      aligned_ptr (m * n) p -> aligned_ptr n p.
+    Proof. by apply aligned_ptr_divide_weaken, N.divide_mul_r. Qed.
+
+    Lemma aligned_ptr_mult_weaken_r m n p :
+      aligned_ptr (m * n) p -> aligned_ptr m p.
+    Proof. by apply aligned_ptr_divide_weaken, N.divide_mul_l. Qed.
+
+    Lemma aligned_ptr_min p : aligned_ptr 1 p.
+    Proof.
+      rewrite /aligned_ptr.
+      case: ptr_vaddr; [|by eauto] => va.
+      eauto using N.divide_1_l.
+    Qed.
+
+    Lemma aligned_ptr_ty_mult_weaken m n ty p :
+      align_of ty = Some m -> (n | m)%N ->
+      aligned_ptr_ty ty p -> aligned_ptr n p.
+    Proof.
+      rewrite /aligned_ptr_ty;
+        naive_solver eauto using aligned_ptr_divide_weaken.
+    Qed.
+
+    Lemma pinned_ptr_pure_aligned_divide va n p :
+      ptr_vaddr p = Some va ->
+      aligned_ptr n p <-> (n | va)%N.
+    Proof. rewrite /aligned_ptr. naive_solver. Qed.
+
+    Lemma pinned_ptr_pure_divide_1 va n p ty
+      (Hal : align_of ty = Some n) :
+      aligned_ptr_ty ty p → ptr_vaddr p = Some va → (n | va)%N.
+    Proof.
+      rewrite /aligned_ptr_ty Hal /aligned_ptr /=.
+      naive_solver.
+    Qed.
+
+    Lemma o_sub_sub (p : ptr) ty i j :
+      p .[ ty ! i] .[ty ! j] = p .[ ty ! i + j].
+    Proof. by rewrite -offset_ptr_dot o_dot_sub. Qed.
+
+    Lemma o_base_derived_tu `{Hσ : !tu ⊧ σ} p base derived :
+      directly_derives_tu tu derived base ->
+      p ,, o_base σ derived base ,, o_derived σ base derived = p.
+    Proof. intros [??%parent_offset_genv_compat]. exact: o_base_derived. Qed.
+
+    Lemma o_derived_base_tu `{Hσ : !tu ⊧ σ} p base derived :
+      directly_derives_tu tu derived base ->
+      p ,, o_derived σ base derived ,, o_base σ derived base = p.
+    Proof. intros [??%parent_offset_genv_compat]. exact: o_derived_base. Qed.
   End with_genv.
 
   #[global] Instance aligned_ptr_ty_mono :
