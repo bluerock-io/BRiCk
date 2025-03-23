@@ -454,6 +454,9 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   #[global] Instance global_ptr_inj tu : Inj (=) (=) (global_ptr tu) := _.
 
+  Section with_genv.
+  Context {σ}.
+
   (* Some proofs using these helpers could be shortened, tactic-wise, but I find
   them clearer this way, and they work in both models. *)
   Lemma ptr_vaddr_global_ptr tu o :
@@ -478,6 +481,7 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   Lemma ptr_alloc_id_nullptr : ptr_alloc_id nullptr = Some null_alloc_id.
   Proof. done. Qed.
+  End with_genv.
 
   (* Instance ptr_equiv : Equiv ptr := (=).
   Instance offset_equiv : Equiv offset := (=).
@@ -561,7 +565,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     is_Some (ptr_alloc_id p') -> ptr_alloc_id p' = ptr_alloc_id p.
   Proof. UNFOLD_dot. by destruct p, o as [[] ?] => //= /is_Some_None []. Qed.
 
-  Axiom ptr_vaddr_o_sub_eq : forall p σ ty n1 n2 sz,
+  Axiom ptr_vaddr_o_sub_eq : forall σ p ty n1 n2 sz,
     size_of σ ty = Some sz -> (sz > 0)%N ->
     same_property ptr_vaddr (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) ->
     n1 = n2.

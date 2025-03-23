@@ -280,6 +280,9 @@ Module Type PTRS.
   (* TODO drop [genv]. *)
   Parameter eval_offset : genv -> offset -> option Z.
 
+  Section with_genv.
+    Context {σ : genv}.
+
   (** [ptr_vaddr_nullptr] is not mandated by the standard, but valid across
       compilers we are interested in.
       The closest hint is in <https://eel.is/c++draft/conv.ptr>
@@ -294,12 +297,12 @@ Module Type PTRS.
 
   (** Pointers into the same array with the same address have the same index.
   Wrapped by [same_address_o_sub_eq]. *)
-  Axiom ptr_vaddr_o_sub_eq : forall p σ ty n1 n2 sz,
+  Axiom ptr_vaddr_o_sub_eq : forall p ty n1 n2 sz,
     size_of σ ty = Some sz -> (sz > 0)%N ->
     same_property ptr_vaddr (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) ->
     n1 = n2.
 
-  Axiom eval_o_sub : forall σ ty (i : Z),
+  Axiom eval_o_sub : forall ty (i : Z),
     eval_offset σ (o_sub σ ty i) =
       (* This order enables reducing for known ty. *)
       (fun n => Z.of_N n * i) <$> size_of σ ty.
@@ -308,17 +311,19 @@ Module Type PTRS.
   To hide implementation details of the compiler from proofs, we restrict
   this axiom to POD/Standard-layout structures.
   *)
-  Axiom eval_o_field : forall σ f n cls st,
+  Axiom eval_o_field : forall f n cls st,
     f = Field cls n ->
     glob_def σ cls = Some (Gstruct st) ->
     st.(s_layout) = POD \/ st.(s_layout) = Standard ->
     eval_offset σ (o_field σ f) = offset_of σ cls n.
 
   (* [eval_offset] respects the monoidal structure of [offset]s _for well-defined offsets_. *)
-  Axiom eval_offset_dot : ∀ {σ o1 o2 s1 s2},
+  Axiom eval_offset_dot : ∀ {o1 o2 s1 s2},
     eval_offset σ o1 = Some s1 ->
     eval_offset σ o2 = Some s2 ->
     eval_offset σ (o1 ,, o2) = Some (s1 + s2).
+
+  End with_genv.
 End PTRS.
 
 Module Type PTRS_DERIVED (Import P : PTRS).
@@ -410,19 +415,22 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
         p2 = p ,, o2 /\
         offset_cong σ o1 o2.
 
-  Lemma offset_ptr_sub_0 {σ} (p : ptr) ty (Hsz : is_Some (size_of σ ty)) :
+  Section with_genv.
+    Context {σ : genv}.
+
+  Lemma offset_ptr_sub_0 (p : ptr) ty (Hsz : is_Some (size_of σ ty)) :
     p .[ty ! 0] = p.
   Proof. by rewrite o_sub_0 // offset_ptr_id. Qed.
 
-  #[global] Instance offset_cong_equiv {σ} : RelationClasses.PER (offset_cong σ).
+  #[global] Instance offset_cong_equiv : RelationClasses.PER (offset_cong σ).
   Proof. apply same_property_per. Qed.
 
-  Lemma offset_cong_partial_reflexive σ o :
+  Lemma offset_cong_partial_reflexive o :
     is_Some (eval_offset σ o) ->
     offset_cong σ o o.
   Proof. by move /same_property_reflexive_equiv. Qed.
 
-  Lemma offset_cong_offset2 {σ o1 o2 o3 o4} :
+  Lemma offset_cong_offset2 {o1 o2 o3 o4} :
     offset_cong σ o1 o2 ->
     offset_cong σ o3 o4 ->
     offset_cong σ (o1 ,, o3) (o2 ,, o4).
@@ -432,13 +440,13 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     rewrite !(eval_offset_dot (s1 := z) (s2 := z')) //. eauto.
   Qed.
 
-  Lemma offset_cong_offset {σ o1 o2 o} :
+  Lemma offset_cong_offset {o1 o2 o} :
     is_Some (eval_offset σ o) ->
     offset_cong σ o1 o2 ->
     offset_cong σ (o1 ,, o) (o2 ,, o).
   Proof. intros. exact /offset_cong_offset2 /offset_cong_partial_reflexive. Qed.
 
-  #[global] Instance ptr_cong_reflexive {σ} : Reflexive (ptr_cong σ).
+  #[global] Instance ptr_cong_reflexive : Reflexive (ptr_cong σ).
   Proof.
     red; unfold ptr_cong; intros p; exists p, (.[ Tbyte ! 0 ]), (.[ Tbyte ! 0]).
     intuition; try solve [rewrite offset_ptr_sub_0; auto].
@@ -446,7 +454,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     rewrite eval_o_sub /= Z.mul_0_r; eauto.
   Qed.
 
-  #[global] Instance ptr_cong_sym {σ} : Symmetric (ptr_cong σ).
+  #[global] Instance ptr_cong_sym : Symmetric (ptr_cong σ).
   Proof.
     red; unfold ptr_cong.
     intros p p' [p'' [o1 [o2 [Hp [Hp' Hcong]]]]]; subst.
@@ -456,13 +464,13 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   (* NOTE (JH): [Transitive] isn't provable without a [ptr_vaddr] side-condition because
      the intermediate [offset] might not [eval_offset] to [Some] integral value.
    *)
-  (* #[global] Instance ptr_cong_trans {σ} : Transitive (ptr_cong σ). *)
+  (* #[global] Instance ptr_cong_trans : Transitive (ptr_cong σ). *)
 
-  Lemma offset_ptr_cong σ (p : ptr) o1 o2 :
+  Lemma offset_ptr_cong (p : ptr) o1 o2 :
     offset_cong σ o1 o2 -> ptr_cong σ (p ,, o1) (p ,, o2).
   Proof. rewrite /ptr_cong. naive_solver. Qed.
 
-  Lemma ptr_cong_offset2 {σ p1 p2 o1 o2} :
+  Lemma ptr_cong_offset2 {p1 p2 o1 o2} :
     offset_cong σ o1 o2 ->
     ptr_cong σ p1 p2 ->
     ptr_cong σ (p1 ,, o1) (p2 ,, o2).
@@ -472,13 +480,13 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     exact: (offset_cong_offset2 Ho34 Ho12).
   Qed.
 
-  Lemma ptr_cong_offset {σ p1 p2 o} :
+  Lemma ptr_cong_offset {p1 p2 o} :
     is_Some (eval_offset σ o) ->
     ptr_cong σ p1 p2 ->
     ptr_cong σ (p1 ,, o) (p2 ,, o).
   Proof. intros. apply /ptr_cong_offset2 => //. exact: offset_cong_partial_reflexive. Qed.
 
-  Lemma ptr_cong_o_sub {σ p1 p2 ty i} :
+  Lemma ptr_cong_o_sub {p1 p2 ty i} :
     is_Some (size_of σ ty) ->
     ptr_cong σ p1 p2 ->
     ptr_cong σ (p1 .[ ty ! i ]) (p2 ,, .[ ty ! i ]).
@@ -589,7 +597,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
 
   (** Pointers into the same array with the same address have the same index.
   Wrapper by [ptr_vaddr_o_sub_eq]. *)
-  Lemma same_address_o_sub_eq p σ ty n1 n2 sz :
+  Lemma same_address_o_sub_eq p ty n1 n2 sz :
     size_of σ ty = Some sz -> (sz > 0)%N ->
     same_address (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) -> n1 = n2.
   Proof. rewrite same_address_eq. exact: ptr_vaddr_o_sub_eq. Qed.
@@ -599,30 +607,14 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     *)
   Definition aligned_ptr align p :=
     (exists va, ptr_vaddr p = Some va /\ (align | va)%N) \/ ptr_vaddr p = None.
-  Definition aligned_ptr_ty {σ} ty p :=
+  Definition aligned_ptr_ty ty p :=
     exists align, align_of ty = Some align /\ aligned_ptr align p.
 
-  Lemma aligned_ptr_ty_erase_qualifiers {σ} p ty :
+  Lemma aligned_ptr_ty_erase_qualifiers p ty :
     aligned_ptr_ty ty p <-> aligned_ptr_ty (erase_qualifiers ty) p.
   Proof.
     rewrite /aligned_ptr_ty; intros. by rewrite -align_of_erase_qualifiers.
   Qed.
-
-  #[global] Instance aligned_ptr_ty_mono :
-    Proper (genv_leq ==> eq ==> eq ==> impl) (@aligned_ptr_ty).
-  Proof.
-    rewrite /aligned_ptr_ty; intros σ1 σ2 Hg ? ty -> ? p ->.
-    f_equiv => align [Hal Hp]; split; last done.
-    exact: (align_of_genv_leq σ1) Hal Hg.
-  Qed.
-
-  #[global] Instance aligned_ptr_ty_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> flip impl) (@aligned_ptr_ty).
-  Proof. solve_proper. Qed.
-
-  #[global] Instance aligned_ptr_ty_proper :
-    Proper (genv_eq ==> eq ==> eq ==> iff) (@aligned_ptr_ty).
-  Proof. intros σ1 σ2 [H1 H2] ? ty -> ? p ->. split; by rewrite (H1, H2). Qed.
 
   #[global] Instance aligned_ptr_divide_mono :
     Proper (flip N.divide ==> eq ==> impl) aligned_ptr.
@@ -656,7 +648,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     eauto using N.divide_1_l.
   Qed.
 
-  Lemma aligned_ptr_ty_mult_weaken {σ} m n ty p :
+  Lemma aligned_ptr_ty_mult_weaken m n ty p :
     align_of ty = Some m -> (n | m)%N ->
     aligned_ptr_ty ty p -> aligned_ptr n p.
   Proof.
@@ -669,7 +661,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     aligned_ptr n p <-> (n | va)%N.
   Proof. rewrite /aligned_ptr. naive_solver. Qed.
 
-  Lemma pinned_ptr_pure_divide_1 σ va n p ty
+  Lemma pinned_ptr_pure_divide_1 va n p ty
     (Hal : align_of ty = Some n) :
     aligned_ptr_ty ty p → ptr_vaddr p = Some va → (n | va)%N.
   Proof.
@@ -677,19 +669,37 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     naive_solver.
   Qed.
 
-  Lemma o_sub_sub (p : ptr) ty i j σ :
+  Lemma o_sub_sub (p : ptr) ty i j :
     p .[ ty ! i] .[ty ! j] = p .[ ty ! i + j].
   Proof. by rewrite -offset_ptr_dot o_dot_sub. Qed.
 
-  Lemma o_base_derived_tu `{Hσ : tu ⊧ σ} p base derived :
+  Lemma o_base_derived_tu `{Hσ : !tu ⊧ σ} p base derived :
     directly_derives_tu tu derived base ->
     p ,, o_base σ derived base ,, o_derived σ base derived = p.
   Proof. intros [??%parent_offset_genv_compat]. exact: o_base_derived. Qed.
 
-  Lemma o_derived_base_tu `{Hσ : tu ⊧ σ} p base derived :
+  Lemma o_derived_base_tu `{Hσ : !tu ⊧ σ} p base derived :
     directly_derives_tu tu derived base ->
     p ,, o_derived σ base derived ,, o_base σ derived base = p.
   Proof. intros [??%parent_offset_genv_compat]. exact: o_derived_base. Qed.
+  End with_genv.
+
+  #[global] Instance aligned_ptr_ty_mono :
+    Proper (genv_leq ==> eq ==> eq ==> impl) (@aligned_ptr_ty).
+  Proof.
+    rewrite /aligned_ptr_ty; intros σ1 σ2 Hg ? ty -> ? p ->.
+    f_equiv => align [Hal Hp]; split; last done.
+    exact: (align_of_genv_leq σ1) Hal Hg.
+  Qed.
+
+  #[global] Instance aligned_ptr_ty_flip_mono :
+    Proper (flip genv_leq ==> eq ==> eq ==> flip impl) (@aligned_ptr_ty).
+  Proof. solve_proper. Qed.
+
+  #[global] Instance aligned_ptr_ty_proper :
+    Proper (genv_eq ==> eq ==> eq ==> iff) (@aligned_ptr_ty).
+  Proof. intros σ1 σ2 [H1 H2] ? ty -> ? p ->. split; by rewrite (H1, H2). Qed.
+
 End PTRS_MIXIN.
 
 Module Type PTRS_INTF := PTRS_INTF_MINIMAL <+ PTRS_MIXIN.

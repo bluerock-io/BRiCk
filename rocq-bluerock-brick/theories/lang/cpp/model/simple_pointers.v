@@ -212,6 +212,9 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   Lemma global_ptr_nonnull tu o : global_ptr tu o <> nullptr.
   Proof. (* done. Qed. *) Admitted. (* TODO *)
 
+  Section with_genv.
+  Context {σ}.
+
   Lemma ptr_vaddr_global_ptr tu o :
     ptr_vaddr (global_ptr tu o) = Some (global_ptr_encode_vaddr o).
   Proof. (* done. Qed. *) Admitted. (* TODO *)
@@ -232,7 +235,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   #[global] Instance global_ptr_aid_inj tu : Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
   Proof. intros ??. rewrite !ptr_alloc_id_global_ptr. by intros ?%(inj _)%(inj _). Qed.
 
-  Lemma ptr_vaddr_o_sub_eq p σ ty n1 n2 sz
+  Lemma ptr_vaddr_o_sub_eq p ty n1 n2 sz
     (Hsz : size_of σ ty = Some sz) (Hsz0 : (sz > 0)%N) :
     (same_property ptr_vaddr (p ,, o_sub σ ty n1) (p ,, o_sub σ ty n2) ->
     n1 = n2).
@@ -254,13 +257,13 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   (* Not exposed directly, but proof sketch for
   [valid_o_sub_size]; recall that in this model, all valid pointers have an
   address. *)
-  Lemma raw_valid_o_sub_size σ p ty i :
+  Lemma raw_valid_o_sub_size p ty i :
     is_Some (ptr_vaddr (p ,, o_sub σ ty i)) ->
     is_Some (size_of σ ty).
   Proof. rewrite _dot.unlock /o_sub /o_sub_off. case: size_of=> //=. Qed.
 
   Definition eval_offset (_ : genv) (o : offset) : option Z := o.
-  Lemma eval_o_sub σ ty (i : Z) :
+  Lemma eval_o_sub ty (i : Z) :
     eval_offset _ (o_sub _ ty i) =
       (* This order enables reducing for known ty. *)
       (fun n => Z.of_N n * i) <$> size_of _ ty.
@@ -269,7 +272,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
     by rewrite (comm _ i).
   Qed.
 
-  Lemma eval_o_field σ f n cls st :
+  Lemma eval_o_field f n cls st :
     f = Field cls n ->
     glob_def σ cls = Some (Gstruct st) ->
     st.(s_layout) = POD \/ st.(s_layout) = Standard ->
@@ -277,7 +280,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   Proof. (* done. Qed. *) Admitted. (* TODO *)
 
   (* [eval_offset] respects the monoidal structure of [offset]s _for well-defined offsets_. *)
-  Lemma eval_offset_dot : ∀ σ (o1 o2 : offset),
+  Lemma eval_offset_dot : ∀ (o1 o2 : offset),
     ∀ s1 s2,
       eval_offset σ o1 = Some s1 ->
       eval_offset σ o2 = Some s2 ->
@@ -315,6 +318,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
     (* lia. *)
   Abort.
 
+  End with_genv.
   Include PTRS_DERIVED_MIXIN.
   Include PTRS_MIXIN.
 End SIMPLE_PTRS_IMPL.

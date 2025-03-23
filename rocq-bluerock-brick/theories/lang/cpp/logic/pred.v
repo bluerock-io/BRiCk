@@ -479,16 +479,16 @@ Module Type CPP_LOGIC
     End with_genv.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+  Context `{cpp_logic} {σ}.
 
-    Axiom offset_pinned_ptr_pure : forall σ o z va p,
+    Axiom offset_pinned_ptr_pure : forall o z va p,
       eval_offset σ o = Some z ->
       ptr_vaddr p = Some va ->
       valid_ptr (p ,, o) |--
       [| 0 <= Z.of_N va + z |]%Z **
       [| ptr_vaddr (p ,, o) = Some (Z.to_N (Z.of_N va + z)) |].
 
-    Axiom offset_inv_pinned_ptr_pure : forall σ o z va p,
+    Axiom offset_inv_pinned_ptr_pure : forall o z va p,
       eval_offset σ o = Some z ->
       ptr_vaddr (p ,, o) = Some va ->
       valid_ptr (p ,, o) |--
@@ -557,26 +557,26 @@ Module Type CPP_LOGIC
     Parameter type_ptr : forall `{cpp_logic} {resolve : genv} (c: Rtype), ptr -> mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+  Context `{cpp_logic} {σ}.
 
-    Axiom type_ptr_persistent : forall {σ} p ty,
+    Axiom type_ptr_persistent : forall p ty,
       Persistent (type_ptr ty p).
-    Axiom type_ptr_affine : forall {σ} p ty,
+    Axiom type_ptr_affine : forall p ty,
       Affine (type_ptr ty p).
-    Axiom type_ptr_timeless : forall {σ} p ty,
+    Axiom type_ptr_timeless : forall p ty,
       Timeless (type_ptr ty p).
     #[global] Existing Instances type_ptr_persistent type_ptr_affine type_ptr_timeless.
 
-    Axiom type_ptr_erase : forall {σ} ty p,
+    Axiom type_ptr_erase : forall ty p,
         type_ptr ty p -|- type_ptr (erase_qualifiers ty) p.
 
-    Axiom type_ptr_aligned_pure : forall {σ} ty p,
+    Axiom type_ptr_aligned_pure : forall ty p,
       type_ptr ty p |-- [| aligned_ptr_ty ty p |].
 
-    Axiom type_ptr_off_nonnull : forall {σ} ty p o,
+    Axiom type_ptr_off_nonnull : forall ty p o,
       type_ptr ty (p ,, o) |-- [| p <> nullptr |].
 
-    Axiom tptsto_type_ptr : forall {σ : genv} ty q p v,
+    Axiom tptsto_type_ptr : forall ty q p v,
       Observe (type_ptr ty p) (tptsto ty q p v).
     #[global] Existing Instance tptsto_type_ptr.
 
@@ -585,17 +585,17 @@ Module Type CPP_LOGIC
        NOTE to support un-sized objects, we can simply say that the [sizeof] operator
             in C++ is only a conservative approximation of the true size of an object.
      *)
-    Axiom type_ptr_size : forall σ ty p,
+    Axiom type_ptr_size : forall ty p,
         type_ptr ty p |-- [| is_Some (size_of σ ty) |].
 
     (**
     Recall that [type_ptr] and [strict_valid_ptr] don't include
     past-the-end pointers... *)
-    Axiom type_ptr_strict_valid : forall resolve ty p,
+    Axiom type_ptr_strict_valid : forall ty p,
       type_ptr ty p |-- strict_valid_ptr p.
     (** Hence they can be incremented into (possibly past-the-end) valid pointers. *)
-    Axiom type_ptr_valid_plus_one : forall resolve ty p,
-      type_ptr ty p |-- valid_ptr (p ,, o_sub resolve ty 1).
+    Axiom type_ptr_valid_plus_one : forall ty p,
+      type_ptr ty p |-- valid_ptr (p ,, o_sub σ ty 1).
 
     (* When [p] is a [ptr] to a C++ object of type [ty], [p] is /also/ a pointer
        to the "object representation" of [ty] - which consists of "the sequence
@@ -666,7 +666,7 @@ Module Type CPP_LOGIC
        *)
       Section all_at_once.
         Lemma type_ptr_obj_repr :
-          forall (σ : genv) (ty : Rtype) (p : ptr) (sz : N),
+          forall (ty : Rtype) (p : ptr) (sz : N),
             size_of σ ty = Some sz ->
             type_ptr ty p |-- [∗list] i ∈ seqN 0 sz, type_ptr Tbyte (p .[ Tbyte ! Z.of_N i ]).
         Proof.
@@ -972,7 +972,7 @@ Notation pinned_ptr_Z va p :=
   ([| 0 <= va |]%Z ** pinned_ptr (Z.to_N va) p).
 
 Section pinned_ptr_def.
-  Context `{cpp_logic}.
+  Context `{cpp_logic} {σ}.
 
   #[global] Instance exposed_ptr_persistent p : Persistent (exposed_ptr p).
   Proof. rewrite exposed_ptr.unlock. apply _. Qed.
