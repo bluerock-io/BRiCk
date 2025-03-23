@@ -106,7 +106,7 @@ Module SimpleCPP_BASE <: CPP_LOGIC_CLASS.
   Definition Z_to_bytes {σ:genv} (n : bitsize) (sgn: signed) (v : Z) : list runtime_val' :=
     Rval <$> _Z_to_bytes (bitsize.bytesNat n) (genv_byte_order σ) sgn v.
 
-  Lemma length_Z_to_bytes {σ} n sgn v : length (Z_to_bytes (σ:=σ) n sgn v) = bitsize.bytesNat n.
+  Lemma length_Z_to_bytes {σ} n sgn v : length (Z_to_bytes n sgn v) = bitsize.bytesNat n.
   Proof. by rewrite /Z_to_bytes length_fmap _Z_to_bytes_length. Qed.
 
   Record cpp_ghost' : Type :=
@@ -318,8 +318,6 @@ Module SimpleCPP.
 
       Definition aptr (p : ptr) : list runtime_val :=
         Rpointer_chunk p <$> (seq 0 POINTER_BYTES).
-
-      Notation Z_to_bytes := (Z_to_bytes (σ:=σ)).
 
       Definition cptr (a : N) : list runtime_val :=
         Z_to_bytes POINTER_BITSZ Unsigned (Z.of_N a).
@@ -831,21 +829,21 @@ Module SimpleCPP.
       (* [alloc_own (alloc_id p) (l, h) **
       [| l <= ptr_addr p <= ptr_addr (p ,, o_sub resolve ty 1) <= h |]] *)
 
-    Instance type_ptr_persistent σ p ty : Persistent (type_ptr (resolve:=σ) ty p) := _.
-    Instance type_ptr_affine σ p ty : Affine (type_ptr (resolve:=σ) ty p) := _.
-    Instance type_ptr_timeless σ p ty : Timeless (type_ptr (resolve:=σ) ty p) := _.
+    Instance type_ptr_persistent σ p ty : Persistent (type_ptr ty p) := _.
+    Instance type_ptr_affine σ p ty : Affine (type_ptr ty p) := _.
+    Instance type_ptr_timeless σ p ty : Timeless (type_ptr ty p) := _.
 
     Lemma type_ptr_off_nonnull {σ ty p o} :
       type_ptr ty (p ,, o) |-- [| p <> nullptr |].
     Admitted.
 
     Lemma type_ptr_strict_valid resolve ty p :
-      type_ptr (resolve := resolve) ty p |-- strict_valid_ptr p.
+      type_ptr ty p |-- strict_valid_ptr p.
     Proof. iDestruct 1 as "(_ & _ & _ & $ & _)". Qed.
 
     Lemma type_ptr_valid_plus_one resolve ty p :
       (* size_of resolve ty = Some sz -> *)
-      type_ptr (resolve := resolve) ty p |--
+      type_ptr ty p |--
       valid_ptr (p ,, o_sub resolve ty 1).
     Proof. iDestruct 1 as "(_ & _ & _ & _ & $)". Qed.
 
@@ -890,9 +888,9 @@ Module SimpleCPP.
     (* This lemma is unused; it confirms we can lift the other half of
     [pinned_ptr_aligned_divide], but we don't expose this. *)
     #[local] Lemma pinned_ptr_type_divide_2 {va n σ p ty}
-      (Hal : align_of (σ := σ) ty = Some n) (Hnn : p <> nullptr) :
+      (Hal : align_of ty = Some n) (Hnn : p <> nullptr) :
       pinned_ptr va p ⊢ valid_ptr (p ,, o_sub σ ty 1) -∗
-      [| (n | va)%N |] -∗ type_ptr (resolve := σ) ty p.
+      [| (n | va)%N |] -∗ type_ptr ty p.
     Proof.
       rewrite /type_ptr /aligned_ptr_ty Hal /=.
       iIntros "[V [%P|[%P P]]] #$ %HvaAl"; first by case P.
@@ -914,7 +912,7 @@ Module SimpleCPP.
     #[local] Lemma valid_type_uchar resolve p (Hnn : p <> nullptr) va :
       pinned_ptr va p ⊢
       valid_ptr (p ,, o_sub resolve Tuchar 1) -∗
-      type_ptr (resolve := resolve) Tuchar p.
+      type_ptr Tuchar p.
     Proof.
       iIntros "#P #V".
       iApply (pinned_ptr_type_divide_2 (n := 1)) => //. {
@@ -974,14 +972,14 @@ Module SimpleCPP.
 
     (* TODO (JH): We shouldn't be axiomatizing this in our model in the long-run *)
     Axiom tptsto_live : forall {σ} ty (q : cQp.t) p v,
-      tptsto (σ:=σ) ty q p v |-- live_ptr p ** True.
+      tptsto ty q p v |-- live_ptr p ** True.
 
     #[global] Instance tptsto_nonnull_obs {σ} ty q a :
-      Observe False (tptsto (σ:=σ) ty q nullptr a).
+      Observe False (tptsto ty q nullptr a).
     Proof. iDestruct 1 as (Hne) "_". naive_solver. Qed.
 
     Theorem tptsto_nonnull {σ} ty q a :
-      tptsto (σ:=σ) ty q nullptr a |-- False.
+      tptsto ty q nullptr a |-- False.
     Proof. rewrite tptsto_nonnull_obs. iDestruct 1 as "[]". Qed.
 
     #[global] Instance tptsto_mono :
@@ -1006,20 +1004,20 @@ Module SimpleCPP.
     Qed.
 
     (* Relies on [oaddr_encodes_fractional] *)
-    #[global] Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto (σ:=σ) ty) := _.
+    #[global] Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto ty) := _.
 
     #[global] Instance tptsto_timeless {σ} ty q p v :
-      Timeless (tptsto (σ:=σ) ty q p v) := _.
+      Timeless (tptsto ty q p v) := _.
 
     #[global] Instance tptsto_nonvoid {σ} ty (q : cQp.t) p v :
-      Observe [| ty <> Tvoid |] (tptsto (σ:=σ) ty q p v) := _.
+      Observe [| ty <> Tvoid |] (tptsto ty q p v) := _.
 
     #[global] Instance tptsto_cfrac_valid {σ} ty :
-      CFracValid2 (tptsto (σ:=σ) ty).
+      CFracValid2 (tptsto ty).
     Proof. solve_cfrac_valid. Qed.
 
     #[global] Instance tptsto_agree σ ty q1 q2 p v1 v2 :
-      Observe2 [| v1 = v2 |] (tptsto (σ:=σ) ty q1 p v1) (tptsto (σ:=σ) ty q2 p v2).
+      Observe2 [| v1 = v2 |] (tptsto ty q1 p v1) (tptsto ty q2 p v2).
     Proof.
       intros; apply: observe_2_intro_persistent.
       iDestruct 1 as (Hnn1 Ht1 oa1) "H1".
@@ -1168,7 +1166,7 @@ Module SimpleCPP.
        [tptsto_ptr_congP_transport] from [tptsto_raw_ptr_congP_transport].
      *)
     Lemma tptsto_ptr_congP_transport : forall {σ} q p1 p2 v,
-      ptr_congP σ p1 p2 |-- tptsto (σ:=σ) Tbyte q p1 v -* tptsto (σ:=σ) Tbyte q p2 v.
+      ptr_congP σ p1 p2 |-- tptsto Tbyte q p1 v -* tptsto Tbyte q p2 v.
     Proof. Admitted.
 
     Definition strict_valid_if_not_empty_array (ty : type) : ptr -> mpred :=
@@ -1343,12 +1341,12 @@ Module SimpleCPP.
     End with_genv.
 
     #[local] Theorem tptsto_welltyped : forall {σ} p ty q (v : val),
-      Observe (has_type_or_undef v ty) (tptsto (σ:=σ) ty q p v).
+      Observe (has_type_or_undef v ty) (tptsto ty q p v).
     Proof. Admitted.
 
     (* TODO: the [Notation] connects to the wrong definition *)
     #[local] Theorem tptsto_reference_to : forall {σ} p ty q (v : val),
-      Observe (reference_to ty p) (tptsto (σ:=σ) ty q p v).
+      Observe (reference_to ty p) (tptsto ty q p v).
     Proof. Admitted.
 
   End with_cpp.
@@ -1359,7 +1357,7 @@ Module SimpleCPP.
   Section with_cpp.
     Context `{cpp_logic}.
 
-    #[global] Declare Instance struct_padding_timeless {σ:genv} :  Timeless3 (struct_padding).
+    #[global] Declare Instance struct_padding_timeless {σ:genv} :  Timeless3 struct_padding.
     #[global] Declare Instance struct_padding_fractional : forall {σ : genv} p cls, CFractional (struct_padding p cls).
     #[global] Declare Instance struct_padding_frac_valid :  forall {σ : genv} p cls, CFracValid0 (struct_padding p cls).
 
@@ -1373,7 +1371,7 @@ Module SimpleCPP.
   Section with_cpp.
     Context `{cpp_logic}.
 
-    #[global] Declare Instance union_padding_timeless {σ:genv} :  Timeless4 (union_padding).
+    #[global] Declare Instance union_padding_timeless {σ:genv} :  Timeless4 union_padding.
     #[global] Declare Instance union_padding_fractional : forall {σ : genv} p cls, CFractional1 (union_padding p cls).
     #[global] Declare Instance union_padding_frac_valid :  forall {σ : genv} p cls, CFracValid1 (union_padding p cls).
 
