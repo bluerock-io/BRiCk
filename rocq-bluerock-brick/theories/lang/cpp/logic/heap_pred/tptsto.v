@@ -21,11 +21,9 @@ value [v'] (see [val_related] and [tptsto_fuzzyR_val_related]).
 *)
 mlock Definition tptstoR `{Σ : cpp_logic} {σ : genv} (ty : Rtype) (q : cQp.t) (v : val) : Rep :=
   as_Rep (fun p => tptsto ty q p v).
-#[global] Arguments tptstoR {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 mlock Definition tptsto_fuzzyR `{Σ : cpp_logic, σ : genv} (ty : Rtype) (q : cQp.t) (v : val) : Rep :=
   Exists v', [| val_related ty v v' |] ** tptstoR ty q v'.
-#[global] Arguments tptsto_fuzzyR {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 Section tptstoR.
   Context `{Σ : cpp_logic} {σ : genv}.

@@ -24,7 +24,6 @@ C++ abstract machine.
 *)
 mlock Definition rawR `{Σ : cpp_logic, σ : genv} (q : cQp.t) (r : raw_byte) : Rep :=
   tptsto_fuzzyR Tbyte q (Vraw r).
-#[global] Arguments rawR {_ _ _ _} _ _ : assert.	(* mlock bug *)
 
 (**
 [rawsR q rs]: An array of raw bytes

@@ -255,7 +255,6 @@ mlock Definition operand_receive `{Σ : cpp_logic, σ : genv}
   let cv := qual_norm (fun cv _ => cv) ty in
   res |-> tptsto_fuzzyR (erase_qualifiers ty) (cQp.mk (q_const cv) 1) v **
   Q v.
-#[global] Arguments operand_receive {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 Definition init_receive `{Σ : cpp_logic, σ : genv}
     (addr res : ptr) (Q : epred) : mpred :=

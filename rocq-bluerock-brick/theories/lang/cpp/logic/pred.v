@@ -964,7 +964,6 @@ End valid_ptr_code.
 
 mlock Definition exposed_ptr `{cpp_logic} p : mpred :=
   valid_ptr p ** ∃ aid, [| ptr_alloc_id p = Some aid |] ** exposed_aid aid.
-#[global] Arguments exposed_ptr {_ _ _} p : assert.
 
 (** Physical representation of pointers. *)
 (** [pinned_ptr va p] states that the abstract pointer [p] is tied to a
@@ -973,7 +972,6 @@ mlock Definition exposed_ptr `{cpp_logic} p : mpred :=
   but other pointers exist. *)
 mlock Definition pinned_ptr `{cpp_logic} (va : vaddr) (p : ptr) : mpred :=
   [| ptr_vaddr p = Some va |] ** exposed_ptr p.
-#[global] Arguments pinned_ptr {_ _ _} va p : assert.
 
 Notation pinned_ptr_Z va p :=
   ([| 0 <= va |]%Z ** pinned_ptr (Z.to_N va) p).

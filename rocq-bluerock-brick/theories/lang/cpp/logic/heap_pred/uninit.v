@@ -23,7 +23,6 @@ Implicit Types (σ : genv) (p : ptr) (o : offset).
 mlock
 Definition uninitR `{Σ : cpp_logic} {σ : genv} (ty : Rtype) (q : cQp.t) : Rep :=
   tptstoR ty q Vundef.
-#[global] Arguments uninitR {thread_info _ Σ σ} ty q : rename.
 
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.
