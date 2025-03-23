@@ -235,7 +235,7 @@ Module Type PTRS.
   (* [o_sub_0] axiom is required because any object is a 1-object array
      (<https://eel.is/c++draft/expr.add#footnote-80>).
    *)
-  Axiom o_sub_0 : ∀ {σ : genv} ty, is_Some (size_of σ ty) -> .[ty ! 0] = o_id.
+  Axiom o_sub_0 : ∀ {σ} ty, is_Some (size_of σ ty) -> .[ty ! 0] = o_id.
   (* TODO: drop (is_Some (size_of σ ty)) via
      `displacement (o_sub σ ty i) = if (i = 0) then 0 else i * size_of σ ty`
    *)
@@ -295,7 +295,7 @@ Module Type PTRS.
     size_of σ ty = Some sz -> (sz > 0)%N ->
     same_property ptr_vaddr (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) ->
     n1 = n2.
-  Axiom o_dot_sub : ∀ {σ : genv} i j ty,
+  Axiom o_dot_sub : ∀ {σ} i j ty,
     (o_sub _ ty i) ,, (o_sub _ ty j) = o_sub _ ty (i + j).
 
   (** [eval_offset] and associated axioms are more advanced, only to be used
@@ -385,7 +385,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   Definition offset_cong : genv -> relation offset :=
     fun σ o1 o2 => same_property (eval_offset σ) o1 o2.
 
-  #[global] Instance offset_cong_equiv {σ : genv} : RelationClasses.PER (offset_cong σ).
+  #[global] Instance offset_cong_equiv {σ} : RelationClasses.PER (offset_cong σ).
   Proof. apply same_property_per. Qed.
 
   Lemma offset_cong_partial_reflexive σ o :
@@ -429,7 +429,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
         p2 = p ,, o2 /\
         offset_cong σ o1 o2.
 
-  #[global] Instance ptr_cong_reflexive {σ : genv} : Reflexive (ptr_cong σ).
+  #[global] Instance ptr_cong_reflexive {σ} : Reflexive (ptr_cong σ).
   Proof.
     red; unfold ptr_cong; intros p; exists p, (.[ Tbyte ! 0 ]), (.[ Tbyte ! 0]).
     intuition; try solve [rewrite o_sub_0; auto; rewrite offset_ptr_id//].
@@ -437,7 +437,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     rewrite eval_o_sub/= Z.mul_0_r; eauto.
   Qed.
 
-  #[global] Instance ptr_cong_sym {σ : genv} : Symmetric (ptr_cong σ).
+  #[global] Instance ptr_cong_sym {σ} : Symmetric (ptr_cong σ).
   Proof.
     red; unfold ptr_cong.
     intros p p' [p'' [o1 [o2 [Hp [Hp' Hcong]]]]]; subst.
@@ -447,7 +447,7 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
   (* NOTE (JH): [Transitive] isn't provable without a [ptr_vaddr] side-condition because
      the intermediate [offset] might not [eval_offset] to [Some] integral value.
    *)
-  (* #[global] Instance ptr_cong_trans {σ : genv} : Transitive (ptr_cong σ). *)
+  (* #[global] Instance ptr_cong_trans {σ} : Transitive (ptr_cong σ). *)
 
   Lemma offset_ptr_cong σ (p : ptr) o1 o2 :
     offset_cong σ o1 o2 -> ptr_cong σ (p ,, o1) (p ,, o2).
