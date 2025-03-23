@@ -138,9 +138,6 @@ Module Type CPP_LOGIC
     *)
     Parameter has_type : ∀ `{cpp_logic} {σ : genv}, val -> type -> mpred.
 
-    #[global] Declare Instance has_type_mono `{cpp_logic} :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@has_type _ _ _).
-
     (**
        [reference_to ty p] states that the location [p] stores a value of type [ty].
        Being a reference is stronger than being a pointer because pointers allow
@@ -171,9 +168,6 @@ Module Type CPP_LOGIC
        state of [type_ptr]).
      *)
     Parameter reference_to : forall `{cpp_logic} {σ : genv}, type -> ptr -> mpred.
-
-    #[global] Declare Instance reference_to_mono `{cpp_logic} :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@reference_to _ _ _).
 
     Section with_genv.
       Context `{cpp_logic} {σ : genv}.
@@ -1437,15 +1431,6 @@ Section has_type.
 
   (** [has_type] *)
 
-  #[global] Instance: Params (@has_type) 3 := {}.
-  #[global] Instance has_type_proper :
-    Proper (genv_eq ==> eq ==> eq ==> (≡)) (@has_type _ _ _).
-  Proof. intros ?? Heq ??? ???; split'; apply has_type_mono => //; apply Heq. Qed.
-
-  #[global] Instance has_type_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> flip bi_entails) (@has_type _ _ _).
-  Proof. by move=> ??+ ??-> ??-> => ->. Qed.
-
   #[global] Instance has_type_knowledge {σ} : Knowledge2 has_type_or_undef.
   Proof. rewrite has_type_or_undef_unfold; split; apply _. Qed.
   #[global] Instance has_type_timeless {σ} : Timeless2 has_type_or_undef.
@@ -1488,14 +1473,6 @@ Section has_type.
 
   Definition is_undef (v : val) : bool :=
     if v is Vundef then true else false.
-
-  #[global] Instance: Params (@has_type_or_undef) 3 := {}.
-  #[global] Instance has_type_or_undef_proper :
-    Proper (genv_eq ==> eq ==> eq ==> (≡)) (@has_type_or_undef _ _ _).
-  Proof. rewrite has_type_or_undef_unfold; solve_proper. Qed.
-  #[global] Instance has_type_or_undef_mono :
-    Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@has_type_or_undef _ _ _).
-  Proof. rewrite has_type_or_undef_unfold; solve_proper. Qed.
 
   Lemma has_type_or_undef_undef {σ} t : |-- has_type_or_undef Vundef t.
   Proof. rewrite has_type_or_undef_unfold. by iRight. Qed.

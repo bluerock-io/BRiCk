@@ -74,20 +74,6 @@ Section with_cpp.
   Qed.
 
   (** [initializedR] *)
-  #[global] Instance: Params (@initializedR) 3 := {}.
-  #[global] Instance initializedR_proper :
-    Proper (genv_eq ==> (=) ==> (=) ==> (=) ==> (⊣⊢)) (@initializedR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite initializedR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance initializedR_mono :
-    Proper (genv_leq ==> (=) ==> (=) ==> (=) ==> (⊢)) (@initializedR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite initializedR.unlock. by setoid_rewrite Hσ.
-  Qed.
-
   #[global] Instance initializedR_timeless ty q v
     : Timeless (initializedR ty q v).
   Proof. rewrite initializedR.unlock. apply _. Qed.
@@ -179,20 +165,6 @@ Section with_cpp.
   Proof. rewrite initializedR.unlock. apply _. Qed.
 
   (** [primR] *)
-  #[global] Instance: Params (@primR) 3 := {}.
-  #[global] Instance primR_proper :
-    Proper (genv_eq ==> (=) ==> (=) ==> (=) ==> (⊣⊢)) (@primR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite primR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance primR_mono :
-    Proper (genv_leq ==> (=) ==> (=) ==> (=) ==> (⊢)) (@primR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite primR.unlock. by setoid_rewrite Hσ.
-  Qed.
-
   #[global] Instance primR_timeless ty q v
     : Timeless (primR ty q v).
   Proof. rewrite primR.unlock. apply _. Qed.

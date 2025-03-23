@@ -1218,17 +1218,9 @@ Module SimpleCPP.
       | _ => [| nonptr_prim_type ty |]
       end.
 
-    #[global] Instance has_type_mono :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@has_type).
-    Proof. solve_proper. Qed.
-
     Definition reference_to {σ : genv} (ty : type) (p : ptr) : mpred :=
       [| aligned_ptr_ty ty p |] ** [| p <> nullptr |] **
         valid_ptr p ** if zero_sized_array ty then emp else strict_valid_ptr p.
-
-    #[global] Instance reference_to_mono :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@reference_to).
-    Proof. solve_proper. Qed.
 
     Definition has_type_or_undef {σ} (v : val) ty : mpred :=
       has_type v ty \\// [| v = Vundef |].

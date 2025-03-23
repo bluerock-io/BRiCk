@@ -684,22 +684,6 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
     Proof. intros [??%parent_offset_genv_compat]. exact: o_derived_base. Qed.
   End with_genv.
 
-  #[global] Instance aligned_ptr_ty_mono :
-    Proper (genv_leq ==> eq ==> eq ==> impl) (@aligned_ptr_ty).
-  Proof.
-    rewrite /aligned_ptr_ty; intros σ1 σ2 Hg ? ty -> ? p ->.
-    f_equiv => align [Hal Hp]; split; last done.
-    exact: (align_of_genv_leq σ1) Hal Hg.
-  Qed.
-
-  #[global] Instance aligned_ptr_ty_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> flip impl) (@aligned_ptr_ty).
-  Proof. solve_proper. Qed.
-
-  #[global] Instance aligned_ptr_ty_proper :
-    Proper (genv_eq ==> eq ==> eq ==> iff) (@aligned_ptr_ty).
-  Proof. intros σ1 σ2 [H1 H2] ? ty -> ? p ->. split; by rewrite (H1, H2). Qed.
-
 End PTRS_MIXIN.
 
 Module Type PTRS_INTF := PTRS_INTF_MINIMAL <+ PTRS_MIXIN.
