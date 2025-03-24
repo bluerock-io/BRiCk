@@ -548,27 +548,6 @@ Module SimpleCPP.
       Proof. iIntros "!%". by move=> /length_encodes -> /length_encodes ->. Qed.
     End with_genv.
 
-    Instance Z_to_bytes_proper :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> eq) (@Z_to_bytes).
-    Proof. intros ?? Hσ%genv_byte_order_proper. solve_proper. Qed.
-
-    Instance cptr_proper :
-      Proper (genv_leq ==> eq ==> eq) cptr.
-    Proof. rewrite /cptr => σ1 σ2 Heq ?? ->. by rewrite Heq. Qed.
-
-    Instance aptr_proper :
-      Proper (genv_leq ==> eq ==> eq) aptr.
-    Proof. rewrite /aptr => σ1 σ2 Heq ?? ->. by rewrite Heq. Qed.
-
-    Instance encodes_proper :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> lentails) encodes.
-    Proof.
-      unfold encodes; intros σ1 σ2 Heq t1 t2 -> v1 v2 -> vs1 vs2 ->.
-      f_equiv; unfold pure_encodes, impl;
-        destruct (erase_qualifiers t2) => //; destruct v2 => //;
-        try case_decide; rewrite ?Heq //.
-    Qed.
-
     Definition val_ (a : ptr) (v : val) q : mpred :=
       ghost_mem_own a q v.
 
@@ -866,24 +845,6 @@ Module SimpleCPP.
     Lemma type_ptr_size {σ} ty p : type_ptr ty p |-- [| is_Some (size_of σ ty) |].
     Proof. iDestruct 1 as "(_ & _ & % & _)"; eauto. Qed.
 
-    (* See [o_sub_mono] in [simple_pointers.v] *)
-    Axiom valid_ptr_o_sub_proper : forall {σ1 σ2 p ty}, genv_leq σ1 σ2 ->
-      valid_ptr (p ,, o_sub σ1 ty 1) |-- valid_ptr (p ,, o_sub σ2 ty 1).
-
-    Instance type_ptr_mono :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@type_ptr).
-    Proof.
-      rewrite /type_ptr /aligned_ptr_ty => σ1 σ2 Heq x y ????; subst.
-      rewrite (valid_ptr_o_sub_proper Heq).
-      do 3 f_equiv.
-      - move=> -[align [HalTy Halp]]. eexists; split => //.
-        move: Heq HalTy => /Proper_align_of /(_ y _ eq_refl).
-        destruct 1; naive_solver.
-      - f_equiv=> -[sz1].
-        move: Heq => /Proper_size_of /(_ y _ eq_refl).
-        destruct 1; naive_solver.
-    Qed.
-
 
     (* This lemma is unused; it confirms we can lift the other half of
     [pinned_ptr_aligned_divide], but we don't expose this. *)
@@ -981,27 +942,6 @@ Module SimpleCPP.
     Theorem tptsto_nonnull {σ} ty q a :
       tptsto ty q nullptr a |-- False.
     Proof. rewrite tptsto_nonnull_obs. iDestruct 1 as "[]". Qed.
-
-    #[global] Instance tptsto_mono :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> eq ==> (⊢)) (@tptsto).
-    Proof.
-      rewrite /tptsto /oaddr_encodes /addr_encodes.
-      intros ?? Hσ ??-> ??-> ??-> ??->.
-      iIntros "(%Hnonnull & %Htype & H)";
-        iDestruct "H" as (oa) "(Htype_ptr & Hmem_inj_own & Hoa)".
-      iSplitR; first eauto.
-      iSplitR; first eauto.
-      iExists oa; iFrame "Hmem_inj_own".
-      iSplitL "Htype_ptr"; first by rewrite Hσ.
-      iStopProof; destruct oa; by solve_proper.
-    Qed.
-
-    #[global] Instance tptsto_proper :
-      Proper (genv_eq ==> eq ==> eq ==> eq ==> eq ==> (≡)) (@tptsto).
-    Proof.
-      intros σ1 σ2 [Hσ1 Hσ2] ??-> ??-> ??-> ??->.
-      by split'; apply tptsto_mono.
-    Qed.
 
     (* Relies on [oaddr_encodes_fractional] *)
     #[global] Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto ty) := _.

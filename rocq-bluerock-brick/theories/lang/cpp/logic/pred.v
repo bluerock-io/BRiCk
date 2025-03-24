@@ -287,12 +287,6 @@ Module Type CPP_LOGIC
     Axiom tptsto_nonnull : forall {σ} ty q a,
       tptsto ty q nullptr a |-- False.
 
-    #[global] Declare Instance tptsto_params : Params (@tptsto) 3.
-    #[global] Declare Instance tptsto_proper :
-      Proper (genv_eq ==> eq ==> eq ==> eq ==> eq ==> (≡)) (@tptsto _ _ _).
-    #[global] Declare Instance tptsto_mono :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> eq ==> (⊢)) (@tptsto _ _ _).
-
     #[global] Declare Instance tptsto_timeless : Timeless4 tptsto.
     #[global] Declare Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto ty).
 
@@ -1311,11 +1305,6 @@ Section with_cpp.
     _valid_ptr vt p ∗ live_ptr p.
   Definition valid_live_ptr p : mpred := _valid_live_ptr Relaxed p.
   Definition strict_valid_live_ptr p : mpred := _valid_live_ptr Strict p.
-
-  #[global] Instance tptsto_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> eq ==> eq ==> flip (⊢))
-      (@tptsto _ _ _).
-  Proof. repeat intro. exact: tptsto_mono. Qed.
 
   #[global] Instance tptsto_as_cfractional ty : AsCFractional2 (tptsto ty).
   Proof. solve_as_cfrac. Qed.
