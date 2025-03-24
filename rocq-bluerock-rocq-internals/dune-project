@@ -1,6 +1,6 @@
 (lang dune 3.8)
 (using coq 0.8)
-(name rocq-bluerock-hint-db)
+(name rocq-bluerock-rocq-internals)
 
 (generate_opam_files)
 
@@ -15,6 +15,6 @@
 (license LGPL-2.1-only)
 
 (package
- (name rocq-bluerock-hint-db)
- (synopsis "Plugin to expose some additional internals of Rocq hint databases")
+ (name rocq-bluerock-rocq-internals)
+ (synopsis "Plugin to expose some internals of Rocq")
  (depends coq-core))

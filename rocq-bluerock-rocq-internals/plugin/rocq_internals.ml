@@ -1,5 +1,5 @@
 (************************************************************************)
-(*         *      The Rocq Prover / The Rocq Development Team           *)
+(*         *   The Coq Proof Assistant / The Coq Development Team       *)
 (*  v      *         Copyright INRIA, CNRS and contributors             *)
 (* <O___,, * (see version control and CREDITS file for authors & dates) *)
 (*   \VV/  **************************************************************)
@@ -16,6 +16,8 @@
 open Util
 open Names
 open Pattern
+
+type pat = Pattern.constr_pattern
 
 module Patternops = struct
   include Patternops
@@ -94,3 +96,12 @@ let decomp_pat p =
     | c -> (c,acc)
   in
   decrec [] (eta_reduce_pat p)
+
+let evaluable_constant c env ts =
+  (* Hack to work around a broken Print Module implementation, see #2668. *)
+  (if Environ.mem_constant c env then Environ.evaluable_constant c env else true) &&
+  Structures.PrimitiveProjections.is_transparent_constant ts c
+
+let evaluable_named id env ts =
+  (try Environ.evaluable_named id env with Not_found -> true) &&
+  TransparentState.is_transparent_variable ts id

@@ -1,7 +1,0 @@
-(library
- (name bluerock_hint_db)
- (flags :standard -w -32-37) ; TODO fix all warnings
- (public_name rocq-bluerock-hint-db.plugin)
- (libraries coq-core.vernac) ; TODO: vernac seems big, is there a better one?
-)
-

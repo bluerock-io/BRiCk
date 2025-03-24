@@ -5,8 +5,6 @@
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-open Bluerock_hint_db.HintDbExtra
-
 let option_prefix = ["HintDb"; "Opacity"; "Info"]
 
 type equivalence =
@@ -192,7 +190,7 @@ let constr_pat_discr env ts depth p : aux =
       end
     | _ -> Done
   in
-  decomp depth [] (eta_reduce_pat p)
+  decomp depth [] (Rocq_internals.eta_reduce_pat p)
 
 let pr_hint (hint : Hints.FullHint.t) =
   let open Pp in
