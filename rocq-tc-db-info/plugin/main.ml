@@ -370,6 +370,8 @@ let go_db clss db_name =
 
   let db = Hints.searchtable_map (Names.Id.to_string db_name) in
   let modes = Hints.Hint_db.modes db in
+  (* TODO: Unexpected breakage from https://github.com/coq/coq/pull/20201 *)
+  let modes : Hints.hint_mode array list Names.GlobRef.Map.t = Obj.magic modes in
   let ts = Hints.Hint_db.transparent_state db in
 
   let go_hint modes head hint =
