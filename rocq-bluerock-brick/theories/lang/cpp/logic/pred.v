@@ -117,7 +117,7 @@ Module Type CPP_LOGIC
     Notation valid_ptr := (_valid_ptr Relaxed).
 
   Section with_cpp_logic.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
     #[global] Declare Instance _valid_ptr_persistent : forall b p, Persistent (_valid_ptr b p).
     #[global] Declare Instance _valid_ptr_affine : forall b p, Affine (_valid_ptr b p).
@@ -242,7 +242,7 @@ Module Type CPP_LOGIC
       forall `{cpp_logic} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
 
   Section with_cpp_logic.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
     #[global] Declare Instance provides_storage_persistent :
       forall storage_ptr obj_ptr ty,
@@ -278,14 +278,14 @@ Module Type CPP_LOGIC
       (t : Rtype) (q : cQp.t) (a : ptr) (v : val), mpred.
 
   Section with_cpp_logic.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
     #[global] Declare Instance tptsto_valid_type
-      : forall {σ} (t : Rtype) (q : cQp.t) (a : ptr) (v : val),
+      : forall (t : Rtype) (q : cQp.t) (a : ptr) (v : val),
         Observe [| is_heap_type t |] (tptsto t q a v).
 
     Axiom tptsto_nonnull : forall {σ} ty q a,
-      tptsto (σ:=σ) ty q nullptr a |-- False.
+      tptsto ty q nullptr a |-- False.
 
     #[global] Declare Instance tptsto_params : Params (@tptsto) 3.
     #[global] Declare Instance tptsto_proper :
@@ -293,7 +293,7 @@ Module Type CPP_LOGIC
     #[global] Declare Instance tptsto_mono :
       Proper (genv_leq ==> eq ==> eq ==> eq ==> eq ==> (⊢)) (@tptsto _ _ _).
 
-    #[global] Declare Instance tptsto_timeless : Timeless5 (@tptsto _ _ _).
+    #[global] Declare Instance tptsto_timeless : Timeless4 tptsto.
     #[global] Declare Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto ty).
 
     #[global] Declare Instance tptsto_cfrac_valid {σ} t : CFracValid2 (tptsto t).
@@ -325,7 +325,7 @@ Module Type CPP_LOGIC
       alloc_id -> mpred.
 
   Section with_cpp_logic.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
     #[global] Declare Instance live_alloc_id_timeless : forall aid, Timeless (live_alloc_id aid).
 
@@ -396,13 +396,13 @@ Module Type CPP_LOGIC
         cQp.t -> ptr -> mpred.
 
   Section with_cpp_logic.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    #[global] Declare Instance mdc_path_cfractional σ this mdc : CFractional1 (mdc_path this mdc).
-    #[global] Declare Instance mdc_path_cfrac_valid {σ} cls path : CFracValid1 (mdc_path cls path).
-    #[global] Declare Instance mdc_path_timeless {σ} : Timeless4 (mdc_path).
-    #[global] Declare Instance mdc_path_strict_valid {σ} this mdc q p : Observe (strict_valid_ptr p) (mdc_path this mdc q p).
-    #[global] Declare Instance mdc_path_agree {σ} cls1 cls2 q1 q2 p mdc1 mdc2 :
+    #[global] Declare Instance mdc_path_cfractional this mdc : CFractional1 (mdc_path this mdc).
+    #[global] Declare Instance mdc_path_cfrac_valid cls path : CFracValid1 (mdc_path cls path).
+    #[global] Declare Instance mdc_path_timeless : Timeless4 (mdc_path).
+    #[global] Declare Instance mdc_path_strict_valid this mdc q p : Observe (strict_valid_ptr p) (mdc_path this mdc q p).
+    #[global] Declare Instance mdc_path_agree cls1 cls2 q1 q2 p mdc1 mdc2 :
       Observe2 [| mdc1 = mdc2 /\ cls1 = cls2 |] (mdc_path cls1 mdc1 q1 p) (mdc_path cls2 mdc2 q2 p).
 
     (** this allows you to forget an object mdc_path, necessary for doing
@@ -503,7 +503,7 @@ Module Type CPP_LOGIC
     Parameter exposed_aid : forall `{cpp_logic}, alloc_id -> mpred.
 
   Section with_cpp_logic.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
     #[global] Declare Instance exposed_aid_persistent : forall aid, Persistent (exposed_aid aid).
     #[global] Declare Instance exposed_aid_affine : forall aid, Affine (exposed_aid aid).
@@ -779,13 +779,13 @@ Module Type CPP_LOGIC
       ptr -> globname -> cQp.t -> mpred.
 
   Section with_cpp_logic.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    #[global] Declare Instance struct_padding_timeless {σ} : Timeless3 struct_padding.
-    #[global] Declare Instance struct_padding_fractional : forall {σ} p cls, CFractional (struct_padding p cls).
-    #[global] Declare Instance struct_padding_frac_valid : forall {σ} p cls, CFracValid0 (struct_padding p cls).
+    #[global] Declare Instance struct_padding_timeless : Timeless3 struct_padding.
+    #[global] Declare Instance struct_padding_fractional : forall p cls, CFractional (struct_padding p cls).
+    #[global] Declare Instance struct_padding_frac_valid : forall p cls, CFracValid0 (struct_padding p cls).
 
-    #[global] Declare Instance struct_padding_type_ptr_observe : forall {σ} p cls q,
+    #[global] Declare Instance struct_padding_type_ptr_observe : forall p cls q,
         Observe (type_ptr (Tnamed cls) p) (struct_padding p cls q).
 
   End with_cpp_logic.
