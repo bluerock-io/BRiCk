@@ -598,3 +598,31 @@ Inductive class_compatible (a b : translation_unit) (cls : name) : Prop :=
                (_ : b.(types) !! cls = Some (Gstruct st))
                (_ : forall base, In base (map fst st.(s_bases)) ->
                             class_compatible a b base).
+
+#[local]
+Lemma arguments_same xs : forall ys,
+    map (λ b : ident * type, drop_qualifiers (normalize_type b.2)) xs = map (λ b : ident * type, drop_qualifiers (normalize_type b.2)) ys ->
+    map (λ t : type, to_arg_type (normalize_type t)) xs.*2 = map (λ t : type, to_arg_type (normalize_type t)) ys.*2.
+Proof.
+  induction xs; destruct ys; simpl; intros; try congruence.
+  inversion H; clear H; subst.
+  f_equal; eauto.
+  revert H1; clear.
+  rewrite /to_arg_type. rewrite !qual_norm_decompose_type.
+  rewrite !drop_qualifiers_decompose_type.
+  destruct (decompose_type (normalize_type a.2)), (decompose_type (normalize_type p.2)); simpl in *; intros; subst.
+  auto.
+Qed.
+
+Lemma type_of_value_ObjValue_ler a b : ObjValue_ler a b -> type_of_value a = type_of_value b.
+Proof.
+  destruct a, b; simpl; try congruence;
+    repeat first [ case_bool_decide | case_match ]; subst; try congruence; simpl; eauto.
+  all: intros; rewrite /type_of_value/=; try congruence.
+  { f_equal. f_equal; eauto using arguments_same. }
+  { f_equal. f_equal; eauto.
+    f_equal; eauto using arguments_same.
+    congruence. }
+  { f_equal. f_equal; eauto.
+    f_equal; eauto using arguments_same. congruence. }
+Qed.
