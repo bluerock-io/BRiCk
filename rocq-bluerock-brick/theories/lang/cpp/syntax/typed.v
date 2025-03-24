@@ -1018,11 +1018,8 @@ Module decltype.
       | Some (Builtin _) => mret ()
       end.
 
-    Definition classname_to_type : classname' lang -> type' lang :=
-      match lang with
-      | lang.cpp => Tnamed
-      | lang.temp => id
-      end.
+    Definition classname_to_type : classname -> type :=
+      Tnamed.
 
     Definition check_method (m : Method' lang) : Merr unit :=
       match m.(m_body) with

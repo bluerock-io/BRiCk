@@ -712,21 +712,8 @@ In templates, these names do not have to be resolved, e.g. in CRTP.
 template<typename T>
 struct Foo : T { };
 >>
-To support this, [classname lang.temp = type lang.temp]
 *)
-Definition classname' (lang : lang.t) : Set :=
-  match lang with
-  | lang.cpp => name' lang
-  | lang.temp => type' lang
-  end.
-#[global] Instance classname_inh {lang} : Inhabited (classname' lang).
-Proof. destruct lang; refine _. Qed.
-
-(*
-#[global] Instance classname_eq_dec {lang} : EqDecision (classname' lang).
-Proof. destruct lang; solve_decision. Defined.
-*)
-
+Notation classname' := type'.
 
 
 (*
@@ -801,9 +788,7 @@ Proof. rewrite /field_name.t. refine _. Defined.
 Notation field' := name' (only parsing).
 (* Definition field' lang : Set := name' lang. *)
 Definition Field' {lang} : classname' lang -> field_name.t lang -> field' lang :=
-  match lang with
-  | lang.cpp => Nscoped
-  | lang.temp => fun t c =>
+  fun t c =>
     (* NOTE: this [match] implements a canonicalization to avoid
        [Ndependent (Tnamed nm)], instead rewriting it to simply [nm] *)
     match t with
@@ -811,10 +796,9 @@ Definition Field' {lang} : classname' lang -> field_name.t lang -> field' lang :
     | Tnamed nm => Nscoped nm c
     | Tparam _ | Tdecltype _ => Nscoped (Ndependent t) c
     | _ => Nunsupported "Field failed"
-    end
-  end.
-Notation field := (field' lang.cpp) (only parsing).
-Notation Field := (@Field' lang.cpp).
+    end.
+Notation field := field' (only parsing).
+Notation Field := Field'.
 Definition f_type {lang} (t : field' lang) : globname' lang :=
   match t with
   | Nscoped n _ => n

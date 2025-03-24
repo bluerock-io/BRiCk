@@ -58,12 +58,12 @@ Module Import internal.
   End convert.
 End internal.
 
-#[local] Notation USE lang1 lang2 f := (
-  f (handle_type (lang1:=lang1) (lang2:=lang2))
-    (handle_expr (lang1:=lang1) (lang2:=lang2))
+#[local] Notation USE f := (
+  f handle_type
+    handle_expr
 ) (only parsing).
-#[local] Notation M2S f := (USE lang.temp lang.cpp f).
-#[local] Notation S2M f := (USE lang.cpp lang.temp f).
+#[local] Notation M2S f := (USE f).
+#[local] Notation S2M f := (USE f).
 
 Definition untempN := M2S MTraverse.traverseN.
 Definition untempT := M2S MTraverse.traverseT.

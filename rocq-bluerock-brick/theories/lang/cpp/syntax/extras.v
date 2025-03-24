@@ -36,6 +36,3 @@ Proof. apply by_prim_tag_leibniz. compute. by destruct x, y; compute. Qed.
 
 #[global] Instance atomic_name__eq_dec {A : Set} `{!EqDecision A} : EqDecision (atomic_name_ A).
 Proof. solve_decision. Defined.
-
-#[global] Instance classname_eq_dec {lang} : EqDecision (classname' lang).
-Proof. destruct lang; solve_decision. Defined.

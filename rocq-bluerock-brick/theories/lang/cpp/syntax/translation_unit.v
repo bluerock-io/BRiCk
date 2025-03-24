@@ -71,8 +71,8 @@ Module global_init.
 
   Import UPoly.
   #[universes(polymorphic)]
-  Definition fmap {lang lang' : lang.t} `{FMap M} (f : Expr' lang -> Expr' lang')
-    (gi : global_init.t lang) : global_init.t lang' :=
+  Definition fmap `{FMap M} (f : Expr -> Expr)
+    (gi : global_init.t) : global_init.t :=
     match gi with
     | global_init.Init e => global_init.Init $ f e
     | global_init.ImplicitInit => global_init.ImplicitInit
@@ -82,8 +82,8 @@ Module global_init.
     end.
 
   #[universes(polymorphic)]
-  Definition traverse {lang lang' : lang.t} `{MRet M, Ap M} (f : Expr' lang -> M (Expr' lang'))
-    (gi : global_init.t lang) : M (global_init.t lang') :=
+  Definition traverse `{MRet M, Ap M} (f : Expr -> M Expr)
+    (gi : global_init.t) : M (global_init.t) :=
     match gi with
     | global_init.Init e => global_init.Init <$> f e
     | global_init.ImplicitInit => mret global_init.ImplicitInit
