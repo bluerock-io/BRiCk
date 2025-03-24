@@ -228,7 +228,7 @@ Module Type Expr__newdelete.
                         smaller, [pass_align] will be [false]. *)
                     storage_ptr |-> alignedR (if pass_align then alloc_al
                                               else STDCPP_DEFAULT_NEW_ALIGNMENT) **
-                    storage_ptr |-> blockR alloc_sz (cQp.m 1) **
+                    storage_ptr |-> blockR alloc_sz 1$m **
                     (Forall (obj_ptr : ptr),
                        provides_storage storage_ptr obj_ptr aty -*
                        letI* free' := wp_opt_initialize oinit aty obj_ptr in
@@ -264,17 +264,17 @@ Module Type Expr__newdelete.
              Exists storage_ptr,
                (Exists size_loc storage_loc,
                  [| vs = [size_loc; storage_loc] |] **
-                 storage_loc |-> primR (Tptr Tvoid) (cQp.m 1) (Vptr storage_ptr) ** True) //\\
+                 storage_loc |-> primR (Tptr Tvoid) 1$m (Vptr storage_ptr) ** True) //\\
                (|> letI* res := wp_fptr tu.(types) nfty (_global new_fn.1) vs in
                  letI* := interp tu ifree in
-                 res |-> primR (Tptr Tvoid) (cQp.mut 1) (Vptr storage_ptr) **
+                 res |-> primR (Tptr Tvoid) 1$m (Vptr storage_ptr) **
                  (* ^^ this line requires the function to return the passed pointer.
                     This is mandated by the standard, see, e.g.
                     <https://eel.is/c++draft/new.delete.placement#2>
                   *)
                   [| storage_ptr <> nullptr |] **
                   (* ^^ mostly redundant with next line except for 0-sized objects *)
-                  storage_ptr |-> blockR alloc_sz (cQp.m 1) **
+                  storage_ptr |-> blockR alloc_sz 1$m **
                   storage_ptr |-> alignedR alloc_al **
                   (Forall (obj_ptr : ptr),
                       (* This also ensures these pointers share their
@@ -347,14 +347,14 @@ Module Type Expr__newdelete.
                   |> letI* res := wp_fptr tu.(types) nfty (_global new_fn.1) vs in
                      letI* := interp tu ifree in
                      Exists (storage_base : ptr),
-                     res |-> primR (Tptr Tvoid) (cQp.mut 1) (Vptr storage_base) **
+                     res |-> primR (Tptr Tvoid) 1$m (Vptr storage_base) **
                      if bool_decide (storage_base = nullptr) then
                        [| new_args <> nil |] ** Q (Vptr storage_base) free
                        (* ^^ [new_args <> nil] exists because the default <<operator new>>
                           is never allowed to return [nullptr] *)
                      else
                        (* [blockR alloc_sz -|- tblockR (Tarray aty array_size)] *)
-                      storage_base |-> blockR (overhead_sz + alloc_sz) (cQp.m 1) **
+                      storage_base |-> blockR (overhead_sz + alloc_sz) 1$m **
                       storage_base |-> alignedR (if pass_align then alloc_al else STDCPP_DEFAULT_NEW_ALIGNMENT) **
                       (Forall (obj_ptr : ptr),
                         storage_base .[Tbyte ! overhead_sz] |-> alignedR alloc_al -*
@@ -380,7 +380,7 @@ Module Type Expr__newdelete.
 
     (** *** [wp_delete] *)
     Definition alloc_pointer (pv : ptr) (Q : ptr -> FreeTemp -> mpred) : mpred :=
-      Forall p : ptr, p |-> primR (Tptr Tvoid) (cQp.mut 1) (Vptr pv) -* Q p (FreeTemps.delete (Tptr Tvoid) p).
+      Forall p : ptr, p |-> primR (Tptr Tvoid) 1$m (Vptr pv) -* Q p (FreeTemps.delete (Tptr Tvoid) p).
 
     Lemma alloc_pointer_frame : forall p Q Q',
         Forall p fr, Q p fr -* Q' p fr |-- alloc_pointer p Q -* alloc_pointer p Q'.
@@ -500,7 +500,7 @@ Module Type Expr__newdelete.
       Exists tu', denoteModule tu' **
       letI* := destroy_val tu' cv_mdc this' (* << invoke the destructor *) in
         Exists (sz : N), [| size_of mdc_ty = Some sz |] **
-          (storage_ptr .[ Tuchar ! -overhead ] |-> blockR (overhead + sz) (cQp.m 1)
+          (storage_ptr .[ Tuchar ! -overhead ] |-> blockR (overhead + sz) 1$m
             -* delete_val tu' delete_fn mdc_ty (storage_ptr .[ Tuchar ! -overhead ]) (Q Vvoid)).
   #[global] Arguments wp_delete {_ _ _ σ}.
 

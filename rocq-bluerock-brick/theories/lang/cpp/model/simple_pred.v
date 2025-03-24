@@ -610,7 +610,7 @@ Module SimpleCPP.
     Qed.
 
     Lemma byte_update (a : addr) (rv rv' : runtime_val) :
-      byte_ a rv (cQp.mut 1)|-- |==> byte_ a rv' (cQp.mut 1).
+      byte_ a rv 1$m|-- |==> byte_ a rv' 1$m.
     Proof. by apply own_update, singleton_update, cmra_update_exclusive. Qed.
 
     Definition bytes (a : addr) (vs : list runtime_val) q : mpred :=
@@ -654,7 +654,7 @@ Module SimpleCPP.
 
     Lemma bytes_update {a : addr} {vs} vs' :
       length vs = length vs' →
-      bytes a vs (cQp.mut 1) |-- |==> bytes a vs' (cQp.mut 1).
+      bytes a vs 1$m |-- |==> bytes a vs' 1$m.
     Proof.
       rewrite /bytes -big_sepL_bupd.
       revert a vs'.
@@ -946,7 +946,7 @@ Module SimpleCPP.
         placement [new] over an existing object.
      *)
     Theorem mdc_path_forget : forall σ mdc this p,
-        @mdc_path σ this mdc (cQp.mut 1) p |-- |={↑pred_ns}=> @mdc_path σ this nil (cQp.mut 1) p.
+        @mdc_path σ this mdc 1$m p |-- |={↑pred_ns}=> @mdc_path σ this nil 1$m p.
     Proof.
       rewrite /mdc_path; intros.
       iIntros "[$ D]".

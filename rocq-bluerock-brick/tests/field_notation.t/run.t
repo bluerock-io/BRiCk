@@ -9,7 +9,7 @@ Compiling the Coq test file.
     Σ : cpp_logic thread_info _Σ
     σ : genv
     ============================
-    ∀ this : ptr, this ,, o_field σ "C::foo" |-> anyR "int" (cQp.mut 1) ⊢ emp
+    ∀ this : ptr, this ,, o_field σ "C::foo" |-> anyR "int" 1$m ⊢ emp
   1 goal
     
     thread_info : biIndex
@@ -17,7 +17,7 @@ Compiling the Coq test file.
     Σ : cpp_logic thread_info _Σ
     σ : genv
     ============================
-    ∀ this : ptr, this ,, o_field σ "C::foo" |-> anyR "int" (cQp.mut 1) ⊢ emp
+    ∀ this : ptr, this ,, o_field σ "C::foo" |-> anyR "int" 1$m ⊢ emp
   "foo"%cpp_name
        : name
   "foo::bar"%cpp_name

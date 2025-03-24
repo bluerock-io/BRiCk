@@ -455,8 +455,8 @@ Module Type Expr.
       let ety := erase_qualifiers $ type_of e in
       wp_lval e (fun a free => Exists v v',
                    (inc_dec_op b ety v v' ** True) //\\
-                   (a |-> primR ety (cQp.mut 1) v **
-                      (a |-> primR ety (cQp.mut 1) v' -* Q a free))).
+                   (a |-> primR ety 1$m v **
+                      (a |-> primR ety 1$m v' -* Q a free))).
 
     (** `++e`
         https://eel.is/c++draft/expr.pre.incr#1
@@ -474,8 +474,8 @@ Module Type Expr.
       let ety := erase_qualifiers $ type_of e in
       wp_lval e (fun a free => Exists v v',
                    (inc_dec_op b ety v v' ** True) //\\
-                   (a |-> primR ety (cQp.mut 1) v **
-                      (a |-> primR ety (cQp.mut 1) v' -* Q v free))).
+                   (a |-> primR ety 1$m v **
+                      (a |-> primR ety 1$m v' -* Q v free))).
 
     (** `e++`
         https://eel.is/c++draft/expr.post.incr#1
@@ -506,8 +506,8 @@ Module Type Expr.
     Axiom wp_lval_assign : forall ty l r Q,
         (letI* '(la, rv), free :=
            eval2 (evaluation_order.order_of OOEqual) (wp_lval l) (wp_operand r) in
-            la |-> anyR (erase_qualifiers ty) (cQp.mut 1) **
-           (la |-> tptstoR (erase_qualifiers ty) (cQp.mut 1) rv -* Q la free))
+            la |-> anyR (erase_qualifiers ty) 1$m **
+           (la |-> tptstoR (erase_qualifiers ty) 1$m rv -* Q la free))
         |-- wp_lval (Eassign l r ty) Q.
 
     Axiom wp_lval_bop_assign : forall ty o l r Q,
@@ -522,8 +522,8 @@ Module Type Expr.
                       eval_binop tu o tl tr resultT cv rv v' **
                         (* convert the value back to the target type so it can be stored *)
                         [| convert tu resultT ty cv v' |] ** True) //\\
-                    (la |-> primR (erase_qualifiers ty) (cQp.mut 1) v **
-                      (la |-> primR (erase_qualifiers ty) (cQp.mut 1) v' -* Q la free))
+                    (la |-> primR (erase_qualifiers ty) 1$m v **
+                      (la |-> primR (erase_qualifiers ty) 1$m v' -* Q la free))
             | _ => False%I
             end
         |-- wp_lval (Eassign_op o l r ty) Q.
@@ -1333,8 +1333,8 @@ Module Type Expr.
         the destructor would potentially do. *)
     Axiom end_provides_storage : forall storage_ptr obj_ptr aty sz,
        size_of aty = Some sz ->
-       provides_storage storage_ptr obj_ptr aty ** obj_ptr |-> anyR aty (cQp.mut 1)
-       |-- |={⊤}=> (storage_ptr |-> blockR sz (cQp.m 1)).
+       provides_storage storage_ptr obj_ptr aty ** obj_ptr |-> anyR aty 1$m
+       |-- |={⊤}=> (storage_ptr |-> blockR sz 1$m).
 
     (** temporary expressions
        note(gmm): these axioms should be reviewed thoroughly
@@ -1409,11 +1409,11 @@ Module Type Expr.
      *)
     Axiom wp_operand_pseudo_destructor : forall e ty Q,
         (letI* v, free := wp_glval e in
-         v |-> anyR ty (cQp.mut 1) ** (v |-> tblockR ty (cQp.mut 1) -* Q Vvoid free))
+         v |-> anyR ty 1$m ** (v |-> tblockR ty 1$m -* Q Vvoid free))
         |-- wp_operand (Epseudo_destructor false ty e) Q.
     Axiom wp_operand_pseudo_destructor_arrow : forall e ty ety (_ : (unptr $ type_of e) = Some ety) Q,
         (letI* v, free := wp_glval (Ederef e ety) in
-         v |-> anyR ty (cQp.mut 1) ** (v |-> tblockR ty (cQp.mut 1) -* Q Vvoid free))
+         v |-> anyR ty 1$m ** (v |-> tblockR ty 1$m -* Q Vvoid free))
         |-- wp_operand (Epseudo_destructor true ty e) Q.
 
     (* [Eimplicit_init] nodes reflect implicit /value initializations/ which are inserted
@@ -1501,12 +1501,12 @@ Module Type Expr.
              match marg_types ctor_type with
              | Some arg_types =>
                 letI* _, argps, ifree, free := wp_args evaluation_order.nd nil arg_types es in
-                |> (this |-> tblockR (Tnamed cls) (cQp.mut 1) -*
+                |> (this |-> tblockR (Tnamed cls) 1$m -*
                    (* ^^ The semantics currently has constructors take ownership of a [tblockR] *)
                    letI* resultp := wp_fptr ctor_type (_global cnd) (this :: argps) in
                    letI* := interp ifree in
                     (* in the semantics, constructors return [void] *)
-                    resultp |-> primR Tvoid (cQp.mut 1) Vvoid **
+                    resultp |-> primR Tvoid 1$m Vvoid **
                     let Q := Q free in
                     if q_const cv
                     then wp_make_const tu this (Tnamed cls) Q
@@ -1680,7 +1680,7 @@ Module Type Expr.
          let* := wp_init_identity this tu cls in
          let* free :=
            wp_each ((fun '(m, e) => (this ., (Field cls m.(mem_name)), m.(mem_type), e)) <$> (combine s.(s_fields) $ skipn (length s.(s_bases)) es)) free in
-         this |-> structR cls (cQp.m 1) -* Q free
+         this |-> structR cls 1$m -* Q free
        else False)%I.
 
 
@@ -1711,7 +1711,7 @@ Module Type Expr.
             | None => default_initialize tu m.(mem_type) field_ptr
             end
           in
-          this |-> unionR cls (cQp.m 1) (Some n) -* Q free
+          this |-> unionR cls 1$m (Some n) -* Q free
       end%I.
 
     (** Using an initializer list to create a `struct`.

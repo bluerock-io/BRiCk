@@ -349,5 +349,5 @@ Section defs.
 
 End defs.
 
-Notation wp_make_const tu := (wp_const tu (cQp.m 1) (cQp.c 1)).
-Notation wp_make_mutable tu := (wp_const tu (cQp.c 1) (cQp.m 1)).
+Notation wp_make_const tu := (wp_const tu 1$m 1$c).
+Notation wp_make_mutable tu := (wp_const tu 1$c 1$m).
