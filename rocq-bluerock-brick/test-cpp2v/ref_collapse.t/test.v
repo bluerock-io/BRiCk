@@ -7,11 +7,11 @@
 Require Import bluerock.prelude.prelude.
 Require Import bluerock.lang.cpp.syntax.types.
 
-Notation T := (Tnum (lang:=lang.cpp) int_rank.Iint Signed).
-Notation C := (tqualified (lang:=lang.cpp) QC) (only parsing).
-Notation V := (tqualified (lang:=lang.cpp) QV) (only parsing).
-Notation L := (tref (lang:=lang.cpp) QM) (only parsing).
-Notation R := (trv_ref (lang:=lang.cpp) QM) (only parsing).
+Notation T := (Tnum int_rank.Iint Signed).
+Notation C := (tqualified QC) (only parsing).
+Notation V := (tqualified QV) (only parsing).
+Notation L := (tref QM) (only parsing).
+Notation R := (trv_ref QM) (only parsing).
 
 (** qualified reference types (via [tqualified]) *)
 Goal C $ Tref T = Tref T. Proof. done. Qed.

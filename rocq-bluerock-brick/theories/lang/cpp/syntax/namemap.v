@@ -21,7 +21,7 @@ Module Import internal.
 
   Module NameMap.
     Module Compare.
-      Definition t : Type := name' Lang.lang.
+      Definition t : Type := name.
       #[local] Definition compare : t -> t -> comparison := compareN.
       #[local] Infix "?=" := compare.
       #[local] Lemma compare_sym x y : (y ?= x) = CompOpp (x ?= y).

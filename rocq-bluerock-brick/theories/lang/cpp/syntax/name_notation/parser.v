@@ -421,7 +421,7 @@ Module internal.
 
    Definition parse_name': M name :=
      commit (keyword "typename") (fun _ => Ndependent <$> parse_type ()) $
-     (let* (x : list (atomic_name' _ * _)) :=
+     (let* (x : list (atomic_name * _)) :=
         optional (op_token "::") *> sepBy (op_token "::") (parse_name_component ())
       in
       match x with
@@ -485,7 +485,7 @@ Module internal.
         $ commit (exact "@") (fun _ => (Anon <$> decimal) <|> (FirstDecl <$> ident))
         $ commit (exact ".") (fun _ => FirstChild <$> ident) (Simple <$> ident)
       in
-      let mk_atomic_name (nm : name_type) (args : option _) : M (atomic_name' _) :=
+      let mk_atomic_name (nm : name_type) (args : option _) : M atomic_name :=
         match args with
         | None => match nm with
                  | Simple nm => mret $ Nid nm

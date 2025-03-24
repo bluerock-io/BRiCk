@@ -69,11 +69,10 @@ Record Member' : Set := mkMember
 ; mem_mutable : bool
 ; mem_init : option Expr
 ; mem_layout : LayoutInfo }.
-#[global] Arguments Member' : clear implicits.
-#[global] Arguments mkMember {_} & _ _ _ _ _ : assert.
-#[global] Instance Member_eq_dec: EqDecision Member.
+Notation Member := Member'.
+#[global] Arguments mkMember _ _ _ _ _ : assert.
+#[global] Instance Member_eq_dec : EqDecision Member.
 Proof. solve_decision. Defined.
-Notation Member := Member.
 
 Record Union' : Set := Build_Union
 { u_fields : list Member
@@ -89,11 +88,10 @@ Record Union' : Set := Build_Union
 ; u_alignment : N
   (* ^ alignment of the union *)
 }.
-#[global] Arguments Union' : clear implicits.
-#[global] Arguments Build_Union {_} & _ _ _ _ _ _ : assert.
+Notation Union := Union'.
+#[global] Arguments Build_Union _ _ _ _ _ _ : assert.
 #[global] Instance Union'_eq_dec : EqDecision Union.
 Proof. solve_decision. Defined.
-Notation Union := Union.
 
 Variant LayoutType : Set := POD | Standard | Unspecified.
 #[global] Instance: EqDecision LayoutType.
@@ -128,11 +126,10 @@ Record Struct' : Set := Build_Struct
 ; s_alignment : N
   (* ^ alignment of the structure *)
 }.
-#[global] Arguments Struct' : clear implicits.
-#[global] Arguments Build_Struct {_} & _ _ _ _ _ _ _ _ _ _ : assert.
+Notation Struct := Struct'.
+#[global] Arguments Build_Struct _ _ _ _ _ _ _ _ _ _ : assert.
 #[global] Instance Struct_eq_dec : EqDecision Struct.
 Proof. solve_decision. Defined.
-Notation Struct := Struct.
 
 (** [has_vtable s] determines whether [s] has any <<virtual>> methods
     (or bases). Having a vtable is *not* a transitive property.
@@ -147,12 +144,12 @@ Definition has_vtable (s : Struct) : bool :=
   | nil => false
   | _ :: _ => true
   end.
-#[global] Arguments has_vtable {_} & _ : assert.
+#[global] Arguments has_vtable _ : assert.
 
 (* [has_virtual_dtor s] returns true if the destructor is virtual. *)
 Definition has_virtual_dtor (s : Struct) : bool :=
   List.existsb (fun '(a,_) => bool_decide (a = s.(s_dtor))) s.(s_virtuals).
-#[global] Arguments has_virtual_dtor _ & _ : assert.
+#[global] Arguments has_virtual_dtor _ : assert.
 
 Variant Ctor_type : Set := Ct_Complete | Ct_Base | Ct_alloc | Ct_Comdat.
 #[global] Instance: EqDecision Ctor_type.
@@ -165,11 +162,9 @@ Variant FunctionBody' : Set :=
 | Impl (_ : Stmt)
 | Builtin (_ : BuiltinFn)
 .
-#[global] Arguments FunctionBody' _ : clear implicits, assert.
-#[global] Arguments Impl _ &.
+Notation FunctionBody := FunctionBody'.
 #[global] Instance: EqDecision FunctionBody.
 Proof. solve_decision. Defined.
-Notation FunctionBody := FunctionBody.
 
 Record Func' : Set := Build_Func
 { f_return : type
@@ -178,13 +173,12 @@ Record Func' : Set := Build_Func
 ; f_arity  : function_arity
 ; f_body   : option FunctionBody
 }.
-#[global] Arguments Func' : clear implicits.
-#[global] Arguments Build_Func {_} & _ _ _ _ _ : assert.
+Notation Func := Func'.
+#[global] Arguments Build_Func _ _ _ _ _ : assert.
 #[global] Instance: EqDecision Func.
 Proof. solve_decision. Defined.
 #[global] Instance Func_inhabited : Inhabited Func.
 Proof. solve_inhabited. Qed.
-Notation Func := Func.
 
 (** *** Methods *)
 Record Method' : Set := Build_Method
@@ -196,11 +190,10 @@ Record Method' : Set := Build_Method
 ; m_arity   : function_arity
 ; m_body    : option (OrDefault Stmt)
 }.
-#[global] Arguments Method' : clear implicits.
-#[global] Arguments Build_Method {_} & _ _ _ _ _ _ _ : assert.
+Notation Method := Method'.
+#[global] Arguments Build_Method _ _ _ _ _ _ _ : assert.
 #[global] Instance: EqDecision Method.
 Proof. solve_decision. Defined.
-Notation Method := Method.
 
 Definition static_method (m : Method)
   : Func :=
@@ -220,19 +213,17 @@ Variant InitPath' : Set :=
 | InitField (_ : field_name.t)
 | InitIndirect (anon_path : list (field_name.t * classname)) (_ : field_name.t)
 | InitThis.
-#[global] Arguments InitPath' : clear implicits.
+#[global] Notation InitPath := InitPath'.
 #[global] Instance: EqDecision InitPath.
 Proof. solve_decision. Defined.
-#[global] Notation InitPath := InitPath.
 
 Record Initializer' : Set := Build_Initializer
   { init_path : InitPath
   ; init_init : Expr }.
-#[global] Arguments Initializer' : clear implicits.
-#[global] Arguments Build_Initializer {_} & _ _ : assert.
+Notation Initializer := Initializer'.
+#[global] Arguments Build_Initializer _ _ : assert.
 #[global] Instance: EqDecision Initializer.
 Proof. solve_decision. Defined.
-Notation Initializer := Initializer.
 
 Record Ctor' : Set := Build_Ctor
 { c_class  : classname
@@ -241,11 +232,10 @@ Record Ctor' : Set := Build_Ctor
 ; c_arity  : function_arity
 ; c_body   : option (OrDefault (list Initializer * Stmt))
 }.
-#[global] Arguments Ctor' : clear implicits.
-#[global] Arguments Build_Ctor {_} & _ _ _ _ _ : assert.
+Notation Ctor := Ctor'.
+#[global] Arguments Build_Ctor _ _ _ _ _ : assert.
 #[global] Instance: EqDecision Ctor.
 Proof. solve_decision. Defined.
-Notation Ctor := Ctor.
 
 (** *** Destructors *)
 
@@ -254,11 +244,10 @@ Record Dtor' : Set := Build_Dtor
 ; d_cc     : calling_conv
 ; d_body   : option (OrDefault Stmt)
 }.
-#[global] Arguments Dtor' : clear implicits.
-#[global] Arguments Build_Dtor {_} & _ _ _ : assert.
+Notation Dtor := Dtor'.
+#[global] Arguments Build_Dtor _ _ _ : assert.
 #[global] Instance: EqDecision Dtor.
 Proof. solve_decision. Defined.
-Notation Dtor := Dtor.
 
 Variant Dtor_type : Set := Dt_Deleting | Dt_Complete | Dt_Base | Dt_Comdat.
 #[global] Instance: EqDecision Dtor_type.

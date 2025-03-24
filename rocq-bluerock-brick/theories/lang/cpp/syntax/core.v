@@ -694,7 +694,7 @@ Notation Nenum_const gn id := (Nscoped gn (Nid id)) (only parsing).
 Notation operator_impl' := (operator_impl.t obj_name' type').
 Notation MethodRef' := (MethodRef_ obj_name' functype' Expr').
 Notation function_type' := (function_type_ decltype').
-Notation temp_param' := (temp_param_ type').
+Notation temp_param := (temp_param_ type').
 Notation atomic_name' := (atomic_name_ type').
 
 (**
@@ -751,7 +751,7 @@ Notation decltype := decltype'.
 Notation functype := functype'.
 Notation classname := classname'.
 Notation Cast := Cast'.
-(*Notation operator_impl := operator_impl'. *)
+Notation operator_impl := operator_impl'.
 Notation MethodRef := MethodRef'.
 Notation Expr := Expr'.
 Notation function_type := function_type'.
@@ -759,6 +759,8 @@ Notation VarDecl := VarDecl'.
 Notation BindingDecl := BindingDecl'.
 (*Notation temp_param := temp_param.
 Notation Stemp_arg := temp_arg. *)
+Notation Stmt := Stmt'.
+Notation temp_arg := temp_arg'.
 Notation atomic_name := atomic_name'.
 
 Module field_name.

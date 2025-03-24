@@ -1655,7 +1655,7 @@ Module Type Expr.
 
     Definition struct_inits (s : Struct) (es : list Expr) : option (list Initializer) :=
       let info :=
-          map (fun b e => {| init_path := InitBase (lang:=lang.cpp) b.1
+          map (fun b e => {| init_path := InitBase b.1
                         ; init_init := e |}) s.(s_bases) ++
           map (fun m e => {| init_path := InitField m.(mem_name)
                         ; init_init := e |}) s.(s_fields)

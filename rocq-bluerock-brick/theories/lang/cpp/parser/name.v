@@ -16,13 +16,13 @@ Module ParserName.
      overlapping declarations can differ on qualification here.
    *)
   Definition Nfunction qs nm ts :=
-    Nfunction qs nm $ List.map (@normalize_arg_type parser_lang) ts.
+    Nfunction qs nm $ List.map (normalize_arg_type) ts.
   Definition Nctor ts :=
-    Nctor $ List.map (@normalize_arg_type parser_lang) ts.
+    Nctor $ List.map (normalize_arg_type) ts.
   Definition Nop q oo ts :=
-    Nop q oo $ List.map (@normalize_arg_type parser_lang) ts.
+    Nop q oo $ List.map (normalize_arg_type) ts.
   Definition Nop_lit fn ts :=
-    Nop_lit fn $ List.map (@normalize_arg_type parser_lang) ts.
+    Nop_lit fn $ List.map (normalize_arg_type) ts.
 
   Definition Nrecord_by_field (nm : ident) : atomic_name :=
     Nfirst_child nm.

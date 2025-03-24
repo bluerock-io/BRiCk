@@ -622,7 +622,7 @@ Definition wpi_bases `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
   match bases with
   | nil => Q
   | b :: bases =>
-    match List.filter (fun i => bool_decide (i.(init_path) = InitBase (lang:=lang.cpp) b)) inits with
+    match List.filter (fun i => bool_decide (i.(init_path) = InitBase b)) inits with
     | nil =>
       (*
       There is no initializer for this base class.

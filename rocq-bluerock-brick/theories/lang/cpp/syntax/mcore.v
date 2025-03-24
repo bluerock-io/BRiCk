@@ -9,8 +9,6 @@ Require Export bluerock.lang.cpp.syntax.core.
 #[local] Set Primitive Projections.
 
 (** ** C++ with templates *)
-Import lang.
-
 Notation Mname := name (only parsing).
 Notation Mglobname := globname (only parsing).
 Notation Mobj_name := obj_name (only parsing).

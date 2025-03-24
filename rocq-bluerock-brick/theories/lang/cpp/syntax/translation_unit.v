@@ -26,16 +26,9 @@ Variant GlobDecl' : Set :=
   | Gconstant (_ : type) (init : option Expr) (* used for enumerator constants*)
   | Gtypedef  (_ : type)
   | Gunsupported (_ : PrimString.string).
-#[global] Arguments GlobDecl' : clear implicits.
-#[global] Arguments Gunion _ & _ : assert.
-#[global] Arguments Gstruct _ & _ : assert.
-#[global] Arguments Genum _ & _ _ : assert.
-#[global] Arguments Gconstant _ & _ _ : assert.
-#[global] Arguments Gtypedef _ & _ : assert.
-#[global] Arguments Gunsupported _ & _ : assert.
+Notation GlobDecl := GlobDecl'.
 #[global] Instance: EqDecision GlobDecl.
 Proof. solve_decision. Defined.
-Notation GlobDecl := GlobDecl.
 
 (** *** The Type Table *)
 Definition type_table : Type := NM.t GlobDecl.
@@ -65,7 +58,6 @@ Module global_init.
   | Delayed (* for <<static>> variables declared in functions.
                These are initialized during the first call to the function *)
   | Extern.
-  #[global] Arguments t _ : clear implicits.
   #[global] Instance t_eq : EqDecision t.
   Proof. solve_decision. Defined.
 
@@ -100,15 +92,9 @@ Variant ObjValue' : Set :=
 | Omethod      (_ : Method)
 | Oconstructor (_ : Ctor)
 | Odestructor  (_ : Dtor).
-#[global] Arguments ObjValue' : clear implicits.
-#[global] Arguments Ovar _ & _ _ : assert.
-#[global] Arguments Ofunction _ & _ : assert.
-#[global] Arguments Omethod _ & _ : assert.
-#[global] Arguments Oconstructor _ & _ : assert.
-#[global] Arguments Odestructor _ & _ : assert.
+Notation ObjValue := ObjValue'.
 #[global] Instance: EqDecision ObjValue.
 Proof. solve_decision. Defined.
-Notation ObjValue := ObjValue.
 
 (**
 TODO: [Tmember_func], [type_of_value] seem misplaced
@@ -157,11 +143,9 @@ Variant GlobalInit' : Set :=
      See https://eel.is/c++draft/stmt.dcl#3
    *)
 | FunctionInit (at_most_once : bool).
-#[global] Arguments GlobalInit' : clear implicits.
-#[global] Arguments ExprInit _ & _ : assert.
+Notation GlobalInit := GlobalInit'.
 #[global] Instance: EqDecision GlobalInit.
 Proof. solve_decision. Defined.
-Notation GlobalInit := GlobalInit.
 
 (** [GlobalInitializer] represents an initializer for a
     global variable.
@@ -171,11 +155,9 @@ Record GlobalInitializer' : Set := Build_GlobalInitializer
   ; g_type : type
   ; g_init : GlobalInit
   }.
-#[global] Arguments GlobalInitializer' : clear implicits.
-#[global] Arguments Build_GlobalInitializer _ & _ _ _ : assert.
+Notation GlobalInitializer := GlobalInitializer'.
 #[global] Instance: EqDecision GlobalInitializer.
 Proof. solve_decision. Defined.
-Notation GlobalInitializer := GlobalInitializer.
 
 (** An initialization block is a sequence of variable initializers
     that will be run when the compilation unit is loaded.
@@ -189,7 +171,6 @@ Notation GlobalInitializer := GlobalInitializer.
  *)
 Definition InitializerBlock : Set :=
   list GlobalInitializer.
-Notation InitializerBlock := InitializerBlock.
 #[global] Instance InitializerBlock_empty : Empty InitializerBlock :=
   nil.
 

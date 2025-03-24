@@ -107,7 +107,7 @@ Module ParserExpr.
   Definition Eunevaluated_var (var : ident) (t : type): Expr :=
     Eunsupported ("Unevaluated variable: " ++ var) (Tref t).
 
-  Definition Ecapture (qual : type_qualifiers) (fld : field_name.t parser_lang) (lambda : name) (capture_field_type : type) : Expr :=
+  Definition Ecapture (qual : type_qualifiers) (fld : field_name.t) (lambda : name) (capture_field_type : type) : Expr :=
     Emember true (Ethis (Tptr $ tqualified qual (Tnamed lambda))) (Field fld false capture_field_type).
 
   Notation Ecapture_var qual lambda_class name capture_field_type :=
