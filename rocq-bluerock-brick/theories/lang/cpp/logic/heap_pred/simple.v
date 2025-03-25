@@ -18,7 +18,7 @@ Definition derivationR `{Σ : cpp_logic} {σ} (cls : globname) (mdc : list globn
     as_Rep (mdc_path cls mdc q).
 
 mlock
-Definition alignedR `{Σ : cpp_logic} (al : N) : Rep :=
+Definition alignedR `{Σ : cpp_logic} {σ} (al : N) : Rep :=
   as_Rep (λ p, [| aligned_ptr al p |]).
 
 (* [Rep] version of (to be deprecated) [aligned_ptr_ty] *)

@@ -244,11 +244,10 @@ Module SimpleCPP.
 
     Definition _valid_ptr vt (p : ptr) : mpred :=
       [| p = nullptr /\ vt = Relaxed |] \\//
-            Exists base l h o zo,
+        Exists σ' base l h o zo,
                 blocks_own base l h **
                 in_range vt l zo h **
-                 (* XXX this is wrong: [eval_offset] shouldn't take a genv. *)
-                [| exists resolve, eval_offset resolve o = Some zo /\ p = base ,, o |] **
+                [| eval_offset σ' o = Some zo /\ p = base ,, o |] **
                 [| ptr_vaddr p <> Some 0%N |].
     (* strict validity (not past-the-end) *)
     Notation strict_valid_ptr := (_valid_ptr Strict).
@@ -267,7 +266,7 @@ Module SimpleCPP.
       [| same_address p nullptr <-> p = nullptr |].
     Proof.
       rewrite /_valid_ptr same_address_eq; iIntros "[[-> _]|H]";
-        [ |iDestruct "H" as (?????) "(_ & _ & _ & %Hne)"]; iIntros "!%".
+        [ |iDestruct "H" as (??????) "(_ & _ & _ & %Hne)"]; iIntros "!%".
       by rewrite same_property_iff ptr_vaddr_nullptr; naive_solver.
       rewrite same_property_iff; split; last intros ->;
         rewrite ptr_vaddr_nullptr; naive_solver.
@@ -279,7 +278,7 @@ Module SimpleCPP.
     Theorem not_strictly_valid_ptr_nullptr : strict_valid_ptr nullptr |-- False.
     Proof.
       iDestruct 1 as "[[_ %]|H] /="; first done.
-      by iDestruct "H" as (?????) "(_ & _ & _ & %Hne)".
+      by iDestruct "H" as (??????) "(_ & _ & _ & %Hne)".
     Qed.
     Typeclasses Opaque _valid_ptr.
 
@@ -1333,8 +1332,8 @@ Module VALID_PTR : VALID_PTR_AXIOMS PTRS_IMPL VALUES_DEFS_IMPL L L.
     Proof.
       (* A proper proof requires redesigning valid_ptr *)
       rewrite /_valid_ptr; iDestruct 1 as "[%|H]"; first naive_solver.
-      iDestruct "H" as (base l h o zo) "(B & Rng & %Hoff & _)".
-      destruct Hoff as (? & Heval & Habs).
+      iDestruct "H" as (? base l h o zo) "(B & Rng & %Hoff & _)".
+      destruct Hoff as (Heval & Habs).
     Admitted.
 
     (** Justified by [https://eel.is/c++draft/expr.add#4.1]. *)

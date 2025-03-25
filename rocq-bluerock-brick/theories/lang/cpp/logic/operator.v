@@ -21,7 +21,7 @@ Axiom eval_binop_impure_well_typed : forall `{cpp_logic} {σ} tu bo ty1 ty2 ty3 
     eval_binop_impure tu bo ty1 ty2 ty3 v1 v2 v3 |-- has_type v1 ty1 ** has_type v2 ty2 ** has_type v3 ty3.
 
 (** Pointer [p'] is not at the beginning of a block. *)
-Definition non_beginning_ptr `{cpp_logic} p' : mpred :=
+Definition non_beginning_ptr `{cpp_logic} {σ} p' : mpred :=
   ∃ p o, [| p' = p ,, o /\
     (* ensure that o is > 0 *)
     some_Forall2 N.lt (ptr_vaddr p) (ptr_vaddr p') |] ∧ valid_ptr p.
