@@ -11,21 +11,23 @@ Require Import bluerock.lang.cpp.semantics.values.
 Require Import bluerock.lang.cpp.semantics.operator.
 Require Import bluerock.lang.cpp.logic.pred.
 
-Parameter eval_binop_impure : forall `{has_cpp : cpp_logic} {σ : genv},
+Implicit Type (σ : genv).
+
+Parameter eval_binop_impure : forall `{cpp_logic} {σ},
     translation_unit -> BinOp -> forall (lhsT rhsT resT : type) (lhs rhs res : val), mpred.
 
-Axiom eval_binop_impure_well_typed : forall `{has_cpp : cpp_logic} `{σ : genv} tu bo ty1 ty2 ty3 v1 v2 v3,
+Axiom eval_binop_impure_well_typed : forall `{cpp_logic} {σ} tu bo ty1 ty2 ty3 v1 v2 v3,
     tu ⊧ σ ->
     eval_binop_impure tu bo ty1 ty2 ty3 v1 v2 v3 |-- has_type v1 ty1 ** has_type v2 ty2 ** has_type v3 ty3.
 
 (** Pointer [p'] is not at the beginning of a block. *)
-Definition non_beginning_ptr `{has_cpp : cpp_logic} p' : mpred :=
+Definition non_beginning_ptr `{cpp_logic} p' : mpred :=
   ∃ p o, [| p' = p ,, o /\
     (* ensure that o is > 0 *)
     some_Forall2 N.lt (ptr_vaddr p) (ptr_vaddr p') |] ∧ valid_ptr p.
 
 Section non_beginning_ptr.
-  Context `{has_cpp : cpp_logic}.
+  Context `{cpp_logic} {σ}.
 
   #[global] Instance non_beginning_ptr_persistent p : Persistent (non_beginning_ptr p) := _.
   #[global] Instance non_beginning_ptr_affine p : Affine (non_beginning_ptr p) := _.
@@ -35,13 +37,13 @@ End non_beginning_ptr.
 #[global] Typeclasses Opaque non_beginning_ptr.
 
 Section with_Σ.
-  Context `{has_cpp : cpp_logic} {resolve : genv}.
+  Context `{cpp_logic} {σ}.
 
   Definition eval_binop tu (b : BinOp) (lhsT rhsT resT : type) (lhs rhs res : val) : mpred :=
     [| eval_binop_pure tu b lhsT rhsT resT lhs rhs res |] ∨ eval_binop_impure tu b lhsT rhsT resT lhs rhs res.
 
   Lemma eval_binop_impure_well_typed_prop tu bo ty1 ty2 ty3 v1 v2 v3 :
-    tu ⊧ resolve ->
+    tu ⊧ σ ->
     eval_binop_impure tu bo ty1 ty2 ty3 v1 v2 v3 |-- [| has_type_prop v1 ty1 /\ has_type_prop v2 ty2 /\ has_type_prop v3 ty3 |].
   Proof.
     intros; rewrite eval_binop_impure_well_typed.
@@ -49,7 +51,7 @@ Section with_Σ.
   Qed.
 
   Theorem eval_binop_well_typed tu bo ty1 ty2 ty3 v1 v2 v3 :
-    tu ⊧ resolve ->
+    tu ⊧ σ ->
     eval_binop tu bo ty1 ty2 ty3 v1 v2 v3 |-- [| has_type_prop v1 ty1 /\ has_type_prop v2 ty2 /\ has_type_prop v3 ty3 |].
   Proof.
     iDestruct 1 as "[% | X]".
@@ -260,7 +262,7 @@ Section with_Σ.
 
   #[local] Definition eval_ptr_int_op (bo : BinOp) (f : Z -> Z) : Prop :=
     forall w s p1 p2 o ty,
-      is_Some (size_of resolve ty) ->
+      is_Some (size_of σ ty) ->
       p2 = p1 ,, _sub ty (f o) ->
       valid_ptr p1 ∧ valid_ptr p2 ⊢
       eval_binop_impure tu bo
@@ -269,7 +271,7 @@ Section with_Σ.
 
   #[local] Definition eval_int_ptr_op (bo : BinOp) (f : Z -> Z) : Prop :=
     forall w s p1 p2 o ty,
-      is_Some (size_of resolve ty) ->
+      is_Some (size_of σ ty) ->
       p2 = p1 ,, _sub ty (f o) ->
       valid_ptr p1 ∧ valid_ptr p2 ⊢
       eval_binop_impure tu bo
@@ -314,7 +316,7 @@ Section with_Σ.
   *)
   Axiom eval_ptr_ptr_sub :
     forall w p1 p2 o1 o2 base ty,
-      is_Some (size_of resolve ty) ->
+      is_Some (size_of σ ty) ->
       p1 = base ,, _sub ty o1 ->
       p2 = base ,, _sub ty o2 ->
       (* Side condition to prevent overflow; needed per https://eel.is/c++draft/expr.add#note-1 *)

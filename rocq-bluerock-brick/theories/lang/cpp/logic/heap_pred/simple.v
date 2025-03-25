@@ -13,7 +13,7 @@ Implicit Types (σ : genv) (p : ptr) (o : offset).
     The path from the object to its complete object.
   *)
 mlock
-Definition derivationR `{Σ : cpp_logic} {σ : genv} (cls : globname) (mdc : list globname)
+Definition derivationR `{Σ : cpp_logic} {σ} (cls : globname) (mdc : list globname)
   (q : cQp.t) : Rep :=
     as_Rep (mdc_path cls mdc q).
 
@@ -27,7 +27,7 @@ Definition aligned_ofR `{Σ : cpp_logic} {σ} (ty : type) : Rep :=
   ∃ align : N, [| align_of ty = Some align |] ** alignedR align.
 
 Section with_cpp.
-  Context `{Σ : cpp_logic} {σ : genv}.
+  Context `{Σ : cpp_logic} {σ}.
 
   (** ** [alignedR] *)
   #[global] Instance alignedR_persistent {al} : Persistent (alignedR al).

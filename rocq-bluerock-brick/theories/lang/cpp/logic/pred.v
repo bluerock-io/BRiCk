@@ -233,8 +233,8 @@ Module Type CPP_LOGIC
     End with_genv.
 
     Parameter has_type_or_undef : forall `{cpp_logic} {σ}, val -> type -> mpred.
-    Axiom has_type_or_undef_unfold : forall `{cpp_logic},
-        @has_type_or_undef _ _ _ = funI σ v ty => has_type v ty \\// [| v = Vundef |].
+    Axiom has_type_or_undef_unfold : forall `{cpp_logic} {σ},
+        @has_type_or_undef _ _ _ _ = funI v ty => has_type v ty \\// [| v = Vundef |].
 
     (** Formalizes the notion of "provides storage",
     http://eel.is/c++draft/intro.object#def:provides_storage *)
@@ -613,7 +613,7 @@ Module Type CPP_LOGIC
        *)
       Section conservative.
         Axiom type_ptr_obj_repr_byte :
-          forall (σ : genv) (ty : Rtype) (p : ptr) (i sz : N),
+          forall (ty : Rtype) (p : ptr) (i sz : N),
             size_of σ ty = Some sz -> (* 1) [ty] has some byte-size [sz] *)
             (i < sz)%N ->             (* 2) by (1), [sz] is nonzero and [i] is a
                                             byte-offset into the object rooted at [p ,, o]
@@ -649,7 +649,7 @@ Module Type CPP_LOGIC
             by (unfold lookupN, list_lookupN; rewrite Nat2N.id //);
             clear Hn'.
           apply lookupN_seqN in Hn as [? ?].
-          iDestruct (type_ptr_obj_repr_byte σ ty p n sz Hsz ltac:(lia) with "tptr") as "$".
+          iDestruct (type_ptr_obj_repr_byte ty p n sz Hsz ltac:(lia) with "tptr") as "$".
         Qed.
       End all_at_once.
     End type_ptr_object_representation.
