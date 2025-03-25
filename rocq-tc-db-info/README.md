@@ -1,7 +1,9 @@
 rocq-tc-db-info
 ====================
-The rocq-tc-db-info package provides a vernacular command to report
-transparent terms in hint (typeclass) patterns.
+The rocq-tc-db-info package provides tools for analyzing hint databases, especially for optimization purposes.
+
+Currently, it provides:
+- a vernacular command to report transparent terms in hint/typeclass patterns.
 
 Motivation
 =============
