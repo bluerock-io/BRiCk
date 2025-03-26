@@ -321,7 +321,7 @@ Section fractional.
     set p := (N_to_Qp _).
     rewrite (replicateN_S _ ((N.succ _))) big_opL_cons.
 
-    have{1}->: (cQp.mut q = cQp.m (q * p / (p + 1)) + cQp.m (q / (p + 1)))%cQp.
+    have{1}->: (q$m = (q * p / (p + 1))$m + (q / (p + 1))$m)%cQp.
     {
       rewrite /cQp.add/=; f_equal.
       by rewrite -Qp.div_add_distr -{3}[q]Qp.mul_1_r -Qp.mul_add_distr_l
@@ -452,16 +452,16 @@ Section valid_0.
   Proof. intros ?? [<-]. apply cfrac_valid_0. Qed.
 
   Section examples.
-    Lemma mut q : Observe [| q ≤ 1 |]%Qp (P (cQp.mut q)).
+    Lemma mut q : Observe [| q ≤ 1 |]%Qp (P q$m).
     Proof. apply _. Abort.
 
     Lemma scale_mut p q :
-      Observe [| p * q ≤ 1 |]%Qp (P (cQp.scale p (cQp.mut q))).
+      Observe [| p * q ≤ 1 |]%Qp (P (cQp.scale p q$m)).
     Proof. apply _. Abort.
 
     Lemma scale_mut p1 p2 q :
       Observe [| p1 * (p2 * q) ≤ 1 |]%Qp
-        (P (cQp.scale p1 (cQp.scale p2 (cQp.mut q)))).
+        (P (cQp.scale p1 (cQp.scale p2 q$m))).
     Proof. apply _. Abort.
   End examples.
 

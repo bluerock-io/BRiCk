@@ -245,8 +245,8 @@ invoking the destructor [dtor] for type [ty] on [this].
   (**
   We inline [operand_receive] (which could be hoisted and shared).
   *)
-  Exists v, p |-> primR Tvoid (cQp.mut 1) v **
-  this |-> tblockR ty (cQp.mut 1) **
+  Exists v, p |-> primR Tvoid 1$m v **
+  this |-> tblockR ty 1$m **
   Q.
 
 mlock Definition wp_destructor `{Σ : cpp_logic, σ : genv} (tu : translation_unit)

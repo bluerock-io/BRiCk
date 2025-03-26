@@ -103,7 +103,7 @@ Section with_cpp.
 *)
       (* ^^ todo(gmm): static initialization is not yet supported *)
         | Ovar t global_init.NoInit =>
-          uninitR t (cQp.m 1)
+          uninitR t 1$m
         | _ => emp
         end.
 

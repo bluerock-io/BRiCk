@@ -1208,12 +1208,12 @@ Qed.
     normalized to [Tref].
 
     Concrete examples of the above are:
-    - <<const int x = 1>>           -- [tptsto "int" (cQp.c 1) _ 1]
-    - <<const int* x = nullptr>>    -- [tptsto "int*" (cQp.m 1) _ nullptr]
-    - <<int* const x = nullptr>>    -- [tptsto "int*" (cQp.c 1) _ nullptr]
+    - <<const int x = 1>>           -- [tptsto "int" 1$c _ 1]
+    - <<const int* x = nullptr>>    -- [tptsto "int*" 1$m _ nullptr]
+    - <<int* const x = nullptr>>    -- [tptsto "int*" 1$c _ nullptr]
     - <<volatile int x = 0>>        -- not represted using [tptsto]
-    - <<volatile int* p = nullptr>> -- [tptsto "int*" (cQp.m 1) _ nullptr]
-    - <<int&& r = ..>>              -- [tptsto "int&" (cQp.m 1) _ _]
+    - <<volatile int* p = nullptr>> -- [tptsto "int*" 1$m _ nullptr]
+    - <<int&& r = ..>>              -- [tptsto "int&" 1$m _ _]
  *)
 Definition heap_type : Set := type.
 Definition is_heap_type (t : type) : bool :=

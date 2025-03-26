@@ -65,7 +65,7 @@ Section with_cpp.
   Qed.
 
   Lemma blockR_disjoint (l : ptr):
-    l |-> blockR 1 (cQp.m 1) |-- l |-> blockR 1 (cQp.m 1) -* False.
+    l |-> blockR 1 1$m |-- l |-> blockR 1 1$m -* False.
   Proof.
     iIntros "K L". iCombine "K L" as "P".
     by iDestruct (observe [| _ ≤ 1 |]%Qp with "P") as %?.
