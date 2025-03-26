@@ -9,7 +9,7 @@ Require Export bluerock.lang.cpp.syntax.preliminary.
 Require Export bluerock.lang.cpp.syntax.overloadable.
 Require Import bluerock.lang.cpp.syntax.notations.
 Require Export bluerock.lang.cpp.syntax.literal_string.
-Require Import PrimInt63.
+From Stdlib Require Import PrimInt63.
 
 #[local] Set Primitive Projections.
 
