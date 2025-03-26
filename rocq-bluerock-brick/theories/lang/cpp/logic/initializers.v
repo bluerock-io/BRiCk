@@ -106,7 +106,7 @@ Definition default_initialize_body `{Σ : cpp_logic, σ : genv}
   | Tnullptr
   | Tenum _ =>
     let rty := erase_qualifiers ty in
-    p |-> uninitR rty (cQp.m 1) -* |={top}=>?u Q FreeTemps.id
+    p |-> uninitR rty 1$m -* |={top}=>?u Q FreeTemps.id
 
   | Tarray ety sz =>
     default_initialize_array (default_initialize ety) tu ety sz p (fun _ => Q FreeTemps.id)

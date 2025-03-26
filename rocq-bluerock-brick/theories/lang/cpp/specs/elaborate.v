@@ -64,8 +64,8 @@ Section with_cpp.
             letI* pv := add_with "pv" ptr in
             letI* v := add_with "v" val in
             letI* := add_arg pv in
-            letI* := add_pre (pv |-> tptsto_fuzzyR t (cQp.mut 1) v) in
-            letI* := add_post (pv |-> anyR t (cQp.mut 1)) in
+            letI* := add_pre (pv |-> tptsto_fuzzyR t 1$m v) in
+            letI* := add_post (pv |-> anyR t 1$m) in
             elaborate ret ts ar (args ++ [v]) wpp
         end%I
     end.

@@ -84,7 +84,7 @@ Example e_char8 : Rep := char8R q 10.
 
 Variable b: bool.
 Example e11: bool:=true.
-Example e10 : Rep := boolR (cQp.m (1/2)) b.
+Example e10 : Rep := boolR (1/2)$m b.
 
 (**
 Some locations (e.g. the "next" field of linked list) store pointers.
@@ -129,10 +129,10 @@ Lemma l1: e13 |-- [| False |].
 Abort.
 
 (** However, the following is fine: *)
-Example e14 : mpred := x |-> intR ((cQp.m (1/2))) 4 ** x |-> intR ((cQp.m (1/2))) 4.
+Example e14 : mpred := x |-> intR (1/2)$m 4 ** x |-> intR (1/2)$m 4.
 
 (** if [x] and [y] are different locations, the following is also fine *)
-Example e15 : mpred := x |-> intR 1 4 ** y |-> intR (cQp.m (1/2)) 4.
+Example e15 : mpred := x |-> intR 1 4 ** y |-> intR (1/2)$m 4.
 
 (** This separateness part of the [**] (instead of vanilla conjunction) gives the main modularity properties of separation logic.
 For example, if a thread [t1] has precondition [P1] and postcondition [Q2],

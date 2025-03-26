@@ -215,21 +215,21 @@ Section with_cpp.
     Context (p : ptr).
 
     Goal
-        p |-> primR Tint (cQp.m (1/2)) 0
-        |-- p |-> primR Tint (cQp.m (1/2)) 0 -* p |-> primR Tint (cQp.m 1) 0.
+        p |-> primR Tint (1/2)$m 0
+        |-- p |-> primR Tint (1/2)$m 0 -* p |-> primR Tint 1$m 0.
     Proof.
       iIntros "H1 H2".
       iCombine "H1 H2" as "$".
     Abort.
 
     Goal
-        p |-> primR Tint (cQp.c 1) 0 |-- p |-> primR Tint (cQp.c (1/2)) 0 ** p |-> primR Tint (cQp.c (1/2)) 0.
+        p |-> primR Tint 1$c 0 |-- p |-> primR Tint (1/2)$c 0 ** p |-> primR Tint (1/2)$c 0.
     Proof.
       iIntros "H".
       iDestruct "H" as "[H1 H2]".
     Abort.
 
-    Goal p |-> primR Tint (cQp.c 1) 1 |-- True.
+    Goal p |-> primR Tint 1$c 1 |-- True.
     Proof.
       iIntros "H".
       iDestruct (observe [| 1 ≤ 1 |]%Qp with "H") as %? (* ; [] << FAILS *).

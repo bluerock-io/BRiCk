@@ -237,7 +237,7 @@ Definition xval_receive `{Σ : cpp_logic, σ : genv}
   [primR] is enough because C++ code never uses the raw bytes
   underlying an inhabitant of a reference type.
   *)
-  Exists p, res |-> primR (Tref (erase_qualifiers ty)) (cQp.mut 1) (Vref p) ** Q p.
+  Exists p, res |-> primR (Tref (erase_qualifiers ty)) 1$m (Vref p) ** Q p.
 #[global] Arguments xval_receive {_ _ _ _} _ _ _ / : assert.
 
 Definition lval_receive `{Σ : cpp_logic, σ : genv}
@@ -246,7 +246,7 @@ Definition lval_receive `{Σ : cpp_logic, σ : genv}
   [primR] is enough because C++ code never uses the raw bytes
   underlying an inhabitant of a reference type.
   *)
-  Exists p, res |-> primR (Tref (erase_qualifiers ty)) (cQp.mut 1) (Vref p) ** Q p.
+  Exists p, res |-> primR (Tref (erase_qualifiers ty)) 1$m (Vref p) ** Q p.
 #[global] Arguments lval_receive {_ _ _ _} _ _ _ / : assert.
 
 mlock Definition operand_receive `{Σ : cpp_logic, σ : genv}

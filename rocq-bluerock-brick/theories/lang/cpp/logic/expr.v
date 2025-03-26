@@ -135,8 +135,8 @@ Module Type Expr.
      *)
     Axiom wp_lval_string : forall chars ct Q,
           (Forall (p : ptr) (q : Qp),
-            p |-> string_bytesR ct (cQp.c q) chars -*
-            □ (Forall q', (p |-> string_bytesR ct (cQp.c q') chars ={⊤}=∗ emp)) -*
+            p |-> string_bytesR ct q$c chars -*
+            □ (Forall q', (p |-> string_bytesR ct q'$c chars ={⊤}=∗ emp)) -*
             Q p FreeTemps.id)
       |-- wp_lval (Estring chars (Tchar_ ct)) Q.
 
@@ -1857,10 +1857,10 @@ Module Type Expr.
                            to the program to make it read-only.
                          NOTE that no "correct" program will ever modify this variable
                            anyways. *)
-                      loop_index |-> primR Tsize_t (cQp.c 1) idx -*
+                      loop_index |-> primR Tsize_t 1$c idx -*
                       wp_initialize tu ρ ty (targetp .[ erase_qualifiers ty ! idx ]) init
                               (fun free => interp free $
-                                 loop_index |-> primR Tsize_t (cQp.c 1) idx **
+                                 loop_index |-> primR Tsize_t 1$c idx **
                                  rest (N.succ idx))) sz idx.
 
     Axiom wp_init_arrayloop_init : forall oname level sz ρ (trg : ptr) src init ety ty Q,

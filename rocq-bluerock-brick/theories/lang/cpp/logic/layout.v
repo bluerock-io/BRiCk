@@ -40,7 +40,7 @@ Section with_Σ.
       Exists rs, rawsR q rs ** [| raw_bytes_of_struct σ cls rss rs |].
 
   #[local] Definition implicit_destruct_ty (ty : type) :=
-    anyR ty (cQp.mut 1) |-- |={↑pred_ns}=> tblockR ty (cQp.mut 1).
+    anyR ty 1$m |-- |={↑pred_ns}=> tblockR ty 1$m.
 
   (** implicit destruction of a primitive *)
   Axiom implicit_destruct_int : forall sz sgn, Reduce (implicit_destruct_ty (Tnum sz sgn)).
@@ -89,11 +89,11 @@ Section with_Σ.
       glob_def resolve cls = Some (Gunion un) ->
 (*      un.(u_trivially_destructible) -> *)
       type_ptrR (Tnamed cls)
-      |-- (union_def (fun ty => tblockR ty (cQp.mut 1)) cls un)
+      |-- (union_def (fun ty => tblockR ty 1$m) cls un)
       -* [∧ list] idx ↦ it ∈ un.(u_fields),
           let f := _field {| f_name := it.(mem_name) ; f_type := cls |} in
-          |={↑pred_ns}=> f |-> tblockR (erase_qualifiers it.(mem_type)) (cQp.mut 1) **
-               unionR cls (cQp.mut 1) (Some idx).
+          |={↑pred_ns}=> f |-> tblockR (erase_qualifiers it.(mem_type)) 1$m **
+               unionR cls 1$m (Some idx).
 *)
 
   (** decompose an array into individual components
