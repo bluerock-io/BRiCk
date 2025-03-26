@@ -141,7 +141,7 @@ Module MTraverse.
       match n with
       | Ninst n xs => Ninst <$> traverseN n <*> traverse (T:=eta list) traverseTA xs
       | Nglobal c => Nglobal <$> atomic_name.traverse traverseT c
-      | Ndependent t => Ndependent <$> traverseT t
+      | Ndependent t => Ndependent' <$> traverseT t
       | Nscoped n c => Nscoped <$> traverseN n <*> atomic_name.traverse traverseT c
       | Nunsupported msg => mret $ Nunsupported msg
       end

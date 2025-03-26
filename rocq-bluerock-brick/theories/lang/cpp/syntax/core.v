@@ -809,10 +809,19 @@ Definition Ndependent' (t : type) : classname :=
   | Tenum nm => nm
   | _ => Ndependent t
   end.
-
 Lemma Ndependent'_Tnamed x :
   Ndependent' (Tnamed x) = x.
 Proof. done. Qed.
+
+Definition Tnamed' (n : name) : type :=
+  match n with
+  | Ndependent t => t
+  | _ => Tnamed n
+  end.
+Lemma Tnamed'_Ndependent x :
+  Tnamed' (Ndependent x) = x.
+Proof. done. Qed.
+
 
 (* Lemma Tnamed_Ndependent' x : *)
 (*   Tnamed (Ndependent' x) = x. *)
