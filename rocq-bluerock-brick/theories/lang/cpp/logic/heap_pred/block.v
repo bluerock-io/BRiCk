@@ -77,7 +77,7 @@ Section with_cpp.
    *)
   Definition tblockR (ty : Rtype) (q : cQp.t) : Rep :=
     match size_of σ ty , align_of ty with
-    | Some sz , Some al => blockR (σ:=σ) sz q ** alignedR al
+    | Some sz , Some al => blockR sz q ** alignedR al
     | _ , _  => False
     end.
 

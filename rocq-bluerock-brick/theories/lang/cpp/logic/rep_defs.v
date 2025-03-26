@@ -52,11 +52,9 @@ End defs.
 
 mlock Definition at_aux `{Σ : cpp_logic} (p : ptr) (R : Rep) : mpred :=
   R.(monPred_at) p.
-#[global] Arguments at_aux {_ _ _} _ _ : assert.
 
 mlock Definition offsetR_aux `{Σ : cpp_logic} (o : offset) (R : Rep) : Rep :=
   as_Rep (fun base => R.(monPred_at) (base ,, o)).
-#[global] Arguments offsetR_aux {_ _ _} _ _ : assert.
 
 (* TODO replace by the right instances. *)
 #[global] Instance: Params (@at_aux) 4 := {}.

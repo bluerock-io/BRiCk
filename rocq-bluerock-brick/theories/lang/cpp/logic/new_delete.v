@@ -502,7 +502,6 @@ Module Type Expr__newdelete.
         Exists (sz : N), [| size_of mdc_ty = Some sz |] **
           (storage_ptr .[ Tuchar ! -overhead ] |-> blockR (overhead + sz) 1$m
             -* delete_val tu' delete_fn mdc_ty (storage_ptr .[ Tuchar ! -overhead ]) (Q Vvoid)).
-  #[global] Arguments wp_delete {_ _ _ σ}.
 
   Section delete.
     Context `{Σ : cpp_logic} {σ : genv}.

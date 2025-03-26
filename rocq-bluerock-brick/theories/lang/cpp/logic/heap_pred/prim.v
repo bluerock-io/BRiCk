@@ -27,7 +27,6 @@ Definition initializedR `{Σ : cpp_logic, σ : genv} (ty : Rtype) (q : cQp.t) (v
    *)
   pureR (has_type v ty) **
   tptsto_fuzzyR ty q v.
-#[global] Arguments initializedR {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 
 (**
@@ -39,12 +38,10 @@ NOTE [ty] *must* be a primitive type.
 mlock
 Definition primR `{Σ : cpp_logic, σ : genv} (ty : Rtype) (q : cQp.t) (v : val) : Rep :=
   [| ~~ is_raw v |] ** initializedR ty q v.
-#[global] Arguments primR {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 (* TODO: documentation needed *)
 mlock Definition reference_toR `{Σ : cpp_logic, σ : genv} (ty : Rtype) : Rep :=
   as_Rep (reference_to ty).
-#[global] Arguments reference_toR {_ _ _ _} _ : assert.	(* mlock bug *)
 
 #[global] Instance reference_toR_knoweldge `{Σ : cpp_logic, resolve : genv}
   : Knowledge1 reference_toR.
@@ -77,20 +74,6 @@ Section with_cpp.
   Qed.
 
   (** [initializedR] *)
-  #[global] Instance: Params (@initializedR) 3 := {}.
-  #[global] Instance initializedR_proper :
-    Proper (genv_eq ==> (=) ==> (=) ==> (=) ==> (⊣⊢)) (@initializedR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite initializedR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance initializedR_mono :
-    Proper (genv_leq ==> (=) ==> (=) ==> (=) ==> (⊢)) (@initializedR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite initializedR.unlock. by setoid_rewrite Hσ.
-  Qed.
-
   #[global] Instance initializedR_timeless ty q v
     : Timeless (initializedR ty q v).
   Proof. rewrite initializedR.unlock. apply _. Qed.
@@ -182,20 +165,6 @@ Section with_cpp.
   Proof. rewrite initializedR.unlock. apply _. Qed.
 
   (** [primR] *)
-  #[global] Instance: Params (@primR) 3 := {}.
-  #[global] Instance primR_proper :
-    Proper (genv_eq ==> (=) ==> (=) ==> (=) ==> (⊣⊢)) (@primR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite primR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance primR_mono :
-    Proper (genv_leq ==> (=) ==> (=) ==> (=) ==> (⊢)) (@primR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite primR.unlock. by setoid_rewrite Hσ.
-  Qed.
-
   #[global] Instance primR_timeless ty q v
     : Timeless (primR ty q v).
   Proof. rewrite primR.unlock. apply _. Qed.

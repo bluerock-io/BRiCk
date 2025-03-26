@@ -46,7 +46,6 @@ mlock Definition svalid_members `{Σ : cpp_logic, σ : genv}
     (cls : globname) (members : list (field_name.t lang.cpp * type)) : Rep :=
   reference_toR (Tnamed cls) **
   [** list] m ∈ members, _field (Field cls m.1) |-> reference_toR m.2.
-#[global] Arguments svalid_members {_ _ _ _} _ _ : assert.
 
 Section svalid_members.
   Context `{Σ : cpp_logic, σ : genv}.
@@ -424,7 +423,6 @@ place to support `XX_shift` lemmas. This could be fixed.
   end.
 mlock Definition wp_func `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_func' true)).
-#[global] Arguments wp_func {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Definition func_ok `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (f : Func) (spec : function_spec) : mpred :=
@@ -494,7 +492,6 @@ parameters.
   end.
 mlock Definition wp_method `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_method' true)).
-#[global] Arguments wp_method {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Definition method_ok `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (m : Method) (spec : function_spec) : mpred :=
@@ -859,7 +856,6 @@ that implies [type_ptr].
   end.
 mlock Definition wp_ctor `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_ctor' true)).
-#[global] Arguments wp_ctor {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Definition ctor_ok `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (ctor : Ctor) (spec : function_spec) : mpred :=
@@ -1028,7 +1024,6 @@ this resource will be consumed immediately.
   end.
 mlock Definition wp_dtor `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_dtor' true)).
-#[global] Arguments wp_dtor {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Section wp_dtor.
   Context `{Σ : cpp_logic, σ : genv}.

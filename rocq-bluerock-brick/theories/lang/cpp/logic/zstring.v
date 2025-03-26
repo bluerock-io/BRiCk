@@ -436,8 +436,8 @@ Section with_ct.
             apply has_type_prop_char_0.
           - exfalso; eapply nth_error_strlen_contra; by eauto.
         }
-        suff: List.Forall (fun x => x <> 0%N /\ has_type_prop (σ:=σ) (Vchar x) Tchar)
-                          (take (Datatypes.length zs - 1) zs).
+        suff: Refine (List.Forall (fun x => x <> 0%N /\ has_type_prop (Vchar x) Tchar)
+                          (take (Datatypes.length zs - 1) zs)).
         { clear - zs. elim: zs => //= [_ [] //|a zs IH /=]. rewrite Nat.sub_0_r.
           destruct zs as [|z zs]; first done. move => /= /Forall_cons [[??]?].
           move => [//|]. simpl in IH. rewrite Nat.sub_0_r in IH. apply IH. done. }

@@ -46,7 +46,7 @@ Require Import bluerock.lang.cpp.semantics.subtyping.
 
 Variant validity_type : Set := Strict | Relaxed.
 
-Implicit Types (vt : validity_type) (σ resolve : genv).
+Implicit Types (vt : validity_type) (σ : genv).
 Implicit Types (n : N) (z : Z).
 
 (* Namespace for the invariants of the C++ abstraction's ghost state. *)
@@ -110,20 +110,18 @@ Module Type CPP_LOGIC
       http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2369.pdf for
       discussion in the context of the C standard.
     *)
-    Parameter _valid_ptr : forall `{!cpp_logic thread_info Σ}
-      (vt : validity_type), ptr -> mpred.
+    Parameter _valid_ptr : forall `{cpp_logic} (vt : validity_type) (p : ptr), mpred.
     (* strict validity (not past-the-end) *)
     Notation strict_valid_ptr := (_valid_ptr Strict).
     (* validity (past-the-end allowed) *)
     Notation valid_ptr := (_valid_ptr Relaxed).
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    Axiom _valid_ptr_persistent : forall b p, Persistent (_valid_ptr b p).
-    Axiom _valid_ptr_affine : forall b p, Affine (_valid_ptr b p).
-    Axiom _valid_ptr_timeless : forall b p, Timeless (_valid_ptr b p).
-    #[global] Existing Instances _valid_ptr_persistent _valid_ptr_affine _valid_ptr_timeless.
+    #[global] Declare Instance _valid_ptr_persistent : forall b p, Persistent (_valid_ptr b p).
+    #[global] Declare Instance _valid_ptr_affine : forall b p, Affine (_valid_ptr b p).
+    #[global] Declare Instance _valid_ptr_timeless : forall b p, Timeless (_valid_ptr b p).
 
     Axiom valid_ptr_nullptr : |-- valid_ptr nullptr.
     Axiom not_strictly_valid_ptr_nullptr : strict_valid_ptr nullptr |-- False.
@@ -138,10 +136,7 @@ Module Type CPP_LOGIC
     TODO: include in [primR].
     TODO: refine for which types https://bedrocksystems.atlassian.net/browse/FM-3760
     *)
-    Parameter has_type : ∀ `{!cpp_logic thread_info Σ} {σ : genv}, val -> type -> mpred.
-
-    #[global] Declare Instance has_type_mono `{cpp_logic} :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@has_type _ _ _).
+    Parameter has_type : ∀ `{cpp_logic} {σ}, val -> type -> mpred.
 
     (**
        [reference_to ty p] states that the location [p] stores a value of type [ty].
@@ -172,13 +167,10 @@ Module Type CPP_LOGIC
        [strict_valid_ptr] (which would make it something like a pre-construction
        state of [type_ptr]).
      *)
-    Parameter reference_to : forall `{!cpp_logic thread_info Σ} {σ : genv}, type -> ptr -> mpred.
-
-    #[global] Declare Instance reference_to_mono `{cpp_logic} :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@reference_to _ _ _).
+    Parameter reference_to : forall `{cpp_logic} {σ}, type -> ptr -> mpred.
 
     Section with_genv.
-      Context `{cpp_logic} {σ : genv}.
+      Context `{cpp_logic} {σ}.
 
       #[global] Declare Instance has_type_knowledge : Knowledge2 has_type.
       #[global] Declare Instance has_type_timeless : Timeless2 has_type.
@@ -240,29 +232,27 @@ Module Type CPP_LOGIC
 
     End with_genv.
 
-    Parameter has_type_or_undef : forall `{!cpp_logic thread_info Σ} {σ : genv}, val -> type -> mpred.
+    Parameter has_type_or_undef : forall `{cpp_logic} {σ}, val -> type -> mpred.
     Axiom has_type_or_undef_unfold : forall `{cpp_logic},
         @has_type_or_undef _ _ _ = funI σ v ty => has_type v ty \\// [| v = Vundef |].
 
     (** Formalizes the notion of "provides storage",
     http://eel.is/c++draft/intro.object#def:provides_storage *)
     Parameter provides_storage :
-      forall `{!cpp_logic thread_info Σ} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
+      forall `{cpp_logic} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    Axiom provides_storage_persistent :
+    #[global] Declare Instance provides_storage_persistent :
       forall storage_ptr obj_ptr ty,
       Persistent (provides_storage storage_ptr obj_ptr ty).
-    Axiom provides_storage_affine :
+    #[global] Declare Instance provides_storage_affine :
       forall storage_ptr obj_ptr ty,
       Affine (provides_storage storage_ptr obj_ptr ty).
-    Axiom provides_storage_timeless :
+    #[global] Declare Instance provides_storage_timeless :
       forall storage_ptr obj_ptr ty,
       Timeless (provides_storage storage_ptr obj_ptr ty).
-    #[global] Existing Instances provides_storage_persistent provides_storage_affine provides_storage_timeless.
-
   End with_cpp_logic.
 
     (** *** Typed points-to predicate.
@@ -284,18 +274,18 @@ Module Type CPP_LOGIC
     We use this predicate both for pointers to actual memory and for pointers to
     C++ locations that are not stored in memory (as an optimization).
     *)
-    Parameter tptsto : forall `{!cpp_logic thread_info Σ} {σ:genv}
+    Parameter tptsto : forall `{cpp_logic} {σ}
       (t : Rtype) (q : cQp.t) (a : ptr) (v : val), mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
     #[global] Declare Instance tptsto_valid_type
-      : forall {σ:genv} (t : Rtype) (q : cQp.t) (a : ptr) (v : val),
+      : forall (t : Rtype) (q : cQp.t) (a : ptr) (v : val),
         Observe [| is_heap_type t |] (tptsto t q a v).
 
     Axiom tptsto_nonnull : forall {σ} ty q a,
-      tptsto (σ:=σ) ty q nullptr a |-- False.
+      tptsto ty q nullptr a |-- False.
 
     #[global] Declare Instance tptsto_params : Params (@tptsto) 3.
     #[global] Declare Instance tptsto_proper :
@@ -303,7 +293,7 @@ Module Type CPP_LOGIC
     #[global] Declare Instance tptsto_mono :
       Proper (genv_leq ==> eq ==> eq ==> eq ==> eq ==> (⊢)) (@tptsto _ _ _).
 
-    #[global] Declare Instance tptsto_timeless : Timeless5 (@tptsto _ _ _).
+    #[global] Declare Instance tptsto_timeless : Timeless4 tptsto.
     #[global] Declare Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto ty).
 
     #[global] Declare Instance tptsto_cfrac_valid {σ} t : CFracValid2 (tptsto t).
@@ -331,14 +321,13 @@ Module Type CPP_LOGIC
       See https://eel.is/c++draft/basic.stc.general#4 and
       https://eel.is/c++draft/basic.compound#3.1.
     *)
-    Parameter live_alloc_id : forall `{!cpp_logic thread_info Σ},
+    Parameter live_alloc_id : forall `{cpp_logic},
       alloc_id -> mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    Axiom live_alloc_id_timeless : forall aid, Timeless (live_alloc_id aid).
-    #[global] Existing Instance live_alloc_id_timeless.
+    #[global] Declare Instance live_alloc_id_timeless : forall aid, Timeless (live_alloc_id aid).
 
     Axiom valid_ptr_alloc_id : forall p,
       valid_ptr p |-- [| is_Some (ptr_alloc_id p) |].
@@ -402,24 +391,25 @@ Module Type CPP_LOGIC
         Compilers can use the ownership here to represent dynamic dispatch
         tables.
      *)
-    Parameter mdc_path : forall `{!cpp_logic thread_info Σ} {σ : genv}
+    Parameter mdc_path : forall `{cpp_logic} {σ}
         (this : globname) (most_derived : list globname),
         cQp.t -> ptr -> mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
-    #[global] Declare Instance mdc_path_cfractional σ this mdc : CFractional1 (mdc_path this mdc).
-    #[global] Declare Instance mdc_path_cfrac_valid {σ} cls path : CFracValid1 (mdc_path cls path).
-    #[global] Declare Instance mdc_path_timeless {σ} : Timeless4 (mdc_path).
-    #[global] Declare Instance mdc_path_strict_valid {σ} this mdc q p : Observe (strict_valid_ptr p) (mdc_path this mdc q p).
-    #[global] Declare Instance mdc_path_agree {σ} cls1 cls2 q1 q2 p mdc1 mdc2 :
+    Context `{cpp_logic} {σ}.
+
+    #[global] Declare Instance mdc_path_cfractional this mdc : CFractional1 (mdc_path this mdc).
+    #[global] Declare Instance mdc_path_cfrac_valid cls path : CFracValid1 (mdc_path cls path).
+    #[global] Declare Instance mdc_path_timeless : Timeless4 (mdc_path).
+    #[global] Declare Instance mdc_path_strict_valid this mdc q p : Observe (strict_valid_ptr p) (mdc_path this mdc q p).
+    #[global] Declare Instance mdc_path_agree cls1 cls2 q1 q2 p mdc1 mdc2 :
       Observe2 [| mdc1 = mdc2 /\ cls1 = cls2 |] (mdc_path cls1 mdc1 q1 p) (mdc_path cls2 mdc2 q2 p).
 
     (** this allows you to forget an object mdc_path, necessary for doing
         placement [new] over an existing object.
      *)
     Axiom mdc_path_forget : forall σ mdc this p,
-        mdc_path (σ:=σ) this mdc 1$m p |-- |={↑pred_ns}=> mdc_path (σ:=σ) this nil 1$m p.
+        mdc_path this mdc 1$m p |-- |={↑pred_ns}=> mdc_path this nil 1$m p.
 
   End with_cpp_logic.
 
@@ -428,48 +418,39 @@ Module Type CPP_LOGIC
       note that in the presence of code-loading, function calls will
       require an extra side-condition that the code is loaded.
      *)
-    Parameter code_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Func -> ptr -> mpred.
-    Parameter method_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Method -> ptr -> mpred.
-    Parameter ctor_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Ctor -> ptr -> mpred.
-    Parameter dtor_at : forall `{!cpp_logic thread_info Σ},
-      genv -> translation_unit -> Dtor -> ptr -> mpred.
-    #[global] Arguments code_at {_ _ _ σ} tu _ _.
-    #[global] Arguments method_at {_ _ _ σ} tu _ _.
-    #[global] Arguments ctor_at {_ _ _ σ} tu _ _.
-    #[global] Arguments dtor_at {_ _ _ σ} tu _ _.
+    Parameter code_at : forall `{cpp_logic} {σ},
+      translation_unit -> Func -> ptr -> mpred.
+    Parameter method_at : forall `{cpp_logic} {σ},
+      translation_unit -> Method -> ptr -> mpred.
+    Parameter ctor_at : forall `{cpp_logic} {σ},
+      translation_unit -> Ctor -> ptr -> mpred.
+    Parameter dtor_at : forall `{cpp_logic} {σ},
+      translation_unit -> Dtor -> ptr -> mpred.
 
 
     Section with_genv.
-      Context `{cpp_logic} {σ : genv} (tu : translation_unit).
-      #[local] Notation code_at := (@code_at _ _ _ σ tu) (only parsing).
-      #[local] Notation method_at := (@method_at _ _ _ σ tu) (only parsing).
-      #[local] Notation ctor_at := (@ctor_at _ _ _ σ tu) (only parsing).
-      #[local] Notation dtor_at := (@dtor_at _ _ _ σ tu) (only parsing).
+      Context `{cpp_logic} {σ} (tu : translation_unit).
 
-      Axiom code_at_persistent : forall f p, Persistent (code_at f p).
-      Axiom code_at_affine : forall f p, Affine (code_at f p).
-      Axiom code_at_timeless : forall f p, Timeless (code_at f p).
+      #[local] Notation code_at := (code_at tu) (only parsing).
+      #[local] Notation method_at := (method_at tu) (only parsing).
+      #[local] Notation ctor_at := (ctor_at tu) (only parsing).
+      #[local] Notation dtor_at := (dtor_at tu) (only parsing).
 
-      Axiom method_at_persistent : forall f p, Persistent (method_at f p).
-      Axiom method_at_affine : forall f p, Affine (method_at f p).
-      Axiom method_at_timeless : forall f p, Timeless (method_at f p).
+      #[global] Declare Instance code_at_persistent : forall f p, Persistent (code_at f p).
+      #[global] Declare Instance code_at_affine : forall f p, Affine (code_at f p).
+      #[global] Declare Instance code_at_timeless : forall f p, Timeless (code_at f p).
 
-      Axiom ctor_at_persistent : forall f p, Persistent (ctor_at f p).
-      Axiom ctor_at_affine : forall f p, Affine (ctor_at f p).
-      Axiom ctor_at_timeless : forall f p, Timeless (ctor_at f p).
+      #[global] Declare Instance method_at_persistent : forall f p, Persistent (method_at f p).
+      #[global] Declare Instance method_at_affine : forall f p, Affine (method_at f p).
+      #[global] Declare Instance method_at_timeless : forall f p, Timeless (method_at f p).
 
-      Axiom dtor_at_persistent : forall f p, Persistent (dtor_at f p).
-      Axiom dtor_at_affine : forall f p, Affine (dtor_at f p).
-      Axiom dtor_at_timeless : forall f p, Timeless (dtor_at f p).
+      #[global] Declare Instance ctor_at_persistent : forall f p, Persistent (ctor_at f p).
+      #[global] Declare Instance ctor_at_affine : forall f p, Affine (ctor_at f p).
+      #[global] Declare Instance ctor_at_timeless : forall f p, Timeless (ctor_at f p).
 
-      #[global] Existing Instances
-        code_at_persistent code_at_affine code_at_timeless
-        method_at_persistent method_at_affine method_at_timeless
-        ctor_at_persistent ctor_at_affine ctor_at_timeless
-        dtor_at_persistent dtor_at_affine dtor_at_timeless.
+      #[global] Declare Instance dtor_at_persistent : forall f p, Persistent (dtor_at f p).
+      #[global] Declare Instance dtor_at_affine : forall f p, Affine (dtor_at f p).
+      #[global] Declare Instance dtor_at_timeless : forall f p, Timeless (dtor_at f p).
 
       Axiom code_at_live   : forall f p,   code_at f p |-- live_ptr p.
       Axiom method_at_live : forall f p, method_at f p |-- live_ptr p.
@@ -484,32 +465,29 @@ Module Type CPP_LOGIC
     End with_genv.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    Axiom offset_pinned_ptr_pure : forall σ o z va p,
+    Axiom offset_pinned_ptr_pure : forall {o z va p},
       eval_offset σ o = Some z ->
       ptr_vaddr p = Some va ->
       valid_ptr (p ,, o) |--
       [| 0 <= Z.of_N va + z |]%Z **
       [| ptr_vaddr (p ,, o) = Some (Z.to_N (Z.of_N va + z)) |].
 
-    Axiom offset_inv_pinned_ptr_pure : forall σ o z va p,
+    Axiom offset_inv_pinned_ptr_pure : forall o z va p,
       eval_offset σ o = Some z ->
       ptr_vaddr (p ,, o) = Some va ->
       valid_ptr (p ,, o) |--
       [| 0 <= Z.of_N va - z |]%Z **
       [| ptr_vaddr p = Some (Z.to_N (Z.of_N va - z)) |].
 
-    Axiom provides_storage_same_address : forall storage_ptr obj_ptr ty,
+    #[global] Declare Instance provides_storage_same_address : forall storage_ptr obj_ptr ty,
       Observe [| same_address storage_ptr obj_ptr |] (provides_storage storage_ptr obj_ptr ty).
 
-    Axiom provides_storage_valid_storage_ptr : forall storage_ptr obj_ptr aty,
+    #[global] Declare Instance provides_storage_valid_storage_ptr : forall storage_ptr obj_ptr aty,
       Observe (valid_ptr storage_ptr) (provides_storage storage_ptr obj_ptr aty).
-    Axiom provides_storage_valid_obj_ptr : forall storage_ptr obj_ptr aty,
+    #[global] Declare Instance provides_storage_valid_obj_ptr : forall storage_ptr obj_ptr aty,
       Observe (valid_ptr obj_ptr) (provides_storage storage_ptr obj_ptr aty).
-
-    #[global] Existing Instances provides_storage_same_address
-      provides_storage_valid_storage_ptr provides_storage_valid_obj_ptr.
 
   End with_cpp_logic.
 
@@ -522,26 +500,23 @@ Module Type CPP_LOGIC
     (http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2577.pdf).
     See https://dl.acm.org/doi/10.1145/3290380 for an introduction.
     *)
-    Parameter exposed_aid : forall `{!cpp_logic thread_info Σ}, alloc_id -> mpred.
+    Parameter exposed_aid : forall `{cpp_logic}, alloc_id -> mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    Axiom exposed_aid_persistent : forall aid, Persistent (exposed_aid aid).
-    Axiom exposed_aid_affine : forall aid, Affine (exposed_aid aid).
-    Axiom exposed_aid_timeless : forall aid, Timeless (exposed_aid aid).
+    #[global] Declare Instance exposed_aid_persistent : forall aid, Persistent (exposed_aid aid).
+    #[global] Declare Instance exposed_aid_affine : forall aid, Affine (exposed_aid aid).
+    #[global] Declare Instance exposed_aid_timeless : forall aid, Timeless (exposed_aid aid).
 
     Axiom exposed_aid_null_alloc_id : |-- exposed_aid null_alloc_id.
-
-    #[global] Existing Instances
-      exposed_aid_persistent exposed_aid_affine exposed_aid_timeless.
 
   End with_cpp_logic.
 
     (**
-      [type_ptr {resolve := resolve} ty p] asserts that [p] points to
+      [type_ptr (σ := σ) ty p] asserts that [p] points to
       a (possibly dead) object of type [ty] (in environment
-      [resolve]), as defined by https://eel.is/c++draft/basic.compound#3.1.
+      [σ]), as defined by https://eel.is/c++draft/basic.compound#3.1.
 
       This implies:
       - the pointer is strictly valid [type_ptr_strict_valid], and
@@ -559,48 +534,46 @@ Module Type CPP_LOGIC
       from http://eel.is/c++draft/basic.memobj#basic.life-1 to
       http://eel.is/c++draft/basic.memobj#basic.life-4.
      *)
-    Parameter type_ptr : forall `{!cpp_logic thread_info Σ} {resolve : genv} (c: Rtype), ptr -> mpred.
+    Parameter type_ptr : forall `{cpp_logic} {σ} (c : Rtype), ptr -> mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    Axiom type_ptr_persistent : forall {σ} p ty,
+    #[global] Declare Instance type_ptr_persistent : forall p ty,
       Persistent (type_ptr ty p).
-    Axiom type_ptr_affine : forall {σ} p ty,
+    #[global] Declare Instance type_ptr_affine : forall p ty,
       Affine (type_ptr ty p).
-    Axiom type_ptr_timeless : forall {σ} p ty,
+    #[global] Declare Instance type_ptr_timeless : forall p ty,
       Timeless (type_ptr ty p).
-    #[global] Existing Instances type_ptr_persistent type_ptr_affine type_ptr_timeless.
 
-    Axiom type_ptr_erase : forall {σ} ty p,
+    Axiom type_ptr_erase : forall ty p,
         type_ptr ty p -|- type_ptr (erase_qualifiers ty) p.
 
-    Axiom type_ptr_aligned_pure : forall {σ} ty p,
+    Axiom type_ptr_aligned_pure : forall ty p,
       type_ptr ty p |-- [| aligned_ptr_ty ty p |].
 
-    Axiom type_ptr_off_nonnull : forall {σ} ty p o,
+    Axiom type_ptr_off_nonnull : forall ty p o,
       type_ptr ty (p ,, o) |-- [| p <> nullptr |].
 
-    Axiom tptsto_type_ptr : forall {σ : genv} ty q p v,
+    #[global] Declare Instance tptsto_type_ptr : forall ty q p v,
       Observe (type_ptr ty p) (tptsto ty q p v).
-    #[global] Existing Instance tptsto_type_ptr.
 
     (* All objects in the C++ abstract machine have a size
 
        NOTE to support un-sized objects, we can simply say that the [sizeof] operator
             in C++ is only a conservative approximation of the true size of an object.
      *)
-    Axiom type_ptr_size : forall σ ty p,
+    Axiom type_ptr_size : forall ty p,
         type_ptr ty p |-- [| is_Some (size_of σ ty) |].
 
     (**
     Recall that [type_ptr] and [strict_valid_ptr] don't include
     past-the-end pointers... *)
-    Axiom type_ptr_strict_valid : forall resolve ty p,
+    Axiom type_ptr_strict_valid : forall ty p,
       type_ptr ty p |-- strict_valid_ptr p.
     (** Hence they can be incremented into (possibly past-the-end) valid pointers. *)
-    Axiom type_ptr_valid_plus_one : forall resolve ty p,
-      type_ptr ty p |-- valid_ptr (p ,, o_sub resolve ty 1).
+    Axiom type_ptr_valid_plus_one : forall ty p,
+      type_ptr ty p |-- valid_ptr (p ,, o_sub σ ty 1).
 
     (* When [p] is a [ptr] to a C++ object of type [ty], [p] is /also/ a pointer
        to the "object representation" of [ty] - which consists of "the sequence
@@ -671,7 +644,7 @@ Module Type CPP_LOGIC
        *)
       Section all_at_once.
         Lemma type_ptr_obj_repr :
-          forall (σ : genv) (ty : Rtype) (p : ptr) (sz : N),
+          forall (ty : Rtype) (p : ptr) (sz : N),
             size_of σ ty = Some sz ->
             type_ptr ty p |-- [∗list] i ∈ seqN 0 sz, type_ptr Tbyte (p .[ Tbyte ! Z.of_N i ]).
         Proof.
@@ -738,7 +711,7 @@ Module Type CPP_LOGIC
        [tptsto_ptr_congP_transport] from [tptsto_raw_ptr_congP_transport].
      *)
     Axiom tptsto_ptr_congP_transport : forall {σ} q p1 p2 v,
-      ptr_congP σ p1 p2 |-- tptsto (σ:=σ) Tbyte q p1 v -* tptsto (σ:=σ) Tbyte q p2 v.
+      ptr_congP σ p1 p2 |-- tptsto Tbyte q p1 v -* tptsto Tbyte q p2 v.
 
     (**
      ** Deducing pointer equalities
@@ -784,9 +757,9 @@ Module Type CPP_LOGIC
     which might incorporate implementation-specific compiler decisions.
     TODO: handle [std::byte] like [unsigned char].
     *)
-    Axiom same_address_eq_type_ptr : forall resolve ty p1 p2 n,
+    Axiom same_address_eq_type_ptr : forall ty p1 p2 n,
       same_address p1 p2 ->
-      size_of resolve ty = Some n ->
+      size_of _ ty = Some n ->
       (* if [ty = Tuchar], one of these pointer could provide storage for the other. *)
       ty <> Tuchar ->
       (n > 0)%N ->
@@ -802,40 +775,40 @@ Module Type CPP_LOGIC
         This is related to the "construction state" in Tahina's work, i.e.
         <https://inria.hal.science/file/index/docid/674663/filename/cpp-construction.pdf>
      *)
-    Axiom struct_padding : forall `{!cpp_logic thread_info Σ} {σ:genv},
+    Axiom struct_padding : forall `{cpp_logic} {σ},
       ptr -> globname -> cQp.t -> mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    #[global] Declare Instance struct_padding_timeless {σ:genv} : Timeless3 (struct_padding).
-    #[global] Declare Instance struct_padding_fractional : forall {σ : genv} p cls, CFractional (struct_padding p cls).
-    #[global] Declare Instance struct_padding_frac_valid : forall {σ : genv} p cls, CFracValid0 (struct_padding p cls).
+    #[global] Declare Instance struct_padding_timeless : Timeless3 struct_padding.
+    #[global] Declare Instance struct_padding_fractional : forall p cls, CFractional (struct_padding p cls).
+    #[global] Declare Instance struct_padding_frac_valid : forall p cls, CFracValid0 (struct_padding p cls).
 
-    #[global] Declare Instance struct_padding_type_ptr_observe : forall {σ : genv} p cls q,
+    #[global] Declare Instance struct_padding_type_ptr_observe : forall p cls q,
         Observe (type_ptr (Tnamed cls) p) (struct_padding p cls q).
 
   End with_cpp_logic.
 
-    (** [union_padding cls q active_member] is [q] ownership of
-     the union padding for union [cls] for the active member
-     [active_member]. When there is no active member the [active_member]
-     is [None], otherwise it is [Some idx] where [idx] is the numeric
-     index of member field.
-     *)
-    Axiom union_padding : forall `{!cpp_logic thread_info Σ} {σ:genv},
-      ptr -> globname -> cQp.t -> option nat -> mpred.
+  (** [union_padding cls q active_member] is [q] ownership of
+    the union padding for union [cls] for the active member
+    [active_member]. When there is no active member the [active_member]
+    is [None], otherwise it is [Some idx] where [idx] is the numeric
+    index of member field.
+    *)
+  Parameter union_padding : forall `{cpp_logic} {σ},
+    ptr -> globname -> cQp.t -> option nat -> mpred.
 
   Section with_cpp_logic.
-  Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
-    #[global] Declare Instance union_padding_timeless {σ:genv} :  Timeless4 (union_padding).
-    #[global] Declare Instance union_padding_fractional : forall {σ : genv} p cls, CFractional1 (union_padding p cls).
-    #[global] Declare Instance union_padding_frac_valid : forall {σ : genv} p cls, CFracValid1 (union_padding p cls).
+    #[global] Declare Instance union_padding_timeless :  Timeless4 union_padding.
+    #[global] Declare Instance union_padding_fractional : forall p cls, CFractional1 (union_padding p cls).
+    #[global] Declare Instance union_padding_frac_valid : forall p cls, CFracValid1 (union_padding p cls).
 
-    #[global] Declare Instance union_padding_type_ptr_observe : forall {σ : genv} p cls q active,
+    #[global] Declare Instance union_padding_type_ptr_observe : forall p cls q active,
         Observe (type_ptr (Tnamed cls) p) (union_padding p cls q active).
-    #[global] Declare Instance union_padding_agree : forall {σ : genv} p cls q q' i i',
+    #[global] Declare Instance union_padding_agree : forall p cls q q' i i',
         Observe2 [| i = i' |] (union_padding p cls q i) (union_padding p cls q' i').
 
   End with_cpp_logic.
@@ -858,7 +831,7 @@ Module Type VALID_PTR_AXIOMS
   Implicit Types (p : ptr).
 
   Section with_cpp.
-    Context `{cpp_logic} {σ : genv}.
+    Context `{cpp_logic} {σ}.
 
     Axiom invalid_ptr_invalid : forall vt,
       _valid_ptr vt invalid_ptr |-- False.
@@ -950,7 +923,7 @@ Export L.
 Declare Module Export VALID_PTR : VALID_PTR_AXIOMS PTRS_INTF_AXIOM VALUES_INTF_AXIOM LC L.
 
 Section valid_ptr_code.
-  Context `{cpp_logic} {σ : genv} (tu : translation_unit).
+  Context `{cpp_logic} {σ} (tu : translation_unit).
 
   Lemma code_at_valid   : forall f p,   code_at tu f p |-- valid_ptr p.
   Proof. intros. rewrite code_at_strict_valid; apply strict_valid_valid. Qed.
@@ -964,7 +937,6 @@ End valid_ptr_code.
 
 mlock Definition exposed_ptr `{cpp_logic} p : mpred :=
   valid_ptr p ** ∃ aid, [| ptr_alloc_id p = Some aid |] ** exposed_aid aid.
-#[global] Arguments exposed_ptr {_ _ _} p : assert.
 
 (** Physical representation of pointers. *)
 (** [pinned_ptr va p] states that the abstract pointer [p] is tied to a
@@ -973,13 +945,12 @@ mlock Definition exposed_ptr `{cpp_logic} p : mpred :=
   but other pointers exist. *)
 mlock Definition pinned_ptr `{cpp_logic} (va : vaddr) (p : ptr) : mpred :=
   [| ptr_vaddr p = Some va |] ** exposed_ptr p.
-#[global] Arguments pinned_ptr {_ _ _} va p : assert.
 
 Notation pinned_ptr_Z va p :=
   ([| 0 <= va |]%Z ** pinned_ptr (Z.to_N va) p).
 
 Section pinned_ptr_def.
-  Context `{cpp_logic}.
+  Context `{cpp_logic} {σ}.
 
   #[global] Instance exposed_ptr_persistent p : Persistent (exposed_ptr p).
   Proof. rewrite exposed_ptr.unlock. apply _. Qed.
@@ -1075,7 +1046,7 @@ Section pinned_ptr_def.
 End pinned_ptr_def.
 
 Section with_cpp.
-  Context `{cpp_logic} {σ : genv}.
+  Context `{cpp_logic} {σ}.
 
   Lemma same_address_bool_null p tv :
     _valid_ptr tv p |--
@@ -1458,25 +1429,16 @@ Section with_cpp.
 End with_cpp.
 
 Section has_type.
-  Context `{cpp_logic}.
+  Context `{cpp_logic} {σ}.
 
   (** [has_type] *)
 
-  #[global] Instance: Params (@has_type) 3 := {}.
-  #[global] Instance has_type_proper :
-    Proper (genv_eq ==> eq ==> eq ==> (≡)) (@has_type _ _ _).
-  Proof. intros ?? Heq ??? ???; split'; apply has_type_mono => //; apply Heq. Qed.
-
-  #[global] Instance has_type_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> flip bi_entails) (@has_type _ _ _).
-  Proof. by move=> ??+ ??-> ??-> => ->. Qed.
-
-  #[global] Instance has_type_knowledge {σ} : Knowledge2 has_type_or_undef.
+  #[global] Instance has_type_knowledge : Knowledge2 has_type_or_undef.
   Proof. rewrite has_type_or_undef_unfold; split; apply _. Qed.
-  #[global] Instance has_type_timeless {σ} : Timeless2 has_type_or_undef.
+  #[global] Instance has_type_timeless : Timeless2 has_type_or_undef.
   Proof. rewrite has_type_or_undef_unfold; apply _. Qed.
 
-  Lemma has_type_nonptr {σ} v ty :
+  Lemma has_type_nonptr v ty :
     nonptr_prim_type ty ->
     has_type v ty -|- [| has_type_prop v ty |].
   Proof.
@@ -1485,21 +1447,21 @@ Section has_type.
     - by rewrite -has_type_prop_has_type_noptr.
   Qed.
 
-  Lemma has_type_qual_iff {σ} t q x :
+  Lemma has_type_qual_iff t q x :
     has_type x t -|- has_type x (Tqualified q t).
   Proof.
     by rewrite (has_type_erase_qualifiers t)
       (has_type_erase_qualifiers (Tqualified _ _)).
   Qed.
 
-  Lemma has_type_drop_qualifiers {σ} v ty :
+  Lemma has_type_drop_qualifiers v ty :
     has_type v ty -|- has_type v (drop_qualifiers ty).
   Proof.
     rewrite (has_type_erase_qualifiers (drop_qualifiers _)) erase_drop_qualifiers.
     by rewrite -has_type_erase_qualifiers.
   Qed.
 
-  Lemma has_type_val_related {σ} ty v1 v2 :
+  Lemma has_type_val_related ty v1 v2 :
     val_related ty v1 v2 ->
     has_type v1 ty -|- has_type v2 ty.
   Proof.
@@ -1514,18 +1476,10 @@ Section has_type.
   Definition is_undef (v : val) : bool :=
     if v is Vundef then true else false.
 
-  #[global] Instance: Params (@has_type_or_undef) 3 := {}.
-  #[global] Instance has_type_or_undef_proper :
-    Proper (genv_eq ==> eq ==> eq ==> (≡)) (@has_type_or_undef _ _ _).
-  Proof. rewrite has_type_or_undef_unfold; solve_proper. Qed.
-  #[global] Instance has_type_or_undef_mono :
-    Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@has_type_or_undef _ _ _).
-  Proof. rewrite has_type_or_undef_unfold; solve_proper. Qed.
-
-  Lemma has_type_or_undef_undef {σ} t : |-- has_type_or_undef Vundef t.
+  Lemma has_type_or_undef_undef t : |-- has_type_or_undef Vundef t.
   Proof. rewrite has_type_or_undef_unfold. by iRight. Qed.
 
-  Lemma has_type_or_undef_nonundef {σ} t v :
+  Lemma has_type_or_undef_nonundef t v :
     ~~ is_undef v -> has_type_or_undef v t -|- has_type v t.
   Proof.
     intros. rewrite has_type_or_undef_unfold. split'.
@@ -1533,13 +1487,13 @@ Section has_type.
     - iIntros "?". by iLeft.
   Qed.
 
-  Lemma has_type_or_undef_qual_iff {σ} t q v :
+  Lemma has_type_or_undef_qual_iff t q v :
     has_type_or_undef v t -|- has_type_or_undef v (Tqualified q t).
   Proof.
     by rewrite !has_type_or_undef_unfold -!has_type_qual_iff.
   Qed.
 
-  Lemma has_type_or_undef_val_related {σ} ty v1 v2 :
+  Lemma has_type_or_undef_val_related ty v1 v2 :
     val_related ty v1 v2 ->
     has_type_or_undef v1 ty |-- has_type_or_undef v2 ty.
   Proof.
