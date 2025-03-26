@@ -739,7 +739,7 @@ template<typename T>
 struct Foo : T { };
 >>
 *)
-Notation classname' := name'.
+Notation classname' := name' (only parsing).
 
 (** ** C++ with structured names *)
 Notation name := name'.
@@ -749,7 +749,7 @@ Notation type := type'.
 Notation exprtype := exprtype'.
 Notation decltype := decltype'.
 Notation functype := functype'.
-Notation classname := classname'.
+Notation classname := classname' (only parsing).
 Notation Cast := Cast'.
 Notation operator_impl := operator_impl'.
 Notation MethodRef := MethodRef'.
