@@ -8,7 +8,8 @@
   "Jan-Oliver Kaiser <janno@bluerock.io>")
 
 (authors
- "Jan-Oliver Kaiser <janno@bluerock.io>")
+ "Jan-Oliver Kaiser <janno@bluerock.io>"
+ "Rodolphe Lepigre")
 
 (source (github bluerock-io/BRiCk))
 
