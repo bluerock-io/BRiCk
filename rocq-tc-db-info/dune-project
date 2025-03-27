@@ -1,0 +1,26 @@
+(lang dune 3.8)
+(using coq 0.8)
+(name tc-db-info)
+
+(generate_opam_files)
+
+(maintainers
+  "Jan-Oliver Kaiser <janno@bluerock.io>")
+
+(authors
+ "Jan-Oliver Kaiser <janno@bluerock.io>"
+ "Rodolphe Lepigre")
+
+(source (github bluerock-io/BRiCk))
+
+(license LicenseRef-BedRock)
+
+(package
+ (name tc-db-info-plugin)
+ (synopsis "Plugin for analyzing hint databases")
+ (depends coq-core))
+
+(package
+ (name tc-db-info)
+ (synopsis "Tools for analyzing hint databases")
+ (depends coq-stdlib tc-db-info-plugin))

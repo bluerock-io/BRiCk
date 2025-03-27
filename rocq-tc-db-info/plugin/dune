@@ -1,0 +1,7 @@
+(library
+ (name tc_db_info)
+ (flags :standard -w -32-37) ; TODO fix all warnings
+ (public_name tc-db-info-plugin.plugin)
+ (libraries coq-core.vernac rocq-bluerock-rocq-internals))
+
+(coq.pp (modules g_hint_commands))

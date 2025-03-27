@@ -1,0 +1,24 @@
+(*
+ * Copyright (C) BlueRock Security Inc. 2024-2025
+ *
+ * This software is distributed under the terms of the BedRock Open-Source
+ * License. See the LICENSE-BedRock file in the repository root for details.
+ *)
+
+DECLARE PLUGIN "tc-db-info-plugin.plugin"
+
+{
+
+[@@@ocaml.warning "-27-33"]
+
+open Stdarg
+
+}
+
+VERNAC COMMAND EXTEND Db_commands_extension CLASSIFIED AS QUERY
+| [ "HintDb" "Opacity" "Info" ident_list_sep(ids,",")
+  "For" reference_list_sep(refs,",") ] -> {
+    let refs = List.map Nametab.locate refs in
+    Main.db_opacity_info ids refs
+  }
+END
