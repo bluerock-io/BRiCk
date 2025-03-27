@@ -58,12 +58,9 @@ Definition genv_type_table (g : genv) : type_table :=
 Module integral_type.
   Record t : Set := mk { size : int_rank.t ; signedness : signed }.
 
-  #[warnings="-uniform-inheritance"]
   Coercion to_type (v : t) : type :=
     Tnum v.(size) v.(signedness).
 End integral_type.
-
-#[warnings="-uniform-inheritance"]
 Coercion integral_type.to_type : integral_type.t >-> type.
 
 Definition signedness_of_char (σ : genv) (ct : char_type) : signed :=
