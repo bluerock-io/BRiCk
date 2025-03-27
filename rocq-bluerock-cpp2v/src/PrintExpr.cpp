@@ -4,6 +4,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  */
 #include "Assert.hpp"
+#include "AtomicOp.hpp"
 #include "ClangPrinter.hpp"
 #include "CoqPrinter.hpp"
 #include "Formatter.hpp"
@@ -1354,7 +1355,7 @@ public:
 					<< "\n";
 			print.ctor("Eunsupported");
 			print.output() << "\"UnaryExprOrTypeTraitExpr(" << expr->getKind()
-						   << "\")" << fmt::nbsp;
+						   << ")\"" << fmt::nbsp;
 			done(expr);
 		}
 		}
@@ -1519,23 +1520,7 @@ public:
 	void VisitAtomicExpr(const clang::AtomicExpr* expr) {
 		print.ctor("Eatomic");
 
-		switch (expr->getOp()) {
-#define BUILTIN(ID, TYPE, ATTRS)
-#define ATOMIC_BUILTIN(ID, TYPE, ATTRS)                                        \
-	case clang::AtomicExpr::AO##ID:                                            \
-		print.output() << "AO" #ID << fmt::nbsp;                               \
-		break;
-#if 19 <= CLANG_VERSION_MAJOR
-#include "clang/Basic/Builtins.inc"
-#else
-#include "clang/Basic/Builtins.def"
-#endif
-#undef BUILTIN
-#undef ATOMIC_BUILTIN
-		default:
-			// llvm::errs() << "atomic (" << expr->getOp() << ")\n";
-			return unsupported_expr(expr);
-		}
+		print.str(AtomicOpBackport::getOpAsString(expr)) << fmt::nbsp;
 
 		print.begin_list();
 		for (unsigned i = 0; i < expr->getNumSubExprs(); ++i) {

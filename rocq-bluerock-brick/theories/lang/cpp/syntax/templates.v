@@ -1,8 +1,8 @@
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.error.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Import bedrock.lang.cpp.syntax.mcore.
-Require Export bedrock.lang.cpp.syntax.namemap.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.error.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.mcore.
+Require Export bluerock.lang.cpp.syntax.namemap.
 
 (** ** Template pre-instances *)
 (**
@@ -63,7 +63,7 @@ Add Printing Constructor tinst'.
 Notation temp_param := (temp_param' lang.cpp).
 Notation temp_arg := (temp_arg' lang.cpp).
 
-Require Import bedrock.lang.cpp.syntax.translation_unit.
+Require Import bluerock.lang.cpp.syntax.translation_unit.
 
 (** ** Templated values *)
 Section template.

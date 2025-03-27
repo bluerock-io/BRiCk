@@ -7,26 +7,26 @@
  * Semantics of expressions
  * (expressed in weakest pre-condition style)
  *)
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.numbers.
 Require Import iris.proofmode.tactics.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.raw.
-Require Import bedrock.lang.cpp.logic.const.
-Require Import bedrock.lang.cpp.logic.operator.
-Require Import bedrock.lang.cpp.logic.destroy.
-Require Import bedrock.lang.cpp.logic.initializers.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.call.
-Require Import bedrock.lang.cpp.logic.core_string.
-Require Import bedrock.lang.cpp.logic.translation_unit.
-Require Import bedrock.lang.cpp.logic.dispatch.
-Require Import bedrock.lang.cpp.logic.func.
-Require Import bedrock.lang.bi.errors.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.raw.
+Require Import bluerock.lang.cpp.logic.const.
+Require Import bluerock.lang.cpp.logic.operator.
+Require Import bluerock.lang.cpp.logic.destroy.
+Require Import bluerock.lang.cpp.logic.initializers.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.call.
+Require Import bluerock.lang.cpp.logic.core_string.
+Require Import bluerock.lang.cpp.logic.translation_unit.
+Require Import bluerock.lang.cpp.logic.dispatch.
+Require Import bluerock.lang.cpp.logic.func.
+Require Import bluerock.iris.extra.bi.errors.
 
 Module Type Expr.
   (* Needed for [Unfold wp_test] *)
@@ -135,8 +135,8 @@ Module Type Expr.
      *)
     Axiom wp_lval_string : forall chars ct Q,
           (Forall (p : ptr) (q : Qp),
-            p |-> string_bytesR ct (cQp.c q) chars -*
-            □ (Forall q', (p |-> string_bytesR ct (cQp.c q') chars ={⊤}=∗ emp)) -*
+            p |-> string_bytesR ct q$c chars -*
+            □ (Forall q', (p |-> string_bytesR ct q'$c chars ={⊤}=∗ emp)) -*
             Q p FreeTemps.id)
       |-- wp_lval (Estring chars (Tchar_ ct)) Q.
 
@@ -455,8 +455,8 @@ Module Type Expr.
       let ety := erase_qualifiers $ type_of e in
       wp_lval e (fun a free => Exists v v',
                    (inc_dec_op b ety v v' ** True) //\\
-                   (a |-> primR ety (cQp.mut 1) v **
-                      (a |-> primR ety (cQp.mut 1) v' -* Q a free))).
+                   (a |-> primR ety 1$m v **
+                      (a |-> primR ety 1$m v' -* Q a free))).
 
     (** `++e`
         https://eel.is/c++draft/expr.pre.incr#1
@@ -474,8 +474,8 @@ Module Type Expr.
       let ety := erase_qualifiers $ type_of e in
       wp_lval e (fun a free => Exists v v',
                    (inc_dec_op b ety v v' ** True) //\\
-                   (a |-> primR ety (cQp.mut 1) v **
-                      (a |-> primR ety (cQp.mut 1) v' -* Q v free))).
+                   (a |-> primR ety 1$m v **
+                      (a |-> primR ety 1$m v' -* Q v free))).
 
     (** `e++`
         https://eel.is/c++draft/expr.post.incr#1
@@ -506,8 +506,8 @@ Module Type Expr.
     Axiom wp_lval_assign : forall ty l r Q,
         (letI* '(la, rv), free :=
            eval2 (evaluation_order.order_of OOEqual) (wp_lval l) (wp_operand r) in
-            la |-> anyR (erase_qualifiers ty) (cQp.mut 1) **
-           (la |-> tptstoR (erase_qualifiers ty) (cQp.mut 1) rv -* Q la free))
+            la |-> anyR (erase_qualifiers ty) 1$m **
+           (la |-> tptstoR (erase_qualifiers ty) 1$m rv -* Q la free))
         |-- wp_lval (Eassign l r ty) Q.
 
     Axiom wp_lval_bop_assign : forall ty o l r Q,
@@ -522,8 +522,8 @@ Module Type Expr.
                       eval_binop tu o tl tr resultT cv rv v' **
                         (* convert the value back to the target type so it can be stored *)
                         [| convert tu resultT ty cv v' |] ** True) //\\
-                    (la |-> primR (erase_qualifiers ty) (cQp.mut 1) v **
-                      (la |-> primR (erase_qualifiers ty) (cQp.mut 1) v' -* Q la free))
+                    (la |-> primR (erase_qualifiers ty) 1$m v **
+                      (la |-> primR (erase_qualifiers ty) 1$m v' -* Q la free))
             | _ => False%I
             end
         |-- wp_lval (Eassign_op o l r ty) Q.
@@ -587,7 +587,7 @@ Module Type Expr.
         (
           letI* a, free := wp_glval e in
           Exists v,
-          (Exists q, a |-> tptsto_fuzzyR (erase_qualifiers $ type_of e) q v ** True) //\\
+          (Exists q, a |-> initializedR (erase_qualifiers $ type_of e) q v ** True) //\\
           Q v free
         ) |-- wp_operand (Ecast Cl2r e) Q.
 
@@ -601,7 +601,9 @@ Module Type Expr.
     Proof.
       intros. rewrite -wp_operand_cast_l2r. iIntros "wp".
       iApply (wp_glval_wand with "wp"). iIntros (p f) "?".
-      by setoid_rewrite primR_tptsto_fuzzyR.
+      iStopProof. f_equiv; intro. f_equiv. f_equiv; intro.
+      f_equiv. rewrite _at_primR _at_initializedR.
+      iIntros "(_ & $ & $)".
     Qed.
 
     Lemma wp_operand_cast_l2r_raw : forall (e : Expr) Q,
@@ -612,8 +614,13 @@ Module Type Expr.
       |-- wp_operand (Ecast Cl2r e) Q.
     Proof.
       intros. rewrite -wp_operand_cast_l2r /=. iIntros "wp".
-      iApply (wp_glval_wand with "wp"). iIntros (p f) "(%r & ?)".
-      iExists (Vraw r). rewrite H. by rewrite rawR.unlock.
+      iApply (wp_glval_wand with "wp"). iIntros (p f) "(%r & H)".
+      iExists (Vraw r). rewrite H.
+      iStopProof. f_equiv. f_equiv; intro. f_equiv.
+      iIntros "X".
+      iDestruct (observe (has_type _ _) with "X" ) as "#?".
+      rewrite rawR.unlock initializedR.unlock _at_sep _at_pureR /=.
+      iFrame "∗#".
     Qed.
 
     (** No-op casts [Cnoop] are casts that only affect the type and not the value.
@@ -1326,8 +1333,8 @@ Module Type Expr.
         the destructor would potentially do. *)
     Axiom end_provides_storage : forall storage_ptr obj_ptr aty sz,
        size_of aty = Some sz ->
-       provides_storage storage_ptr obj_ptr aty ** obj_ptr |-> anyR aty (cQp.mut 1)
-       |-- |={⊤}=> (storage_ptr |-> blockR sz (cQp.m 1)).
+       provides_storage storage_ptr obj_ptr aty ** obj_ptr |-> anyR aty 1$m
+       |-- |={⊤}=> (storage_ptr |-> blockR sz 1$m).
 
     (** temporary expressions
        note(gmm): these axioms should be reviewed thoroughly
@@ -1402,11 +1409,11 @@ Module Type Expr.
      *)
     Axiom wp_operand_pseudo_destructor : forall e ty Q,
         (letI* v, free := wp_glval e in
-         v |-> anyR ty (cQp.mut 1) ** (v |-> tblockR ty (cQp.mut 1) -* Q Vvoid free))
+         v |-> anyR ty 1$m ** (v |-> tblockR ty 1$m -* Q Vvoid free))
         |-- wp_operand (Epseudo_destructor false ty e) Q.
     Axiom wp_operand_pseudo_destructor_arrow : forall e ty ety (_ : (unptr $ type_of e) = Some ety) Q,
         (letI* v, free := wp_glval (Ederef e ety) in
-         v |-> anyR ty (cQp.mut 1) ** (v |-> tblockR ty (cQp.mut 1) -* Q Vvoid free))
+         v |-> anyR ty 1$m ** (v |-> tblockR ty 1$m -* Q Vvoid free))
         |-- wp_operand (Epseudo_destructor true ty e) Q.
 
     (* [Eimplicit_init] nodes reflect implicit /value initializations/ which are inserted
@@ -1430,9 +1437,9 @@ Module Type Expr.
       | _ => None
       end.
 
-    Lemma zero_init_val_is_scalar ty v : zero_init_val ty = Some v -> scalar_type ty = true.
+    Lemma zero_init_val_is_scalar ty v : zero_init_val ty = Some v -> is_scalar_type ty = true.
     Proof.
-      rewrite /zero_init_val/scalar_type/representation_type /=. destruct (drop_qualifiers ty) eqn:Hdrop => //; eauto.
+      rewrite /zero_init_val/is_scalar_type/representation_type /=. destruct (drop_qualifiers ty) eqn:Hdrop => //; eauto.
     Qed.
 
     Lemma well_typed_zero_init_val (MOD : tu ⊧ resolve) : forall ty v,
@@ -1494,12 +1501,12 @@ Module Type Expr.
              match marg_types ctor_type with
              | Some arg_types =>
                 letI* _, argps, ifree, free := wp_args evaluation_order.nd nil arg_types es in
-                |> (this |-> tblockR (Tnamed cls) (cQp.mut 1) -*
+                |> (this |-> tblockR (Tnamed cls) 1$m -*
                    (* ^^ The semantics currently has constructors take ownership of a [tblockR] *)
                    letI* resultp := wp_fptr ctor_type (_global cnd) (this :: argps) in
                    letI* := interp ifree in
                     (* in the semantics, constructors return [void] *)
-                    resultp |-> primR Tvoid (cQp.mut 1) Vvoid **
+                    resultp |-> primR Tvoid 1$m Vvoid **
                     let Q := Q free in
                     if q_const cv
                     then wp_make_const tu this (Tnamed cls) Q
@@ -1673,7 +1680,7 @@ Module Type Expr.
          let* := wp_init_identity this tu cls in
          let* free :=
            wp_each ((fun '(m, e) => (this ., (Field cls m.(mem_name)), m.(mem_type), e)) <$> (combine s.(s_fields) $ skipn (length s.(s_bases)) es)) free in
-         this |-> structR cls (cQp.m 1) -* Q free
+         this |-> structR cls 1$m -* Q free
        else False)%I.
 
 
@@ -1704,7 +1711,7 @@ Module Type Expr.
             | None => default_initialize tu m.(mem_type) field_ptr
             end
           in
-          this |-> unionR cls (cQp.m 1) (Some n) -* Q free
+          this |-> unionR cls 1$m (Some n) -* Q free
       end%I.
 
     (** Using an initializer list to create a `struct`.
@@ -1850,10 +1857,10 @@ Module Type Expr.
                            to the program to make it read-only.
                          NOTE that no "correct" program will ever modify this variable
                            anyways. *)
-                      loop_index |-> primR Tsize_t (cQp.c 1) idx -*
+                      loop_index |-> primR Tsize_t 1$c idx -*
                       wp_initialize tu ρ ty (targetp .[ erase_qualifiers ty ! idx ]) init
                               (fun free => interp free $
-                                 loop_index |-> primR Tsize_t (cQp.c 1) idx **
+                                 loop_index |-> primR Tsize_t 1$c idx **
                                  rest (N.succ idx))) sz idx.
 
     Axiom wp_init_arrayloop_init : forall oname level sz ρ (trg : ptr) src init ety ty Q,

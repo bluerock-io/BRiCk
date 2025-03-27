@@ -3,9 +3,9 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.prelude.base.
-Require Export bedrock.lang.cpp.syntax.
-Require Export bedrock.lang.cpp.semantics.sub_module.
+Require Import bluerock.prelude.base.
+Require Export bluerock.lang.cpp.syntax.
+Require Export bluerock.lang.cpp.semantics.sub_module.
 
 (* NOTE:
     This constant should be provided by the C++ compiler / runtime.
@@ -57,9 +57,13 @@ Definition genv_type_table (g : genv) : type_table :=
 
 Module integral_type.
   Record t : Set := mk { size : int_rank.t ; signedness : signed }.
+
+  #[warnings="-uniform-inheritance"]
   Coercion to_type {lang} (v : t) : type' lang :=
     Tnum v.(size) v.(signedness).
 End integral_type.
+
+#[warnings="-uniform-inheritance"]
 Coercion integral_type.to_type : integral_type.t >-> type.
 
 Definition signedness_of_char (σ : genv) (ct : char_type) : signed :=

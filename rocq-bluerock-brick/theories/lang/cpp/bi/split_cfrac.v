@@ -5,11 +5,11 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.lang.cpp.algebra.cfrac.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.split_andb.
-Require Import bedrock.lang.bi.split_frac.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Export bluerock.lang.cpp.algebra.cfrac.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.split_andb.
+Require Import bluerock.iris.extra.bi.split_frac.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Import ChargeNotation.
 
 #[local] Set Printing Coercions.

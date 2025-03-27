@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.syntax.prelude.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Import bedrock.lang.cpp.syntax.types.
+Require Import bluerock.lang.cpp.syntax.prelude.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.types.
 
 #[local] Open Scope monad_scope.
 #[local] Notation M := option.
@@ -295,7 +295,7 @@ Module decltype.
 
         | Echar _ t => mret t
         | Estring chars t =>
-            mret $ Tref $ Tarray (Tconst t) (1 + list_numbers.lengthN chars)
+            mret $ Tref $ Tarray (Tconst t) (1 + literal_string.lengthN chars)
         | Eint _ t => mret t
         | Ebool _ => mret Tbool
         | Eunop _ _ t => mret t

@@ -4,11 +4,11 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.list_numbers.
-Require Import bedrock.lang.cpp.arith.types.
-Require Import bedrock.lang.cpp.arith.builtins.
-Require Import bedrock.lang.cpp.arith.operator.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.list_numbers.
+Require Import bluerock.lang.cpp.arith.types.
+Require Import bluerock.lang.cpp.arith.builtins.
+Require Import bluerock.lang.cpp.arith.operator.
 
 Import arith.builtins.churn_bits.
 

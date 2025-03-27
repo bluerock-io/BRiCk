@@ -1,14 +1,14 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2023-2024
+ * Copyright (C) 2023-2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.upoly.prelude.
-Require Import bedrock.upoly.base.
-Require Import bedrock.upoly.UTypes.
-Require Import bedrock.upoly.prod.
+Require Import bluerock.upoly.prelude.
+Require Import bluerock.upoly.base.
+Require Import bluerock.upoly.UTypes.
+Require Import bluerock.upoly.prod.
 Import UPoly.
 
 (** * State monad *)

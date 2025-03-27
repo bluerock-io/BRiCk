@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2021
+ * Copyright (C) 2021 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -203,6 +203,49 @@ let _ =
   go 0 c;
   S.elements !rels
 
+
+let vars_of_constr c =
+  let names = ref Names.Id.Set.empty in
+  let rec go level c =
+    match Constr.kind c with
+    | Constr.Var(n) -> names := Names.Id.Set.add n !names
+    | _             -> Constr.iter_with_binders (fun level -> level + 1) go level c
+  in
+  go 0 c;
+  !names
+
+let _ =
+  define "vars_vars" (constr @-> eret valexpr) @@ fun c _ sigma ->
+  let c = EConstr.to_constr ~abort_on_undefined_evars:false sigma c in
+  let names = vars_of_constr c in
+  let tag = Tac2core.ident_map_tag in
+  let tag_set tag s = Tac2ffi.repr_of Tac2core.set_repr (Tac2core.TaggedSet (tag,s)) in
+  tag_set tag names
+
+let _ =
+  define "vars_really_needed_unsafe" (constr @-> tac valexpr) @@ fun c ->
+  TacUtil.evar_map >>= fun sigma ->
+  TacUtil.env >>= fun env ->
+  let c = EConstr.Unsafe.to_constr c in
+  let names = vars_of_constr c in
+  let named = Context.Named.map_het (EConstr.ERelevance.make) (EConstr.of_constr) (Environ.named_context env) in
+  let names = Names.Id.Set.of_list @@ Termops.dependency_closure env sigma named names in
+  let tag = Tac2core.ident_map_tag in
+  let tag_set tag s = Tac2ffi.repr_of Tac2core.set_repr (Tac2core.TaggedSet (tag,s)) in
+  Proofview.tclUNIT (tag_set tag names)
+
+let _ =
+  define "vars_really_needed" (constr @-> tac valexpr) @@ fun c ->
+  TacUtil.evar_map >>= fun sigma ->
+  TacUtil.env >>= fun env ->
+  let c = EConstr.to_constr ~abort_on_undefined_evars:false sigma c in
+  let names = vars_of_constr c in
+  let named = Context.Named.map_het (EConstr.ERelevance.make) (EConstr.of_constr) (Environ.named_context env) in
+  let names = Names.Id.Set.of_list @@ Termops.dependency_closure env sigma named names in
+  let tag = Tac2core.ident_map_tag in
+  let tag_set tag s = Tac2ffi.repr_of Tac2core.set_repr (Tac2core.TaggedSet (tag,s)) in
+  Proofview.tclUNIT (tag_set tag names)
+
 let _ =
   define "entirely_closed" (constr @-> eret bool) @@ fun c env sigma ->
   let exception Fail in
@@ -239,8 +282,6 @@ let relevance =
   in
   make_repr of_relevance to_relevance
 
-let binder = Tac2ffi.repr_ext val_binder
-
 let _ =
   define "debug_print" (constr @-> ret pp) @@ fun c ->
   Constr.debug_print (EConstr.Unsafe.to_constr c)
@@ -273,10 +314,6 @@ let _ =
 
 (* Pretyping *)
 
-let of_preterm c = of_ext val_preterm c
-let to_preterm c = to_ext val_preterm c
-let preterm = Tac2ffi.repr_ext val_preterm
-let ltac1 = Tac2ffi.repr_ext Tac2ffi.val_ltac1
 let _ =
   define "constr_pretype_at" (option bool @-> option constr @-> preterm @-> tac valexpr) @@ fun use_tc ty c ->
     Tac2core.pf_apply @@ fun env sigma ->
@@ -331,19 +368,19 @@ module RelDecl = struct
   let of_val : Tac2val.valexpr -> t = fun v ->
     let open Tac2ffi in
     match v with
-    | ValBlk(0, [|b|]   ) -> Assum(to_ext val_binder b)
-    | ValBlk(1, [|b; t|]) -> Def(to_ext val_binder b, to_constr t)
+    | ValBlk(0, [|b|]   ) -> Assum(repr_to binder b)
+    | ValBlk(1, [|b; t|]) -> Def(repr_to binder b, to_constr t)
     | _                   -> assert false
 
   let to_val : t -> Tac2val.valexpr = fun _ -> assert false
 
   let repr = Tac2ffi.make_repr to_val of_val
 
-  let make_evar : bool -> t list -> Evd.econstr -> (Evd.evar_map * EConstr.t Constr.pexistential) tactic =
-      fun typeclass_candidate rds goal_ty ->
+  let make_evar : bool -> bool -> t list -> Evd.econstr -> (Evd.evar_map * EConstr.t Constr.pexistential) tactic =
+      fun empty typeclass_candidate rds goal_ty ->
     Goal.enter_one @@ fun gl ->
     let sigma = Goal.sigma gl in
-    let env = Proofview.Goal.env gl in
+    let env = if empty then Environ.empty_env else Proofview.Goal.env gl in
     let fresh_id =
       let count = ref 0 in
       fun () ->
@@ -396,9 +433,9 @@ module RelDecl = struct
 
   let _ =
     define "make_evar_in_level_env"
-      (bool @-> list repr @-> constr @-> tac (pair evar (array constr)))
-      @@ fun b rds t ->
-    make_evar b rds t >>= fun (sigma, (ev, args)) ->
+      (bool @-> bool @-> list repr @-> constr @-> tac (pair evar (array constr)))
+      @@ fun emp b rds t ->
+    make_evar emp b rds t >>= fun (sigma, (ev, args)) ->
     let args = Evd.expand_existential sigma (ev,args) in
     Proofview.tclUNIT (ev, Array.of_list args)
 
@@ -464,8 +501,7 @@ let _ =
   in
   let modes =
     let modes = List.map Hints.Hint_db.modes dbs in
-    let union = Names.GlobRef.Map.union (fun _ m1 m2 -> Some (m1 @ m2)) in
-    List.fold_left union Names.GlobRef.Map.empty modes
+    List.fold_left Hints.Modes.union Hints.Modes.empty modes
   in
   Class_tactics.Search.eauto_tac (modes, st) ~unique ~only_classes
     ~best_effort ~strategy ~depth ~dep dbs
@@ -547,7 +583,6 @@ let _ =
   try Proofview.tclUNIT (Bytes.sub s pos len) with Invalid_argument _ -> Tac2core.throw err_outofbounds
 
 (* TransparentState *)
-let transparent_state = Tac2ffi.repr_ext Tac2ffi.val_transparent_state
 let _ =
   define "transparent_state_of_db" (ident @-> ret transparent_state) @@ fun db ->
   let db = Hints.searchtable_map (Names.Id.to_string db) in

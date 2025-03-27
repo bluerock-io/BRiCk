@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.logic.heap_pred.prelude.
-Require Import bedrock.lang.cpp.logic.heap_pred.valid.
-Require Import bedrock.lang.cpp.logic.heap_pred.null.
+Require Import bluerock.lang.cpp.logic.heap_pred.prelude.
+Require Import bluerock.lang.cpp.logic.heap_pred.valid.
+Require Import bluerock.lang.cpp.logic.heap_pred.null.
 
 #[local] Set Printing Coercions.
 Implicit Types (σ : genv) (p : ptr) (o : offset).
@@ -14,12 +14,10 @@ Implicit Types (σ : genv) (p : ptr) (o : offset).
 mlock
 Definition structR `{Σ : cpp_logic} {σ : genv} (cls : globname) (q : cQp.t) : Rep :=
   as_Rep (fun p => struct_padding p cls q).
-#[global] Arguments structR {_ _ Σ σ} cls%_cpp_name q%_cQp : assert.
 
 mlock
 Definition unionR `{Σ : cpp_logic} {σ : genv} (cls : globname) (q : cQp.t) (i : option nat) : Rep :=
   as_Rep (fun p => union_padding p cls q i).
-#[global] Arguments unionR {_ _ Σ σ} cls%_cpp_name q%_cQp i : assert.
 
 Section aggregate.
   Context `{Σ : cpp_logic} {σ : genv}.

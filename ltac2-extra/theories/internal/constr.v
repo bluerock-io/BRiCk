@@ -1,14 +1,16 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2021-2022
+ * Copyright (C) 2021-2022 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.ltac2.extra.internal.plugin.
-Require Import bedrock.ltac2.extra.internal.init.
-Require Import bedrock.ltac2.extra.internal.misc.
-Require Import bedrock.ltac2.extra.internal.printf.
+Require Ltac2.Pstring.
+Require Import bluerock.ltac2.extra.internal.plugin.
+Require Import bluerock.ltac2.extra.internal.init.
+Require Import bluerock.ltac2.extra.internal.misc.
+Require Import bluerock.ltac2.extra.internal.printf.
+Require Ltac2.FSet.
 
 (* NOTE: When using [Constr.Unsafe], [Constr.Unsafe.check] will enforce sane
    universe constraints on _output_ constructors, as will code like
@@ -53,6 +55,15 @@ Module Constr.
 
     Ltac2 @ external rels : constr -> int list :=
       "ltac2_extensions" "vars_rels".
+
+    Ltac2 @ external vars : constr -> ident FSet.t :=
+      "ltac2_extensions" "vars_vars".
+
+    Ltac2 @ external vars_really_needed : constr -> ident FSet.t :=
+      "ltac2_extensions" "vars_really_needed".
+
+    Ltac2 @ external vars_really_needed_unsafe : constr -> ident FSet.t :=
+      "ltac2_extensions" "vars_really_needed_unsafe".
   End Vars.
 
   Module Binder.
@@ -293,6 +304,14 @@ Module Constr.
         (def : constr) (t : constr) : constr :=
       make (Array u cs def t).
 
+    Ltac2 make_string (s : string) :=
+      match Pstring.of_string s with
+      | Some p => make (String p)
+      | None => Control.throw_invalid_argument "Invalid primitive string: %s" s
+      end.
+
+    Ltac2 make_pstring (p : pstring) := make (String p).
+
     (** ** Declarations *)
     (**
     An inhabitant of type [RelDecl.t] describes a [Rel i] and can be
@@ -506,6 +525,12 @@ Module Constr.
       Ltac2 @ external of_projection : constr -> projection_info option :=
         "ltac2_extensions" "decompose_proj".
     End Destruct.
+
+    (** [compare] is an unsafe comparison operator that is also used in
+        [ConstrSet] and [ConstrMap]. Use at your own peril. *)
+    Ltac2 @ external compare : constr -> constr -> int :=
+      "br.Constr" "compare".
+
   End Unsafe.
 
   Ltac2 @external is_class : Std.reference -> bool :=

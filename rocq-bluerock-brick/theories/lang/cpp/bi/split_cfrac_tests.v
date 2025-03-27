@@ -5,8 +5,8 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.cpp.bi.split_cfrac.
+Require Import bluerock.prelude.base.
+Require Import bluerock.lang.cpp.bi.split_cfrac.
 
 #[local] Set Printing Coercions.
 
@@ -49,10 +49,10 @@ Section split.
   more examples of the underlying splits.
   *)
 
-  Lemma const q1 q2 : Split (cQp.const (q1 + q2)) (cQp.const q1) (cQp.const q2).
+  Lemma const q1 q2 : Split (q1 + q2)$c q1$c q2$c.
   Proof. apply _. Abort.
 
-  Lemma mut q1 q2 : Split (cQp.mut (q1 + q2)) (cQp.mut q1) (cQp.mut q2).
+  Lemma mut q1 q2 : Split (q1 + q2)$m q1$m q2$m.
   Proof. apply _. Abort.
 
   Lemma general c1 c2 q1 q2 :
@@ -103,8 +103,7 @@ Section combine.
   Proof. apply _. Abort.
 
   Lemma scale_mut q q1 q2 :
-    Combine (cQp.scale q (cQp.mut q1)) (cQp.scale q (cQp.mut q2))
-      (cQp.scale q (cQp.mut (q1 + q2))).
+    Combine (cQp.scale q q1$m) (cQp.scale q q2$m) (cQp.scale q (q1 + q2)$m).
   Proof. apply _. Abort.
 
   (**
@@ -120,10 +119,10 @@ Section combine.
   Lemma var q1 q2 : Combine q1 q2 (q1 + q2).
   Proof. apply _. Abort.
 
-  Lemma const q1 q2 : Combine (cQp.const q1) (cQp.const q2) (cQp.const (q1 + q2)).
+  Lemma const q1 q2 : Combine q1$c q2$c (q1 + q2)$c.
   Proof. apply _. Abort.
 
-  Lemma mut q1 q2 : Combine (cQp.mut q1) (cQp.mut q2) (cQp.mut (q1 + q2)).
+  Lemma mut q1 q2 : Combine q1$m q2$m (q1 + q2)$m.
   Proof. apply _. Abort.
 
   Lemma general c1 c2 q1 q2 :

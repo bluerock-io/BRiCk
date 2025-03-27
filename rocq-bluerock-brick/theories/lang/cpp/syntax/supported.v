@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Import bedrock.lang.cpp.syntax.translation_unit.
+Require Import bluerock.prelude.base.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.translation_unit.
 
 Module check.
 Section with_monad.
@@ -45,7 +45,7 @@ Section with_monad.
       match a with
       | Atype t => type t
       | Avalue e => expr e
-      | Apack_expansion xs => List.forallb temp_arg xs
+      | Apack xs => List.forallb temp_arg xs
       | Atemplate n => name n
       | Aunsupported _ => FAIL
       end.

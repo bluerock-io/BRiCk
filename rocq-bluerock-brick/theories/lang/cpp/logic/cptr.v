@@ -3,11 +3,11 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.wp.
 
 Section defs.
   Context `{Σ : cpp_logic}.
@@ -301,7 +301,6 @@ Section with_cpp.
   Qed.
   #[local] Transparent type_of_spec.
 
-(* TODO: Proper wrt [genv_leq]. *)
   #[global] Instance cptrR_ne : NonExpansive cptrR.
   Proof.
     intros n P Q HPQ. rewrite cptrR_eq/cptrR_def.

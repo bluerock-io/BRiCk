@@ -1,6 +1,6 @@
 (include_subdirs qualified)
 
 (coq.theory
- (name bedrock.upoly)
+ (name bluerock.upoly)
  (package rocq-upoly)
  (theories stdpp))

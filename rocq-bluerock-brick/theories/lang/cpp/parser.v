@@ -1,22 +1,25 @@
 (*
- * Copyright (c) 2024 BlueRock Security, Inc.
+ * Copyright (c) 2024-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Ltac2.Ltac2.
-Require Export bedrock.prelude.base.	(* for, e.g., <<::>> *)
+Require Export bluerock.prelude.base.	(* for, e.g., <<::>> *)
+Require Import Stdlib.Numbers.Cyclic.Int63.PrimInt63.
+Require Import bluerock.prelude.parray.
+Require Import bluerock.prelude.uint63.
 Require Export Stdlib.Strings.PrimString.
-Require Import bedrock.prelude.avl.
-Require Export bedrock.lang.cpp.syntax. (* NOTE: too much *)
-Require bedrock.lang.cpp.semantics.sub_module.
-Require Export bedrock.lang.cpp.parser.stmt.
-Require Import bedrock.lang.cpp.parser.lang.
-Require Import bedrock.lang.cpp.parser.type.
-Require Import bedrock.lang.cpp.parser.name.
-Require Import bedrock.lang.cpp.parser.expr.
-Require Import bedrock.lang.cpp.parser.decl.
-Require Import bedrock.lang.cpp.parser.notation.
-Require Import bedrock.lang.cpp.parser.reduction.
+Require Import bluerock.prelude.avl.
+Require Export bluerock.lang.cpp.syntax. (* NOTE: too much *)
+Require bluerock.lang.cpp.semantics.sub_module.
+Require Export bluerock.lang.cpp.parser.stmt.
+Require Import bluerock.lang.cpp.parser.lang.
+Require Import bluerock.lang.cpp.parser.type.
+Require Import bluerock.lang.cpp.parser.name.
+Require Import bluerock.lang.cpp.parser.expr.
+Require Import bluerock.lang.cpp.parser.decl.
+Require Import bluerock.lang.cpp.parser.notation.
+Require Import bluerock.lang.cpp.parser.reduction.
 
 #[local] Definition parser_lang : lang.t := lang.cpp.
 Include ParserName.
@@ -33,14 +36,15 @@ Module Import translation_unit.
 
   Definition raw_symbol_table : Type := NM.Raw.t ObjValue.
   Definition raw_type_table : Type := NM.Raw.t GlobDecl.
-  Definition raw_alias_table : Type := NM.Raw.t type.
 
   #[global] Instance raw_structured_insert : forall {T}, Insert globname T (NM.Raw.t T) := _.
 
+  Definition dup_info := list (name * (GlobDecl + ObjValue)).
+  (** This representation is isomorphic to [translation_unit * list name] as shown by [decls]. *)
   Definition t : Type :=
-    raw_symbol_table -> raw_type_table -> raw_alias_table -> list name ->
-    (raw_symbol_table -> raw_type_table -> raw_alias_table -> list name -> translation_unit * list name) ->
-    translation_unit * list name.
+    raw_symbol_table -> raw_type_table -> dup_info ->
+    (raw_symbol_table -> raw_type_table -> dup_info -> translation_unit * dup_info) ->
+    translation_unit * dup_info.
 
   Definition merge_obj_value (a b : ObjValue) : option ObjValue :=
     if sub_module.ObjValue_le a b then
@@ -48,13 +52,14 @@ Module Import translation_unit.
     else if sub_module.ObjValue_le b a then Some a
          else None.
 
+  (** Constructs a [translation_unit.t] with _one_ symbol, mapping [n] to [v]. *)
   Definition _symbols (n : name) (v : ObjValue) : t :=
-    fun s t a dups k =>
+    fun s t dups k =>
       match s !! n with
-      | None => k (<[n := v]> s) t a dups
+      | None => k (<[n := v]> s) t dups
       | Some v' => match merge_obj_value v v' with
-                  | Some v => k (<[n:=v]> s) t a dups
-                  | None => k s t a (n :: dups)
+                  | Some v => k (<[n:=v]> s) t dups
+                  | None => k s t ((n, inr v) :: (n, inr v') :: dups)
                   end
       end.
   Definition merge_glob_decl (a b : GlobDecl) : option GlobDecl :=
@@ -63,50 +68,60 @@ Module Import translation_unit.
     else if sub_module.GlobDecl_le b a then Some a
          else None.
 
+  (** Constructs a [translation_unit.t] with _one_ type, mapping [n] to [v]. *)
   Definition _types (n : name) (v : GlobDecl) : t :=
-    fun s t a dups k =>
-      match t !! n with
-      | None => k s (<[n := v]> t) a dups
-      | Some v' => match merge_glob_decl v v' with
-                   | Some v => k s (<[n:=v]> t) a dups
-                   | None => k s t a (n :: dups)
-                   end
-      end.
-  Definition _aliases (n : name) (v : type) : t :=
-    fun s t a dups k =>
-      match a !! n with
-      | None => k s t (<[n:=v]> a) dups
-      | _ => k s t a (n :: dups)
-      end.
-  Definition _skip : t :=
-    fun s t a dups k => k s t a dups.
+    fun s t dups k =>
+      if bool_decide (Gtypedef (Tnamed n) = v \/ Gtypedef (Tenum n) = v)
+      then
+        (* ignore self-aliases. These arise when you do
+           something like
+           <<
+           typedef enum memory_order { .. } memory_order;
+           >>
+         *)
+        k s t dups
+      else
+        match t !! n with
+        | None => k s (<[n := v]> t) dups
+        | Some v' => match merge_glob_decl v v' with
+                    | Some v => k s (<[n:=v]> t) dups
+                    | None => k s t ((n, inl v) :: (n, inl v') :: dups)
+                    end
+        end.
 
-  Fixpoint decls' (ds : list t) : t :=
-    match ds with
-    | nil => fun s t a dups k => k s t a dups
-    | d :: ds => fun s t a dups k => d s t a dups (fun s t a dups' => decls' ds s t a dups' k)
+  Definition _aliases (n : name) (ty : type) : t :=
+    _types n (Gtypedef ty).
+
+  (** Constructs an empty [translation_unit.t]. *)
+  Definition _skip : t :=
+    fun s t dups k => k s t dups.
+
+  Fixpoint array_fold {A B}
+    (f : A -> B -> B) (ar : PArray.array A) (fuel : nat) (i : PrimInt63.int) (acc : B) : B :=
+    match fuel with
+    | 0 => acc
+    | S fuel =>
+        array_fold f ar fuel (PrimInt63.add i 1) (f (PArray.get ar i) acc)
     end.
 
-  Definition decls (ds : list t) (e : endian) : translation_unit * list name :=
-    decls' ds ∅ ∅ ∅ [] $ fun s t a => pair {|
+  Definition abi_type := endian.
+
+  Definition decls' (ds : PArray.array t) : t :=
+    array_fold (fun (X Y : t) s t dups K => X s t dups (fun s t dups => Y s t dups K))
+      ds
+      (Z.to_nat (Uint63.to_Z (PArray.length ds))) 0%uint63
+      (fun s t dups k => k s t dups).
+
+  Definition decls (ds : PArray.array t) (e : abi_type) : translation_unit * dup_info :=
+    decls' ds ∅ ∅ [] $ fun s t => pair {|
       symbols := NM.from_raw s;
       types := NM.from_raw t;
-      aliases := NM.from_raw a;
       initializer := nil;	(** TODO *)
       byte_order := e;
     |}.
 
-  (*
-  Definition the_tu (result : translation_unit * list name)
-    : match result.2 with
-      | [] => translation_unit
-      | _ => unit
-      end :=
-    match result.2 as X return match X with [] => translation_unit | _ => unit end with
-    | [] => result.1
-    | _ => tt
-    end.
-   *)
+  Definition list_decls (ls : list translation_unit.t) :=
+    decls $ PArray.of_list _skip ls.
 
   Module make.
     Import Ltac2.Ltac2.
@@ -117,7 +132,7 @@ Module Import translation_unit.
      *)
     Ltac2 check_translation_unit (tu : preterm) (en : preterm) :=
       let endian := Constr.Pretype.pretype Constr.Pretype.Flags.constr_flags (Constr.Pretype.expected_oftype '(endian)) en in
-      let tu := Constr.Pretype.pretype Constr.Pretype.Flags.constr_flags (Constr.Pretype.expected_oftype '(list t)) tu in
+      let tu := Constr.Pretype.pretype Constr.Pretype.Flags.constr_flags (Constr.Pretype.expected_oftype '(PArray.array t)) tu in
       let term := Constr.Unsafe.make (Constr.Unsafe.App ('decls) (Array.of_list [tu; endian])) in
       let rtu := Std.eval_vm None term in
       lazy_match! rtu with

@@ -1,14 +1,14 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2023-2024
+ * Copyright (C) 2023-2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
 Require Import Ltac2.Ltac2.
-Require Import bedrock.ltac2.extra.internal.list.
-Require Import bedrock.ltac2.extra.internal.control.
-Require Import bedrock.ltac2.extra.internal.intgraph.
+Require Import bluerock.ltac2.extra.internal.list.
+Require Import bluerock.ltac2.extra.internal.control.
+Require Import bluerock.ltac2.extra.internal.intgraph.
 
 Module Tests.
   Import IntGraph.

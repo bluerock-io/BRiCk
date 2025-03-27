@@ -1,0 +1,17 @@
+(lang dune 3.13)
+(using coq 0.8)
+(name ltac2-extra)
+
+(generate_opam_files)
+
+(license LicenseRef-LICENSE-BedRock)
+
+(package
+ (name ltac2-llm-plugin)
+ (synopsis "Ltac2 plugin to access OpenAI bindings.")
+ (depends coq-core stdlib-extra))
+
+(package
+ (name ltac2-llm)
+ (synopsis "Ltac2 OpenAI bindings.")
+ (depends coq-stdlib ltac2-llm-plug))

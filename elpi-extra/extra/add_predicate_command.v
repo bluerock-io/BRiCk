@@ -1,11 +1,11 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.elpi.extra.prelude.
+Require Export bluerock.elpi.extra.prelude.
 
 (** [Elpi.Db.AddPred] is a vernacular command that can be used to declare a new
     predicate in an existing elpi database. See [usage] below for instructions

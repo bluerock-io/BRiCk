@@ -1,5 +1,5 @@
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.arith.builtins.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.arith.builtins.
 
 (* TODO: this file is misplaced *)
 

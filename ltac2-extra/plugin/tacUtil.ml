@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2022
+ * Copyright (C) 2022 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -67,10 +67,6 @@ module Value = struct
     Tac2ffi.app_fun1 f rc rd c
 
   type binder = Names.Name.t EConstr.binder_annot * EConstr.types
-
-  let of_binder : binder -> valexpr = of_ext val_binder
-  let to_binder : valexpr -> binder = to_ext val_binder
-  let binder : binder repr = make_repr of_binder to_binder
 
   (** Must agree with Ltac2 type [Constr.Unsafe.RelDecl.t] *)
   let of_rel_declaration (decl : EConstr.rel_declaration) : valexpr =

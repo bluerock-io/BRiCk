@@ -1,0 +1,5 @@
+(include_subdirs qualified)
+(coq.theory
+  (name bluerock.iris.extra)
+  (package rocq-bluerock-iris)
+  (theories bluerock.prelude iris stdpp elpi Ltac2))

@@ -1,21 +1,21 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2023-2025
+ * Copyright (C) 2023-2025 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import stdpp.prelude.
-Require Import bedrock.prelude.base.
-Require Import bedrock.upoly.upoly.
-Require Import bedrock.upoly.option.
-Require Import bedrock.upoly.list.
-Require Import bedrock.prelude.parsec.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Import bedrock.lang.cpp.syntax.types.
+Require Import bluerock.prelude.base.
+Require Import bluerock.upoly.upoly.
+Require Import bluerock.upoly.option.
+Require Import bluerock.upoly.list.
+Require Import bluerock.prelude.parsec.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.types.
 Require Import Stdlib.Strings.PrimString.
-Require Import bedrock.prelude.pstring.
+Require Import bluerock.prelude.pstring.
 Require Import Stdlib.Numbers.Cyclic.Int63.Uint63.
-
+Require Import bluerock.lang.cpp.syntax.translation_unit.
 
 (** ** A parser for C++ names.
 
@@ -33,7 +33,7 @@ Definition ident_char (b : PrimString.char63) : bool :=
 Definition digit_char (b : char63) : bool :=
   (("0".(char63_wrap) ≤? b) && (b ≤? "9".(char63_wrap)))%char63%uint63.
 
-Module parser.
+Module internal.
   Import parsec.
   Import UPoly.
 
@@ -285,6 +285,14 @@ Module parser.
     Notation type := (type' lang).
     Notation name := (name' lang).
 
+    Variant Result : Set :=
+    | NoCheck
+    | Unknown
+    | Alias (_ : type)
+    | IsEnum
+    | IsStruct.
+    Variable resolve_name : name -> Result.
+
     (** classification of names based to account for destructors and overloadable
         operators. *)
     Variant name_type : Set :=
@@ -362,8 +370,29 @@ Module parser.
         in
         fold_left (fun t f => f t) <$> star (entry 100).
 
-    Definition build_named_type (ctor : name -> type) (n : name) : type :=
-      ctor n.
+      Definition name_for_parse (def : name -> type) (opt : option ()) (nm : name) : M type :=
+        match resolve_name nm return M type with
+        | NoCheck => mret $ def nm
+        | Alias ty => mret ty
+        | IsEnum => match def nm return M type with
+                    | Tenum _ as def => mret def
+                    | Tnamed _ =>
+                        match opt with
+                        | None => mret $ Tenum nm
+                        | _ => mfail
+                        end
+                    | _ => mfail
+                    end
+        | IsStruct => match def nm with
+                      | Tnamed _ as def => mret def
+                      | Tenum _ => match opt with
+                                   | None => mret $ Tnamed nm
+                                   | _ => mfail
+                                   end
+                      | _ => mfail
+                      end
+        | Unknown => mfail
+        end.
 
     (* The core parsers are based on fuel to handle the mutual recursion *)
     Definition parse_type' : M type :=
@@ -374,9 +403,9 @@ Module parser.
       let build_named_type ctor nm :=
         match nm with
         | Nglobal (Nfunction function_qualifiers.N nm args) =>
-            Tfunction $ FunctionType (ctor $ Nglobal $ Nid nm) args
+            (fun x => Tfunction $ FunctionType x args) <$> (ctor $ Nglobal $ Nid nm)
         | Nscoped scp (Nfunction function_qualifiers.N nm args) =>
-            Tfunction $ FunctionType (ctor $ Nscoped scp (Nid nm)) args
+            (fun x => Tfunction $ FunctionType x args) <$> (ctor $ Nscoped scp (Nid nm))
         | _ => ctor nm
         end
       in
@@ -385,9 +414,11 @@ Module parser.
         (commit (exact "(") (fun _ => parse_type () <* exact ")")
          $ commit (exact "$") (fun _ => Tparam <$> ident)
          $ commit (exact "#" <|> keyword "enum")
-                (fun _ => build_named_type Tenum <$> parse_name ())
-         $ let* _ := optional (keyword "struct" <|> keyword "class") in
-           (build_named_type Tnamed <$> parse_name ()))
+                (fun e => let* n := parse_name () in
+                     build_named_type (name_for_parse Tenum (Some e)) n)
+         $ let* kw := optional (keyword "struct" <|> keyword "class") in
+           let* n := parse_name () in
+           build_named_type (name_for_parse Tnamed kw) n)
       in
       let* post := parse_postfix_type in
       mret $ post (List.fold_right (fun f x => f x) t quals).
@@ -432,7 +463,17 @@ Module parser.
      | _ => None
      end.
 
-    (* name components basically amount to atomic names with an optional template
+   Fixpoint template_arg (fuel : nat) : M (temp_arg' lang) :=
+     (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) <|>
+     (Apack <$> (spaced "...<" *>
+      match fuel with
+      | S fuel =>
+          sepBy (op_token ",") (template_arg fuel)
+      | _ => mfail
+      end
+      <* spaced ">")).
+
+   (* name components basically amount to atomic names with an optional template
        specialization after them. They are complex because function names include their
        arguments.
      *)
@@ -491,8 +532,7 @@ Module parser.
         end
       in
       let* template_args :=
-        let template_arg :=
-          (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) in
+        let template_arg := template_arg 10 in
         optional (quoted (spaced "<") (spaced ">") $ sepBy (op_token ",") template_arg) in
       let parse_args : M _ :=
         optional (let* '(args, arity) := parse_args false in
@@ -520,7 +560,8 @@ Module parser.
                                         (const Tlong <$> keyword "l");
                                         (const Tulonglong <$> keyword "ull");
                                         (const Tulong <$> keyword "ul");
-                                        (const Tuint <$> keyword "u")]) in
+                                        (const Tuint <$> keyword "u");
+                                        (const Tbool <$> keyword "b")]) in
         let ty :=
           match suffix with
           | None => Tint
@@ -568,13 +609,35 @@ Module parser.
 
   End with_lang.
 
-End parser.
+  #[global] Arguments Result : clear implicits.
+
+  Definition check (tu : translation_unit) (n : name) :=
+    match tu.(types) !! n with
+    | None => Unknown
+    | Some gd =>
+        match gd with
+        | Gunion _ | Gstruct _ => IsStruct
+        | Genum _ _ => IsEnum
+        | Gtypedef t => Alias t
+        | _ => NoCheck
+        end
+    end.
+  Definition no_check {lang : lang.t} : name' lang -> Result lang :=
+    fun _ => NoCheck.
+
+End internal.
+
+Definition parse_name_with (tu : translation_unit) (input : PrimString.string) : option name :=
+  internal.run_full (internal.parse_name (internal.check tu) 1000) input.
+
+Definition parse_type_with (tu : translation_unit) (input : PrimString.string) : option type :=
+  internal.run_full (internal.parse_type (internal.check tu) 1000) input.
 
 Definition parse_name (input : PrimString.string) : option name :=
-  parser.run_full (parser.parse_name 1000) input.
+  internal.run_full (internal.parse_name internal.no_check 1000) input.
 
 Definition parse_type (input : PrimString.string) : option type :=
-  parser.run_full (parser.parse_type 1000) input.
+  internal.run_full (internal.parse_type internal.no_check 1000) input.
 
 Module Type TESTS.
   #[local] Definition TEST (input : PrimString.string) (nm : name) : Prop :=
@@ -683,6 +746,13 @@ Module Type TESTS.
 
   Succeed Example _0 : TEST_type "enum E()" (Tfunction (FunctionType (Tenum (Nglobal (Nid "E"))) [])) := eq_refl.
   Succeed Example _0 : TEST_type "enum NS::E()" (Tfunction (FunctionType (Tenum (Nscoped (Nglobal (Nid "NS")) (Nid "E"))) [])) := eq_refl.
+
+  Succeed Example _0 : TEST "C<1b, 0b>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tbool); Avalue (Eint 0 Tbool)]) := eq_refl.
+  Succeed Example _0 : TEST "C<1, 0>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Avalue (Eint 0 Tint)]) := eq_refl.
+
+  Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
+  Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
+
 
   (* known issues *)
 

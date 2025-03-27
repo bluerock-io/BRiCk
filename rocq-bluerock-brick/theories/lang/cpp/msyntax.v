@@ -4,6 +4,6 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.lang.cpp.syntax.
-Require Export bedrock.lang.cpp.syntax.mcore.
-Require Export bedrock.lang.cpp.syntax.templates.
+Require Export bluerock.lang.cpp.syntax.
+Require Export bluerock.lang.cpp.syntax.mcore.
+Require Export bluerock.lang.cpp.syntax.templates.

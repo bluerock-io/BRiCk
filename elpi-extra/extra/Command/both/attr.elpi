@@ -1,5 +1,5 @@
 /*
- * Copyright (C) BlueRock Security Inc. 2022-2024
+ * Copyright (C) 2022-2024 BlueRock Security, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1 WITH BedRock Exception for use over network, see repository root for details.
  */
@@ -69,7 +69,7 @@ carrying a boolean, [s] carrying a non-empty string, and [m(v)]
 carrying an arbitrary string.
 
 <<
-  Require Import bedrock.elpi.extra.extra.
+  Require Import bluerock.elpi.extra.extra.
   Elpi Command TestAttr.
   Elpi Accumulate File extra.Command.
   Elpi Accumulate lp:{{
@@ -293,9 +293,9 @@ namespace attr {
 
   parse-list L E F O :-
     path.nil Nil,
-    internal.path Nil =>
-    internal.error E =>
-    continue-parsing L F O',
+    ( internal.path Nil =>
+      internal.error E =>
+      continue-parsing L F O'),
     std.rev O' O.
 
   parse E F ElpiOpts O :- std.do! [

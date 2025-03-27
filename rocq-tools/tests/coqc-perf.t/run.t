@@ -28,8 +28,8 @@ Running coqc
   nat : Set
   
   nat is not universe polymorphic
-  Expands to: Inductive Stdlib.Init.Datatypes.nat
-  Declared in library Stdlib.Init.Datatypes, line 160, characters 10-13
+  Expands to: Inductive Corelib.Init.Datatypes.nat
+  Declared in library Corelib.Init.Datatypes, line 178, characters 10-13
   $ rm *.vo *.glob *.vos *.vok
 
 Running our coqc wrapper
@@ -45,8 +45,8 @@ Running our coqc wrapper
   nat : Set
   
   nat is not universe polymorphic
-  Expands to: Inductive Stdlib.Init.Datatypes.nat
-  Declared in library Stdlib.Init.Datatypes, line 160, characters 10-13
+  Expands to: Inductive Corelib.Init.Datatypes.nat
+  Declared in library Corelib.Init.Datatypes, line 178, characters 10-13
   $ rm *.vos *.vok
 
 Extracting all the data

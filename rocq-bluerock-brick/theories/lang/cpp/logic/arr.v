@@ -1,22 +1,22 @@
 (*
- * Copyright (c) 2020 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.algebra.list.
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.prelude.numbers.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.bi.fractional.
-Require Import bedrock.lang.bi.big_op.
-Require Import bedrock.lang.cpp.bi.cfractional.
-Require Import bedrock.lang.cpp.semantics.types.
-Require Import bedrock.lang.cpp.semantics.genv.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.valid.
-Require Import bedrock.lang.cpp.semantics.values.
+Require Import bluerock.iris.extra.algebra.list.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.prelude.numbers.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.iris.extra.bi.fractional.
+Require Import bluerock.iris.extra.bi.big_op.
+Require Import bluerock.lang.cpp.bi.cfractional.
+Require Import bluerock.lang.cpp.semantics.types.
+Require Import bluerock.lang.cpp.semantics.genv.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.valid.
+Require Import bluerock.lang.cpp.semantics.values.
 
 #[local] Set Printing Coercions.	(** Readability *)
 
@@ -609,9 +609,8 @@ End arrayR_agree.
 
 Section with_array_frac.
   Context `{Σ : cpp_logic, resolve : genv} {X : Type} (ty : Rtype).
-  Context (R : Qp -> X -> Rep).
 
-  #[global] Instance arrayR_fractional l
+  #[global] Instance arrayR_fractional (R : Qp -> X -> Rep) l
   `{HF : !∀ x, Fractional (λ q, R q x)} :
     Fractional (λ q, arrayR ty (R q) l).
   Proof.
@@ -621,16 +620,24 @@ Section with_array_frac.
     { rewrite !arrayR_cons IHl HF !_offsetR_sep. iSplit; iCancel. }
   Qed.
 
-  #[global] Instance arrayR_as_fractional l q `{!∀ x, Fractional (λ q, R q x)} :
-    AsFractional (arrayR ty (R q) l) (λ q, arrayR ty (R q) l) q.
-  Proof. exact: Build_AsFractional. Qed.
+  #[global] Instance arrayR_as_fractional (R : X -> Rep) (R' : X -> Qp -> Rep)
+    l q `{!forall x, AsFractional (R x) (R' x) q} :
+    AsFractional (arrayR ty R l) (λ q, arrayR ty (fun x => R' x q) l) q.
+  Proof.
+    constructor.
+    - f_equiv => ?; apply as_fractional.
+    - apply arrayR_fractional => ?.
+      autoapply @as_fractional_fractional with typeclass_instances.
+      apply H.
+  Qed.
+
 End with_array_frac.
 
 Section with_array_cfrac.
   Context `{Σ : cpp_logic, resolve : genv} {X : Type} (ty : Rtype).
-  Context (R : cQp.t -> X -> Rep).
 
-  #[global] Instance arrayR_cfractional l `{HF : CFractional1 R} :
+  #[global] Instance arrayR_cfractional (R : cQp.t -> X -> Rep)
+    l `{HF : CFractional1 R} :
     CFractional (λ q, arrayR ty (R q) l).
   Proof.
     red. intros.
@@ -639,9 +646,16 @@ Section with_array_cfrac.
     { rewrite !arrayR_cons IHl HF !_offsetR_sep. iSplit; iCancel. }
   Qed.
 
-  #[global] Instance arrayR_as_cfractional l `{!CFractional1 R} q :
-    AsCFractional (arrayR ty (R q) l) (λ q, arrayR ty (R q) l) q.
-  Proof. solve_as_cfrac. Qed.
+  #[global] Instance arrayR_as_cfractional (R : X -> Rep) (R' : X -> cQp.t -> Rep)
+    l q `{!forall x, AsCFractional (R x) (R' x) q} :
+    AsCFractional (arrayR ty R l) (λ q, arrayR ty (fun x => R' x q) l) q.
+  Proof.
+    constructor.
+    - f_equiv => ?; apply as_cfractional.
+    - apply arrayR_cfractional => ?.
+      autoapply @as_cfractional_cfractional with typeclass_instances.
+      apply H.
+  Qed.
 
 End with_array_cfrac.
 

@@ -4,15 +4,15 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.atomics.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.atomics.
 
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
 Section cmpxchg_derived.
   Context `{Σ : cpp_logic} {resolve:genv}.
@@ -29,14 +29,14 @@ Section cmpxchg_derived.
       [| weak = Vbool false |] **
       [| succmemord = _SEQ_CST |] ** [| failmemord = _SEQ_CST |] **
       (* local pre-cond *)
-      |>  _eqv expected_p |-> primR ty (cQp.mut 1) (Vint v) **
+      |>  _eqv expected_p |-> primR ty 1$m (Vint v) **
       AU1 << (* atomic pre-cond: latest value of p is also v, because this is
                 successful *)
-              _eqv p |-> primR ty (cQp.mut 1) (Vint v) >> @M,∅
+              _eqv p |-> primR ty 1$m (Vint v) >> @M,∅
           << (* atomic post-cond: latest value is desired *)
-              _eqv p |-> primR ty (cQp.mut 1) (Vint desired),
-            COMM (_eqv expected_p |-> primR ty (cQp.mut 1) (Vint v) -* Q (Vbool true)) >>
-      |-- wp_atom' AO__atomic_compare_exchange_n ty
+              _eqv p |-> primR ty 1$m (Vint desired),
+            COMM (_eqv expected_p |-> primR ty 1$m (Vint v) -* Q (Vbool true)) >>
+      |-- wp_atom' "__atomic_compare_exchange_n" ty
                   (p::succmemord::expected_p::failmemord::Vint desired::weak::nil) Q.
   Proof.
     intros. iIntros "(F1 & F2 & F3 & Hex & AU)".
@@ -60,11 +60,11 @@ Section cmpxchg_derived.
       [| succmemord = _SEQ_CST |] ** [| failmemord = _SEQ_CST |] **
       (* we know that the values are different *)
       [| v <> expected_v |] **
-      |> _eqv val_p |-> primR ty (cQp.mut 1) (Vint expected_v) **
-      AU1 << _eqv p |-> primR ty (cQp.mut 1) (Vint v) >> @M,∅
-          << _eqv p |-> primR ty (cQp.mut 1) (Vint v),
-            COMM (_eqv val_p |-> primR ty (cQp.mut 1) (Vint v) -* Q (Vbool false)) >>
-      |-- wp_atom' AO__atomic_compare_exchange_n ty
+      |> _eqv val_p |-> primR ty 1$m (Vint expected_v) **
+      AU1 << _eqv p |-> primR ty 1$m (Vint v) >> @M,∅
+          << _eqv p |-> primR ty 1$m (Vint v),
+            COMM (_eqv val_p |-> primR ty 1$m (Vint v) -* Q (Vbool false)) >>
+      |-- wp_atom' "__atomic_compare_exchange_n" ty
                   (p::succmemord::val_p::failmemord::Vint desired::weak::nil) Q.
   Proof.
     intros. iIntros "(? & ? & ? & % & ? & AU)".
@@ -87,14 +87,14 @@ Section cmpxchg_derived.
       [| weak = Vbool false |] **
       [| succmemord = _SEQ_CST |] ** [| failmemord = _SEQ_CST |] **
       |> ((* local pre-cond *)
-          _eqv expected_p |-> primR ty (cQp.mut 1) (Vint expected) **
+          _eqv expected_p |-> primR ty 1$m (Vint expected) **
            _eqv desired_p |-> primR ty q (Vint desired)) **
-      AU1 << _eqv p |-> primR ty (cQp.mut 1) (Vint expected) >> @M,∅
+      AU1 << _eqv p |-> primR ty 1$m (Vint expected) >> @M,∅
           << (* atomic post-cond: latest value is desired *)
-              _eqv p |-> primR ty (cQp.mut 1) (Vint desired),
-            COMM (_eqv expected_p |-> primR ty (cQp.mut 1) (Vint expected) **
+              _eqv p |-> primR ty 1$m (Vint desired),
+            COMM (_eqv expected_p |-> primR ty 1$m (Vint expected) **
                   _eqv desired_p |-> primR ty q (Vint desired) -* Q (Vbool true)) >>
-      |-- wp_atom' AO__atomic_compare_exchange ty
+      |-- wp_atom' "__atomic_compare_exchange" ty
                   (p::succmemord::expected_p::failmemord::desired_p::weak::nil) Q.
   Proof.
     intros. iIntros "(? & ? & ? & ? & AU)".
@@ -117,13 +117,13 @@ Section cmpxchg_derived.
       [| succmemord = _SEQ_CST |] ** [| failmemord = _SEQ_CST |] **
       (* we know that the values are different *)
       [| v <> expected |] **
-      |> (_eqv expected_p |-> primR ty (cQp.mut 1) (Vint expected) **
+      |> (_eqv expected_p |-> primR ty 1$m (Vint expected) **
            _eqv desired_p |-> primR ty q (Vint desired)) **
-      AU1 << _eqv p |-> primR ty (cQp.mut 1) (Vint v) >> @M,∅
-          << _eqv p |-> primR ty (cQp.mut 1) (Vint v),
-            COMM (_eqv expected_p |-> primR ty (cQp.mut 1) (Vint v) **
+      AU1 << _eqv p |-> primR ty 1$m (Vint v) >> @M,∅
+          << _eqv p |-> primR ty 1$m (Vint v),
+            COMM (_eqv expected_p |-> primR ty 1$m (Vint v) **
                   _eqv desired_p |-> primR ty q (Vint desired) -* Q (Vbool false)) >>
-      |-- wp_atom' AO__atomic_compare_exchange ty
+      |-- wp_atom' "__atomic_compare_exchange" ty
                   (p::succmemord::expected_p::failmemord::desired_p::weak::nil) Q.
   Proof.
     intros. iIntros "(? & ? & ? & % & ? & AU)".

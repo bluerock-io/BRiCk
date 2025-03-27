@@ -14,18 +14,18 @@ to be guaranteed.
 *)
 
 Require Import stdpp.gmap.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.addr.
-Require Import bedrock.prelude.avl.
-Require Import bedrock.prelude.bytestring.
-Require Import bedrock.prelude.option.
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.addr.
+Require Import bluerock.prelude.avl.
+Require Import bluerock.prelude.bytestring.
+Require Import bluerock.prelude.option.
+Require Import bluerock.prelude.numbers.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.sub_module.
-Require Import bedrock.lang.cpp.semantics.ptrs.
-Require Import bedrock.lang.cpp.model.simple_pointers_utils.
-Require Import bedrock.lang.cpp.model.inductive_pointers_utils.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.sub_module.
+Require Import bluerock.lang.cpp.semantics.ptrs.
+Require Import bluerock.lang.cpp.model.simple_pointers_utils.
+Require Import bluerock.lang.cpp.model.inductive_pointers_utils.
 
 Implicit Types (σ : genv) (z : Z).
 #[local] Close Scope nat_scope.
@@ -428,7 +428,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     | offset_ptr p o => root_ptr_alloc_id p
     end.
 
-  Definition ptr_vaddr (p : ptr) : option vaddr :=
+  Definition ptr_vaddr {σ} (p : ptr) : option vaddr :=
     match p with
     | invalid_ptr_ => None
     | fun_ptr_ tu o => Some (global_ptr_encode_vaddr o)
@@ -454,30 +454,34 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   #[global] Instance global_ptr_inj tu : Inj (=) (=) (global_ptr tu) := _.
 
-  (* Some proofs using these helpers could be shortened, tactic-wise, but I find
-  them clearer this way, and they work in both models. *)
-  Lemma ptr_vaddr_global_ptr tu o :
-    ptr_vaddr (global_ptr tu o) = Some (global_ptr_encode_vaddr o).
-  Proof. done. Qed.
-  Lemma ptr_alloc_id_global_ptr tu o :
-    ptr_alloc_id (global_ptr tu o) = Some (global_ptr_encode_aid o).
-  Proof. done. Qed.
+  Section with_genv.
+    Context {σ}.
 
-  Lemma global_ptr_nonnull_addr tu o : ptr_vaddr (global_ptr tu o) <> Some 0%N.
-  Proof. rewrite ptr_vaddr_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
-  Lemma global_ptr_nonnull_aid tu o : ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
-  Proof. rewrite ptr_alloc_id_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
+    (* Some proofs using these helpers could be shortened, tactic-wise, but I find
+    them clearer this way, and they work in both models. *)
+    Lemma ptr_vaddr_global_ptr tu o :
+      ptr_vaddr (global_ptr tu o) = Some (global_ptr_encode_vaddr o).
+    Proof. done. Qed.
+    Lemma ptr_alloc_id_global_ptr tu o :
+      ptr_alloc_id (global_ptr tu o) = Some (global_ptr_encode_aid o).
+    Proof. done. Qed.
 
-  #[global] Instance global_ptr_addr_inj tu : Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
-  Proof. intros ??. rewrite !ptr_vaddr_global_ptr. by intros ?%(inj _)%(inj _). Qed.
-  #[global] Instance global_ptr_aid_inj tu : Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
-  Proof. intros ??. rewrite !ptr_alloc_id_global_ptr. by intros ?%(inj _)%(inj _). Qed.
+    Lemma global_ptr_nonnull_addr tu o : ptr_vaddr (global_ptr tu o) <> Some 0%N.
+    Proof. rewrite ptr_vaddr_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
+    Lemma global_ptr_nonnull_aid tu o : ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
+    Proof. rewrite ptr_alloc_id_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
 
-  Lemma ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
-  Proof. done. Qed.
+    #[global] Instance global_ptr_addr_inj tu : Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
+    Proof. intros ??. rewrite !ptr_vaddr_global_ptr. by intros ?%(inj _)%(inj _). Qed.
+    #[global] Instance global_ptr_aid_inj tu : Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
+    Proof. intros ??. rewrite !ptr_alloc_id_global_ptr. by intros ?%(inj _)%(inj _). Qed.
 
-  Lemma ptr_alloc_id_nullptr : ptr_alloc_id nullptr = Some null_alloc_id.
-  Proof. done. Qed.
+    Lemma ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
+    Proof. done. Qed.
+
+    Lemma ptr_alloc_id_nullptr : ptr_alloc_id nullptr = Some null_alloc_id.
+    Proof. done. Qed.
+  End with_genv.
 
   (* Instance ptr_equiv : Equiv ptr := (=).
   Instance offset_equiv : Equiv offset := (=).
@@ -507,32 +511,12 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   #[local] Ltac UNFOLD_dot := rewrite _dot.unlock/DOT_dot/=.
 
-  (* [eval_offset] respects the monoidal structure of [offset]s *)
   Lemma eval_offset_dot : ∀ σ (o1 o2 : offset),
-    eval_offset σ (o1 ,, o2) =
-    add_opt (eval_offset σ o1) (eval_offset σ o2).
-  Proof.
-    intros **; UNFOLD_dot.
-    destruct o1 as [[] ?]; destruct o2 as [[] ?]=> //=.
-    - unfold __o_dot, raw_offset_merge, raw_offset_collapse; simpl.
-      unfold eval_offset, eval_raw_offset; simpl.
-      unfold raw_offset_wf, raw_offset_collapse in r0; simpl in r0.
-      rewrite r0/=.
-      destruct (eval_offset_seg o);
-        destruct (foldr (liftM2 Z.add) (Some 0) (map eval_offset_seg l))=> //.
-    - rewrite __o_dot_nil_r.
-      unfold eval_offset, eval_raw_offset=> /=.
-      destruct (liftM2 Z.add (eval_offset_seg o)
-                       (foldr (liftM2 Z.add) (Some 0) (map eval_offset_seg l)))=> //.
-      unfold add_opt; simpl.
-      by rewrite Z.add_0_r.
-    - unfold __o_dot, raw_offset_merge, raw_offset_collapse, eval_offset, eval_raw_offset.
-      unfold proj1_sig; rewrite foldr_app.
-      unfold raw_offset_wf, raw_offset_collapse in *.
-      rewrite !foldr_fmap.
-      rewrite r0.
-      admit.
-  Admitted.
+    ∀ s1 s2,
+      eval_offset σ o1 = Some s1 ->
+      eval_offset σ o2 = Some s2 ->
+      eval_offset σ (o1 ,, o2) = Some (s1 + s2).
+  Proof. Admitted.
 
   #[global] Instance id_dot : LeftId (=) o_id o_dot.
   Proof. UNFOLD_dot. intros o. apply /sig_eq_pi. by case: o. Qed.
@@ -581,7 +565,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     is_Some (ptr_alloc_id p') -> ptr_alloc_id p' = ptr_alloc_id p.
   Proof. UNFOLD_dot. by destruct p, o as [[] ?] => //= /is_Some_None []. Qed.
 
-  Axiom ptr_vaddr_o_sub_eq : forall p σ ty n1 n2 sz,
+  Axiom ptr_vaddr_o_sub_eq : forall σ p ty n1 n2 sz,
     size_of σ ty = Some sz -> (sz > 0)%N ->
     same_property ptr_vaddr (p ,, o_sub _ ty n1) (p ,, o_sub _ ty n2) ->
     n1 = n2.

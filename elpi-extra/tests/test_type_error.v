@@ -1,10 +1,10 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024 BlueRock Security, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1 WITH BedRock Exception for use over network, see repository root for details.
  *)
 
-Require bedrock.elpi.extra.extra.
+Require bluerock.elpi.extra.extra.
 
 (** Confirm that we made warnings from <<Elpi Typecheck>> fatal. *)
 
