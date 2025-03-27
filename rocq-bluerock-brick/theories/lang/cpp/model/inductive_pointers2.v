@@ -580,32 +580,11 @@ Module PTRS_IMPL <: PTRS_INTF.
       }
     Qed.
 
-    Equations norm_complete_aux l r s t :
-      roff_rw_local s t ->
-      normalize (l ++ s ++ r) = normalize (l ++ t ++ r)
-      by wf (length l) lt :=
-    norm_complete_aux l r s t H := _.
-    Next Obligation.
-      have H1 :
-        (∃ ls lt lr, l = ls ++ lr /\ roff_rw_local ls lt) \/
-        ¬∃ ls lt lr, l = ls ++ lr /\ roff_rw_local ls lt.
-      {
-        admit.
-      }
-      destruct H1.
-      {
-        move: H0 => [ls [lt [lr [Hl Hrw]]]].
-        subst. do 2 rewrite -app_assoc.
-        rewrite (norm_eager _ lt). 2: done.
-        rewrite (norm_eager _ lt). 2: done.
-        do 2 rewrite (app_assoc lt).
-        apply norm_complete_aux.
-        { done. }
-        {
-          destruct Hrw;
-          simpl; lia.
-        }
-      }
+    Lemma norm_complete_aux :
+      ∀ l r s t,
+        roff_rw_local s t ->
+        normalize (l ++ s ++ r) = normalize (l ++ t ++ r).
+    Proof.
     Admitted.
 
     Lemma norm_complete :
