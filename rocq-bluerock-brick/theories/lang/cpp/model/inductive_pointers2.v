@@ -2,6 +2,7 @@
  * Copyright (c) 2020 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
+ * Attribution: Work done by Eashan Hatti <eashan.hatti@yale.edu>
  *)
 
 (**
@@ -9,6 +10,8 @@ A mostly-complete consistency proof for [PTRS] base upon [inductive_ptrs.v]. The
 difference is that this file defines offset normalization as a string-rewrite system
 instead of using a Coq function.
 *)
+
+From Equations Require Import Equations.
 
 Require Import stdpp.relations.
 Require Import stdpp.gmap.
@@ -24,8 +27,6 @@ Require Import bedrock.lang.cpp.semantics.values.
 Require Import bedrock.lang.cpp.model.simple_pointers_utils.
 Require Import bedrock.lang.cpp.model.inductive_pointers_utils.
 Require Import bedrock.lang.cpp.semantics.ptrs2.
-
-From Equations Require Import Equations.
 
 Axiom irr : ∀ (P : Prop) (p q : P), p = q.
 
