@@ -156,7 +156,7 @@ of lenses for the handler types.
 Section lens.
   Universe u.
   Context {N T E : Type@{u}}.
-  #[local] Notation type_handler := (type_handler N T E).
+  #[local] Notation type_handler := (type_handler' N T E).
 
   Definition _handle_Tnamed : type_handler ~l> name -> (unit -> N) -> T  := {|
     Lens.view r := r.(handle_Tnamed);

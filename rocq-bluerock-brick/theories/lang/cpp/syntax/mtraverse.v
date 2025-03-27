@@ -359,20 +359,7 @@ Module MTraverse.
       end.
 
     Definition traverseCN : classname -> F classname :=
-      match lang1 as lang1 , lang2 as lang2
-            return (name -> F name) ->
-                   (type -> F type) ->
-                   classname -> F classname
-      with
-      | lang.cpp , lang.cpp => fun tN _ => tN
-      | lang.temp , lang.temp => fun _ tT => tT
-      | lang.cpp , lang.temp => fun tN _ nm => Tnamed <$> tN nm
-      | lang.temp , lang.cpp => fun _ tT ty =>
-          (fun ty => match ty with
-                      | Tnamed nm => nm
-                      | _ => Nunsupported "??" (* TODO: this is not implementable, but I don't think we actually use this *)
-                      end) <$> tT ty
-      end traverseN traverseT.
+      traverseN.
 
     Definition mk_core_traversal : core_traversal F :=
     {| handle_traverseN := traverseN

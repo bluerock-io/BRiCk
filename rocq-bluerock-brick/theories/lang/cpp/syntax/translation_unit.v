@@ -100,11 +100,7 @@ Proof. solve_decision. Defined.
 TODO: [Tmember_func], [type_of_value] seem misplaced
 *)
 
-Definition type_of_classname : classname -> type :=
-  match with
-  | => Tnamed
-  | => fun x => x
-  end.
+Definition type_of_classname : classname -> type := Tnamed.
 
 (** [type_of_value o] returns the type of the given [ObjValue] *)
 Definition type_of_value (o : ObjValue) : type :=

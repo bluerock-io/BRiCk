@@ -166,11 +166,7 @@ Section with_monad.
     | UserDefined v => f v
     end.
 
-  Definition classname : classname -> M :=
-    match as return (name -> M) -> (type -> M) -> classname -> M with
-    | => fun name _ => name
-    | => fun _ type => type
-    end name type.
+  Definition classname : classname -> M := name.
 
   Definition obj_value (o : ObjValue) : M :=
     match o with

@@ -1060,12 +1060,8 @@ Module decltype.
   End internal.
 
   Definition tu_to_ext (tu : translation_unit) : internal.ext_tu :=
-    match as return _ with
-    | => {| internal.ext_symbols nm := fmap (M:=fun t => option t) type_of_value $ tu.(symbols) !! nm
-                  ; internal.ext_types nm := types tu !! nm |}
-    | => {| internal.ext_symbols nm := None
-                   ; internal.ext_types nm := None |}
-    end.
+    {| internal.ext_symbols nm := fmap (M:=fun t => option t) type_of_value $ tu.(symbols) !! nm
+    ; internal.ext_types nm := types tu !! nm |}.
 
   Definition of_expr (tu : translation_unit) (e : Expr) : trace.M Error.t decltype :=
      readerT.run (internal.of_expr e) (tu_to_ext tu, Tvoid, None, []).

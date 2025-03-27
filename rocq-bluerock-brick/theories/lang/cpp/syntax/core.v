@@ -697,17 +697,6 @@ Notation function_type' := (function_type_ decltype').
 Notation temp_param := (temp_param_ type').
 Notation atomic_name' := (atomic_name_ type').
 
-(**
-In certain places, C++ requires a class name,
-for example, for base classes.
-In templates, these names do not have to be resolved, e.g. in CRTP.
-<<
-template<typename T>
-struct Foo : T { };
->>
-*)
-Notation classname' := type'.
-
 
 (*
 Module Import LangNotations.
@@ -740,6 +729,17 @@ Module Import LangNotations.
 *)
 End LangNotations.
 *)
+
+(**
+In certain places, C++ requires a class name,
+for example, for base classes.
+In templates, these names do not have to be resolved, e.g. in CRTP.
+<<
+template<typename T>
+struct Foo : T { };
+>>
+*)
+Notation classname' := name'.
 
 (** ** C++ with structured names *)
 Notation name := name'.
@@ -781,9 +781,9 @@ Proof. rewrite /field_name.t. refine _. Defined.
 *)
 
 Notation field' := name' (only parsing).
-(* Definition field : Set := name. *)
-Definition Field' : classname -> field_name.t -> field := Nscoped.
 Notation field := field' (only parsing).
+Definition Field' : classname -> field_name.t -> field :=
+  Nscoped.
 Notation Field := Field'.
 Definition f_type (t : field) : globname :=
   match t with
@@ -802,6 +802,25 @@ Definition f_name (t : field) : atomic_name :=
 #[global] Bind Scope cpp_type_scope with exprtype'.
 #[global] Bind Scope cpp_type_scope with decltype'.
 #[global] Bind Scope cpp_type_scope with functype'.
+
+Definition Ndependent' (t : type) : classname :=
+  match t with
+  | Tnamed nm => nm
+  | Tenum nm => nm
+  | _ => Ndependent t
+  end.
+
+Lemma Ndependent'_Tnamed x :
+  Ndependent' (Tnamed x) = x.
+Proof. done. Qed.
+
+(* Lemma Tnamed_Ndependent' x : *)
+(*   Tnamed (Ndependent' x) = x. *)
+(* Proof. case: x => //=. try done. Qed. *)
+
+Definition Field'' (t : type) (c : field_name.t) : field :=
+  Nscoped (Ndependent' t) c.
+
 
 (** ** Derived forms *)
 Notation Tconst_volatile := (Tqualified QCV).
