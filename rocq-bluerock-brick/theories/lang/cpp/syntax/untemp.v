@@ -20,9 +20,7 @@ Module Import internal.
   mlock Definition Not_representable : Error.t := inhabitant.
 
   Section convert.
-    Context {lang1 lang2 : lang.t}.
-
-    Definition handle_type : type_handler lang1 lang2 M := {|
+    Definition handle_type : type_handler M := {|
       handle_Tparam _ := mthrow Not_representable;
       handle_Tresult_param _ := mthrow Not_representable;
       handle_Tresult_global _ _ := mthrow Not_representable;
@@ -38,7 +36,7 @@ Module Import internal.
       handle_Tqualified cv _ t := Tqualified cv <$> t ();
     |}.
 
-    Definition handle_expr : expr_handler lang1 lang2 M := {|
+    Definition handle_expr : expr_handler M := {|
       handle_Eparam _ := mthrow Not_representable;
       handle_Eunresolved_global _ _ := mthrow Not_representable;
       handle_Eunresolved_unop _ _ _ := mthrow Not_representable;

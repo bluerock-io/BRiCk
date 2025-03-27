@@ -59,7 +59,7 @@ Module integral_type.
   Record t : Set := mk { size : int_rank.t ; signedness : signed }.
 
   #[warnings="-uniform-inheritance"]
-  Coercion to_type {lang} (v : t) : type' lang :=
+  Coercion to_type (v : t) : type :=
     Tnum v.(size) v.(signedness).
 End integral_type.
 

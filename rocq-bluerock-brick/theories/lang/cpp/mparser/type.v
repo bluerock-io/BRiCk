@@ -6,5 +6,4 @@
 Require Import bluerock.lang.cpp.mparser.prelude.
 Require Import bluerock.lang.cpp.parser.type.
 
-#[local] Definition parser_lang : lang.t := lang.temp.
 Include ParserType.

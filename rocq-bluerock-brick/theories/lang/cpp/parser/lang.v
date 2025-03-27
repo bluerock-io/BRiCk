@@ -5,7 +5,3 @@
  *)
 
 Require Import bluerock.lang.cpp.parser.prelude.
-
-Module Type PARSER_LANG.
-  Parameter Inline parser_lang : lang.t.
-End PARSER_LANG.

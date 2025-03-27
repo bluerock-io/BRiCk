@@ -111,7 +111,7 @@ Section with_cpp.
   Lemma anyR_Tqualified t tq q : anyR (Tqualified tq t) q -|- anyR t (qualify tq q).
   Proof. by rewrite anyR.unlock everywhereR_Tqualified. Qed.
 
-  #[local] Lemma not_heap_type {lang} (t : type' lang) :
+  #[local] Lemma not_heap_type (t : type) :
     (if t is Tqualified _ _ then false else
        is_value_type t || match t with
                         | Tref _ => true

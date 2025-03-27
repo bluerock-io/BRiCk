@@ -21,10 +21,7 @@ Section with_monad.
   #[local] Notation opt f := (from_option f OK).
   #[local] Notation lst f := (List.forallb f).
 
-  Section with_lang.
-
-    Context {lang : lang.t}.
-  Definition atomic_name (type : type' lang -> M) (an : atomic_name' lang) : M :=
+  Definition atomic_name (type : type -> M) (an : atomic_name) : M :=
     match an with
     | Nid _ => OK
     | Nfunction _ _ ts => List.forallb type ts
@@ -40,8 +37,8 @@ Section with_monad.
     end.
 
   Section temp_arg.
-    Context (name : name' lang -> M) (type : type' lang -> M) (expr : Expr' lang -> M).
-    Fixpoint temp_arg  (a : temp_arg' lang) : M :=
+    Context (name : name -> M) (type : type -> M) (expr : Expr -> M).
+    Fixpoint temp_arg  (a : temp_arg) : M :=
       match a with
       | Atype t => type t
       | Avalue e => expr e
@@ -51,7 +48,7 @@ Section with_monad.
       end.
   End temp_arg.
 
-  Fixpoint name (n : name' lang) : M :=
+  Fixpoint name (n : name) : M :=
     match n with
     | Ninst n ii => name n <+> lst (temp_arg name type expr) ii
     | Nglobal an => atomic_name type an
@@ -59,7 +56,7 @@ Section with_monad.
     | Ndependent t => type t
     | Nunsupported _ => FAIL
     end
-  with type (t : type' lang) : M :=
+  with type (t : type) : M :=
     match t with
     | Tunsupported _ => FAIL
     | Tparam _
@@ -81,7 +78,7 @@ Section with_monad.
     | Tdecltype e | Texprtype e => expr e
     | Tnamed n | Tenum n => name n
     end
-  with expr (e : Expr' lang) : M :=
+  with expr (e : Expr) : M :=
     match e with
     | Evar _ t => type t
     | Eenum_const n _ => name n
@@ -114,7 +111,7 @@ Section with_monad.
     | Eimplicit_init t => type t
     | _ => OK
     end
-  with stmt (s : Stmt' lang) : M :=
+  with stmt (s : Stmt) : M :=
     match s with
     | Sseq ss => lst stmt ss
     | Sdecl ds => lst var_decl ds
@@ -135,19 +132,19 @@ Section with_monad.
     | Sgoto _ => FAIL
     | Sunsupported _ => FAIL
     end
-  with var_decl (v : VarDecl' lang) : M :=
+  with var_decl (v : VarDecl) : M :=
     match v with
     | Dvar _ t oe => type t <+> opt expr oe
     | Ddecompose e _ bds => expr e <+> lst binding_decl bds
     | Dinit _ n t None => name n <+> type t
     | Dinit _ n t (Some e) => name n <+> type t <+> expr e
     end
-  with binding_decl (b : BindingDecl' lang) : M :=
+  with binding_decl (b : BindingDecl) : M :=
     match b with
     | Bvar _ t e => type t <+> expr e
     | Bbind _ t e => type t <+> expr e
     end
-  with cast (c : Cast' lang) : M :=
+  with cast (c : Cast) : M :=
     match c with
     | Cdependent t | Cbitcast t | Clvaluebitcast t | Cnoop t | Cint2ptr t | Cptr2int t
     | Cintegral t
@@ -158,7 +155,7 @@ Section with_monad.
     | _ => OK
     end.
 
-  Definition function_body (b : FunctionBody' lang) : M :=
+  Definition function_body (b : FunctionBody) : M :=
     match b with
     | Impl s => stmt s
     | Builtin _ => OK
@@ -169,13 +166,13 @@ Section with_monad.
     | UserDefined v => f v
     end.
 
-  Definition classname : classname' lang -> M :=
-    match lang as lang return (name' lang -> M) -> (type' lang -> M) -> classname' lang -> M with
-    | lang.cpp => fun name _ => name
-    | lang.temp => fun _ type => type
+  Definition classname : classname -> M :=
+    match as return (name -> M) -> (type -> M) -> classname -> M with
+    | => fun name _ => name
+    | => fun _ type => type
     end name type.
 
-  Definition obj_value (o : ObjValue' lang) : M :=
+  Definition obj_value (o : ObjValue) : M :=
     match o with
     | Ovar t ie => type t
     | Ofunction (Build_Func t args _ _ ob) =>
@@ -188,12 +185,11 @@ Section with_monad.
         classname d.(d_class) <+> opt (or_default stmt) d.(d_body)
     end.
 
-  Definition glob_decl (gd : GlobDecl' lang) : M :=
+  Definition glob_decl (gd : GlobDecl) : M :=
     match gd with
     | Gunsupported _ => FAIL
     | _ => OK
     end.
-  End with_lang.
 
   Definition translation_unit (tu : translation_unit) : M :=
     let symbol '(nm, obj) := obj_value obj in

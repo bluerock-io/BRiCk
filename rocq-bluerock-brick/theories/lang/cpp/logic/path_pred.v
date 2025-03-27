@@ -48,8 +48,8 @@ Arguments _global {resolve} _ : rename.
 
 
 (* this is for `Indirect` field references *)
-Fixpoint path_to_Offset {σ:genv} (from : globname) (final : field_name.t lang.cpp)
-         (ls : list (field_name.t lang.cpp * globname))
+Fixpoint path_to_Offset {σ:genv} (from : globname) (final : field_name.t)
+         (ls : list (field_name.t * globname))
   : offset :=
   match ls with
   | [] => o_field σ (Field from final)

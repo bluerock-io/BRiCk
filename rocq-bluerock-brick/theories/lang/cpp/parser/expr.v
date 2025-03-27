@@ -12,15 +12,7 @@ Require Import bluerock.lang.cpp.parser.lang.
 
 (** * Derived expressions emitted by cpp2v *)
 
-Module ParserExpr (Import Lang : PARSER_LANG).
-  #[local] Notation name := (name' parser_lang).
-  #[local] Notation obj_name := (obj_name' parser_lang).
-  #[local] Notation type := (type' parser_lang).
-  #[local] Notation exprtype := (exprtype' parser_lang).
-  #[local] Notation decltype := (decltype' parser_lang).
-  #[local] Notation Expr := (Expr' parser_lang).
-  #[local] Notation Cast := (Cast' parser_lang).
-
+Module ParserExpr.
   Definition Ecstyle_cast (c : Cast) (t : type) (e : Expr) : Expr :=
     Eexplicit_cast cast_style.c t (Ecast c e).
   Definition Efunctional_cast (c : Cast) (t : type) (e : Expr) : Expr :=

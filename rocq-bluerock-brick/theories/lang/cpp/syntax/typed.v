@@ -17,8 +17,8 @@ Import UPoly.
 
 (* TODO: a little "sloppy" with the errors *)
 mlock Definition breadcrumb {t : Set} (_ : t) : Error.t := inhabitant.
-mlock Definition Bad_allocation_function_args {lang : lang.t} (_ : list (type' lang)) : Error.t := inhabitant.
-mlock Definition Can_initialize {lang : lang.t} (dt it : decltype' lang) : Error.t := inhabitant.
+mlock Definition Bad_allocation_function_args (_ : list type) : Error.t := inhabitant.
+mlock Definition Can_initialize (dt it : decltype) : Error.t := inhabitant.
 
 Module decltype.
 
@@ -31,7 +31,7 @@ Module decltype.
   on [to_valcat t] is simpler than matching on [t] when [t] might be
   an xvalue reference to a function type.
   *)
-  Definition to_exprtype {lang} (t : decltype' lang) : ValCat * exprtype' lang :=
+  Definition to_exprtype (t : decltype) : ValCat * exprtype :=
     match drop_qualifiers t with
     | Tref u => (Lvalue, u)
     | Trv_ref u =>
@@ -60,7 +60,7 @@ Module decltype.
       end
     | _ => (Prvalue, t)	(** Promote sharing, rather than normalize qualifiers *)
     end.
-  Definition to_valcat {lang} (t : decltype' lang) : ValCat := (to_exprtype t).1.
+  Definition to_valcat (t : decltype) : ValCat := (to_exprtype t).1.
 
   (**
   Compute a declaration type from a value category and expression
@@ -69,7 +69,7 @@ Module decltype.
   Up to dropping qualifiers on reference and function types, this is
   intended to be a partial inverse of [to_exprtype].
   *)
-  Definition of_exprtype {lang} (vc : ValCat) (t : exprtype' lang) : decltype' lang :=
+  Definition of_exprtype (vc : ValCat) (t : exprtype) : decltype :=
     (**
     As [t : Mexprtype], we do not need [tref], [trv_ref].
     *)
@@ -81,18 +81,9 @@ Module decltype.
 
   Module internal.
   Section with_lang.
-    Context {lang : lang.t}.
-    #[local] Notation Expr := (Expr' lang).
-    #[local] Notation name := (name' lang).
-    #[local] Notation decltype := (decltype' lang).
-    #[local] Notation exprtype := (exprtype' lang).
-    #[local] Notation function_type := (function_type' lang).
-    #[local] Notation functype := (functype' lang).
-    #[local] Notation Stmt := (Stmt' lang).
-
     Record ext_tu : Set :=
     { ext_symbols : name -> option decltype
-    ; ext_types : name -> option (GlobDecl' lang) }.
+    ; ext_types : name -> option GlobDecl }.
 
     #[local] Definition M : Set -> Type :=
       readerT.M (ext_tu * decltype * option exprtype * list (localname * decltype)) (trace.M Error.t).
@@ -115,7 +106,7 @@ Module decltype.
       | None => throw ("failed to find global "%bs, n)
       end.
 
-    Definition global (n : name) : M (GlobDecl' lang) :=
+    Definition global (n : name) : M GlobDecl :=
       let* osym := readerT.asks (fun '(tu, _, _, _) => tu.(ext_types) n) in
       match osym with
       | Some gd => mret gd
@@ -316,7 +307,7 @@ Module decltype.
       Definition is_volatile (t : exprtype) : bool :=
         qual_norm (fun cv _ => q_volatile cv) t.
 
-      Definition qualifiers {lang} (t : type' lang) : type_qualifiers :=
+      Definition qualifiers (t : type) : type_qualifiers :=
         qual_norm (fun cv _ => cv) t.
 
       Succeed Example _0 : bool_decide (tq_le QM QC) := I.
@@ -383,11 +374,11 @@ Module decltype.
         end.
 
       Fixpoint check_list' (from : name) (ts : list exprtype) (result : name) : M () :=
-        let* (gd : GlobDecl' lang) := global from in
+        let* (gd : GlobDecl) := global from in
         match gd with
         | Gstruct st =>
             let check nm :=
-              List.existsb (fun '(b, _) => bool_decide (type_of_classname (lang:=lang) b = Tnamed (lang:=lang) nm)) st.(s_bases)
+              List.existsb (fun '(b, _) => bool_decide (type_of_classname b = Tnamed nm)) st.(s_bases)
             in
             match ts with
             | nil =>
@@ -415,7 +406,7 @@ Module decltype.
             throw ("cast does not start and end on named types "%bs, from, result)
         end.
 
-      Definition of_cast (c : Cast' lang) (base : decltype) : M decltype :=
+      Definition of_cast (c : Cast) (base : decltype) : M decltype :=
         let require_float t :=
           match t with
           | Tfloat_ _ => mret tt
@@ -873,7 +864,7 @@ Module decltype.
     Section var_decl.
       Context (of_expr : Expr -> M decltype).
 
-      Definition check_binding (d : BindingDecl' lang) : M bindings :=
+      Definition check_binding (d : BindingDecl) : M bindings :=
         match d with
         | Bvar lname ty init =>
             let* _ := of_expr init >>= can_initialize ty in
@@ -883,7 +874,7 @@ Module decltype.
             mret ({| _bindings := [(lname, ty)] |})
         end.
 
-      Definition check_decl (d : VarDecl' lang) : M bindings :=
+      Definition check_decl (d : VarDecl) : M bindings :=
         trace d
         match d with
         | Dvar lname ty oinit =>
@@ -919,10 +910,10 @@ Module decltype.
 
       Notation check_decl := (check_decl of_expr) (only parsing).
 
-      Definition check_decls (ds : list (VarDecl' lang)) : M bindings :=
+      Definition check_decls (ds : list VarDecl) : M bindings :=
         big_op (T:=eta list) <$> traverse (F:=M) (T:=eta list) check_decl ds.
 
-      Fixpoint check_stmt_body (s : Stmt' lang) : M (bindings * option decltype) :=
+      Fixpoint check_stmt_body (s : Stmt) : M (bindings * option decltype) :=
         let check_stmt := check_stmt_body in
         trace s
         match s with
@@ -1008,7 +999,7 @@ Module decltype.
     Definition lift_reader {S S' T M} (f : S -> S') (m : readerT.M S' M T) : readerT.M S M T :=
       readerT.mk $ fun s => readerT.run m (f s).
 
-    Definition check_func (f : Func' lang) : Merr unit :=
+    Definition check_func (f : Func) : Merr unit :=
       match f.(f_body) with
       | None => mret ()
       | Some (Impl body) =>
@@ -1021,7 +1012,7 @@ Module decltype.
     Definition classname_to_type : classname -> type :=
       Tnamed.
 
-    Definition check_method (m : Method' lang) : Merr unit :=
+    Definition check_method (m : Method) : Merr unit :=
       match m.(m_body) with
       | Some (UserDefined s) =>
           readerT.mk $ fun tu =>
@@ -1030,7 +1021,7 @@ Module decltype.
       | _ => mret ()
       end.
 
-    Definition check_ctor (c : Ctor' lang) : Merr unit :=
+    Definition check_ctor (c : Ctor) : Merr unit :=
       match c.(c_body) with
       | Some (UserDefined (inits, body)) =>
           readerT.mk $ fun tu =>
@@ -1040,7 +1031,7 @@ Module decltype.
       | _ => mret ()
       end.
 
-    Definition check_dtor (d : Dtor' lang) : Merr unit :=
+    Definition check_dtor (d : Dtor) : Merr unit :=
       match d.(d_body) with
       | Some (UserDefined body) =>
           readerT.mk $ fun tu =>
@@ -1048,7 +1039,7 @@ Module decltype.
       | _ => mret ()
       end.
 
-    Definition check_obj_value (o : ObjValue' lang) : Merr unit :=
+    Definition check_obj_value (o : ObjValue) : Merr unit :=
       readerT.trace (breadcrumb o)
       match o with
       | Ovar _ oinit =>
@@ -1068,15 +1059,15 @@ Module decltype.
 
   End internal.
 
-  Definition tu_to_ext {lang} (tu : translation_unit) : @internal.ext_tu lang :=
-    match lang as lang return _ with
-    | lang.cpp => {| internal.ext_symbols nm := fmap (M:=fun t => option t) type_of_value $ tu.(symbols) !! nm
+  Definition tu_to_ext (tu : translation_unit) : internal.ext_tu :=
+    match as return _ with
+    | => {| internal.ext_symbols nm := fmap (M:=fun t => option t) type_of_value $ tu.(symbols) !! nm
                   ; internal.ext_types nm := types tu !! nm |}
-    | lang.temp => {| internal.ext_symbols nm := None
+    | => {| internal.ext_symbols nm := None
                    ; internal.ext_types nm := None |}
     end.
 
-  Definition of_expr {lang} (tu : translation_unit) (e : Expr' lang) : trace.M Error.t (decltype' lang) :=
+  Definition of_expr (tu : translation_unit) (e : Expr) : trace.M Error.t decltype :=
      readerT.run (internal.of_expr e) (tu_to_ext tu, Tvoid, None, []).
 
   Definition check_tu (tu : translation_unit) : trace.M Error.t unit :=
@@ -1089,16 +1080,16 @@ End decltype.
 
 Module exprtype.
 Section exprtype.
-  Context {lang : lang.t} (tu : translation_unit).
+  Context (tu : translation_unit).
 
-  Definition of_expr (e : Expr' lang) : option (ValCat * exprtype' lang) :=
+  Definition of_expr (e : Expr) : option (ValCat * exprtype) :=
     trace.runO $ decltype.to_exprtype <$> decltype.of_expr tu e.
 
-  Definition of_expr_drop (e : Expr' lang) : option (exprtype' lang) :=
+  Definition of_expr_drop (e : Expr) : option exprtype :=
     trace.runO $ drop_reference <$> decltype.of_expr tu e.
 
   Definition of_expr_check (P : ValCat -> Prop) `{!∀ vc, Decision (P vc)}
-      (e : Expr' lang) : option (exprtype' lang) :=
+      (e : Expr) : option exprtype :=
     of_expr e >>= fun p => guard (P p.1) ;; mret p.2.
 
 End exprtype.

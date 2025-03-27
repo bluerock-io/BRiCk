@@ -132,13 +132,12 @@ Module MTraverse.
     Universe u.
     Context {F : Set -> Type@{u}}.
     Context `{!UPoly.FMap F, !UPoly.MRet F, !UPoly.MBind F, AP : !UPoly.Ap F}.
-    Context {lang1 lang2 : lang.t}.
-    Context (hT : type_handler lang1 lang2 F).
-    Context (hE : expr_handler lang1 lang2 F).
+    Context (hT : type_handler F).
+    Context (hE : expr_handler F).
 
     #[local] Notation ET := (hE.(handle_expr_type)) (only parsing).
 
-    Fixpoint traverseN (n : name' lang1) : F (name' lang2) :=
+    Fixpoint traverseN (n : name) : F name :=
       match n with
       | Ninst n xs => Ninst <$> traverseN n <*> traverse (T:=eta list) traverseTA xs
       | Nglobal c => Nglobal <$> atomic_name.traverse traverseT c
@@ -147,7 +146,7 @@ Module MTraverse.
       | Nunsupported msg => mret $ Nunsupported msg
       end
 
-    with traverseTA (a : temp_arg' lang1) : F (temp_arg' lang2) :=
+    with traverseTA (a : temp_arg) : F temp_arg :=
       match a with
       | Atype t => Atype <$> traverseT t
       | Avalue e => Avalue <$> traverseE e
@@ -156,7 +155,7 @@ Module MTraverse.
       | Aunsupported msg => mret $ Aunsupported msg
       end
 
-    with traverseT (t : type' lang1) : F (type' lang2) :=
+    with traverseT (t : type) : F type :=
       match t with
       | Tparam T => hT.(handle_Tparam) T
       | Tresult_param X => hT.(handle_Tresult_param) X
@@ -195,7 +194,7 @@ Module MTraverse.
       | Tunsupported msg => mret $ Tunsupported msg
       end
 
-    with traverseE (e : Expr' lang1) : F (Expr' lang2) :=
+    with traverseE (e : Expr) : F Expr :=
       match e with
       | Eparam X => hE.(handle_Eparam) X
       | Eunresolved_global on => hE.(handle_Eunresolved_global) on (fun _ => traverseN on)
@@ -277,7 +276,7 @@ Module MTraverse.
       | Eunsupported msg t => Eunsupported msg <$> traverseT t
       end
 
-    with traverseD (d : VarDecl' lang1) : F (VarDecl' lang2) :=
+    with traverseD (d : VarDecl) : F VarDecl :=
       match d with
       | Dvar n t oe =>
           let k := hE.(handle_unresolved_init) t (fun _ => traverseT t) $ (fun e => (e, fun _ => traverseE e)) <$> oe in
@@ -292,7 +291,7 @@ Module MTraverse.
             <*> traverse (T:=eta list) traverseB ds
       end
 
-    with traverseB (d : BindingDecl' lang1) : F (BindingDecl' lang2) :=
+    with traverseB (d : BindingDecl) : F BindingDecl :=
       match d with
       | Bvar n t e =>
           Bvar n <$> traverseT t <*> traverseE e
@@ -300,7 +299,7 @@ Module MTraverse.
           Bbind n <$> traverseT t <*> traverseE e
       end
 
-    with traverseS (s : Stmt' lang1) : F (Stmt' lang2) :=
+    with traverseS (s : Stmt) : F Stmt :=
       match s with
       | Sseq ss => Sseq <$> traverse (T:=eta list) traverseS ss
       | Sdecl ds => Sdecl <$> traverse (T:=eta list) traverseD ds
@@ -324,7 +323,7 @@ Module MTraverse.
       | Sunsupported msg => mret $ Sunsupported msg
       end
 
-    with traverseC (c : Cast' lang1) : F (Cast' lang2) :=
+    with traverseC (c : Cast) : F Cast :=
       match c with
       (**
       TODO (FM-4319): Does <<Cdependent>> have something to do with
@@ -359,11 +358,11 @@ Module MTraverse.
       | Cunsupported msg t => Cunsupported msg <$> traverseT t
       end.
 
-    Definition traverseCN : classname' lang1 -> F (classname' lang2) :=
+    Definition traverseCN : classname -> F classname :=
       match lang1 as lang1 , lang2 as lang2
-            return (name' lang1 -> F (name' lang2)) ->
-                   (type' lang1 -> F (type' lang2)) ->
-                   classname' lang1 -> F (classname' lang2)
+            return (name -> F name) ->
+                   (type -> F type) ->
+                   classname -> F classname
       with
       | lang.cpp , lang.cpp => fun tN _ => tN
       | lang.temp , lang.temp => fun _ tT => tT
@@ -375,7 +374,7 @@ Module MTraverse.
                       end) <$> tT ty
       end traverseN traverseT.
 
-    Definition mk_core_traversal : core_traversal lang1 lang2 F :=
+    Definition mk_core_traversal : core_traversal F :=
     {| handle_traverseN := traverseN
      ; handle_traverseT := traverseT
      ; handle_traverseE := traverseE
@@ -397,8 +396,7 @@ Module MTraverse.
     Universe u.
     Context {F : Set -> Type@{u}}.
     Context `{!UPoly.FMap F, !UPoly.MRet F, AP : !Ap F}.
-    Context {lang1 lang2 : lang.t}.
-    Context (hD : core_traversal lang1 lang2 F).
+    Context (hD : core_traversal F).
 
     #[local] Notation traverseN := (hD.(handle_traverseN)).
     #[local] Notation traverseT := (hD.(handle_traverseT)).
@@ -407,20 +405,20 @@ Module MTraverse.
     #[local] Notation traverseCN := (hD.(handle_classname)).
     #[local] Notation traverseE_init := (hD.(handle_traverseE_init)).
 
-    Definition traverseF_bodyS (f : FunctionBody' lang1) : F (FunctionBody' lang2) :=
+    Definition traverseF_bodyS (f : FunctionBody) : F FunctionBody :=
       match f with
       | Impl s => Impl <$> traverseS s
       | Builtin f => mret $ Builtin f
       end.
 
-    Definition traverseF (f : Func' lang1) : F (Func' lang2) :=
+    Definition traverseF (f : Func) : F Func :=
       Build_Func
         <$> traverseT f.(f_return)
         <*> traverse (T:=eta list) (prod.traverse mret traverseT) f.(f_params)
         <*> mret f.(f_cc) <*> mret f.(f_arity)
         <*> traverse (T:=eta option) traverseF_bodyS f.(f_body).
 
-    Definition traverseM (f : Method' lang1) : F (Method' lang2) :=
+    Definition traverseM (f : Method) : F Method :=
       Build_Method <$> traverseT f.(m_return)
                    <*> traverseCN f.(m_class)
                    <*> mret f.(m_this_qual)
@@ -429,25 +427,25 @@ Module MTraverse.
                    <*> mret f.(m_arity)
                    <*> traverse (T:=eta option) (traverse (T:=eta OrDefault) traverseS) f.(m_body).
 
-    Definition traverseP (i : InitPath' lang1) : F (InitPath' lang2) :=
+    Definition traverseP (i : InitPath) : F InitPath :=
       match i with
       | InitBase b => InitBase <$> traverseCN b
       | InitField f =>
-          InitField (lang:=lang2) <$> atomic_name.traverse (F:=F) traverseT f
+          InitField <$> atomic_name.traverse (F:=F) traverseT f
       | InitIndirect path f =>
           let elemF '(a,b) :=
             pair <$> atomic_name.traverse (F:=F) traverseT a <*> traverseCN b
           in
           InitIndirect <$> traverse (F:=F) (T:=eta list) elemF path
             <*> (atomic_name.traverse (F:=F) traverseT f)
-      | InitThis => mret (M:=F) $ InitThis (lang:=lang2)
+      | InitThis => mret (M:=F) $ InitThis
       end.
 
-    Definition traverseI (i : Initializer' lang1) : F (Initializer' lang2) :=
+    Definition traverseI (i : Initializer) : F Initializer :=
       Build_Initializer <$> traverseP i.(init_path)
                         <*> traverseE i.(init_init).
 
-    Definition traverseCtor (c : Ctor' lang1) : F (Ctor' lang2) :=
+    Definition traverseCtor (c : Ctor) : F Ctor :=
       Build_Ctor
         <$> traverseCN c.(c_class)
         <*> traverse (T:=eta list) (traverse (T:=eta (prod _)) traverseT) c.(c_params)
@@ -455,13 +453,13 @@ Module MTraverse.
         <*> mret c.(c_arity)
         <*> traverse (T:=eta option) (traverse (T:=eta OrDefault) (prod.traverse (traverse (T:=eta list) traverseI) traverseS)) c.(c_body).
 
-    Definition traverseDtor (d : Dtor' lang1) : F (Dtor' lang2) :=
+    Definition traverseDtor (d : Dtor) : F Dtor :=
       Build_Dtor
         <$> traverseCN d.(d_class)
         <*> mret d.(d_cc)
         <*> traverse (T:=eta option) (traverse (T:=eta OrDefault) traverseS) d.(d_body).
 
-    Definition traverseMember (m : Member' lang1) : F (Member' lang2) :=
+    Definition traverseMember (m : Member) : F Member :=
       mkMember
         <$> atomic_name.traverse traverseT m.(mem_name)
         <*> traverseT m.(mem_type)
@@ -469,7 +467,7 @@ Module MTraverse.
         <*> traverse (T:=eta option) traverseE m.(mem_init)
         <*> mret m.(mem_layout).
 
-    Definition traverseUnion (u : Union' lang1) : F (Union' lang2) :=
+    Definition traverseUnion (u : Union) : F Union :=
       Build_Union
         <$> traverse (T:=eta list) traverseMember u.(u_fields)
         <*> traverseN u.(u_dtor)
@@ -478,7 +476,7 @@ Module MTraverse.
         <*> mret u.(u_size)
         <*> mret u.(u_alignment).
 
-    Definition traverseStruct (s : Struct' lang1) : F (Struct' lang2) :=
+    Definition traverseStruct (s : Struct) : F Struct :=
       Build_Struct
         <$> traverse (T:=eta list) (prod.traverse traverseCN mret) s.(s_bases)
         <*> traverse (T:=eta list) traverseMember s.(s_fields)
@@ -492,7 +490,7 @@ Module MTraverse.
         <*> mret s.(s_size)
         <*> mret s.(s_alignment).
 
-    Definition traverseGD (gd : GlobDecl' lang1) : F (GlobDecl' lang2) :=
+    Definition traverseGD (gd : GlobDecl) : F GlobDecl :=
       match gd with
       | Gtype => mret Gtype
       | Gunion u => Gunion <$> traverseUnion u

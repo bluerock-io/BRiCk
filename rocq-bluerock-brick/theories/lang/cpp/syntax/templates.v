@@ -11,17 +11,15 @@ instantiation (bound in a translation unit) to a _template
 pre-instance_ comprising the instance's template name (bound in a
 template file) and arguments.
 *)
-Definition temp_name : Set := name' lang.temp.
+Definition temp_name : Set := name.
 
 Section tpreinst.
-  Context {lang : lang.t}.
-
   (* TODO: this type probably does not need to be parametric in [lang.t]
      The only meaningful instantation is [lang.cpp]
    *)
   Record tpreinst' : Set := TPreInst {
     tpreinst_name : temp_name;
-    tpreinst_args : list (temp_arg' lang);
+    tpreinst_args : list temp_arg;
   }.
 
   #[global] Instance tpreinst'_inhabited : Inhabited tpreinst'.
@@ -40,11 +38,11 @@ Section tinst.
   #[local] Set Polymorphic Inductive Cumulativity.
   #[local] Unset Auto Template Polymorphism.
   Universe uV.
-  Context {lang : lang.t} {V : Type@{uV}}.
+  Context {V : Type@{uV}}.
 
   Record tinst' : Type@{uV} := TInst {
-    tinst_params : list (temp_param' lang.temp);
-    tinst_args : list (temp_arg' lang);
+    tinst_params : list temp_param;
+    tinst_args : list temp_arg;
     tinst_value : V;
   }.
 
@@ -60,8 +58,8 @@ Add Printing Constructor tinst'.
 #[global] Arguments tinst' : clear implicits.
 #[global] Arguments TInst {_ _} _ _ & _ : assert.
 
-Notation temp_param := (temp_param' lang.cpp).
-Notation temp_arg := (temp_arg' lang.cpp).
+Notation temp_param := temp_param.
+Notation temp_arg := temp_arg.
 
 Require Import bluerock.lang.cpp.syntax.translation_unit.
 
@@ -117,8 +115,8 @@ Notation MGlobalInitializer := (GlobalInitializer' temp).
 Notation MInitializer := (Initializer' temp).
 Notation MMember := (Member' temp).
 Notation MInitializerBlock := (InitializerBlock' temp).
-Notation Mfield_name := (field_name.t lang.temp).
-Notation MInitPath := (InitPath' lang.temp).
+Notation Mfield_name := field_name.t (only parsing).
+Notation MInitPath := InitPath (only parsing).
 
 (** ** Template TUs *)
 (**

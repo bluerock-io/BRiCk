@@ -654,14 +654,9 @@ End temp_param.
 
 Module temp_arg.
   Section compare.
-    Context {lang : lang.t}.
-    #[local] Notation name := (name' lang).
-    #[local] Notation type := (type' lang).
-    #[local] Notation Expr := (Expr' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
-   #[local] Notation temp_arg := (temp_arg' lang).
 
     Definition tag (p : temp_arg) : positive :=
       match p with
@@ -896,10 +891,7 @@ End atomic_name.
 
 Module Cast.
   Section compare.
-    Context {lang : lang.t}.
-    #[local] Notation type := (type' lang).
     Context (compareT : type -> type -> comparison).
-    #[local] Notation Cast := (Cast' lang).
 
     #[local] Canonical type_comparator :=
       {| _car := type
@@ -1040,18 +1032,13 @@ End Cast.
 
 Module name.
   Section compare_body.
-    Context {lang : lang.t}.
-    #[local] Notation name := (name' lang).
-    #[local] Notation type := (type' lang).
-    #[local] Notation Expr := (Expr' lang).
-    #[local] Notation atomic_name := (atomic_name' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
 
     Record box_Ninst : Set := Box_Ninst {
       box_Ninst_0 : name;
-      box_Ninst_1 : list (temp_arg' lang);
+      box_Ninst_1 : list temp_arg;
     }.
     Definition box_Ninst_compare (b1 b2 : box_Ninst) : comparison :=
       compare_lex (compareN b1.(box_Ninst_0) b2.(box_Ninst_0)) $ fun _ =>
@@ -1112,10 +1099,6 @@ End name.
 
 Module type.
   Section compare_body.
-    Context {lang : lang.t}.
-    #[local] Notation name := (name' lang).
-    #[local] Notation type := (type' lang).
-    #[local] Notation Expr := (Expr' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
@@ -1255,7 +1238,7 @@ Module type.
       | 7 => box_Tarray
       | 8 => type
       | 9 => box_Tvariable_array
-      | 10 => function_type' lang
+      | 10 => function_type
       | 11 => box_Tmember_pointer
       | 12 => box_Tarch
       | 13 | 14 => Expr
@@ -1386,12 +1369,6 @@ End type.
 
 Module Expr.
   Section compare_body.
-    Context {lang : lang.t}.
-    #[local] Notation name := (name' lang).
-    #[local] Notation type := (type' lang).
-    #[local] Notation Cast := (Cast' lang).
-    #[local] Notation Expr := (Expr' lang).
-    #[local] Notation Stmt := (Stmt' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareC : Cast -> Cast -> comparison).
@@ -1565,7 +1542,7 @@ Module Expr.
       compareE b1.(box_Eexplicit_cast_2) b2.(box_Eexplicit_cast_2).
 
     Record box_Ecast : Set := Box_Ecast {
-      box_Ecast_0 : Cast' lang;
+      box_Ecast_0 : Cast;
       box_Ecast_1 : Expr;
     }.
     Definition box_Ecast_compare (b1 b2 : box_Ecast) : comparison :=
@@ -1583,7 +1560,7 @@ Module Expr.
     Record box_Emember : Set := Box_Emember {
       box_Emember_0 : bool ;
       box_Emember_1 : Expr;
-      box_Emember_2 : atomic_name' lang;
+      box_Emember_2 : atomic_name;
       box_Emember_3 : bool;
       box_Emember_4 : type;
     }.
@@ -1606,7 +1583,7 @@ Module Expr.
 
     Record box_Emember_call : Set := Box_Emember_call {
       box_Emember_call_0 : bool ;
-      box_Emember_call_1 : MethodRef' lang;
+      box_Emember_call_1 : MethodRef;
       box_Emember_call_2 : Expr;
       box_Emember_call_3 : list Expr;
     }.
@@ -2145,13 +2122,6 @@ End Expr.
 
 Module VarDecl.
   Section compare_body.
-    Context {lang : lang.t}.
-    #[local] Notation name := (name' lang).
-    #[local] Notation type := (type' lang).
-    #[local] Notation Expr := (Expr' lang).
-    #[local] Notation VarDecl := (VarDecl' lang).
-    #[local] Notation BindingDecl := (BindingDecl' lang).
-    #[local] Notation Stmt := (Stmt' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
@@ -2208,12 +2178,6 @@ End VarDecl.
 
 Module BindingDecl.
   Section compare_body.
-    Context {lang : lang.t}.
-    #[local] Notation type := (type' lang).
-    #[local] Notation Expr := (Expr' lang).
-    #[local] Notation VarDecl := (VarDecl' lang).
-    #[local] Notation BindingDecl := (BindingDecl' lang).
-    #[local] Notation Stmt := (Stmt' lang).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
     Context (compareVD : VarDecl -> VarDecl -> comparison).
@@ -2255,12 +2219,6 @@ End BindingDecl.
 
 Module Stmt.
   Section compare_body.
-    Context {lang : lang.t}.
-    #[local] Notation name := (name' lang).
-    #[local] Notation type := (type' lang).
-    #[local] Notation Expr := (Expr' lang).
-    #[local] Notation VarDecl := (VarDecl' lang).
-    #[local] Notation Stmt := (Stmt' lang).
     Context (compareN : name -> name -> comparison).
     Context (compareT : type -> type -> comparison).
     Context (compareE : Expr -> Expr -> comparison).
@@ -2384,17 +2342,17 @@ Module Stmt.
       | Sfor a b c d => compare_ctor (Sfor a b c d)
       | Sdo a b => compare_ctor (Sdo a b)
       | Sswitch a b c => compare_ctor (Sswitch a b c)
-      | Scase a => compare_ctor (Scase (lang:=lang) a)
-      | Sdefault => compare_ctor (Sdefault (lang:=lang))
-      | Sbreak => compare_ctor (Sbreak (lang:=lang))
-      | Scontinue => compare_ctor (Scontinue (lang:=lang))
+      | Scase a => compare_ctor (Scase a)
+      | Sdefault => compare_ctor (Sdefault)
+      | Sbreak => compare_ctor (Sbreak)
+      | Scontinue => compare_ctor (Scontinue)
       | Sreturn a => compare_ctor (Sreturn a)
       | Sexpr a => compare_ctor (Sexpr a)
       | Sattr a b => compare_ctor (Sattr a b)
       | Sasm a b c d e => compare_ctor (Sasm a b c d e)
       | Slabeled a b => compare_ctor (Slabeled a b)
-      | Sgoto a => compare_ctor (Sgoto (lang:=lang) a)
-      | Sunsupported a => compare_ctor (Sunsupported (lang:=lang) a)
+      | Sgoto a => compare_ctor (Sgoto a)
+      | Sunsupported a => compare_ctor (Sunsupported a)
       end.
 
   End compare_body.
@@ -2407,14 +2365,6 @@ End Stmt.
 #[local] Unset Guard Checking.
 
 Section compare.
-  Context {lang : lang.t}.
-  #[local] Notation name := (name' lang).
-  #[local] Notation type := (type' lang).
-  #[local] Notation Cast := (Cast' lang).
-  #[local] Notation Expr := (Expr' lang).
-  #[local] Notation VarDecl := (VarDecl' lang).
-  #[local] Notation BindingDecl := (BindingDecl' lang).
-  #[local] Notation Stmt := (Stmt' lang).
 
 
   (* NOTE: Do not remove the {struct} annotations here. They may seem trivial
@@ -2447,12 +2397,6 @@ End compare.
 #[local] Set Guard Checking.
 
 Section compare_instances.
-  Context {lang : lang.t}.
-  #[local] Notation name := (name' lang).
-  #[local] Notation type := (type' lang).
-  #[local] Notation Expr := (Expr' lang).
-  #[local] Notation VarDecl := (VarDecl' lang).
-  #[local] Notation Stmt := (Stmt' lang).
 
   #[global] Instance name_compare : Compare name := compareN.
   #[global] Instance type_compare : Compare type := compareT.
@@ -2464,43 +2408,43 @@ End compare_instances.
 
 (** ** Name maps *)
 
-#[global] Declare Instance name_comparison {lang} :
-  Comparison (compareN (lang:=lang)).	(* TODO *)
-#[global] Declare Instance type_comparison {lang} :
-  Comparison (compareT (lang:=lang)). (* TODO *)
-#[global] Declare Instance Expr_comparison {lang} :
-  Comparison (compareE (lang:=lang)). (* TODO *)
-#[global] Declare Instance VarDecl_comparison {lang} :
-  Comparison (compareVD (lang:=lang)). (* TODO *)
-#[global] Declare Instance Stmt_comparison {lang} :
-  Comparison (compareS (lang:=lang)). (* TODO *)
-#[global] Declare Instance temp_arg_comparison {lang} :
-  Comparison (temp_arg.compare (compareN (lang:=lang)) (compareT (lang:=lang)) (compareE (lang:=lang))). (* TODO *)
+#[global] Declare Instance name_comparison :
+  Comparison (compareN).	(* TODO *)
+#[global] Declare Instance type_comparison :
+  Comparison (compareT). (* TODO *)
+#[global] Declare Instance Expr_comparison :
+  Comparison (compareE). (* TODO *)
+#[global] Declare Instance VarDecl_comparison :
+  Comparison (compareVD). (* TODO *)
+#[global] Declare Instance Stmt_comparison :
+  Comparison (compareS). (* TODO *)
+#[global] Declare Instance temp_arg_comparison :
+  Comparison (temp_arg.compare (compareN) (compareT) (compareE)). (* TODO *)
 
 
-#[global] Declare Instance name_leibniz_comparison {lang} :
-  LeibnizComparison (compareN (lang:=lang)).	(* TODO *)
-#[global] Declare Instance type_leibniz_comparison {lang} :
-  LeibnizComparison (compareT (lang:=lang)). (* TODO *)
-#[global] Declare Instance Expr_leibniz_comparison {lang} :
-  LeibnizComparison (compareE (lang:=lang)). (* TODO *)
-#[global] Declare Instance VarDecl_leibniz_comparison {lang} :
-  LeibnizComparison (compareVD (lang:=lang)). (* TODO *)
-#[global] Declare Instance Stmt_leibniz_comparison {lang} :
-  LeibnizComparison (compareS (lang:=lang)). (* TODO *)
-#[global] Declare Instance temp_arg_leibniz_comparison {lang} :
-  LeibnizComparison (temp_arg.compare (compareN (lang:=lang)) (compareT (lang:=lang)) (compareE (lang:=lang))). (* TODO *)
+#[global] Declare Instance name_leibniz_comparison :
+  LeibnizComparison (compareN).	(* TODO *)
+#[global] Declare Instance type_leibniz_comparison :
+  LeibnizComparison (compareT). (* TODO *)
+#[global] Declare Instance Expr_leibniz_comparison :
+  LeibnizComparison (compareE). (* TODO *)
+#[global] Declare Instance VarDecl_leibniz_comparison :
+  LeibnizComparison (compareVD). (* TODO *)
+#[global] Declare Instance Stmt_leibniz_comparison :
+  LeibnizComparison (compareS). (* TODO *)
+#[global] Declare Instance temp_arg_leibniz_comparison :
+  LeibnizComparison (temp_arg.compare (compareN) (compareT) (compareE)). (* TODO *)
 
 
-#[global] Instance name_eq_dec {lang} : EqDecision (name' lang) :=
+#[global] Instance name_eq_dec : EqDecision name :=
   from_comparison.
-#[global] Instance type_eq_dec {lang} : EqDecision (type' lang) :=
+#[global] Instance type_eq_dec : EqDecision type :=
   from_comparison.
-#[global] Instance Expr_eq_dec {lang} : EqDecision (Expr' lang) :=
+#[global] Instance Expr_eq_dec : EqDecision Expr :=
   from_comparison.
-#[global] Instance VarDecl_eq_dec {lang} : EqDecision (VarDecl' lang) :=
+#[global] Instance VarDecl_eq_dec : EqDecision VarDecl :=
   from_comparison.
-#[global] Instance Stmt_eq_dec {lang} : EqDecision (Stmt' lang) :=
+#[global] Instance Stmt_eq_dec : EqDecision Stmt :=
   from_comparison.
-#[global] Instance temp_arg_eq_dec {lang} : EqDecision (temp_arg' lang) :=
+#[global] Instance temp_arg_eq_dec : EqDecision temp_arg :=
   from_comparison.

@@ -9,10 +9,7 @@ Require Import bluerock.lang.cpp.parser.lang.
 
 (** * Derived types emitted by cpp2v *)
 
-Module ParserType (Import Lang : PARSER_LANG).
-  #[local] Notation globname := (globname' parser_lang).
-  #[local] Notation type := (type' parser_lang).
-
+Module ParserType.
   (*
   Indicate that [underlying] is used to represent alias type [name].
   Enums are treated similarly.

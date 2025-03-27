@@ -63,26 +63,26 @@ Record LayoutInfo : Set :=
 #[global] Instance: EqDecision LayoutInfo.
 Proof. solve_decision. Defined.
 
-Record Member' {lang} : Set := mkMember
-{ mem_name : field_name.t lang
-; mem_type : type' lang
+Record Member' : Set := mkMember
+{ mem_name : field_name.t
+; mem_type : type
 ; mem_mutable : bool
-; mem_init : option (Expr' lang)
+; mem_init : option Expr
 ; mem_layout : LayoutInfo }.
 #[global] Arguments Member' : clear implicits.
 #[global] Arguments mkMember {_} & _ _ _ _ _ : assert.
-#[global] Instance Member_eq_dec {lang}: EqDecision (Member' lang).
+#[global] Instance Member_eq_dec: EqDecision Member.
 Proof. solve_decision. Defined.
-Notation Member := (Member' lang.cpp).
+Notation Member := Member.
 
-Record Union' {lang} : Set := Build_Union
-{ u_fields : list (Member' lang)
+Record Union' : Set := Build_Union
+{ u_fields : list Member
   (* ^ fields with type, initializer, and layout information *)
-; u_dtor : obj_name' lang
+; u_dtor : obj_name
   (* ^ the name of the destructor *)
 ; u_trivially_destructible : bool
   (* ^ whether objects of the union type are trivially destructible. *)
-; u_delete : option (obj_name' lang)
+; u_delete : option obj_name
   (* ^ name of [operator delete], if it exists *)
 ; u_size : N
   (* ^ size of the union (including padding) *)
@@ -91,24 +91,24 @@ Record Union' {lang} : Set := Build_Union
 }.
 #[global] Arguments Union' : clear implicits.
 #[global] Arguments Build_Union {_} & _ _ _ _ _ _ : assert.
-#[global] Instance Union'_eq_dec {lang} : EqDecision (Union' lang).
+#[global] Instance Union'_eq_dec : EqDecision Union.
 Proof. solve_decision. Defined.
-Notation Union := (Union' lang.cpp).
+Notation Union := Union.
 
 Variant LayoutType : Set := POD | Standard | Unspecified.
 #[global] Instance: EqDecision LayoutType.
 Proof. solve_decision. Defined.
 
-Record Struct' {lang} : Set := Build_Struct
-{ s_bases : list (classname' lang * LayoutInfo)
+Record Struct' : Set := Build_Struct
+{ s_bases : list (classname * LayoutInfo)
   (* ^ base classes *)
-; s_fields : list (Member' lang)
+; s_fields : list Member
   (* ^ fields with type, initializer, and layout information *)
-; s_virtuals : list (obj_name' lang * option (obj_name' lang))
+; s_virtuals : list (obj_name * option obj_name)
   (* ^ function_name -> symbol *)
-; s_overrides : list (obj_name' lang * obj_name' lang)
+; s_overrides : list (obj_name * obj_name)
   (* ^ k |-> v ~ update k with v *)
-; s_dtor : obj_name' lang
+; s_dtor : obj_name
   (* ^ the name of the destructor.
      NOTE at the C++ abstract machine level, there is only
           one destructor, but implementations (and name mangling)
@@ -117,7 +117,7 @@ Record Struct' {lang} : Set := Build_Struct
    *)
 ; s_trivially_destructible : bool
   (* ^ this is actually computable, and we could compute it *)
-; s_delete : option (obj_name' lang)
+; s_delete : option obj_name
   (* ^ the name of a [delete] member function in case virtual dispatch is used to destroy an
      object of this type. *)
 ; s_layout : LayoutType
@@ -130,9 +130,9 @@ Record Struct' {lang} : Set := Build_Struct
 }.
 #[global] Arguments Struct' : clear implicits.
 #[global] Arguments Build_Struct {_} & _ _ _ _ _ _ _ _ _ _ : assert.
-#[global] Instance Struct_eq_dec {lang} : EqDecision (Struct' lang).
+#[global] Instance Struct_eq_dec : EqDecision Struct.
 Proof. solve_decision. Defined.
-Notation Struct := (Struct' lang.cpp).
+Notation Struct := Struct.
 
 (** [has_vtable s] determines whether [s] has any <<virtual>> methods
     (or bases). Having a vtable is *not* a transitive property.
@@ -142,7 +142,7 @@ Notation Struct := (Struct' lang.cpp).
     Note that methods that override virtual methods are implicitly virtual.
     This includes destructor.
  *)
-Definition has_vtable {lang} (s : Struct' lang) : bool :=
+Definition has_vtable (s : Struct) : bool :=
   match s.(s_virtuals) with
   | nil => false
   | _ :: _ => true
@@ -150,7 +150,7 @@ Definition has_vtable {lang} (s : Struct' lang) : bool :=
 #[global] Arguments has_vtable {_} & _ : assert.
 
 (* [has_virtual_dtor s] returns true if the destructor is virtual. *)
-Definition has_virtual_dtor {lang} (s : Struct' lang) : bool :=
+Definition has_virtual_dtor (s : Struct) : bool :=
   List.existsb (fun '(a,_) => bool_decide (a = s.(s_dtor))) s.(s_virtuals).
 #[global] Arguments has_virtual_dtor _ & _ : assert.
 
@@ -161,49 +161,49 @@ Proof. solve_decision. Defined.
 (** ** Value Declarations *)
 
 (** *** Functions *)
-Variant FunctionBody' {lang} : Set :=
-| Impl (_ : Stmt' lang)
+Variant FunctionBody' : Set :=
+| Impl (_ : Stmt)
 | Builtin (_ : BuiltinFn)
 .
 #[global] Arguments FunctionBody' _ : clear implicits, assert.
 #[global] Arguments Impl _ &.
-#[global] Instance: forall {lang}, EqDecision (FunctionBody' lang).
+#[global] Instance: EqDecision FunctionBody.
 Proof. solve_decision. Defined.
-Notation FunctionBody := (FunctionBody' lang.cpp).
+Notation FunctionBody := FunctionBody.
 
-Record Func' {lang} : Set := Build_Func
-{ f_return : type' lang
-; f_params : list (ident * type' lang)
+Record Func' : Set := Build_Func
+{ f_return : type
+; f_params : list (ident * type)
 ; f_cc     : calling_conv
 ; f_arity  : function_arity
-; f_body   : option (FunctionBody' lang)
+; f_body   : option FunctionBody
 }.
 #[global] Arguments Func' : clear implicits.
 #[global] Arguments Build_Func {_} & _ _ _ _ _ : assert.
-#[global] Instance: forall {lang}, EqDecision (Func' lang).
+#[global] Instance: EqDecision Func.
 Proof. solve_decision. Defined.
-#[global] Instance Func_inhabited {lang} : Inhabited (Func' lang).
+#[global] Instance Func_inhabited : Inhabited Func.
 Proof. solve_inhabited. Qed.
-Notation Func := (Func' lang.cpp).
+Notation Func := Func.
 
 (** *** Methods *)
-Record Method' {lang} : Set := Build_Method
-{ m_return  : type' lang
-; m_class   : classname' lang
+Record Method' : Set := Build_Method
+{ m_return  : type
+; m_class   : classname
 ; m_this_qual : type_qualifiers
-; m_params  : list (ident * type' lang)
+; m_params  : list (ident * type)
 ; m_cc      : calling_conv
 ; m_arity   : function_arity
-; m_body    : option (OrDefault (Stmt' lang))
+; m_body    : option (OrDefault Stmt)
 }.
 #[global] Arguments Method' : clear implicits.
 #[global] Arguments Build_Method {_} & _ _ _ _ _ _ _ : assert.
-#[global] Instance: forall {lang}, EqDecision (Method' lang).
+#[global] Instance: EqDecision Method.
 Proof. solve_decision. Defined.
-Notation Method := (Method' lang.cpp).
+Notation Method := Method.
 
-Definition static_method {lang} (m : Method' lang)
-  : Func' lang :=
+Definition static_method (m : Method)
+  : Func :=
   {| f_return := m.(m_return)
    ; f_params := m.(m_params)
    ; f_cc := m.(m_cc)
@@ -215,50 +215,50 @@ Definition static_method {lang} (m : Method' lang)
 
 (** *** Constructors *)
 
-Variant InitPath' {lang} : Set :=
-| InitBase (_ : classname' lang)
-| InitField (_ : field_name.t lang)
-| InitIndirect (anon_path : list (field_name.t lang * classname' lang)) (_ : field_name.t lang)
+Variant InitPath' : Set :=
+| InitBase (_ : classname)
+| InitField (_ : field_name.t)
+| InitIndirect (anon_path : list (field_name.t * classname)) (_ : field_name.t)
 | InitThis.
 #[global] Arguments InitPath' : clear implicits.
-#[global] Instance: forall {lang}, EqDecision (InitPath' lang).
+#[global] Instance: EqDecision InitPath.
 Proof. solve_decision. Defined.
-#[global] Notation InitPath := (InitPath' lang.cpp).
+#[global] Notation InitPath := InitPath.
 
-Record Initializer' {lang} : Set := Build_Initializer
-  { init_path : InitPath' lang
-  ; init_init : Expr' lang }.
+Record Initializer' : Set := Build_Initializer
+  { init_path : InitPath
+  ; init_init : Expr }.
 #[global] Arguments Initializer' : clear implicits.
 #[global] Arguments Build_Initializer {_} & _ _ : assert.
-#[global] Instance: forall {lang}, EqDecision (Initializer' lang).
+#[global] Instance: EqDecision Initializer.
 Proof. solve_decision. Defined.
-Notation Initializer := (Initializer' lang.cpp).
+Notation Initializer := Initializer.
 
-Record Ctor' {lang} : Set := Build_Ctor
-{ c_class  : classname' lang
-; c_params : list (ident * type' lang)
+Record Ctor' : Set := Build_Ctor
+{ c_class  : classname
+; c_params : list (ident * type)
 ; c_cc     : calling_conv
 ; c_arity  : function_arity
-; c_body   : option (OrDefault (list (Initializer' lang) * Stmt' lang))
+; c_body   : option (OrDefault (list Initializer * Stmt))
 }.
 #[global] Arguments Ctor' : clear implicits.
 #[global] Arguments Build_Ctor {_} & _ _ _ _ _ : assert.
-#[global] Instance: forall {lang}, EqDecision (Ctor' lang).
+#[global] Instance: EqDecision Ctor.
 Proof. solve_decision. Defined.
-Notation Ctor := (Ctor' lang.cpp).
+Notation Ctor := Ctor.
 
 (** *** Destructors *)
 
-Record Dtor' {lang} : Set := Build_Dtor
-{ d_class  : classname' lang
+Record Dtor' : Set := Build_Dtor
+{ d_class  : classname
 ; d_cc     : calling_conv
-; d_body   : option (OrDefault (Stmt' lang))
+; d_body   : option (OrDefault Stmt)
 }.
 #[global] Arguments Dtor' : clear implicits.
 #[global] Arguments Build_Dtor {_} & _ _ _ : assert.
-#[global] Instance: forall {lang}, EqDecision (Dtor' lang).
+#[global] Instance: EqDecision Dtor.
 Proof. solve_decision. Defined.
-Notation Dtor := (Dtor' lang.cpp).
+Notation Dtor := Dtor.
 
 Variant Dtor_type : Set := Dt_Deleting | Dt_Complete | Dt_Base | Dt_Comdat.
 #[global] Instance: EqDecision Dtor_type.

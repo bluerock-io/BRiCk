@@ -69,7 +69,7 @@ End Mtranslation_unit.
 
 #[local] Notation Mtemp_params := (list Mtemp_param).
 
-Definition Dvariable (ps : Mtemp_params) (n : Mname) (t : Mtype) (init : global_init.t lang.temp) : K :=
+Definition Dvariable (ps : Mtemp_params) (n : Mname) (t : Mtype) (init : global_init.t.temp) : K :=
   _symbols <[n := Template ps $ Ovar t init]>.
 
 Definition Dfunction (ps : Mtemp_params) (n : Mname)  (f : MFunc) : K :=

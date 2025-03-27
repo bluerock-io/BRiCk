@@ -9,7 +9,7 @@ Require Import bluerock.lang.cpp.parser.lang.
 
 (** * Derived names emitted by cpp2v *)
 
-Module ParserName (Import Lang : PARSER_LANG).
+Module ParserName.
 
   (* It is important that the argument types of names do not
      include <<const>> or <<volatile>> on argument types because
@@ -24,22 +24,22 @@ Module ParserName (Import Lang : PARSER_LANG).
   Definition Nop_lit fn ts :=
     Nop_lit fn $ List.map (@normalize_arg_type parser_lang) ts.
 
-  Definition Nrecord_by_field (nm : ident) : atomic_name' parser_lang :=
+  Definition Nrecord_by_field (nm : ident) : atomic_name :=
     Nfirst_child nm.
 
-  Definition Nenum_by_enumerator (nm : ident) : atomic_name' parser_lang :=
+  Definition Nenum_by_enumerator (nm : ident) : atomic_name :=
     Nfirst_child nm.
 
-  Definition Nby_first_decl (nm : ident) : atomic_name' parser_lang :=
+  Definition Nby_first_decl (nm : ident) : atomic_name :=
     Nfirst_decl nm.
 
-  Definition Ndependent (t : type' parser_lang) : name' parser_lang :=
+  Definition Ndependent (t : type) : name :=
     match t with
     | Tnamed nm => nm
     | _ => Ndependent t
     end.
 
-  Definition Nlocal (n : atomic_name' parser_lang) :=
+  Definition Nlocal (n : atomic_name) :=
     Nglobal n. (* TODO: this is incorrect *)
 
 End ParserName.

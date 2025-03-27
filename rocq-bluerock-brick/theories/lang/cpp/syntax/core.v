@@ -19,13 +19,6 @@ From Stdlib Require Import PrimInt63.
 #[local] Tactic Notation "solve_decision" := intros; solve_decision.
 
 
-(* The stages of a C++ program *)
-Module lang.
-  Variant t : Set :=
-    | cpp (* concrete, non-templated code *)
-    | temp. (* meta, templated code *)
-End lang.
-
 (** ** Function types *)
 (**
 TODO: Prefer [function_type] over [functype]. This is complicated by
@@ -339,7 +332,7 @@ Module cast_style.
 End cast_style.
 
 (** ** Structured names *)
-Inductive name' {lang : lang.t} : Set :=
+Inductive name' : Set :=
 | Ninst (c : name') (_ : list temp_arg')
 | Nglobal (c : atomic_name_ type')	(* <<::c>> *)
 | Ndependent (t : type') (* <<typename t>> *)
@@ -355,7 +348,7 @@ Inductive name' {lang : lang.t} : Set :=
       We can enforce this if we want in the future.
     - <<T>> for <<T>> of template type would be represented as [Atemplate T]
  *)
-with temp_arg' {lang : lang.t} : Set :=
+with temp_arg' : Set :=
 | Atype (_ : type')
 | Avalue (_ : Expr')
 | Apack (_ : list temp_arg') (* See <https://en.cppreference.com/w/cpp/language/pack> *)
@@ -371,7 +364,7 @@ do things this way for consistency, and to keep the components of
 substitutions small.
 *)
 
-with type' {lang : lang.t} : Set :=
+with type' : Set :=
 | Tparam (_ : ident)
 | Tresult_param (_ : ident)
 | Tresult_global (on : name')
@@ -416,7 +409,7 @@ NOTE: We need both unresolved operators and unresolved calls because
 operators like <<a = b>> use a different evaluation order than calls
 like <<operator=(a, b)>>.
 *)
-with Expr' {lang : lang.t} : Set :=
+with Expr' : Set :=
 | Eparam (_ : ident)
 | Eunresolved_global (_ : name')
 | Eunresolved_unop (_ : RUnOp) (e : Expr')
@@ -530,7 +523,7 @@ Should be [gn : classname]
 | Earrayloop_index (level : N) (t : type')
 | Eopaque_ref (name : N) (t : type')
 | Eunsupported (s : PrimString.string) (t : type')
-with Stmt' {lang : lang.t} : Set :=
+with Stmt' : Set :=
 | Sseq    (_ : list Stmt')
 | Sdecl   (_ : list VarDecl')
 
@@ -562,16 +555,16 @@ with Stmt' {lang : lang.t} : Set :=
 | Slabeled (_ : ident) (_ : Stmt')
 | Sgoto (_ : ident)
 | Sunsupported (_ : PrimString.string)
-with VarDecl' {lang : lang.t} : Set :=
+with VarDecl' : Set :=
 | Dvar (name : localname) (_ : type') (init : option Expr')
 | Ddecompose (_ : Expr') (anon_var : ident) (_ : list BindingDecl')
   (* initialization of a function-local [static]. See https://eel.is/c++draft/stmt.dcl#3 *)
 | Dinit (thread_safe : bool) (name : name') (_ : type') (init : option Expr')
-with BindingDecl' {lang : lang.t} : Set :=
+with BindingDecl' : Set :=
 | Bvar (name : localname) (_ : type') (init : Expr')
 | Bbind (name : localname) (_ : type') (init : Expr')
 (** ** Casts *)
-with Cast' {lang : lang.t} : Set :=
+with Cast' : Set :=
 | Cdependent (_ : type')
 | Cbitcast (_ : type')
 | Clvaluebitcast	(_ : type') (** TODO (FM-3431): Drop this constructor? *)
@@ -625,27 +618,27 @@ with Cast' {lang : lang.t} : Set :=
 #[global] Arguments BindingDecl' : clear implicits.
 #[global] Arguments Stmt' : clear implicits.
 
-#[global] Instance type_inhabited {lang} : Inhabited (type' lang).
+#[global] Instance type_inhabited : Inhabited type'.
 Proof. solve_inhabited. Qed.
-#[global] Instance Expr_inhabited {lang} : Inhabited (Expr' lang).
+#[global] Instance Expr_inhabited : Inhabited Expr'.
 Proof. solve_inhabited. Qed.
-#[global] Instance name_inhabited {lang} : Inhabited (name' lang).
+#[global] Instance name_inhabited : Inhabited name'.
 Proof. apply populate, Nglobal, inhabitant. Qed.
-#[global] Instance temp_arg_inhabited {lang} : Inhabited (temp_arg' lang).
+#[global] Instance temp_arg_inhabited : Inhabited temp_arg'.
 Proof. apply populate, Atype, inhabitant. Qed.
-#[global] Instance VarDecl_inhabited {lang} : Inhabited (VarDecl' lang).
+#[global] Instance VarDecl_inhabited : Inhabited VarDecl'.
 Proof. solve_inhabited. Qed.
-#[global] Instance BindingDecl_inhabited {lang} : Inhabited (BindingDecl' lang).
+#[global] Instance BindingDecl_inhabited : Inhabited BindingDecl'.
 Proof. solve_inhabited. Qed.
-#[global] Instance Stmt_inhabited {lang} : Inhabited (Stmt' lang).
+#[global] Instance Stmt_inhabited : Inhabited Stmt'.
 Proof. apply populate, Sseq, nil. Qed.
-#[global] Instance Cast_inhabited {lang} : Inhabited (Cast' lang).
+#[global] Instance Cast_inhabited : Inhabited Cast'.
 Proof. apply populate, C2void. Qed.
 
 Module Cast.
-  Definition existsb {lang : lang.t}
-    (T : type' lang -> bool)
-    (c : Cast' lang) : bool :=
+  Definition existsb
+    (T : type' -> bool)
+    (c : Cast') : bool :=
     match c with
     | Cdependent t
     | Cbitcast t
@@ -677,7 +670,7 @@ Module Cast.
 
 End Cast.
 
-Definition is_implicit {lang} (e : Expr' lang) : bool :=
+Definition is_implicit (e : Expr') : bool :=
   if e is Eimplicit _ then true else false.
 
 Definition globname' := name'.	(** Type names *)
@@ -692,17 +685,17 @@ Notation Nenum_const gn id := (Nscoped gn (Nid id)) (only parsing).
 (** ** Notations
     We aim to set up all of the types so that they look uniform.
     The convention can be viewed with the type [Expr].
-    - [Expr' lang] is the syntax that is parametric in the [lang.t]
-    - [Notation Expr := Expr' lang.cpp]
-    - [Notation MExpr := Expr' lang.temp]
+    - [Expr'] is the syntax that is parametric in the [lang.t]
+    - [Notation Expr := Expr']
+    - [Notation MExpr := Expr']
     When types are not immediately parametric in [lang.t], we
     give them names with an <<_>>, for example, see [Cast_].
  *)
-Notation operator_impl' lang := (operator_impl.t (obj_name' lang) (type' lang)).
-Notation MethodRef' lang := (MethodRef_ (obj_name' lang) (functype' lang) (Expr' lang)).
-Notation function_type' lang := (function_type_ (decltype' lang)).
-Notation temp_param' lang := (temp_param_ (type' lang)).
-Notation atomic_name' lang := (atomic_name_ (type' lang)).
+Notation operator_impl' := (operator_impl.t obj_name' type').
+Notation MethodRef' := (MethodRef_ obj_name' functype' Expr').
+Notation function_type' := (function_type_ decltype').
+Notation temp_param' := (temp_param_ type').
+Notation atomic_name' := (atomic_name_ type').
 
 (**
 In certain places, C++ requires a class name,
@@ -729,82 +722,73 @@ Module Import LangNotations.
   #[local] Notation globname := name (only parsing).
 
   (* in core *)
-  Notation operator_impl lang := (operator_impl.t (obj_name lang) (type lang)).
-  Notation MethodRef lang := (MethodRef' (obj_name lang) (type lang) (Expr lang)).
+  Notation operator_impl := (operator_impl.t obj_name type).
+  Notation MethodRef := (MethodRef' obj_name type Expr).
 
-  Notation function_type lang := (function_type' (decltype lang)).
-  Notation function_name lang := (function_name' (type lang)).
-  Notation atomic_name lang := (atomic_name' (type lang) (Expr lang)).
+  Notation function_type := (function_type' decltype).
+  Notation function_name := (function_name' type).
+  Notation atomic_name := (atomic_name' type Expr).
 (*
-  Notation tpreinst lang := (tpreinst' (decltype lang) (Expr lang)).
-  Notation tinst lang := (tinst' (decltype lang) (Expr lang)).
+  Notation tpreinst := (tpreinst' decltype Expr).
+  Notation tinst := (tinst' decltype Expr).
 
-  Notation FunctionBody lang := (FunctionBody' (obj_name lang) (decltype lang) (Expr lang)).
-  Notation Func lang := (Func' (obj_name lang) (decltype lang) (Expr lang)).
-  Notation GlobalInit lang := (GlobalInit' (Expr lang)).
-  Notation GlobalInitializer lang := (GlobalInitializer' (obj_name lang) (decltype lang) (Expr lang)).
-  Notation InitializerBlock lang := (InitializerBlock' (obj_name lang) (decltype lang) (Expr lang)).
+  Notation FunctionBody := (FunctionBody' obj_name decltype Expr).
+  Notation Func := (Func' obj_name decltype Expr).
+  Notation GlobalInit := (GlobalInit' Expr).
+  Notation GlobalInitializer := (GlobalInitializer' obj_name decltype Expr).
+  Notation InitializerBlock := (InitializerBlock' obj_name decltype Expr).
 *)
 End LangNotations.
 *)
 
 (** ** C++ with structured names *)
-Notation name := (name' lang.cpp).
-Notation globname := (globname' lang.cpp).
-Notation obj_name := (obj_name' lang.cpp).
-Notation type := (type' lang.cpp).
-Notation exprtype := (exprtype' lang.cpp).
-Notation decltype := (decltype' lang.cpp).
-Notation functype := (functype' lang.cpp).
-Notation classname := (classname' lang.cpp).
-Notation Cast := (Cast' lang.cpp).
-(*Notation operator_impl := (operator_impl' lang.cpp). *)
-Notation MethodRef := (MethodRef' lang.cpp).
-Notation Expr := (Expr' lang.cpp).
-Notation function_type := (function_type' lang.cpp).
-Notation VarDecl := (VarDecl' lang.cpp).
-Notation BindingDecl := (BindingDecl' lang.cpp).
-(*Notation temp_param := (temp_param lang.cpp).
-Notation Stemp_arg := (temp_arg lang.cpp). *)
-Notation atomic_name := (atomic_name' lang.cpp).
+Notation name := name'.
+Notation globname := globname'.
+Notation obj_name := obj_name'.
+Notation type := type'.
+Notation exprtype := exprtype'.
+Notation decltype := decltype'.
+Notation functype := functype'.
+Notation classname := classname'.
+Notation Cast := Cast'.
+(*Notation operator_impl := operator_impl'. *)
+Notation MethodRef := MethodRef'.
+Notation Expr := Expr'.
+Notation function_type := function_type'.
+Notation VarDecl := VarDecl'.
+Notation BindingDecl := BindingDecl'.
+(*Notation temp_param := temp_param.
+Notation Stemp_arg := temp_arg. *)
+Notation atomic_name := atomic_name'.
 
 Module field_name.
-  Definition t lang := (atomic_name' lang).
-  Definition Id {lang} : ident -> t lang := Nid.
-  Definition Anon {lang} : _ -> t lang := Nanon.
-  Definition CaptureVar {lang} : ident -> t lang := Nid.
-  Definition CaptureThis {lang} : t lang := Nid ".this".
+  Definition t := atomic_name'.
+  Definition Id : ident -> t := Nid.
+  Definition Anon : _ -> t := Nanon.
+  Definition CaptureVar : ident -> t := Nid.
+  Definition CaptureThis : t := Nid ".this".
 End field_name.
-Notation field_name := (field_name.t lang.cpp).
+Notation field_name := field_name.t.
 
 (*
-#[global] Instance field_name_inh {lang} : Inhabited (field_name.t lang).
+#[global] Instance field_name_inh : Inhabited field_name.t.
 Proof. rewrite /field_name.t. refine _. Defined.
-#[global] Instance field_name_eq_dec {lang} : EqDecision (field_name.t lang).
+#[global] Instance field_name_eq_dec : EqDecision field_name.t.
 Proof. rewrite /field_name.t. refine _. Defined.
 #[global] Hint Opaque field_name.t : typeclass_instances.
 *)
 
 Notation field' := name' (only parsing).
-(* Definition field' lang : Set := name' lang. *)
-Definition Field' {lang} : classname' lang -> field_name.t lang -> field' lang :=
-  fun t c =>
-    (* NOTE: this [match] implements a canonicalization to avoid
-       [Ndependent (Tnamed nm)], instead rewriting it to simply [nm] *)
-    match t with
-    | Tenum nm
-    | Tnamed nm => Nscoped nm c
-    | Tparam _ | Tdecltype _ => Nscoped (Ndependent t) c
-    | _ => Nunsupported "Field failed"
-    end.
+(* Definition field : Set := name. *)
+Definition Field' : classname -> field_name.t -> field := Nscoped.
 Notation field := field' (only parsing).
 Notation Field := Field'.
-Definition f_type {lang} (t : field' lang) : globname' lang :=
+Definition f_type (t : field) : globname :=
   match t with
   | Nscoped n _ => n
   | _ => Nunsupported "not a field"
   end.
-Definition f_name {lang} (t : field' lang) : atomic_name' lang :=
+Definition f_name (t : field) : atomic_name :=
   match t with
   | Nscoped _ n => n
   | _ => Nunsupported_atomic "not a field"
@@ -887,7 +871,7 @@ Notation Tbyte := (Tnum int_rank.Ichar Unsigned) (only parsing).
 
 
 (** ** Dependent names, types, and terms *)
-Fixpoint is_dependentN {lang} (n : name' lang) : bool :=
+Fixpoint is_dependentN (n : name) : bool :=
   match n with
   | Ninst n xs => is_dependentN n || existsb is_dependentTA xs
   | Nglobal c => atomic_name.existsb is_dependentT c
@@ -896,7 +880,7 @@ Fixpoint is_dependentN {lang} (n : name' lang) : bool :=
   | Nunsupported _ => false
   end
 
-with is_dependentTA {lang} (t : temp_arg' lang) : bool :=
+with is_dependentTA (t : temp_arg) : bool :=
   match t with
   | Atype t => is_dependentT t
   | Avalue e => is_dependentE e
@@ -905,7 +889,7 @@ with is_dependentTA {lang} (t : temp_arg' lang) : bool :=
   | Aunsupported _ => false
   end
 
-with is_dependentT {lang} (t : type' lang) : bool :=
+with is_dependentT (t : type) : bool :=
   match t with
   | Tparam _
   | Tresult_param _
@@ -939,7 +923,7 @@ with is_dependentT {lang} (t : type' lang) : bool :=
   | Tunsupported _ => false
   end
 
-with is_dependentE {lang} (e : Expr' lang) : bool :=
+with is_dependentE (e : Expr) : bool :=
   match e with
   | Eparam _
   | Eunresolved_global _
@@ -1006,20 +990,20 @@ with is_dependentE {lang} (e : Expr' lang) : bool :=
   | Eunsupported _ t => is_dependentT t
   end
 
-with is_dependentVD {lang} (vd : VarDecl' lang) : bool :=
+with is_dependentVD (vd : VarDecl) : bool :=
   match vd with
   | Dvar _ t oe => is_dependentT t || option.existsb is_dependentE oe
   | Ddecompose e _ lvd => is_dependentE e || List.existsb is_dependentBD lvd
   | Dinit _ n t oe => is_dependentN n || is_dependentT t || option.existsb is_dependentE oe
   end
 
-with is_dependentBD {lang} (bd : BindingDecl' lang) : bool :=
+with is_dependentBD (bd : BindingDecl) : bool :=
   match bd with
   | Bvar _ t e
   | Bbind _ t e => is_dependentT t || is_dependentE e
   end
 
-with is_dependentS {lang} (s : Stmt' lang) : bool :=
+with is_dependentS (s : Stmt) : bool :=
   match s with
   | Sseq ss => List.existsb is_dependentS ss
   | Sdecl ds => List.existsb is_dependentVD ds

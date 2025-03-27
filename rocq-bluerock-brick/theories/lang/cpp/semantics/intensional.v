@@ -18,7 +18,7 @@ Require Import bluerock.lang.cpp.syntax.
 
 (* this determines whether a type is initializable from a primitive.
  *)
-Fixpoint prim_initializable {lang} (t : type' lang) : bool :=
+Fixpoint prim_initializable (t : type) : bool :=
   match t with
   | Tptr _
   | Tnum _ _
