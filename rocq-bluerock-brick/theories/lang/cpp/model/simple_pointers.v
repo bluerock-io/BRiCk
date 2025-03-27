@@ -48,7 +48,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   Definition nullptr : ptr := mkptr null_alloc_id 0.
 
   Definition ptr_alloc_id : ptr -> option alloc_id := fmap fst.
-  Definition ptr_vaddr : ptr -> option vaddr := λ p,
+  Definition ptr_vaddr : ∀ {σ}, ptr -> option vaddr := λ {σ} p,
     '(_, va) ← p;
     guard (0 ≤ va);;
     Some (Z.to_N va).
@@ -63,7 +63,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   #[global] Instance ptr_eq_dec : EqDecision ptr := _.
   #[global] Instance ptr_countable : Countable ptr := _.
 
-  Lemma ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
+  Lemma ptr_vaddr_nullptr {σ} : ptr_vaddr nullptr = Some 0%N.
   Proof. done. Qed.
 
   Definition o_id : offset := Some 0.

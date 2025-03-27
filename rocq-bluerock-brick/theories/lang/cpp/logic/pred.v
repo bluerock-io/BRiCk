@@ -233,13 +233,13 @@ Module Type CPP_LOGIC
     End with_genv.
 
     Parameter has_type_or_undef : forall `{cpp_logic} {σ}, val -> type -> mpred.
-    Axiom has_type_or_undef_unfold : forall `{cpp_logic},
-        @has_type_or_undef _ _ _ = funI σ v ty => has_type v ty \\// [| v = Vundef |].
+    Axiom has_type_or_undef_unfold : forall `{cpp_logic} {σ},
+        @has_type_or_undef _ _ _ _ = funI v ty => has_type v ty \\// [| v = Vundef |].
 
     (** Formalizes the notion of "provides storage",
     http://eel.is/c++draft/intro.object#def:provides_storage *)
     Parameter provides_storage :
-      forall `{cpp_logic} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
+      forall `{cpp_logic} {σ} (storage : ptr) (object : ptr) (object_type : Rtype), mpred.
 
   Section with_cpp_logic.
     Context `{cpp_logic} {σ}.
@@ -286,12 +286,6 @@ Module Type CPP_LOGIC
 
     Axiom tptsto_nonnull : forall {σ} ty q a,
       tptsto ty q nullptr a |-- False.
-
-    #[global] Declare Instance tptsto_params : Params (@tptsto) 3.
-    #[global] Declare Instance tptsto_proper :
-      Proper (genv_eq ==> eq ==> eq ==> eq ==> eq ==> (≡)) (@tptsto _ _ _).
-    #[global] Declare Instance tptsto_mono :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> eq ==> (⊢)) (@tptsto _ _ _).
 
     #[global] Declare Instance tptsto_timeless : Timeless4 tptsto.
     #[global] Declare Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto ty).
@@ -619,7 +613,7 @@ Module Type CPP_LOGIC
        *)
       Section conservative.
         Axiom type_ptr_obj_repr_byte :
-          forall (σ : genv) (ty : Rtype) (p : ptr) (i sz : N),
+          forall (ty : Rtype) (p : ptr) (i sz : N),
             size_of σ ty = Some sz -> (* 1) [ty] has some byte-size [sz] *)
             (i < sz)%N ->             (* 2) by (1), [sz] is nonzero and [i] is a
                                             byte-offset into the object rooted at [p ,, o]
@@ -655,7 +649,7 @@ Module Type CPP_LOGIC
             by (unfold lookupN, list_lookupN; rewrite Nat2N.id //);
             clear Hn'.
           apply lookupN_seqN in Hn as [? ?].
-          iDestruct (type_ptr_obj_repr_byte σ ty p n sz Hsz ltac:(lia) with "tptr") as "$".
+          iDestruct (type_ptr_obj_repr_byte ty p n sz Hsz ltac:(lia) with "tptr") as "$".
         Qed.
       End all_at_once.
     End type_ptr_object_representation.
@@ -943,7 +937,7 @@ mlock Definition exposed_ptr `{cpp_logic} p : mpred :=
   virtual address [va].
   [pinned_ptr] will only hold on pointers that are associated to addresses,
   but other pointers exist. *)
-mlock Definition pinned_ptr `{cpp_logic} (va : vaddr) (p : ptr) : mpred :=
+mlock Definition pinned_ptr `{cpp_logic} {σ} (va : vaddr) (p : ptr) : mpred :=
   [| ptr_vaddr p = Some va |] ** exposed_ptr p.
 
 Notation pinned_ptr_Z va p :=
@@ -1311,11 +1305,6 @@ Section with_cpp.
     _valid_ptr vt p ∗ live_ptr p.
   Definition valid_live_ptr p : mpred := _valid_live_ptr Relaxed p.
   Definition strict_valid_live_ptr p : mpred := _valid_live_ptr Strict p.
-
-  #[global] Instance tptsto_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> eq ==> eq ==> flip (⊢))
-      (@tptsto _ _ _).
-  Proof. repeat intro. exact: tptsto_mono. Qed.
 
   #[global] Instance tptsto_as_cfractional ty : AsCFractional2 (tptsto ty).
   Proof. solve_as_cfrac. Qed.

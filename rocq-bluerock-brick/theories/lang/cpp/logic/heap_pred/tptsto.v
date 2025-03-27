@@ -33,21 +33,6 @@ Section tptstoR.
   Lemma _at_tptstoR (p : ptr) ty q v : p |-> tptstoR ty q v -|- tptsto ty q p v.
   Proof. by rewrite tptstoR.unlock _at_as_Rep. Qed.
 
-  #[global] Instance: Params (@tptstoR) 3 := {}.
-
-  #[global] Instance tptstoR_proper :
-    Proper (genv_eq ==> eq ==> eq ==> eq ==> (⊣⊢)) (@tptstoR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite tptstoR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance tptstoR_mono :
-    Proper (genv_leq ==> eq ==> eq ==> eq ==> (⊢)) (@tptstoR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite tptstoR.unlock. by setoid_rewrite Hσ.
-  Qed.
-
   #[global] Instance tptstoR_timeless ty q v :
     Timeless (tptstoR ty q v).
   Proof. rewrite tptstoR.unlock. apply _. Qed.
@@ -121,22 +106,6 @@ Section tptstoR.
   Proof.
     rewrite tptsto_fuzzyR.unlock. rewrite _at_exists. f_equiv=>v'.
     by rewrite _at_sep _at_only_provable.
-  Qed.
-
-  #[global] Instance: Params (@tptsto_fuzzyR) 3 := {}.
-  #[global] Instance tptsto_fuzzyR_mono :
-    Proper (genv_leq ==> eq ==> eq ==> eq ==> bi_entails) (@tptsto_fuzzyR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite tptsto_fuzzyR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance tptsto_fuzzyR_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> eq ==> flip bi_entails) (@tptsto_fuzzyR _ _ _).
-  Proof. repeat intro. by apply tptsto_fuzzyR_mono. Qed.
-  #[global] Instance tptsto_fuzzyR_proper :
-    Proper (genv_eq ==> eq ==> eq ==> eq ==> equiv) (@tptsto_fuzzyR _ _ _).
-  Proof.
-    intros σ1 σ2 [??] ??? ??? ???. split'; by apply tptsto_fuzzyR_mono.
   Qed.
 
   #[global] Instance tptsto_fuzzyR_timeless : Timeless3 tptsto_fuzzyR.

@@ -27,19 +27,6 @@ Definition uninitR `{Σ : cpp_logic} {σ : genv} (ty : Rtype) (q : cQp.t) : Rep 
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.
 
-  #[global] Instance uninitR_proper
-    : Proper (genv_eq ==> (=) ==> (=) ==> (≡)) (@uninitR _ _ Σ).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??->     .
-    rewrite uninitR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance uninitR_mono
-    : Proper (genv_leq ==> (=) ==> (=) ==> (⊢)) (@uninitR _ _ Σ).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??->     .
-    rewrite uninitR.unlock. by setoid_rewrite Hσ.
-  Qed.
-
   #[global] Instance uninitR_timeless ty q
     : Timeless (uninitR ty q).
   Proof. rewrite uninitR.unlock. apply _. Qed.

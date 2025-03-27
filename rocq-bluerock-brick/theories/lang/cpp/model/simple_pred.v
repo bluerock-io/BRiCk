@@ -222,7 +222,7 @@ Module SimpleCPP.
   Parameter live_alloc_id : forall `{!cpp_logic thread_info Σ}, alloc_id -> mpred.
 
   Section with_cpp.
-    Context `{cpp_logic}.
+    Context `{cpp_logic} {σ}.
 
     Axiom live_alloc_id_timeless : forall aid, Timeless (live_alloc_id aid).
     #[global] Existing Instance live_alloc_id_timeless.
@@ -244,11 +244,10 @@ Module SimpleCPP.
 
     Definition _valid_ptr vt (p : ptr) : mpred :=
       [| p = nullptr /\ vt = Relaxed |] \\//
-            Exists base l h o zo,
+        Exists σ' base l h o zo,
                 blocks_own base l h **
                 in_range vt l zo h **
-                 (* XXX this is wrong: [eval_offset] shouldn't take a genv. *)
-                [| exists resolve, eval_offset resolve o = Some zo /\ p = base ,, o |] **
+                [| eval_offset σ' o = Some zo /\ p = base ,, o |] **
                 [| ptr_vaddr p <> Some 0%N |].
     (* strict validity (not past-the-end) *)
     Notation strict_valid_ptr := (_valid_ptr Strict).
@@ -267,7 +266,7 @@ Module SimpleCPP.
       [| same_address p nullptr <-> p = nullptr |].
     Proof.
       rewrite /_valid_ptr same_address_eq; iIntros "[[-> _]|H]";
-        [ |iDestruct "H" as (?????) "(_ & _ & _ & %Hne)"]; iIntros "!%".
+        [ |iDestruct "H" as (??????) "(_ & _ & _ & %Hne)"]; iIntros "!%".
       by rewrite same_property_iff ptr_vaddr_nullptr; naive_solver.
       rewrite same_property_iff; split; last intros ->;
         rewrite ptr_vaddr_nullptr; naive_solver.
@@ -279,7 +278,7 @@ Module SimpleCPP.
     Theorem not_strictly_valid_ptr_nullptr : strict_valid_ptr nullptr |-- False.
     Proof.
       iDestruct 1 as "[[_ %]|H] /="; first done.
-      by iDestruct "H" as (?????) "(_ & _ & _ & %Hne)".
+      by iDestruct "H" as (??????) "(_ & _ & _ & %Hne)".
     Qed.
     Typeclasses Opaque _valid_ptr.
 
@@ -311,7 +310,6 @@ Module SimpleCPP.
       Observe (valid_ptr obj_ptr) (provides_storage storage_ptr obj_ptr aty) := _.
 
     Section with_genv.
-      Variable σ : genv.
 
       Let POINTER_BITSZ : bitsize := pointer_size_bitsize σ.
       Notation POINTER_BYTES := (bitsize.bytesNat POINTER_BITSZ).
@@ -548,27 +546,6 @@ Module SimpleCPP.
       Proof. iIntros "!%". by move=> /length_encodes -> /length_encodes ->. Qed.
     End with_genv.
 
-    Instance Z_to_bytes_proper :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> eq) (@Z_to_bytes).
-    Proof. intros ?? Hσ%genv_byte_order_proper. solve_proper. Qed.
-
-    Instance cptr_proper :
-      Proper (genv_leq ==> eq ==> eq) cptr.
-    Proof. rewrite /cptr => σ1 σ2 Heq ?? ->. by rewrite Heq. Qed.
-
-    Instance aptr_proper :
-      Proper (genv_leq ==> eq ==> eq) aptr.
-    Proof. rewrite /aptr => σ1 σ2 Heq ?? ->. by rewrite Heq. Qed.
-
-    Instance encodes_proper :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> lentails) encodes.
-    Proof.
-      unfold encodes; intros σ1 σ2 Heq t1 t2 -> v1 v2 -> vs1 vs2 ->.
-      f_equiv; unfold pure_encodes, impl;
-        destruct (erase_qualifiers t2) => //; destruct v2 => //;
-        try case_decide; rewrite ?Heq //.
-    Qed.
-
     Definition val_ (a : ptr) (v : val) q : mpred :=
       ghost_mem_own a q v.
 
@@ -685,16 +662,16 @@ Module SimpleCPP.
       They're not exported, so we don't give them a complete theory;
       however, some of their proofs can be done via TC inference *)
     #[local] Definition addr_encodes
-        (σ : genv) (t : type) q (a : addr) (v : val) (vs : list runtime_val) :=
-      encodes σ t v vs ** bytes a vs q ** vbytes a vs q.
+        (t : type) q (a : addr) (v : val) (vs : list runtime_val) :=
+      encodes t v vs ** bytes a vs q ** vbytes a vs q.
 
-    #[local] Instance addr_encodes_fractional {σ} ty a v vs :
-      CFractional (λ q, addr_encodes σ ty q a v vs) := _.
+    #[local] Instance addr_encodes_fractional ty a v vs :
+      CFractional (λ q, addr_encodes ty q a v vs) := _.
 
-    #[local] Instance addr_encodes_agree_dst σ t a v1 v2 vs1 vs2 q1 q2 :
+    #[local] Instance addr_encodes_agree_dst t a v1 v2 vs1 vs2 q1 q2 :
       Observe2 [| vs1 = vs2 |]
-        (addr_encodes σ t q1 a v1 vs1)
-        (addr_encodes σ t q2 a v2 vs2).
+        (addr_encodes t q1 a v1 vs1)
+        (addr_encodes t q2 a v2 vs2).
     Proof.
       apply: observe_2_intro_persistent.
       iIntros "[En1 [By1 _]] [En2 [By2 _]]".
@@ -702,10 +679,10 @@ Module SimpleCPP.
       by iDestruct (bytes_agree Heq with "By1 By2") as %->.
     Qed.
 
-    #[local] Instance addr_encodes_agree_src σ t v1 v2 a vs1 vs2 q1 q2 :
+    #[local] Instance addr_encodes_agree_src t v1 v2 a vs1 vs2 q1 q2 :
       Observe2 [| v1 = v2 |]
-        (addr_encodes σ t q1 a v1 vs1)
-        (addr_encodes σ t q2 a v2 vs2).
+        (addr_encodes t q1 a v1 vs1)
+        (addr_encodes t q2 a v2 vs2).
     Proof.
       iIntros "H1 H2".
       iDestruct (addr_encodes_agree_dst with "H1 H2") as %->.
@@ -713,8 +690,8 @@ Module SimpleCPP.
       iApply (observe_2 with "H1 H2").
     Qed.
 
-    #[global] Instance addr_encodes_cfrac_valid {σ} ty :
-      CFracValid3 (addr_encodes σ ty).
+    #[global] Instance addr_encodes_cfrac_valid ty :
+      CFracValid3 (addr_encodes ty).
     Proof.
       constructor. intros. apply: observe_intro_persistent.
       iDestruct 1 as (Hen%length_encodes_pos) "[B _]".
@@ -722,24 +699,24 @@ Module SimpleCPP.
     Qed.
 
     #[local] Definition oaddr_encodes
-        (σ : genv) (t : type) q (oa : option addr) p (v : val) :=
+        (t : type) q (oa : option addr) p (v : val) :=
         match oa with
         | Some a =>
           Exists vs,
-          addr_encodes σ t q a v vs
+          addr_encodes t q a v vs
         | None => [| t <> Tvoid |] ** val_ p v q
         end.
 
     (* Needed by tptsto_cfractional *)
-    #[local] Instance oaddr_encodes_fractional {σ} t oa p v :
-      CFractional (λ q, oaddr_encodes σ t q oa p v).
+    #[local] Instance oaddr_encodes_fractional t oa p v :
+      CFractional (λ q, oaddr_encodes t q oa p v).
     Proof. rewrite /oaddr_encodes; destruct oa; apply _. Qed.
 
-    #[local] Instance oaddr_encodes_nonvoid {σ} ty q oa p v :
-      Observe [| ty <> Tvoid |] (oaddr_encodes σ ty q oa p v).
+    #[local] Instance oaddr_encodes_nonvoid ty q oa p v :
+      Observe [| ty <> Tvoid |] (oaddr_encodes ty q oa p v).
     Proof. destruct oa; apply _. Qed.
-    #[local] Instance oaddr_encodes_cfrac_valid {σ} t :
-      CFracValid3 (oaddr_encodes σ t).
+    #[local] Instance oaddr_encodes_cfrac_valid t :
+      CFracValid3 (oaddr_encodes t).
     Proof. constructor. intros ? oa ??. destruct oa; apply _. Qed.
 
     (** the pointer points to the code
@@ -760,43 +737,37 @@ Module SimpleCPP.
     Proof. by rewrite code_own_strict_valid strict_valid_valid. Qed.
     Typeclasses Opaque code_own.
 
-    Definition code_at (_ : genv) (_ : translation_unit) (f : Func) (p : ptr) : mpred :=
+    Definition code_at {_ : genv} (_ : translation_unit) (f : Func) (p : ptr) : mpred :=
       code_own p (inl (inl (inl f))).
-    Definition method_at (_ : genv) (_ : translation_unit) (m : Method) (p : ptr) : mpred :=
+    Definition method_at {_ : genv} (_ : translation_unit) (m : Method) (p : ptr) : mpred :=
       code_own p (inl (inl (inr m))).
-    Definition ctor_at (_ : genv) (_ : translation_unit) (c : Ctor) (p : ptr) : mpred :=
+    Definition ctor_at {_ : genv} (_ : translation_unit) (c : Ctor) (p : ptr) : mpred :=
       code_own p (inl (inr c)).
-    Definition dtor_at (_ : genv) (_ : translation_unit) (d : Dtor) (p : ptr) : mpred :=
+    Definition dtor_at {_ : genv} (_ : translation_unit) (d : Dtor) (p : ptr) : mpred :=
       code_own p (inr d).
 
-    Instance code_at_persistent : forall s tu f p, Persistent (@code_at s tu f p) := _.
-    Instance code_at_affine : forall s tu f p, Affine (@code_at s tu f p) := _.
-    Instance code_at_timeless : forall s tu f p, Timeless (@code_at s tu f p) := _.
+    Instance code_at_persistent : forall tu f p, Persistent (code_at tu f p) := _.
+    Instance code_at_affine : forall tu f p, Affine (code_at tu f p) := _.
+    Instance code_at_timeless : forall tu f p, Timeless (code_at tu f p) := _.
 
-    Instance method_at_persistent : forall s tu f p, Persistent (@method_at s tu f p) := _.
-    Instance method_at_affine : forall s tu f p, Affine (@method_at s tu f p) := _.
-    Instance method_at_timeless : forall s tu f p, Timeless (@method_at s tu f p) := _.
+    Instance method_at_persistent : forall tu f p, Persistent (method_at tu f p) := _.
+    Instance method_at_affine : forall tu f p, Affine (method_at tu f p) := _.
+    Instance method_at_timeless : forall tu f p, Timeless (method_at tu f p) := _.
 
-    Instance ctor_at_persistent : forall s tu f p, Persistent (@ctor_at s tu f p) := _.
-    Instance ctor_at_affine : forall s tu f p, Affine (@ctor_at s tu f p) := _.
-    Instance ctor_at_timeless : forall s tu f p, Timeless (@ctor_at s tu f p) := _.
+    Instance ctor_at_persistent : forall tu f p, Persistent (ctor_at tu f p) := _.
+    Instance ctor_at_affine : forall tu f p, Affine (ctor_at tu f p) := _.
+    Instance ctor_at_timeless : forall tu f p, Timeless (ctor_at tu f p) := _.
 
-    Instance dtor_at_persistent : forall s tu f p, Persistent (@dtor_at s tu f p) := _.
-    Instance dtor_at_affine : forall s tu f p, Affine (@dtor_at s tu f p) := _.
-    Instance dtor_at_timeless : forall s tu f p, Timeless (@dtor_at s tu f p) := _.
+    Instance dtor_at_persistent : forall tu f p, Persistent (dtor_at tu f p) := _.
+    Instance dtor_at_affine : forall tu f p, Affine (dtor_at tu f p) := _.
+    Instance dtor_at_timeless : forall tu f p, Timeless (dtor_at tu f p) := _.
 
-    Axiom code_at_live   : forall s tu f p,   @code_at s tu f p |-- live_ptr p.
-    Axiom method_at_live : forall s tu f p, @method_at s tu f p |-- live_ptr p.
-    Axiom ctor_at_live   : forall s tu f p,   @ctor_at s tu f p |-- live_ptr p.
-    Axiom dtor_at_live   : forall s tu f p,   @dtor_at s tu f p |-- live_ptr p.
+    Axiom code_at_live   : forall tu f p,   code_at tu f p |-- live_ptr p.
+    Axiom method_at_live : forall tu f p, method_at tu f p |-- live_ptr p.
+    Axiom ctor_at_live   : forall tu f p,   ctor_at tu f p |-- live_ptr p.
+    Axiom dtor_at_live   : forall tu f p,   dtor_at tu f p |-- live_ptr p.
 
     Section with_genv.
-      Context {σ : genv}.
-      #[local] Notation code_at := (code_at σ) (only parsing).
-      #[local] Notation method_at := (method_at σ) (only parsing).
-      #[local] Notation ctor_at := (ctor_at σ) (only parsing).
-      #[local] Notation dtor_at := (dtor_at σ) (only parsing).
-
       Lemma code_at_strict_valid tu f p :   code_at tu f p |-- strict_valid_ptr p.
       Proof. exact: code_own_strict_valid. Qed.
       Lemma method_at_strict_valid tu f p :   method_at tu f p |-- strict_valid_ptr p.
@@ -833,21 +804,21 @@ Module SimpleCPP.
     Instance type_ptr_affine σ p ty : Affine (type_ptr ty p) := _.
     Instance type_ptr_timeless σ p ty : Timeless (type_ptr ty p) := _.
 
-    Lemma type_ptr_off_nonnull {σ ty p o} :
+    Lemma type_ptr_off_nonnull {ty p o} :
       type_ptr ty (p ,, o) |-- [| p <> nullptr |].
     Admitted.
 
-    Lemma type_ptr_strict_valid resolve ty p :
+    Lemma type_ptr_strict_valid ty p :
       type_ptr ty p |-- strict_valid_ptr p.
     Proof. iDestruct 1 as "(_ & _ & _ & $ & _)". Qed.
 
-    Lemma type_ptr_valid_plus_one resolve ty p :
+    Lemma type_ptr_valid_plus_one ty p :
       (* size_of resolve ty = Some sz -> *)
       type_ptr ty p |--
-      valid_ptr (p ,, o_sub resolve ty 1).
+      valid_ptr (p ,, o_sub σ ty 1).
     Proof. iDestruct 1 as "(_ & _ & _ & _ & $)". Qed.
 
-    Lemma type_ptr_erase : forall {σ} ty p,
+    Lemma type_ptr_erase : forall ty p,
         type_ptr ty p -|- type_ptr (erase_qualifiers ty) p.
     Proof.
       rewrite /type_ptr; intros.
@@ -859,35 +830,17 @@ Module SimpleCPP.
         admit. }
     Admitted.
 
-    Lemma type_ptr_aligned_pure σ ty p :
+    Lemma type_ptr_aligned_pure ty p :
       type_ptr ty p |-- [| aligned_ptr_ty ty p |].
     Proof. iDestruct 1 as "(_ & $ & _)". Qed.
 
-    Lemma type_ptr_size {σ} ty p : type_ptr ty p |-- [| is_Some (size_of σ ty) |].
+    Lemma type_ptr_size ty p : type_ptr ty p |-- [| is_Some (size_of σ ty) |].
     Proof. iDestruct 1 as "(_ & _ & % & _)"; eauto. Qed.
-
-    (* See [o_sub_mono] in [simple_pointers.v] *)
-    Axiom valid_ptr_o_sub_proper : forall {σ1 σ2 p ty}, genv_leq σ1 σ2 ->
-      valid_ptr (p ,, o_sub σ1 ty 1) |-- valid_ptr (p ,, o_sub σ2 ty 1).
-
-    Instance type_ptr_mono :
-      Proper (genv_leq ==> eq ==> eq ==> (⊢)) (@type_ptr).
-    Proof.
-      rewrite /type_ptr /aligned_ptr_ty => σ1 σ2 Heq x y ????; subst.
-      rewrite (valid_ptr_o_sub_proper Heq).
-      do 3 f_equiv.
-      - move=> -[align [HalTy Halp]]. eexists; split => //.
-        move: Heq HalTy => /Proper_align_of /(_ y _ eq_refl).
-        destruct 1; naive_solver.
-      - f_equiv=> -[sz1].
-        move: Heq => /Proper_size_of /(_ y _ eq_refl).
-        destruct 1; naive_solver.
-    Qed.
 
 
     (* This lemma is unused; it confirms we can lift the other half of
     [pinned_ptr_aligned_divide], but we don't expose this. *)
-    #[local] Lemma pinned_ptr_type_divide_2 {va n σ p ty}
+    #[local] Lemma pinned_ptr_type_divide_2 {va n p ty}
       (Hal : align_of ty = Some n) (Hnn : p <> nullptr) :
       pinned_ptr va p ⊢ valid_ptr (p ,, o_sub σ ty 1) -∗
       [| (n | va)%N |] -∗ type_ptr ty p.
@@ -903,15 +856,15 @@ Module SimpleCPP.
     Admitted.
 
     (* XXX move *)
-    Axiom align_of_uchar : forall resolve, @align_of resolve Tuchar = Some 1%N.
+    Axiom align_of_uchar : align_of Tuchar = Some 1%N.
 
     (* Requirememnt is too strong, we'd want just [(strict_)valid_ptr p]; see comment
     above on [aligned_ptr_mpred] and [mem_inj_own].
     XXX: this assumes that casting to uchar preserves the pointer.
     *)
-    #[local] Lemma valid_type_uchar resolve p (Hnn : p <> nullptr) va :
+    #[local] Lemma valid_type_uchar p (Hnn : p <> nullptr) va :
       pinned_ptr va p ⊢
-      valid_ptr (p ,, o_sub resolve Tuchar 1) -∗
+      valid_ptr (p ,, o_sub σ Tuchar 1) -∗
       type_ptr Tuchar p.
     Proof.
       iIntros "#P #V".
@@ -922,17 +875,17 @@ Module SimpleCPP.
 
     (* todo(gmm): this isn't accurate, but it is sufficient to show that the axioms are
     instantiatable. *)
-    Definition mdc_path {σ : genv} (this : globname) (most_derived : list globname)
+    Definition mdc_path {_ : genv} (this : globname) (most_derived : list globname)
                (q : cQp.t) (p : ptr) : mpred :=
       strict_valid_ptr p ** derivation_own p q this most_derived.
 
-    Instance mdc_path_cfractional {σ} this mdc : CFractional1 (mdc_path this mdc) := _.
-    Axiom mdc_path_cfrac_valid : forall {σ} cls path,
+    Instance mdc_path_cfractional this mdc : CFractional1 (mdc_path this mdc) := _.
+    Axiom mdc_path_cfrac_valid : forall cls path,
       CFracValid1 (mdc_path cls path).
-    Instance mdc_path_timeless {σ} this mdc q p : Timeless (mdc_path this mdc q p) := _.
-    Instance mdc_path_strict_valid {σ} this mdc q p : Observe (strict_valid_ptr p) (mdc_path this mdc q p).
+    Instance mdc_path_timeless this mdc q p : Timeless (mdc_path this mdc q p) := _.
+    Instance mdc_path_strict_valid this mdc q p : Observe (strict_valid_ptr p) (mdc_path this mdc q p).
     Proof. refine _. Qed.
-    Instance mdc_path_agree {σ} cls1 cls2 q1 q2 p mdc1 mdc2 :
+    Instance mdc_path_agree cls1 cls2 q1 q2 p mdc1 mdc2 :
       Observe2 [| mdc1 = mdc2 /\ cls1 = cls2 |] (mdc_path cls1 mdc1 q1 p) (mdc_path cls2 mdc2 q2 p).
     Proof.
       rewrite /mdc_path.
@@ -943,8 +896,8 @@ Module SimpleCPP.
     (** this allows you to forget an object mdc_path, necessary for doing
         placement [new] over an existing object.
      *)
-    Theorem mdc_path_forget : forall σ mdc this p,
-        @mdc_path σ this mdc 1$m p |-- |={↑pred_ns}=> @mdc_path σ this nil 1$m p.
+    Theorem mdc_path_forget : forall mdc this p,
+        mdc_path this mdc 1$m p |-- |={↑pred_ns}=> mdc_path this nil 1$m p.
     Proof.
       rewrite /mdc_path; intros.
       iIntros "[$ D]".
@@ -952,71 +905,50 @@ Module SimpleCPP.
       by apply singleton_update, cmra_update_exclusive.
     Qed.
 
-    Definition tptsto {σ : genv} (t : type) (q : cQp.t) (p : ptr) (v : val) : mpred :=
+    Definition tptsto (t : type) (q : cQp.t) (p : ptr) (v : val) : mpred :=
       [| p <> nullptr |] ** [| is_heap_type t |] **
       Exists (oa : option addr),
         type_ptr t p ** (* use the appropriate ghost state instead *)
         mem_inj_own p oa **
-        oaddr_encodes σ t q oa p v.
+        oaddr_encodes t q oa p v.
     (* TODO: [tptsto] should not include [type_ptr] wholesale, but its
     pieces in the new model, replacing [mem_inj_own], and [tptsto_type_ptr]
     should be proved properly. *)
 
     #[global] Instance tptsto_valid_type
-      : forall {σ:genv} (t : type) (q : cQp.t) (a : ptr) (v : val),
+      : forall (t : type) (q : cQp.t) (a : ptr) (v : val),
         Observe [| is_heap_type t |] (tptsto t q a v).
     Proof. rewrite /tptsto; refine _. Qed.
 
-    #[global] Instance tptsto_type_ptr : forall (σ : genv) ty q p v,
+    #[global] Instance tptsto_type_ptr : forall ty q p v,
         Observe (type_ptr ty p) (tptsto ty q p v) := _.
 
     (* TODO (JH): We shouldn't be axiomatizing this in our model in the long-run *)
-    Axiom tptsto_live : forall {σ} ty (q : cQp.t) p v,
+    Axiom tptsto_live : forall ty (q : cQp.t) p v,
       tptsto ty q p v |-- live_ptr p ** True.
 
-    #[global] Instance tptsto_nonnull_obs {σ} ty q a :
+    #[global] Instance tptsto_nonnull_obs ty q a :
       Observe False (tptsto ty q nullptr a).
     Proof. iDestruct 1 as (Hne) "_". naive_solver. Qed.
 
-    Theorem tptsto_nonnull {σ} ty q a :
+    Theorem tptsto_nonnull ty q a :
       tptsto ty q nullptr a |-- False.
     Proof. rewrite tptsto_nonnull_obs. iDestruct 1 as "[]". Qed.
 
-    #[global] Instance tptsto_mono :
-      Proper (genv_leq ==> eq ==> eq ==> eq ==> eq ==> (⊢)) (@tptsto).
-    Proof.
-      rewrite /tptsto /oaddr_encodes /addr_encodes.
-      intros ?? Hσ ??-> ??-> ??-> ??->.
-      iIntros "(%Hnonnull & %Htype & H)";
-        iDestruct "H" as (oa) "(Htype_ptr & Hmem_inj_own & Hoa)".
-      iSplitR; first eauto.
-      iSplitR; first eauto.
-      iExists oa; iFrame "Hmem_inj_own".
-      iSplitL "Htype_ptr"; first by rewrite Hσ.
-      iStopProof; destruct oa; by solve_proper.
-    Qed.
-
-    #[global] Instance tptsto_proper :
-      Proper (genv_eq ==> eq ==> eq ==> eq ==> eq ==> (≡)) (@tptsto).
-    Proof.
-      intros σ1 σ2 [Hσ1 Hσ2] ??-> ??-> ??-> ??->.
-      by split'; apply tptsto_mono.
-    Qed.
-
     (* Relies on [oaddr_encodes_fractional] *)
-    #[global] Instance tptsto_cfractional {σ} ty : CFractional2 (tptsto ty) := _.
+    #[global] Instance tptsto_cfractional ty : CFractional2 (tptsto ty) := _.
 
-    #[global] Instance tptsto_timeless {σ} ty q p v :
+    #[global] Instance tptsto_timeless ty q p v :
       Timeless (tptsto ty q p v) := _.
 
-    #[global] Instance tptsto_nonvoid {σ} ty (q : cQp.t) p v :
+    #[global] Instance tptsto_nonvoid ty (q : cQp.t) p v :
       Observe [| ty <> Tvoid |] (tptsto ty q p v) := _.
 
-    #[global] Instance tptsto_cfrac_valid {σ} ty :
+    #[global] Instance tptsto_cfrac_valid ty :
       CFracValid2 (tptsto ty).
     Proof. solve_cfrac_valid. Qed.
 
-    #[global] Instance tptsto_agree σ ty q1 q2 p v1 v2 :
+    #[global] Instance tptsto_agree ty q1 q2 p v1 v2 :
       Observe2 [| v1 = v2 |] (tptsto ty q1 p v1) (tptsto ty q2 p v2).
     Proof.
       intros; apply: observe_2_intro_persistent.
@@ -1028,9 +960,9 @@ Module SimpleCPP.
       by iPureIntro.
     Qed.
 
-    Axiom same_address_eq_type_ptr : forall resolve ty p1 p2 n,
+    Axiom same_address_eq_type_ptr : forall ty p1 p2 n,
       same_address p1 p2 ->
-      size_of resolve ty = Some n ->
+      size_of σ ty = Some n ->
       (* if [ty = Tuchar], one of these pointer could provide storage for the other. *)
       ty <> Tuchar ->
       (n > 0)%N ->
@@ -1038,7 +970,7 @@ Module SimpleCPP.
         |={↑pred_ns}=> [| p1 = p2 |].
 
     (* Not provable in the current model without tying to a concrete model of pointers. *)
-    Lemma offset_pinned_ptr_pure σ o z va p :
+    Lemma offset_pinned_ptr_pure o z va p :
       eval_offset σ o = Some z ->
       ptr_vaddr p = Some va ->
       valid_ptr (p ,, o) |--
@@ -1067,7 +999,7 @@ Module SimpleCPP.
     Parameter exposed_aid : forall `{!cpp_logic thread_info Σ}, alloc_id -> mpred.
 
   Section with_cpp.
-    Context `{!cpp_logic thread_info Σ}.
+    Context `{!cpp_logic thread_info Σ} {σ}.
     (* strict validity (not past-the-end) *)
     Notation strict_valid_ptr := (_valid_ptr Strict).
     (* relaxed validity (past-the-end allowed) *)
@@ -1080,7 +1012,7 @@ Module SimpleCPP.
     Axiom exposed_aid_null_alloc_id : |-- exposed_aid null_alloc_id.
 
     Lemma type_ptr_obj_repr_byte :
-      forall (σ : genv) (ty : type) (p : ptr) (i sz : N),
+      forall  (ty : type) (p : ptr) (i sz : N),
         size_of σ ty = Some sz -> (* 1) [ty] has some byte-size [sz] *)
         (i < sz)%N ->             (* 2) by (1), [sz] is nonzero and [i] is a
                                         byte-offset into the object rooted at [p ,, o]
@@ -1101,7 +1033,7 @@ Module SimpleCPP.
     Proof. Admitted.
 
     Lemma type_ptr_obj_repr :
-      forall (σ : genv) (ty : type) (p : ptr) (sz : N),
+      forall (ty : type) (p : ptr) (sz : N),
         size_of σ ty = Some sz ->
         type_ptr ty p |-- [∗list] i ∈ seqN 0 sz, type_ptr Tbyte (p ,, o_sub σ Tbyte (Z.of_N i)).
     Proof.
@@ -1112,7 +1044,7 @@ Module SimpleCPP.
         by (unfold lookupN, list_lookupN; rewrite Nat2N.id //);
         clear Hn'.
       apply lookupN_seqN in Hn as [? ?].
-      iDestruct (type_ptr_obj_repr_byte σ ty p n sz Hsz ltac:(lia) with "tptr") as "$".
+      iDestruct (type_ptr_obj_repr_byte ty p n sz Hsz ltac:(lia) with "tptr") as "$".
     Qed.
 
     (* [offset_congP] hoists [offset_cong] to [mpred] *)
@@ -1165,7 +1097,7 @@ Module SimpleCPP.
        non-raw values into their constituent raw pieces - to enable deriving
        [tptsto_ptr_congP_transport] from [tptsto_raw_ptr_congP_transport].
      *)
-    Lemma tptsto_ptr_congP_transport : forall {σ} q p1 p2 v,
+    Lemma tptsto_ptr_congP_transport : forall q p1 p2 v,
       ptr_congP σ p1 p2 |-- tptsto Tbyte q p1 v -* tptsto Tbyte q p2 v.
     Proof. Admitted.
 
@@ -1216,19 +1148,17 @@ Module SimpleCPP.
       | _ => [| nonptr_prim_type ty |]
       end.
 
-    Definition reference_to {σ : genv} (ty : type) (p : ptr) : mpred :=
+    Definition reference_to (ty : type) (p : ptr) : mpred :=
       [| aligned_ptr_ty ty p |] ** [| p <> nullptr |] **
         valid_ptr p ** if zero_sized_array ty then emp else strict_valid_ptr p.
 
-    Definition has_type_or_undef {σ} (v : val) ty : mpred :=
+    Definition has_type_or_undef (v : val) ty : mpred :=
       has_type v ty \\// [| v = Vundef |].
     Lemma has_type_or_undef_unfold :
-      @has_type_or_undef = funI σ v ty => has_type v ty \\// [| v = Vundef |].
+      @has_type_or_undef = funI v ty => has_type v ty \\// [| v = Vundef |].
     Proof. done. Qed.
 
     Section with_genv.
-      Context {σ : genv}.
-
       #[global] Instance has_type_knowledge : Knowledge2 has_type.
       Proof. solve_knowledge. Qed.
 
@@ -1340,12 +1270,12 @@ Module SimpleCPP.
 
     End with_genv.
 
-    #[local] Theorem tptsto_welltyped : forall {σ} p ty q (v : val),
+    #[local] Theorem tptsto_welltyped : forall p ty q (v : val),
       Observe (has_type_or_undef v ty) (tptsto ty q p v).
     Proof. Admitted.
 
     (* TODO: the [Notation] connects to the wrong definition *)
-    #[local] Theorem tptsto_reference_to : forall {σ} p ty q (v : val),
+    #[local] Theorem tptsto_reference_to : forall p ty q (v : val),
       Observe (reference_to ty p) (tptsto ty q p v).
     Proof. Admitted.
 
@@ -1402,8 +1332,8 @@ Module VALID_PTR : VALID_PTR_AXIOMS PTRS_IMPL VALUES_DEFS_IMPL L L.
     Proof.
       (* A proper proof requires redesigning valid_ptr *)
       rewrite /_valid_ptr; iDestruct 1 as "[%|H]"; first naive_solver.
-      iDestruct "H" as (base l h o zo) "(B & Rng & %Hoff & _)".
-      destruct Hoff as (? & Heval & Habs).
+      iDestruct "H" as (? base l h o zo) "(B & Rng & %Hoff & _)".
+      destruct Hoff as (Heval & Habs).
     Admitted.
 
     (** Justified by [https://eel.is/c++draft/expr.add#4.1]. *)

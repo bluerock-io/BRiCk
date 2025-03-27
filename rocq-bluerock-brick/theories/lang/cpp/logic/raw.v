@@ -70,16 +70,6 @@ Section with_Σ.
 
   (** [rawR] *)
 
-  #[local] Notation PROPER R S := (
-    Proper (R ==> eq ==> eq ==> S) (@rawR _ _ _)
-  ) (only parsing).
-  #[global] Instance rawR_mono : PROPER genv_leq bi_entails.
-  Proof. rewrite rawR.unlock. solve_proper. Qed.
-  #[global] Instance rawR_flip_mono : PROPER (flip genv_leq) (flip bi_entails).
-  Proof. repeat intro. exact: rawR_mono. Qed.
-  #[global] Instance rawR_proper : PROPER genv_eq equiv.
-  Proof. intros σ1 σ2 [??] ??? ???. split'; exact: rawR_mono. Qed.
-
   #[global] Instance rawR_timeless : Timeless2 rawR.
   Proof. rewrite rawR.unlock. apply _. Qed.
 

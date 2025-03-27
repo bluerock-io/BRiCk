@@ -301,7 +301,6 @@ Section with_cpp.
   Qed.
   #[local] Transparent type_of_spec.
 
-(* TODO: Proper wrt [genv_leq]. *)
   #[global] Instance cptrR_ne : NonExpansive cptrR.
   Proof.
     intros n P Q HPQ. rewrite cptrR_eq/cptrR_def.
