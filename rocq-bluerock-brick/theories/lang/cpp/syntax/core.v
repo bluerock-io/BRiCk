@@ -782,8 +782,7 @@ Proof. rewrite /field_name.t. refine _. Defined.
 
 Notation field' := name' (only parsing).
 Notation field := field' (only parsing).
-Definition Field' : classname -> field_name.t -> field :=
-  Nscoped.
+Notation Field' := Nscoped (only parsing).
 Notation Field := Field'.
 Definition f_type (t : field) : globname :=
   match t with
