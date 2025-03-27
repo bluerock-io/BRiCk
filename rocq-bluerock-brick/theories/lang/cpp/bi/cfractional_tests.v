@@ -5,9 +5,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.cpp.bi.cfractional.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.lang.cpp.bi.cfractional.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Import ChargeNotation.
 
 #[local] Set Printing Coercions.
@@ -71,10 +71,10 @@ Module Type EXAMPLES.
   (** Otherwise, both sides get the same [cQp.is_const] after the split. *)
 
   Lemma split_mut :
-    R (cQp.mut 1) |-- R (cQp.mut (1/2)) ** R (cQp.mut (1/2)).
+    R 1$m |-- R (1/2)$m ** R (1/2)$m.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
   Lemma split_const :
-    R (cQp.const 1) |-- R (cQp.const (1/2)) ** R (cQp.const (1/2)).
+    R 1$c |-- R  (1/2)$c ** R  (1/2)$c.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
   Lemma split_mk c :
     R (cQp.mk c 1) |-- let Rhalf := R (cQp.mk c (1/2)) in Rhalf ** Rhalf.
@@ -88,25 +88,25 @@ Module Type EXAMPLES.
   of) [q1 + q2].
   *)
 
-  Lemma split_½ : R (cQp.mut (1/2)) |-- let Rhalf := R (cQp.mut (1/4)) in Rhalf ** Rhalf.
+  Lemma split_½ : R (1/2)$m |-- let Rhalf := R (1/4)$m in Rhalf ** Rhalf.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
-  Lemma split_1 : R (cQp.mut 1) |-- let Rhalf := R (cQp.mut (1/2)) in Rhalf ** Rhalf.
+  Lemma split_1 : R 1$m |-- let Rhalf := R (1/2)$m in Rhalf ** Rhalf.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
-  Lemma split_q q : R (cQp.mut q) |-- let Rhalf := R (cQp.mut (q/2)) in Rhalf ** Rhalf.
+  Lemma split_q q : R q$m |-- let Rhalf := R (q/2)$m in Rhalf ** Rhalf.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
 
-  Lemma split_sum q1 q2 : R (cQp.mut (q1 + q2)) |-- R (cQp.mut q1) ** R (cQp.mut q2).
+  Lemma split_sum q1 q2 : R (q1 + q2)$m |-- R q1$m ** R q2$m.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
 
   Lemma split_mul_l p q1 q2 :
-    R (cQp.mut (p * (q1 + q2))) |-- R (cQp.mut (p * q1)) ** R (cQp.mut (p * q2)).
+    R (p * (q1 + q2))$m |-- R (p * q1)$m ** R (p * q2)$m.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
   Lemma split_mul_r p q1 q2 :
-    R (cQp.mut ((q1 + q2) * p)) |-- R (cQp.mut (q1 * p)) ** R (cQp.mut (q2 * p)).
+    R ((q1 + q2) * p)$m |-- R (q1 * p)$m ** R (q2 * p)$m.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
 
   Lemma split_div p q1 q2 :
-    R (cQp.mut ((q1 + q2) / p)) |-- R (cQp.mut (q1 / p)) ** R (cQp.mut (q2 / p)).
+    R ((q1 + q2) / p)$m |-- R (q1 / p)$m ** R (q2 / p)$m.
   Proof. iIntros "[R1 R2]". by iFrame "R1 R2". Qed.
 
   (**
@@ -146,47 +146,47 @@ Module Type EXAMPLES.
   (** Simplifing [cQp.is_const] given two concrete values *)
 
   Lemma combine_mut_mut :
-    R (cQp.mut (1/2)) ** R (cQp.mut (1/2)) |-- R (cQp.mut 1).
+    R (1/2)$m ** R (1/2)$m |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_mut_const :
-    R (cQp.mut (1/2)) ** R (cQp.const (1/2)) |-- R (cQp.mut 1).
+    R (1/2)$m ** R  (1/2)$c |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_const_mut :
-    R (cQp.const (1/2)) ** R (cQp.mut (1/2)) |-- R (cQp.mut 1).
+    R  (1/2)$c ** R (1/2)$m |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   Lemma combine_const_const :
-    R (cQp.const (1/2)) ** R (cQp.const (1/2)) |-- R (cQp.const 1).
+    R  (1/2)$c ** R  (1/2)$c |-- R 1$c.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   (** Simplifing [cQp.is_const] given one concrete value *)
 
   Lemma combine_mut_var q cv :
-    R (cQp.mut q) ** R cv |-- R (cQp.mut (q + cQp.frac cv)).
+    R q$m ** R cv |-- R (q + cQp.frac cv)$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_var_mut q cv :
-    R cv ** R (cQp.mut q) |-- R (cQp.mut (cQp.frac cv + q)).
+    R cv ** R q$m |-- R (cQp.frac cv + q)$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   Lemma combine_const_var q cv :
-    R (cQp.const q) ** R cv |-- R (cQp.mk (cQp.is_const cv) (q + cQp.frac cv)).
+    R q$c ** R cv |-- R (cQp.mk (cQp.is_const cv) (q + cQp.frac cv)).
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_var_const q cv :
-    R cv ** R (cQp.const q) |-- R (cQp.mk (cQp.is_const cv) (cQp.frac cv + q)).
+    R cv ** R q$c |-- R (cQp.mk (cQp.is_const cv) (cQp.frac cv + q)).
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   Lemma combine_mut_mk c :
-    R (cQp.mut (1/2)) ** R (cQp.mk c (1/2)) |-- R (cQp.mut 1).
+    R (1/2)$m ** R (cQp.mk c (1/2)) |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_mk_mut c :
-    R (cQp.mk c (1/2)) ** R (cQp.mut (1/2)) |-- R (cQp.mut 1).
+    R (cQp.mk c (1/2)) ** R (1/2)$m |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   Lemma combine_const_mk c :
-    R (cQp.const (1/2)) ** R (cQp.mk c (1/2)) |-- R (cQp.mk c 1).
+    R  (1/2)$c ** R (cQp.mk c (1/2)) |-- R (cQp.mk c 1).
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_mk_const c :
-    R (cQp.mk c (1/2)) ** R (cQp.const (1/2)) |-- R (cQp.mk c 1).
+    R (cQp.mk c (1/2)) ** R  (1/2)$c |-- R (cQp.mk c 1).
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   (** Simplifying [cQp.is_const] given no concrete values *)
@@ -214,34 +214,34 @@ Module Type EXAMPLES.
   Simpifying [cQp.frac] is pretty aggressive. We give a few examples.
   *)
 
-  Lemma combine_quarter q : R (cQp.mut (q/4)) ** R (cQp.mut (q/4)) |-- R (cQp.mut (q/2)).
+  Lemma combine_quarter q : R (q/4)$m ** R (q/4)$m |-- R (q/2)$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
-  Lemma combine_¼ : R (cQp.mut (1/4)) ** R (cQp.mut (1/4)) |-- R (cQp.mut (1/2)).
-  Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
-
-  Lemma combine_half q : R (cQp.mut (q/2)) ** R (cQp.mut (q/2)) |-- R (cQp.mut q).
-  Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
-  Lemma combine_½ : R (cQp.mut (1/2)) ** R (cQp.mut (1/2)) |-- R (cQp.mut 1).
+  Lemma combine_¼ : R (1/4)$m ** R (1/4)$m |-- R (1/2)$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
-  Lemma combine1 : R (cQp.mut (1/4)) ** R (cQp.mut (3/4)) |-- R (cQp.mut 1).
+  Lemma combine_half q : R (q/2)$m ** R (q/2)$m |-- R q$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
-  Lemma combine2 : R (cQp.mut (3/4)) ** R (cQp.mut (1/4)) |-- R (cQp.mut 1).
+  Lemma combine_½ : R (1/2)$m ** R (1/2)$m |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
-  Lemma combine3 : R (cQp.mut (1/3)) ** R (cQp.mut (2/3)) |-- R (cQp.mut 1).
+  Lemma combine1 : R (1/4)$m ** R (3/4)$m |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
-  Lemma combine4 : R (cQp.mut (2/3)) ** R (cQp.mut (1/3)) |-- R (cQp.mut 1).
+  Lemma combine2 : R (3/4)$m ** R (1/4)$m |-- R 1$m.
+  Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
+
+  Lemma combine3 : R (1/3)$m ** R (2/3)$m |-- R 1$m.
+  Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
+  Lemma combine4 : R (2/3)$m ** R (1/3)$m |-- R 1$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   Lemma combine_mul_l p q1 q2 :
-    R (cQp.mut (p * q1)) ** R (cQp.mut (p * q2)) |-- R (cQp.mut (p * (q1 + q2))).
+    R (p * q1)$m ** R (p * q2)$m |-- R (p * (q1 + q2))$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_mul_r p q1 q2 :
-    R (cQp.mut (q1 * p)) ** R (cQp.mut (q2 * p)) |-- R (cQp.mut ((q1 + q2) * p)).
+    R (q1 * p)$m ** R (q2 * p)$m |-- R ((q1 + q2) * p)$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
   Lemma combine_div p q1 q2 :
-    R (cQp.mut (q1 / p)) ** R (cQp.mut (q2 / p)) |-- R (cQp.mut ((q1 + q2) / p)).
+    R (q1 / p)$m ** R (q2 / p)$m |-- R ((q1 + q2) / p)$m.
   Proof. iIntros "[R1 R2]"; iCombine "R1 R2" as "R". by iFrame "R". Qed.
 
   End with_all.

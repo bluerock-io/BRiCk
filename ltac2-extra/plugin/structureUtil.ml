@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2023
+ * Copyright (C) 2023 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -80,7 +80,7 @@ let _ =
           in
           go 0 (t.Structure.projections)
         in
-        let t = of_ext val_inductive (t.Structure.name) in
+        let t = repr_of inductive (t.Structure.name) in
         let proj_term = of_constr (EConstr.of_constr (Constr.mkConstU (proj, inst))) in
         let proj_index = of_int proj_index in
         let args = of_array of_constr (Array.map EConstr.of_constr args) in

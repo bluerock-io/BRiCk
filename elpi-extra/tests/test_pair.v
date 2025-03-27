@@ -1,13 +1,13 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024-2025 BlueRock Security, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1 WITH BedRock Exception for use over network, see repository root for details.
  *)
 
-From bedrock_tests.elpi.extra Extra Dependency "test.elpi" as test.
-Require Import Coq.NArith.BinNat.
-Require Import Coq.ZArith.BinInt.
-Require Import bedrock.elpi.extra.extra.
+From bluerock_tests.elpi.extra Extra Dependency "test.elpi" as test.
+Require Import Stdlib.NArith.BinNat.
+Require Import Stdlib.ZArith.BinInt.
+Require Import bluerock.elpi.extra.extra.
 
 Elpi Program test lp:{{ }}.
 Elpi Accumulate File extra.Program.

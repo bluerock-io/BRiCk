@@ -7,14 +7,14 @@
 (** Support code for [simple_pointers.v]. *)
 
 Require Import stdpp.gmap.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.addr.
-Require Import bedrock.prelude.option.
-Require Import bedrock.prelude.avl.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.types.
-Require Import bedrock.lang.cpp.semantics.genv.
-Require Import bedrock.lang.cpp.semantics.alloc_id.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.addr.
+Require Import bluerock.prelude.option.
+Require Import bluerock.prelude.avl.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.types.
+Require Import bluerock.lang.cpp.semantics.genv.
+Require Import bluerock.lang.cpp.semantics.alloc_id.
 
 Implicit Types (σ : genv).
 #[local] Close Scope nat_scope.

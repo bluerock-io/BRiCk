@@ -1,12 +1,12 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2021-2024
+ * Copyright (C) 2021-2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.ltac2.extra.internal.init.
-Require Import bedrock.ltac2.extra.internal.constr.
+Require Import bluerock.ltac2.extra.internal.init.
+Require Import bluerock.ltac2.extra.internal.constr.
 
 Module ConstrSet_test.
   Import Ltac2.
@@ -86,3 +86,23 @@ Module DecomposeProj_Tests.
     Goal True. test 't2. Qed.
   End Prim.
 End DecomposeProj_Tests.
+
+
+Module Vars_Test.
+  Import Ltac2.
+  Import printf.Printf.
+
+  #[projections(primitive)]
+  Record ty (u : unit) := R { f : unit }.
+
+  Lemma test u (r : ty u) : @f u r = tt.
+  Proof.
+    intros.
+    Control.enter (fun () =>
+      let g := Control.goal () in
+      let v := Constr.Vars.vars_really_needed g in
+      Control.assert_true (FSet.mem @u v)
+    ).
+  Abort.
+
+End Vars_Test.

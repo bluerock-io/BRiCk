@@ -13,17 +13,17 @@ Unlike [PTRS_IMPL], this model cannot be extended to support
 *)
 
 Require Import stdpp.gmap.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.addr.
-Require Import bedrock.prelude.avl.
-Require Import bedrock.prelude.bytestring.
-Require Import bedrock.prelude.option.
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.addr.
+Require Import bluerock.prelude.avl.
+Require Import bluerock.prelude.bytestring.
+Require Import bluerock.prelude.option.
+Require Import bluerock.prelude.numbers.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.sub_module.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.model.simple_pointers_utils.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.sub_module.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.model.simple_pointers_utils.
 
 Implicit Types (σ : genv).
 #[local] Close Scope nat_scope.
@@ -48,7 +48,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   Definition nullptr : ptr := mkptr null_alloc_id 0.
 
   Definition ptr_alloc_id : ptr -> option alloc_id := fmap fst.
-  Definition ptr_vaddr : ptr -> option vaddr := λ p,
+  Definition ptr_vaddr : ∀ {σ}, ptr -> option vaddr := λ {σ} p,
     '(_, va) ← p;
     guard (0 ≤ va);;
     Some (Z.to_N va).
@@ -63,7 +63,7 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   #[global] Instance ptr_eq_dec : EqDecision ptr := _.
   #[global] Instance ptr_countable : Countable ptr := _.
 
-  Lemma ptr_vaddr_nullptr : ptr_vaddr nullptr = Some 0%N.
+  Lemma ptr_vaddr_nullptr {σ} : ptr_vaddr nullptr = Some 0%N.
   Proof. done. Qed.
 
   Definition o_id : offset := Some 0.
@@ -212,104 +212,113 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
   Lemma global_ptr_nonnull tu o : global_ptr tu o <> nullptr.
   Proof. (* done. Qed. *) Admitted. (* TODO *)
 
-  Lemma ptr_vaddr_global_ptr tu o :
-    ptr_vaddr (global_ptr tu o) = Some (global_ptr_encode_vaddr o).
-  Proof. (* done. Qed. *) Admitted. (* TODO *)
-  Lemma ptr_alloc_id_global_ptr tu o :
-    ptr_alloc_id (global_ptr tu o) = Some (global_ptr_encode_aid o).
-  Proof. done. Qed.
+  Section with_genv.
+    Context {σ}.
 
-  Lemma global_ptr_nonnull_addr tu o : ptr_vaddr (global_ptr tu o) <> Some 0%N.
-  Proof. rewrite ptr_vaddr_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
-  Lemma global_ptr_nonnull_aid tu o : ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
-  Proof. rewrite ptr_alloc_id_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
+    Lemma ptr_vaddr_global_ptr tu o :
+      ptr_vaddr (global_ptr tu o) = Some (global_ptr_encode_vaddr o).
+    Proof. (* done. Qed. *) Admitted. (* TODO *)
+    Lemma ptr_alloc_id_global_ptr tu o :
+      ptr_alloc_id (global_ptr tu o) = Some (global_ptr_encode_aid o).
+    Proof. done. Qed.
 
-  #[global] Instance global_ptr_inj tu : Inj (=) (=) (global_ptr tu).
-  Proof. by intros o1 o2 [?%(inj global_ptr_encode_aid) _]%(inj Some)%(inj2 _). Qed.
+    Lemma global_ptr_nonnull_addr tu o : ptr_vaddr (global_ptr tu o) <> Some 0%N.
+    Proof. rewrite ptr_vaddr_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
+    Lemma global_ptr_nonnull_aid tu o : ptr_alloc_id (global_ptr tu o) <> Some null_alloc_id.
+    Proof. rewrite ptr_alloc_id_global_ptr. (* done. Qed. *) Admitted. (* TODO *)
 
-  #[global] Instance global_ptr_addr_inj tu : Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
-  Proof. intros ??. rewrite !ptr_vaddr_global_ptr. by intros ?%(inj _)%(inj _). Qed.
-  #[global] Instance global_ptr_aid_inj tu : Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
-  Proof. intros ??. rewrite !ptr_alloc_id_global_ptr. by intros ?%(inj _)%(inj _). Qed.
+    #[global] Instance global_ptr_inj tu : Inj (=) (=) (global_ptr tu).
+    Proof. by intros o1 o2 [?%(inj global_ptr_encode_aid) _]%(inj Some)%(inj2 _). Qed.
 
-  Lemma ptr_vaddr_o_sub_eq p σ ty n1 n2 sz
-    (Hsz : size_of σ ty = Some sz) (Hsz0 : (sz > 0)%N) :
-    (same_property ptr_vaddr (p ,, o_sub σ ty n1) (p ,, o_sub σ ty n2) ->
-    n1 = n2).
-  Proof.
-    UNFOLD_dot.
-    rewrite same_property_iff /ptr_vaddr /o_sub /o_sub_off Hsz => -[addr []] /=.
-    case: p => [[aid va]|] Haddr ?; simplify_option_eq. nia.
-  Qed.
+    #[global] Instance global_ptr_addr_inj tu : Inj (=) (=) (λ o, ptr_vaddr (global_ptr tu o)).
+    Proof. intros ??. rewrite !ptr_vaddr_global_ptr. by intros ?%(inj _)%(inj _). Qed.
+    #[global] Instance global_ptr_aid_inj tu : Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
+    Proof. intros ??. rewrite !ptr_alloc_id_global_ptr. by intros ?%(inj _)%(inj _). Qed.
 
-  #[global] Instance o_sub_mono :
-    Proper (genv_leq ==> eq ==> eq ==> Roption_leq eq) (@o_sub).
-  Proof.
-    move => σ1 σ2 /Proper_size_of + _ ty -> _ n -> => /(_ ty ty eq_refl).
-    rewrite /o_sub /o_sub_off.
-    move: (size_of σ1) (size_of σ2) => [sz1|] [sz2|] LE //=; inversion LE; constructor.
-    naive_solver .
-  Qed.
+    Lemma ptr_vaddr_o_sub_eq p ty n1 n2 sz
+      (Hsz : size_of σ ty = Some sz) (Hsz0 : (sz > 0)%N) :
+      (same_property ptr_vaddr (p ,, o_sub σ ty n1) (p ,, o_sub σ ty n2) ->
+      n1 = n2).
+    Proof.
+      UNFOLD_dot.
+      rewrite same_property_iff /ptr_vaddr /o_sub /o_sub_off Hsz => -[addr []] /=.
+      case: p => [[aid va]|] Haddr ?; simplify_option_eq. nia.
+    Qed.
 
-  (* Not exposed directly, but proof sketch for
-  [valid_o_sub_size]; recall that in this model, all valid pointers have an
-  address. *)
-  Lemma raw_valid_o_sub_size σ p ty i :
-    is_Some (ptr_vaddr (p ,, o_sub σ ty i)) ->
-    is_Some (size_of σ ty).
-  Proof. rewrite _dot.unlock /o_sub /o_sub_off. case: size_of=> //=. Qed.
+    #[global] Instance o_sub_mono :
+      Proper (genv_leq ==> eq ==> eq ==> Roption_leq eq) (@o_sub).
+    Proof.
+      move => σ1 σ2 /Proper_size_of + _ ty -> _ n -> => /(_ ty ty eq_refl).
+      rewrite /o_sub /o_sub_off.
+      move: (size_of σ1) (size_of σ2) => [sz1|] [sz2|] LE //=; inversion LE; constructor.
+      naive_solver.
+    Qed.
 
-  Definition eval_offset (_ : genv) (o : offset) : option Z := o.
-  Lemma eval_o_sub σ ty (i : Z) :
-    eval_offset _ (o_sub _ ty i) =
-      (* This order enables reducing for known ty. *)
-      (fun n => Z.of_N n * i) <$> size_of _ ty.
-  Proof.
-    rewrite /o_sub/o_sub_off. case: size_of => //= sz.
-    by rewrite (comm _ i).
-  Qed.
+    (* Not exposed directly, but proof sketch for
+    [valid_o_sub_size]; recall that in this model, all valid pointers have an
+    address. *)
+    Lemma raw_valid_o_sub_size p ty i :
+      is_Some (ptr_vaddr (p ,, o_sub σ ty i)) ->
+      is_Some (size_of σ ty).
+    Proof. rewrite _dot.unlock /o_sub /o_sub_off. case: size_of=> //=. Qed.
 
-  Lemma eval_o_field σ f n cls st :
-    f = Field cls n ->
-    glob_def σ cls = Some (Gstruct st) ->
-    st.(s_layout) = POD \/ st.(s_layout) = Standard ->
-    eval_offset σ (o_field σ f) = offset_of σ cls n.
-  Proof. (* done. Qed. *) Admitted. (* TODO *)
+    Definition eval_offset (_ : genv) (o : offset) : option Z := o.
+    Lemma eval_o_sub ty (i : Z) :
+      eval_offset _ (o_sub _ ty i) =
+        (* This order enables reducing for known ty. *)
+        (fun n => Z.of_N n * i) <$> size_of _ ty.
+    Proof.
+      rewrite /o_sub/o_sub_off. case: size_of => //= sz.
+      by rewrite (comm _ i).
+    Qed.
 
-  (* [eval_offset] respects the monoidal structure of [offset]s *)
-  Lemma eval_offset_dot : ∀ σ (o1 o2 : offset),
-    eval_offset σ (o1 ,, o2) =
-    add_opt (eval_offset σ o1) (eval_offset σ o2).
-  Proof. UNFOLD_dot; by unfold eval_offset, __o_dot, add_opt. Qed.
+    Lemma eval_o_field f n cls st :
+      f = Field cls n ->
+      glob_def σ cls = Some (Gstruct st) ->
+      st.(s_layout) = POD \/ st.(s_layout) = Standard ->
+      eval_offset σ (o_field σ f) = offset_of σ cls n.
+    Proof. (* done. Qed. *) Admitted. (* TODO *)
 
-  Lemma offset_ptr_vaddr_raw resolve o n va va' p :
-    eval_offset resolve o = Some n ->
-    ptr_vaddr p = Some va ->
-    ptr_vaddr (p ,, o) = Some va' ->
-    Z.to_N (Z.of_N va + n) = va'.
-  Proof.
-    UNFOLD_dot.
-    rewrite /eval_offset /ptr_vaddr.
-    case: p => [[aid ?]|] /=;
-      intros; simplify_option_eq. lia.
-  Qed.
+    (* [eval_offset] respects the monoidal structure of [offset]s _for well-defined offsets_. *)
+    Lemma eval_offset_dot : ∀ (o1 o2 : offset),
+      ∀ s1 s2,
+        eval_offset σ o1 = Some s1 ->
+        eval_offset σ o2 = Some s2 ->
+        eval_offset σ (o1 ,, o2) = Some (s1 + s2).
+    (* [eval_offset] respects the monoidal structure of [offset]s *)
+    Proof.
+      UNFOLD_dot; unfold eval_offset, __o_dot, add_opt; naive_solver.
+    Qed.
 
-  Lemma offset_ptr_vaddr resolve o n va p :
-    eval_offset resolve o = Some n ->
-    ptr_vaddr p = Some va ->
-    ptr_vaddr (p ,, o) = Some (Z.to_N (Z.of_N va + n)).
-  Proof.
-    case E: (ptr_vaddr (p ,, o)) => [va'|] Hoff Hp.
-    { by erewrite offset_ptr_vaddr_raw. }
-    move: E Hp Hoff.
-    rewrite /eval_offset /ptr_vaddr.
-    case: p => [[aid ?]|] //=;
-      intros; simplify_option_eq => //.
-    (* False. *)
-    (* have: 0 <= n by admit. *)
-    (* lia. *)
-  Abort.
+    Lemma offset_ptr_vaddr_raw resolve o n va va' p :
+      eval_offset resolve o = Some n ->
+      ptr_vaddr p = Some va ->
+      ptr_vaddr (p ,, o) = Some va' ->
+      Z.to_N (Z.of_N va + n) = va'.
+    Proof.
+      UNFOLD_dot.
+      rewrite /eval_offset /ptr_vaddr.
+      case: p => [[aid ?]|] /=;
+        intros; simplify_option_eq. lia.
+    Qed.
 
+    Lemma offset_ptr_vaddr resolve o n va p :
+      eval_offset resolve o = Some n ->
+      ptr_vaddr p = Some va ->
+      ptr_vaddr (p ,, o) = Some (Z.to_N (Z.of_N va + n)).
+    Proof.
+      case E: (ptr_vaddr (p ,, o)) => [va'|] Hoff Hp.
+      { by erewrite offset_ptr_vaddr_raw. }
+      move: E Hp Hoff.
+      rewrite /eval_offset /ptr_vaddr.
+      case: p => [[aid ?]|] //=;
+        intros; simplify_option_eq => //.
+      (* False. *)
+      (* have: 0 <= n by admit. *)
+      (* lia. *)
+    Abort.
+
+  End with_genv.
   Include PTRS_DERIVED_MIXIN.
   Include PTRS_MIXIN.
 End SIMPLE_PTRS_IMPL.

@@ -1,10 +1,29 @@
 /*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024 BlueRock Security, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1 WITH BedRock Exception for use over network, see repository root for details.
  */
 
 /** * Minor extensions to namespace <<coq>> */
+
+namespace coq {
+
+  /** Utils */
+  pred ltac.fresh-name i:name, i:term, o:name.
+
+macro @pi-decl-safe N T F :-
+  sigma N' \ coq.ltac.fresh-name N T N', pi x\ decl x N' T => F x.
+macro @pi-def-safe N T B F :-
+  sigma N' \ coq.ltac.fresh-name N T N', pi x\ def x N' T B => cache x B_ => F x.
+
+}
+
+macro @pi-decl-safe2 N T F :-
+  sigma N' \ coq.ltac.fresh-name N T N', pi x\ decl x N' T => F x.
+macro @pi-def-safe2 N T B F :-
+  sigma N' \ coq.ltac.fresh-name N T N', pi x\ def x N' T B => cache x B_ => F x.
+
+/** Utils */
 
 namespace coq {
 
@@ -26,6 +45,9 @@ namespace coq {
   /*
   Implementation
   */
+
+  ltac.fresh-name N Ty N' :-
+    coq.id->name { coq.ltac.fresh-id {coq.name->id N} Ty } N'.
 
   ltac.solve Ty Tac Args Tm D :- diag.do! D [
     diag.lift-oks! (Tm = {{ _ }}) "coq.ltac.solve: Cannot set output",

@@ -1,5 +1,5 @@
 (*
- * Copyright (C) 2023-2024 BlueRock Security Inc.
+ * Copyright (C) 2023-2024 BlueRock Security, Inc.
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -21,11 +21,11 @@ open Rocq_tools.Extra
 let coqdep_command : string list -> string = fun args ->
   let coqc =
     match Sys.getenv_opt "DUNE_SOURCEROOT" with
-    | None       -> "coqdep"
-    | Some(root) -> Filename.concat root "_build/install/default/bin/coqdep"
+    | None       -> "rocq"
+    | Some(root) -> Filename.concat root "_build/install/default/bin/rocq"
   in
   Filename.quote_command coqc args
 
 let _ =
   let args = List.tl (Array.to_list Sys.argv) in
-  exit (Sys.command (coqdep_command ("-w" :: "+all" :: args)))
+  exit (Sys.command (coqdep_command ("dep" :: "-w" :: "+all" :: args)))

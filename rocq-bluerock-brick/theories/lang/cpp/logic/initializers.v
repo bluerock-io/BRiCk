@@ -4,18 +4,18 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import Stdlib.Lists.List.
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.prelude.numbers.
-Require Import bedrock.prelude.bool.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.bi.errors.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.destroy.
-Require Import bedrock.lang.cpp.logic.const.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.prelude.numbers.
+Require Import bluerock.prelude.bool.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.destroy.
+Require Import bluerock.lang.cpp.logic.const.
 
 #[local] Set Printing Coercions.
 
@@ -67,7 +67,6 @@ Definition default_initialize_array `{Σ : cpp_logic, σ : genv} :
     (tu : translation_unit) (ty : exprtype) (len : N) (p : ptr)
     (Q : FreeTemps -> epred), mpred :=
   Cbn (Reduce (default_initialize_array_body true)).
-#[global] Arguments default_initialize_array {_ _ _ _} _ _ _ _ _ _%_I : assert.	(* mlock bug *)
 
 (**
 [default_initialize tu ty p Q] default initializes the memory at [p]
@@ -106,7 +105,7 @@ Definition default_initialize_body `{Σ : cpp_logic, σ : genv}
   | Tnullptr
   | Tenum _ =>
     let rty := erase_qualifiers ty in
-    p |-> uninitR rty (cQp.m 1) -* |={top}=>?u Q FreeTemps.id
+    p |-> uninitR rty 1$m -* |={top}=>?u Q FreeTemps.id
 
   | Tarray ety sz =>
     default_initialize_array (default_initialize ety) tu ety sz p (fun _ => Q FreeTemps.id)
@@ -135,11 +134,10 @@ Definition default_initialize_body `{Σ : cpp_logic, σ : genv}
   end%pstring%I.
 
 mlock
-  Definition default_initialize `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
+Definition default_initialize `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
   : ∀ (ty : exprtype) (p : ptr) (Q : FreeTemps -> epred), mpred :=
   fix default_initialize ty p Q {struct ty} :=
     Cbn (Reduce (default_initialize_body true) default_initialize tu ty p Q).
-#[global] Arguments default_initialize {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Section unfold.
   Context `{Σ : cpp_logic, σ : genv}.
@@ -444,7 +442,6 @@ Definition wp_initialize_unqualified `{Σ : cpp_logic, σ : genv} :
     (cv : type_qualifiers) (ty : decltype)
     (addr : ptr) (init : Expr) (Q : FreeTemps -> epred), mpred :=
   Cbn (Reduce (wp_initialize_unqualified_body fupd_compatible)).
-#[global] Arguments wp_initialize_unqualified {_ _ _ _} _ _ _ _ _ _ _%_I : assert.	(* mlock bug *)
 
 Definition wp_initialize `{Σ : cpp_logic, σ : genv} (tu : translation_unit) (ρ : region)
     (qty : decltype) (addr : ptr) (init : Expr) (Q : FreeTemps -> epred) : mpred :=
@@ -843,7 +840,7 @@ Section wp_initialize.
   | WpInitVolatile cv ty' : (cv, ty') = decompose_type ty ->
                             q_volatile cv ->
                           wp_initialize_decomp_spec tu ρ ty addr init Q False
-  | WpInitScalar cv ty' : scalar_type ty' ->
+  | WpInitScalar cv ty' : is_scalar_type ty' ->
                          (cv, ty') = decompose_type ty ->
                          ~~q_volatile cv ->
                          wp_initialize_decomp_spec tu ρ ty addr init Q (

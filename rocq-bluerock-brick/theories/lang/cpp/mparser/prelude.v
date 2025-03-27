@@ -4,7 +4,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.prelude.base.	(* for, e.g., <<::>> *)
-Require Export bedrock.prelude.bytestring.	(* for <<%bs>> *)
-Require Export bedrock.lang.cpp.syntax.mcore.
-Require Export bedrock.lang.cpp.syntax.templates.
+Require Export bluerock.prelude.base.	(* for, e.g., <<::>> *)
+Require Export bluerock.prelude.bytestring.	(* for <<%bs>> *)
+Require Export bluerock.lang.cpp.syntax.mcore.
+Require Export bluerock.lang.cpp.syntax.templates.

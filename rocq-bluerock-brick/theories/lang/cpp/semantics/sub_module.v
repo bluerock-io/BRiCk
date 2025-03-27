@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import stdpp.fin_maps.
-Require Export bedrock.prelude.base.
-Require Import bedrock.prelude.avl.
-Require Import bedrock.lang.cpp.syntax.
+Require Export bluerock.prelude.base.
+Require Import bluerock.prelude.avl.
+Require Import bluerock.lang.cpp.syntax.
 
 (** TODO rename [sub_module] since it is not actually about modules
     TODO use [⊆] as the "generic" name by declaring [SubsetEq] instances

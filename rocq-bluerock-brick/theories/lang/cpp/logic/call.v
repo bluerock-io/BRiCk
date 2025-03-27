@@ -3,15 +3,15 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.initializers.
-Require Import bedrock.prelude.letstar.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.initializers.
+Require Import bluerock.prelude.letstar.
 
 (* BEGIN UPSTREAM *)
 Lemma big_opL_map {PROP : bi} : forall {T U} (g : U -> T) ps (f : nat -> T -> PROP),
@@ -237,7 +237,7 @@ Definition xval_receive `{Σ : cpp_logic, σ : genv}
   [primR] is enough because C++ code never uses the raw bytes
   underlying an inhabitant of a reference type.
   *)
-  Exists p, res |-> primR (Tref (erase_qualifiers ty)) (cQp.mut 1) (Vref p) ** Q p.
+  Exists p, res |-> primR (Tref (erase_qualifiers ty)) 1$m (Vref p) ** Q p.
 #[global] Arguments xval_receive {_ _ _ _} _ _ _ / : assert.
 
 Definition lval_receive `{Σ : cpp_logic, σ : genv}
@@ -246,7 +246,7 @@ Definition lval_receive `{Σ : cpp_logic, σ : genv}
   [primR] is enough because C++ code never uses the raw bytes
   underlying an inhabitant of a reference type.
   *)
-  Exists p, res |-> primR (Tref (erase_qualifiers ty)) (cQp.mut 1) (Vref p) ** Q p.
+  Exists p, res |-> primR (Tref (erase_qualifiers ty)) 1$m (Vref p) ** Q p.
 #[global] Arguments lval_receive {_ _ _ _} _ _ _ / : assert.
 
 mlock Definition operand_receive `{Σ : cpp_logic, σ : genv}
@@ -255,7 +255,6 @@ mlock Definition operand_receive `{Σ : cpp_logic, σ : genv}
   let cv := qual_norm (fun cv _ => cv) ty in
   res |-> tptsto_fuzzyR (erase_qualifiers ty) (cQp.mk (q_const cv) 1) v **
   Q v.
-#[global] Arguments operand_receive {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 Definition init_receive `{Σ : cpp_logic, σ : genv}
     (addr res : ptr) (Q : epred) : mpred :=

@@ -5,17 +5,17 @@
  *)
 Require Export elpi.apps.locker.locker.
 
-Require Export bedrock.lang.proofmode.proofmode.
-Require Export bedrock.lang.bi.fractional.
+Require Export bluerock.iris.extra.proofmode.proofmode.
+Require Export bluerock.iris.extra.bi.fractional.
 
-Require Export bedrock.lang.cpp.bi.cfractional.
-Require Export bedrock.lang.cpp.semantics.
-Require Export bedrock.lang.cpp.syntax.
-Require Export bedrock.lang.cpp.logic.pred.
-Require Export bedrock.lang.cpp.logic.pred.
-Require Export bedrock.lang.cpp.logic.path_pred.
+Require Export bluerock.lang.cpp.bi.cfractional.
+Require Export bluerock.lang.cpp.semantics.
+Require Export bluerock.lang.cpp.syntax.
+Require Export bluerock.lang.cpp.logic.pred.
+Require Export bluerock.lang.cpp.logic.pred.
+Require Export bluerock.lang.cpp.logic.path_pred.
 
-Export bedrock.lang.cpp.logic.pred.
+Export bluerock.lang.cpp.logic.pred.
 (* ^^ Should this be exported? this file is supposed to provide wrappers
    so that clients do not work directly with [pred.v] *)
-Export bedrock.lang.cpp.algebra.cfrac.
+Export bluerock.lang.cpp.algebra.cfrac.

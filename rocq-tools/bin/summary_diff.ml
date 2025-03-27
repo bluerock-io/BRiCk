@@ -1,5 +1,5 @@
 (*
- * Copyright (C) 2023-2024 BlueRock Security Inc.
+ * Copyright (C) 2023-2024 BlueRock Security, Inc.
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,7 @@
  *)
 
 (*
- * Copyright (C) BlueRock Security Inc. 2022
+ * Copyright (C) 2022 BlueRock Security, Inc.
  *)
 
 (** Short name for a standard formatter. *)

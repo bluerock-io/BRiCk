@@ -1,7 +1,7 @@
 (*
  * SPDX-License-Identifier: BSD-3-Clause
  * Copyright: RefinedC developers and contributors 2020-2023
- * Copyright: BlueRock Security, Inc. 2024
+ * Copyright: 2024 BlueRock Security, Inc.
  *)
 
 (** Output and debugging utilities. *)

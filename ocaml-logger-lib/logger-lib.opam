@@ -4,8 +4,8 @@ synopsis: "Generic logging library with efficient event recording"
 maintainer: ["Jan-Oliver Kaiser <janno@bluerock.io>"]
 authors: ["Jan-Oliver Kaiser <janno@bluerock.io>" "Rodolphe Lepigre"]
 license: "LicenseRef-BedRock"
-homepage: "https://github.com/bedrocksystems/cpp2v"
-bug-reports: "https://github.com/bedrocksystems/cpp2v/issues"
+homepage: "https://github.com/bluerock-io/BRiCk"
+bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [
   "dune" {>= "3.16"}
   "stdlib-extra"
@@ -25,4 +25,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/bedrocksystems/cpp2v.git"
+dev-repo: "git+https://github.com/bluerock-io/BRiCk.git"

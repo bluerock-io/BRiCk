@@ -3,9 +3,9 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.cpp.arith.types.
-Require Import bedrock.lang.cpp.arith.operator.
+Require Import bluerock.prelude.base.
+Require Import bluerock.lang.cpp.arith.types.
+Require Import bluerock.lang.cpp.arith.operator.
 
 #[local] Open Scope Z_scope.
 (* see

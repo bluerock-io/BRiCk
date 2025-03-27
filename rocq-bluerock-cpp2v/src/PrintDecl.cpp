@@ -621,59 +621,6 @@ static const DeclPrinter Dunion("Dunion", printUnion, supportedRecord);
 // Functions
 namespace {
 static fmt::Formatter &
-printBuiltin(Builtin::ID id, const ValueDecl &decl, CoqPrinter &print,
-			 ClangPrinter &cprint) {
-	if (ClangPrinter::debug && cprint.trace(Trace::Decl))
-		cprint.trace("printBuiltin", loc::of(decl));
-	switch (id) {
-#define CASEB(x)                                                               \
-	case Builtin::BI__builtin_##x:                                             \
-		return print.output() << "Bin_" #x;
-		CASEB(alloca)
-		CASEB(alloca_with_align)
-		CASEB(launder)
-		// control flow
-		CASEB(expect)
-		CASEB(unreachable)
-		CASEB(trap)
-		// bitwise operations
-		CASEB(bswap16)
-		CASEB(bswap32)
-		CASEB(bswap64)
-		CASEB(ffs)
-		CASEB(ffsl)
-		CASEB(ffsll)
-		CASEB(clz)
-		CASEB(clzl)
-		CASEB(clzll)
-		CASEB(ctz)
-		CASEB(ctzl)
-		CASEB(ctzll)
-		CASEB(popcount)
-		CASEB(popcountl)
-		// memory operations
-		CASEB(memset)
-		CASEB(memcmp)
-		CASEB(bzero)
-#undef CASEB
-	default: {
-		if (ClangPrinter::warn_well_known)
-			unsupported(cprint, loc::of(decl), "builtin function");
-		guard::ctor _(print, "Bin_unknown");
-		return print.str(decl.getNameAsString());
-	}
-	}
-}
-
-static inline Builtin::ID
-getBuiltin(const FunctionDecl &decl) {
-	auto id = decl.getBuiltinID();
-	if (Builtin::ID::NotBuiltin != id)
-		return Builtin::ID(id);
-	return Builtin::ID::NotBuiltin;
-}
-
-static fmt::Formatter &
 printFunctionParams(CoqPrinter &print, const FunctionDecl &decl,
 					ClangPrinter &cprint) {
 	if (ClangPrinter::debug && cprint.trace(Trace::Decl))
@@ -701,10 +648,11 @@ printFunction(CoqPrinter &print, const FunctionDecl &decl, ClangPrinter &cprint,
 		guard::some some(print, false);
 		guard::ctor _(print, "Impl", false);
 		return cprint.printStmt(print, body);
-	} else if (auto builtin = getBuiltin(decl)) {
+	} else if (decl.getBuiltinID() != Builtin::ID::NotBuiltin) {
 		guard::some some(print, false);
 		guard::ctor _(print, "Builtin", false);
-		return printBuiltin(builtin, decl, print, cprint);
+		return print.str(
+			cprint.getContext().BuiltinInfo.getName(decl.getBuiltinID()));
 	} else {
 		return print.none();
 	}

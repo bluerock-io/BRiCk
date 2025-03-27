@@ -11,7 +11,7 @@
  "Gregory Malecha <gregory@bluerock.io>"
  "Paolo Giarrusso <paolo@bluerock.io>")
 
-(source (github bedrocksystems/BRiCk))
+(source (github bluerock-io/BRiCk))
 
 (license LGPL-2.1-or-later)
 

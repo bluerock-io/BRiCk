@@ -3,20 +3,20 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.prelude.base.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Require Import iris.bi.lib.fractional.
 
-Require Import bedrock.lang.cpp.bi.cfractional.
-Require Import bedrock.lang.cpp.arith.z_to_bytes.
-Require Import bedrock.lang.cpp.arith.builtins.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.arr.
-Require Import bedrock.lang.cpp.logic.builtins.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.z_to_bytes.
+Require Import bluerock.lang.cpp.bi.cfractional.
+Require Import bluerock.lang.cpp.arith.z_to_bytes.
+Require Import bluerock.lang.cpp.arith.builtins.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.arr.
+Require Import bluerock.lang.cpp.logic.builtins.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.z_to_bytes.
 
 (**
 [rawR q r]: the argument pointer points to [r : raw_byte] within the
@@ -24,7 +24,6 @@ C++ abstract machine.
 *)
 mlock Definition rawR `{Σ : cpp_logic, σ : genv} (q : cQp.t) (r : raw_byte) : Rep :=
   tptsto_fuzzyR Tbyte q (Vraw r).
-#[global] Arguments rawR {_ _ _ _} _ _ : assert.	(* mlock bug *)
 
 (**
 [rawsR q rs]: An array of raw bytes
@@ -70,16 +69,6 @@ Section with_Σ.
   Context `{Σ : cpp_logic} {σ : genv}.
 
   (** [rawR] *)
-
-  #[local] Notation PROPER R S := (
-    Proper (R ==> eq ==> eq ==> S) (@rawR _ _ _)
-  ) (only parsing).
-  #[global] Instance rawR_mono : PROPER genv_leq bi_entails.
-  Proof. rewrite rawR.unlock. solve_proper. Qed.
-  #[global] Instance rawR_flip_mono : PROPER (flip genv_leq) (flip bi_entails).
-  Proof. repeat intro. exact: rawR_mono. Qed.
-  #[global] Instance rawR_proper : PROPER genv_eq equiv.
-  Proof. intros σ1 σ2 [??] ??? ???. split'; exact: rawR_mono. Qed.
 
   #[global] Instance rawR_timeless : Timeless2 rawR.
   Proof. rewrite rawR.unlock. apply _. Qed.

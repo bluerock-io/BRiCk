@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2019-2024
+ * Copyright (C) 2019-2024 BlueRock Security, Inc.
 
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -8,18 +8,18 @@ Require Import Stdlib.ZArith.BinInt.
 Require Import Stdlib.Lists.List.
 Require Export Stdlib.Strings.Ascii.
 
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.prelude.stdpp_ssreflect.
-Require Import bedrock.prelude.bytestring.
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.logic.arr.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.mpred.
-Require Import bedrock.lang.cpp.logic.zstring.
+Require Import bluerock.prelude.stdpp_ssreflect.
+Require Import bluerock.prelude.bytestring.
+Require Import bluerock.prelude.base.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.logic.arr.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.mpred.
+Require Import bluerock.lang.cpp.logic.zstring.
 
 Import ChargeNotation.
 #[local] Open Scope Z_scope.
@@ -1136,28 +1136,29 @@ Module cstring.
   End with_Σ.
 End cstring.
 
-Require Import bedrock.lang.cpp.logic.core_string.
+Require Import bluerock.lang.cpp.logic.core_string.
 
 Section core_string.
   Context `{Σ : cpp_logic} {σ : genv}.
 
-  Lemma string_bytesR_zstringR bytes q :
-    zstring.WF char_type.Cchar (bytes ++ [0%N]) ->
-    string_bytesR char_type.Cchar q bytes -|- zstring.R char_type.Cchar q (bytes ++ [0]%N).
+  Lemma string_bytesR_zstringR str q :
+    zstring.WF char_type.Cchar (literal_string.to_list_N str ++ [0%N]) ->
+    string_bytesR char_type.Cchar q str -|- zstring.R char_type.Cchar q (literal_string.to_list_N str ++ [0]%N).
   Proof.
     intros HWF.
     apply Rep_equiv_at => p.
     rewrite /zstring.R string_bytesR.unlock /= _at_sep _at_only_provable.
     rewrite only_provable_True // right_id; f_equiv.
+    move: (literal_string.to_list_N _) HWF => bytes HWF.
     elim: bytes HWF => [|b bs IH] /= HWF.
     by rewrite !(arrayR_cons, arrayR_nil) !N_to_char_Cchar_eq.
     move: HWF => /zstring.WF_cons' [_ [/has_type_prop_char' /= Hbt Hbs]].
     rewrite !(arrayR_cons, arrayR_nil) -IH ?N_to_char_Cchar_eq //; lia.
   Qed.
 
-  Lemma string_bytesR_cstringR bytes q :
-    zstring.WF char_type.Cchar (bytes ++ [0%N]) ->
-    string_bytesR char_type.Cchar q bytes -|- cstring.R q (cstring._from_zstring (bytes ++ [0%N])).
+  Lemma string_bytesR_cstringR str q :
+    zstring.WF char_type.Cchar (literal_string.to_list_N str ++ [0%N]) ->
+    string_bytesR char_type.Cchar q str -|- cstring.R q (cstring._from_zstring (literal_string.to_list_N str ++ [0%N])).
   Proof.
     intros HWF.
     by rewrite string_bytesR_zstringR // /cstring.R cstring.to_from_zstring.

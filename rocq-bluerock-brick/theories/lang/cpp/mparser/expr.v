@@ -3,11 +3,11 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.cpp.mparser.prelude.
-Require Import bedrock.lang.cpp.syntax.types.
-Require Import bedrock.lang.cpp.syntax.typing. (* TODO: use [typed]? *)
-Require Import bedrock.lang.cpp.syntax.overloadable.
-Require Import bedrock.lang.cpp.parser.expr.
+Require Import bluerock.lang.cpp.mparser.prelude.
+Require Import bluerock.lang.cpp.syntax.types.
+Require Import bluerock.lang.cpp.syntax.typing. (* TODO: use [typed]? *)
+Require Import bluerock.lang.cpp.syntax.overloadable.
+Require Import bluerock.lang.cpp.parser.expr.
 
 #[local] Definition parser_lang : lang.t := lang.temp.
 Include ParserExpr.

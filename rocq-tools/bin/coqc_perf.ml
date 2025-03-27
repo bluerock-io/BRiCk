@@ -1,5 +1,5 @@
 (*
- * Copyright (C) 2023-2024 BlueRock Security Inc.
+ * Copyright (C) 2023-2024 BlueRock Security, Inc.
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -29,12 +29,12 @@ let check_no_comp () =
       panic "Error: %s can only have value \"true\" or \"false\"." _NO_COMP
 
 let coqc_command : string list -> string = fun args ->
-  let coqc =
+  let coqc, extra_args =
     match Sys.getenv_opt "DUNE_SOURCEROOT" with
-    | None       -> "coqc"
-    | Some(root) -> Filename.concat root "_build/install/default/bin/coqc"
+    | None       -> ("coqc", [])
+    | Some(_) -> ("rocq", ["c"])
   in
-  Filename.quote_command coqc args
+  Filename.quote_command coqc (extra_args @ args)
 
 type files = {
   glob : string;
@@ -66,7 +66,7 @@ let (cmd, files) =
         {glob; perf; summary; log; stdout; stderr}
       in
       let env =
-        "COQ_PROFILE_COMPONENTS=command" ::
+        "ROCQ_PROFILE_COMPONENTS=command" ::
         ("BR_LOG_FILE=" ^ Filename.quote files.log) ::
         []
       in

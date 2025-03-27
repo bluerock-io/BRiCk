@@ -19,11 +19,11 @@ private:
 	template<typename T, char PREFIX>
 	class NameCache {
 		std::map<T*, name_t> entries_{};
-		name_t next_{1};
+		name_t next_{1}; // we reserve 0
 
 	public:
 		name_t fresh(T*) {
-			return ++next_;
+			return next_++;
 		}
 		void store(T* p, name_t n) {
 			always_assert(entries_.find(p) == entries_.end());

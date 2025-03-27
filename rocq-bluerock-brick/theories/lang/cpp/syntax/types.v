@@ -3,12 +3,12 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.prelude.elpi.derive.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.bool.
-Require Import bedrock.prelude.list.
-Require Export bedrock.lang.cpp.syntax.core.
-Require Export bedrock.lang.cpp.syntax.extras.
+Require Import bluerock.prelude.elpi.derive.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.bool.
+Require Import bluerock.prelude.list.
+Require Export bluerock.lang.cpp.syntax.core.
+Require Export bluerock.lang.cpp.syntax.extras.
 
 
 Set Primitive Projections.
@@ -157,16 +157,18 @@ function type."
 | Tqualified_func_param cc ar ret q t args args' :
   Tfunction (@FunctionType _ cc ar ret (args ++ Tqualified q t :: args')) ≡ Tfunction (@FunctionType _ cc ar ret (args ++ t :: args'))
 
-(** Equivalence *)
+(* Equivalence *)
 | type_equiv_refl t : t ≡ t
 | type_equiv_sym t u : t ≡ u -> u ≡ t
 | type_equiv_trans t u v : t ≡ u -> u ≡ v -> t ≡ v
 
-(** Compatibility *)
+(* Compatibility *)
 | Tptr_proper : Proper (equiv ==> equiv) Tptr
 | Tref_proper : Proper (equiv ==> equiv) Tref
 | Trv_ref_proper : Proper (equiv ==> equiv) Trv_ref
 | Tarray_proper : Proper (equiv ==> eq ==> equiv) Tarray
+| Tincomplete_array_proper : Proper (equiv ==> equiv) Tincomplete_array
+| Tvariable_array_proper : Proper (equiv ==> eq ==> equiv) Tvariable_array
 (* | Tfunction_proper cc ar : Proper (equiv ==> equiv ==> equiv) (@Tfunction lang cc ar) *)
 | Tmember_pointer_proper gn : Proper (equiv ==> equiv) (Tmember_pointer gn)
 | Tqualified_proper q : Proper (equiv ==> equiv) (Tqualified q)
@@ -537,7 +539,8 @@ Lemma drop_qualifiers_Tnullptr : forall [ty],
     drop_qualifiers ty = Tnullptr -> erase_qualifiers ty = Tnullptr.
 Proof. induction ty; simpl; intros; try congruence; eauto. Qed.
 
-(** simplify instances where you have [drop_qualifiers ty = Txxx ..] for some [Txxx]. *)
+(** simplify instances where you have [drop_qualifiers ty = Txxx ..]
+    for some [Txxx]. *)
 (* Same order as above, for easier review. *)
 Ltac simpl_drop_qualifiers :=
   match goal with
@@ -948,7 +951,7 @@ Proof. induction ty; simpl; intros; eauto. Qed.
 (**
 Formalizes https://eel.is/c++draft/basic.types.general#term.scalar.type.
 *)
-Definition scalar_type (ty : type) : bool :=
+Definition is_scalar_type (ty : type) : bool :=
   match drop_qualifiers ty with
   | Tnullptr | Tptr _
   | Tmember_pointer _ _
@@ -958,9 +961,15 @@ Definition scalar_type (ty : type) : bool :=
   | Tnum _ _ | Tenum _ => true
   | _ => false
   end.
-Lemma scalar_type_erase_drop ty :
-  scalar_type (erase_qualifiers ty) = scalar_type (drop_qualifiers ty).
+Lemma is_scalar_type_erase_drop ty :
+  is_scalar_type (erase_qualifiers ty) = is_scalar_type (drop_qualifiers ty).
 Proof. by induction ty. Qed.
+Lemma is_scalar_type_erase ty :
+  is_scalar_type (erase_qualifiers ty) = is_scalar_type ty.
+Proof. rewrite /is_scalar_type. induction ty; simpl; auto. Qed.
+Lemma is_scalar_type_drop ty :
+  is_scalar_type (drop_qualifiers ty) = is_scalar_type ty.
+Proof. rewrite /is_scalar_type. induction ty; simpl; auto. Qed.
 
 (**
 [is_value_type t] returns [true] if [t] has value semantics. A value
@@ -1199,14 +1208,12 @@ Qed.
     normalized to [Tref].
 
     Concrete examples of the above are:
-    - <<const int x = 1>>           -- [tptsto Tint (cQp.m 1) _ 1]
-    - <<const int* x = nullptr>>    -- [tptsto (Tptr Tint) (cQp.m 1) _ nullptr]
-    - <<int* const x = nullptr>>    -- [tptsto (Tptr Tint) (cQp.c 1) _ nullptr]
+    - <<const int x = 1>>           -- [tptsto "int" 1$c _ 1]
+    - <<const int* x = nullptr>>    -- [tptsto "int*" 1$m _ nullptr]
+    - <<int* const x = nullptr>>    -- [tptsto "int*" 1$c _ nullptr]
     - <<volatile int x = 0>>        -- not represted using [tptsto]
-    - <<volatile int* p = nullptr>> -- [tptsto (Tptr Tint) (cQp.m 1) _ nullptr]
-    - <<int&& r = ..>>              -- [tptsto (Tref Tint) (cQp.m 1) _ _]
-
-    TODO: this probably belongs in [syntax/types.v].
+    - <<volatile int* p = nullptr>> -- [tptsto "int*" 1$m _ nullptr]
+    - <<int&& r = ..>>              -- [tptsto "int&" 1$m _ _]
  *)
 Definition heap_type : Set := type.
 Definition is_heap_type (t : type) : bool :=
@@ -1222,7 +1229,8 @@ Definition to_heap_type (t : type) : heap_type :=
   | Trv_ref t => Tref t
   | t => t
   end.
-Lemma to_heap_type_qualified cv t : to_heap_type (Tqualified cv t) = to_heap_type t.
+Lemma to_heap_type_qualified cv t :
+  to_heap_type (Tqualified cv t) = to_heap_type t.
 Proof. done. Qed.
 
 Lemma heap_type_not_qualified cv t : is_heap_type (Tqualified cv t) -> False.
@@ -1245,8 +1253,6 @@ Definition Tmember_func {lang} (ty : exprtype' lang) (fty : functype' lang) : fu
                                 ; ft_return := ft.(ft_return) ; ft_params := Tptr ty :: ft.(ft_params) |}
   | _ => fty
   end.
-
-
 End with_lang.
 
 Notation normalize_type := (normalize_type' QM).
@@ -1254,3 +1260,7 @@ Notation as_ref := (as_ref' (fun u => u) Tvoid).
 Notation as_ref_option := (as_ref' Some None).
 #[global] Hint Resolve is_qualified_decompose_type | 0 : core.
 #[global] Hint Resolve is_qualified_drop_qualifiers | 0 : core.
+
+(* Deprecations *)
+#[global,deprecated(note="use [is_scalar_type].",since="20250203")]
+Notation scalar_type := is_scalar_type (only parsing).

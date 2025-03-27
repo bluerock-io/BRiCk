@@ -6,7 +6,7 @@
 (**
    Path notations
  *)
-Require Import bedrock.lang.cpp.
+Require Import bluerock.lang.cpp.cpp.
 
 Section with_env.
 

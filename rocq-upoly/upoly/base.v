@@ -4,7 +4,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.upoly.prelude.
+Require Import bluerock.upoly.prelude.
 
 (**
 We aim to be compatible with stdpp and SSR.

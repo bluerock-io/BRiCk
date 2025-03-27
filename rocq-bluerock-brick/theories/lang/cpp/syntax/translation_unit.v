@@ -4,13 +4,13 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 Require Import stdpp.fin_maps.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.avl.
-Require Import bedrock.prelude.pstring.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Import bedrock.lang.cpp.syntax.types.
-Require Import bedrock.lang.cpp.syntax.decl.
-Require Import bedrock.lang.cpp.syntax.namemap.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.avl.
+Require Import bluerock.prelude.pstring.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.types.
+Require Import bluerock.lang.cpp.syntax.decl.
+Require Import bluerock.lang.cpp.syntax.namemap.
 Export decl.
 
 #[local] Set Primitive Projections.
@@ -212,7 +212,6 @@ Is then a translation unit a "singleton" value in this monoid?
 Record translation_unit : Type := {
   symbols : symbol_table;
   types : type_table;
-  aliases : alias_table;	(* we eschew <<Gtypedef>> for now *)
   initializer : InitializerBlock;
   byte_order  : endian;
 }.

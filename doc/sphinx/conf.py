@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2020 BedRock Systems, Inc.
+# Copyright (c) 2020 BlueRock Security, Inc.
 # This software is distributed under the terms of the BedRock Open-Source License.
 # See the LICENSE-BedRock file in the repository root for details.
 #
@@ -8,7 +8,7 @@
 # General information about the project.
 project = 'BlueRock BRiCk'
 copyright = '2021-24 BlueRock Security'
-author = 'Jasper Haag'
+author = 'The BlueRock FM Team'
 
 version = "0.5.0"
 release = "alpha"
@@ -64,7 +64,7 @@ rst_prolog = """
 needs_sphinx = '2.3.1'
 
 sertop_args = []
-coqpaths = os.environ.get("COQPATH", "").split(':')
+coqpaths = os.environ.get("ROCQPATH", "").split(':')
 for coqpath in coqpaths:
     if coqpath.strip() == '':
         continue
@@ -82,7 +82,7 @@ alectryon.docutils.AlectryonTransform.SERTOP_ARGS = sertop_args
 # NOTE: Add in other entries here if we want to register coqdoc things which are
 #       compatible with the `:coqid:` role.
 alectryon.docutils.COQ_IDENT_DB_URLS.append(
-    ("bedrock", "https://bedrocksystems.gitlab.io/cpp2v/$modpath.html#$ident")
+    ("bluerock", "https://bedrocksystems.gitlab.io/cpp2v/$modpath.html#$ident")
 )
 
 # Add any Sphinx extension module names here, as strings. They can be

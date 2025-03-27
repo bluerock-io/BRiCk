@@ -3,10 +3,10 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.pstring.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.pstring.
 
-Require Import bedrock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.core.
 
 (** Pretty printing of C++ terms *)
 
@@ -184,7 +184,7 @@ Section with_lang.
       match ta with
       | Atype t => [printT t]
       | Avalue e => [printE e]
-      | Apack_expansion ls => "(...)" ::  List.concat (List.map printTA ls)
+      | Apack ls => List.concat (List.map printTA ls)
       | Atemplate n => ["<>" ++ printN n]
       | Aunsupported note => [note]
       end

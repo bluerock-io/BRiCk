@@ -5,24 +5,24 @@
  *)
 
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.lang.proofmode.proofmode.	(** Early to get the right [ident] *)
-Require Import bedrock.lang.bi.ChargeCompat.
-Require Import bedrock.lang.bi.errors.
-Require Import bedrock.lang.cpp.logic.entailsN.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.rep_proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
+Require Import bluerock.iris.extra.bi.ChargeCompat.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.lang.cpp.logic.entailsN.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.rep_proofmode.
 
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.builtins.
-Require Import bedrock.lang.cpp.logic.cptr.
-Require Import bedrock.lang.cpp.logic.const.
-Require Import bedrock.lang.cpp.logic.initializers.
-Require Import bedrock.lang.cpp.logic.translation_unit.
-Require Import bedrock.lang.cpp.logic.destroy.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.builtins.
+Require Import bluerock.lang.cpp.logic.cptr.
+Require Import bluerock.lang.cpp.logic.const.
+Require Import bluerock.lang.cpp.logic.initializers.
+Require Import bluerock.lang.cpp.logic.translation_unit.
+Require Import bluerock.lang.cpp.logic.destroy.
 
 (* UPSTREAM. *)
 Lemma wand_frame {PROP : bi} (R Q Q' : PROP) :
@@ -46,7 +46,6 @@ mlock Definition svalid_members `{Σ : cpp_logic, σ : genv}
     (cls : globname) (members : list (field_name.t lang.cpp * type)) : Rep :=
   reference_toR (Tnamed cls) **
   [** list] m ∈ members, _field (Field cls m.1) |-> reference_toR m.2.
-#[global] Arguments svalid_members {_ _ _ _} _ _ : assert.
 
 Section svalid_members.
   Context `{Σ : cpp_logic, σ : genv}.
@@ -234,8 +233,8 @@ producing the new identity for "this".
 *)
 Definition wp_init_identity `{Σ : cpp_logic, σ : genv} (p : ptr) (tu : translation_unit)
     (cls : globname) (Q : mpred) : mpred :=
-  p |-> derivationsR tu false cls [] (cQp.mut 1) **
-  (p |-> derivationsR tu true cls [cls] (cQp.mut 1) -* Q).
+  p |-> derivationsR tu false cls [] 1$m **
+  (p |-> derivationsR tu true cls [cls] 1$m -* Q).
 
 Section wp_init_identity.
   Context `{Σ : cpp_logic, σ : genv}.
@@ -263,8 +262,8 @@ class.
 *)
 Definition wp_revert_identity `{Σ : cpp_logic, σ : genv} (p : ptr) (tu : translation_unit)
     (cls : globname) (Q : mpred) : mpred :=
-  p |-> derivationsR tu true cls [cls] (cQp.mut 1) **
-  (p |-> derivationsR tu false cls [] (cQp.mut 1) -* Q).
+  p |-> derivationsR tu true cls [cls] 1$m **
+  (p |-> derivationsR tu false cls [] 1$m -* Q).
 
 Section with_cpp.
   Context `{Σ : cpp_logic, σ : genv}.
@@ -285,7 +284,7 @@ Section with_cpp.
 
   (** sanity chect that initialization and revert are inverses *)
   Lemma wp_init_revert p tu cls Q :
-    let REQ := p |-> derivationsR tu false cls [] (cQp.mut 1) in
+    let REQ := p |-> derivationsR tu false cls [] 1$m in
     REQ ** Q
     |-- wp_init_identity p tu cls (wp_revert_identity p tu cls (REQ ** Q)).
   Proof.
@@ -424,7 +423,6 @@ place to support `XX_shift` lemmas. This could be fixed.
   end.
 mlock Definition wp_func `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_func' true)).
-#[global] Arguments wp_func {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Definition func_ok `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (f : Func) (spec : function_spec) : mpred :=
@@ -494,7 +492,6 @@ parameters.
   end.
 mlock Definition wp_method `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_method' true)).
-#[global] Arguments wp_method {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Definition method_ok `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (m : Method) (spec : function_spec) : mpred :=
@@ -683,11 +680,11 @@ Definition wp_struct_initializer_list `{Σ : cpp_logic, σ : genv} (tu : transla
     members, following http://eel.is/c++draft/class.base.init#13
     (except virtual base classes, which are unsupported)
 
-    NOTE we get the [structR] at the end since [structR (cQp.mut 1)
+    NOTE we get the [structR] at the end since [structR 1$m
     cls |-- type_ptrR (Tnamed cls)].
     *)
     this |-> svalid_members cls ((fun m => (m.(mem_name), m.(mem_type))) <$> s.(s_fields)) -*
-    bases (ident (members (this |-> structR cls (cQp.mut 1) -* Q)))
+    bases (ident (members (this |-> structR cls 1$m -* Q)))
   end.
 
 Section with_cpp.
@@ -723,7 +720,7 @@ Definition wp_union_initializer_list `{Σ : cpp_logic, σ : genv} (tu : translat
   | [{| init_path := InitField f ; init_init := e |} as init] =>
     match list_find (fun m => f = m.(mem_name)) u.(u_fields) with
     | None => ERROR "wp_union_initializer_list: field not found"
-    | Some (n, m) => wpi tu ρ cls this m.(mem_type) init $ this |-> unionR cls (cQp.m 1) (Some n) -* Q
+    | Some (n, m) => wpi tu ρ cls this m.(mem_type) init $ this |-> unionR cls 1$m (Some n) -* Q
     end
   | _ =>
     UNSUPPORTED "wp_union_initializer_list: indirect (or self) union initialization is not currently supported"
@@ -825,7 +822,7 @@ that implies [type_ptr].
         We require that you give up the *entire* block of memory
         [tblockR] that the object will use.
         *)
-        thisp |-> tblockR ty (cQp.mut 1) **
+        thisp |-> tblockR ty 1$m **
         |>
         let ρ vap := Remp (Some thisp) vap Tvoid in
         letI* ρ, cleanup := bind_vars tu ctor.(c_arity) ctor.(c_params) rest_vals ρ in
@@ -833,7 +830,7 @@ that implies [type_ptr].
         letI* := wp tu ρ body in
         letI* := Kcleanup tu cleanup in
         letI* := Kreturn_void in
-        |={top}=>?u |> Forall p : ptr, p |-> primR Tvoid (cQp.mut 1) Vvoid -* Q p
+        |={top}=>?u |> Forall p : ptr, p |-> primR Tvoid 1$m Vvoid -* Q p
 
       | Some (Gunion union) =>
         (*
@@ -842,7 +839,7 @@ that implies [type_ptr].
         We require that you give up the *entire* block of memory
         [tblockR] that the object will use.
         *)
-        thisp |-> tblockR ty (cQp.mut 1) **
+        thisp |-> tblockR ty 1$m **
         |>
         let ρ vap := Remp (Some thisp) vap Tvoid in
         letI* ρ, cleanup := bind_vars tu ctor.(c_arity) ctor.(c_params) rest_vals ρ in
@@ -850,7 +847,7 @@ that implies [type_ptr].
         letI* := wp tu ρ body in
         letI* := Kcleanup tu cleanup in
         letI* := Kreturn_void in
-        |={top}=>?u |> Forall p : ptr, p |-> primR Tvoid (cQp.mut 1) Vvoid -* Q p
+        |={top}=>?u |> Forall p : ptr, p |-> primR Tvoid 1$m Vvoid -* Q p
 
       | _ => ERROR ("wp_ctor: constructor for non-aggregate", ctor.(c_class))
       end
@@ -859,7 +856,6 @@ that implies [type_ptr].
   end.
 mlock Definition wp_ctor `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_ctor' true)).
-#[global] Arguments wp_ctor {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Definition ctor_ok `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (ctor : Ctor) (spec : function_spec) : mpred :=
@@ -987,7 +983,7 @@ this resource will be consumed immediately.
       match tu.(types) !! dtor.(d_class) with
       | Some (Gstruct s) =>
         letI* := wp_body in
-        thisp |-> structR dtor.(d_class) (cQp.mut 1) **
+        thisp |-> structR dtor.(d_class) 1$m **
         (**
         Destroy fields, object identity, and base classes (reverse
         order).
@@ -1000,8 +996,8 @@ this resource will be consumed immediately.
         (**
         Return object's memory to the abstract machine.
         *)
-        thisp |-> tblockR ty (cQp.mut 1) -*
-        |={top}=>?upd |> Forall p : ptr, p |-> primR Tvoid (cQp.mut 1) Vvoid -*
+        thisp |-> tblockR ty 1$m -*
+        |={top}=>?upd |> Forall p : ptr, p |-> primR Tvoid 1$m Vvoid -*
         Q p
       | Some (Gunion u) =>
         (*
@@ -1015,10 +1011,10 @@ this resource will be consumed immediately.
         trivial destructor or is already destroyed.
         *)
         letI* := wp_body in
-        thisp |-> tblockR ty (cQp.mut 1) **
+        thisp |-> tblockR ty 1$m **
         (
-          thisp |-> tblockR ty (cQp.mut 1) -*
-          |={top}=>?upd |> Forall p : ptr, p |-> primR Tvoid (cQp.mut 1) Vvoid -*
+          thisp |-> tblockR ty 1$m -*
+          |={top}=>?upd |> Forall p : ptr, p |-> primR Tvoid 1$m Vvoid -*
           Q p
         )
       | _ => ERROR ("wp_dtor: not a structure or union")
@@ -1028,7 +1024,6 @@ this resource will be consumed immediately.
   end.
 mlock Definition wp_dtor `{Σ : cpp_logic, σ : genv} :=
   Cbn (Reduce (wp_dtor' true)).
-#[global] Arguments wp_dtor {_ _ _ _} _ _ _ _%_I : assert.	(* mlock bug *)
 
 Section wp_dtor.
   Context `{Σ : cpp_logic, σ : genv}.

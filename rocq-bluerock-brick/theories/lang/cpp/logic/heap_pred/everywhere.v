@@ -3,16 +3,16 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.cpp.logic.heap_pred.prelude.
-Require Import bedrock.lang.cpp.logic.rep_proofmode.
-Require Import bedrock.lang.cpp.logic.arr.
-Require Import bedrock.lang.cpp.logic.heap_pred.valid.
-Require Import bedrock.lang.cpp.logic.heap_pred.null.
-Require Import bedrock.lang.cpp.logic.heap_pred.simple.
-Require Import bedrock.lang.cpp.logic.heap_pred.aggregate.
-Require Import bedrock.lang.cpp.logic.heap_pred.tptsto.
-Require Import bedrock.lang.cpp.logic.heap_pred.uninit.
-Require Import bedrock.lang.cpp.logic.heap_pred.prim.
+Require Import bluerock.lang.cpp.logic.heap_pred.prelude.
+Require Import bluerock.lang.cpp.logic.rep_proofmode.
+Require Import bluerock.lang.cpp.logic.arr.
+Require Import bluerock.lang.cpp.logic.heap_pred.valid.
+Require Import bluerock.lang.cpp.logic.heap_pred.null.
+Require Import bluerock.lang.cpp.logic.heap_pred.simple.
+Require Import bluerock.lang.cpp.logic.heap_pred.aggregate.
+Require Import bluerock.lang.cpp.logic.heap_pred.tptsto.
+Require Import bluerock.lang.cpp.logic.heap_pred.uninit.
+Require Import bluerock.lang.cpp.logic.heap_pred.prim.
 
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.
@@ -156,9 +156,9 @@ Section with_cpp.
       (TprimR : forall q ty, Timeless (R q ty)) : forall q ty, Timeless (typeR q ty).
     Proof.
       move=> q ty; revert q; induction ty; simpl; intros; refine _.
-      (*rewrite /struct_defR/union_defR.
+      rewrite /struct_defR/union_defR.
       repeat (case_match; refine _).
-    Qed. *) Admitted.
+    Qed.
 
     #[local] Instance typeR_valid
       (TprimR : forall q ty, Observe validR (R q ty)) : forall q ty, Observe validR (typeR q ty).

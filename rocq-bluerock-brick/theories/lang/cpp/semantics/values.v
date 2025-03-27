@@ -8,19 +8,19 @@
 Require Import Stdlib.Strings.Ascii.
 Require Import stdpp.gmap.
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.option.
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.option.
+Require Import bluerock.prelude.numbers.
 
-Require Import bedrock.lang.cpp.reserved_notation. (* TODO *)
-Require Import bedrock.lang.cpp.arith.operator.
-Require Import bedrock.lang.cpp.arith.builtins.
-Require Import bedrock.lang.cpp.syntax.
-Require Export bedrock.lang.cpp.semantics.types.
-Require Export bedrock.lang.cpp.semantics.sub_module.
-Require Export bedrock.lang.cpp.semantics.genv.
-Require Export bedrock.lang.cpp.semantics.ptrs.
-Require Export bedrock.lang.cpp.semantics.heap_types.
+Require Import bluerock.lang.cpp.reserved_notation. (* TODO *)
+Require Import bluerock.lang.cpp.arith.operator.
+Require Import bluerock.lang.cpp.arith.builtins.
+Require Import bluerock.lang.cpp.syntax.
+Require Export bluerock.lang.cpp.semantics.types.
+Require Export bluerock.lang.cpp.semantics.sub_module.
+Require Export bluerock.lang.cpp.semantics.genv.
+Require Export bluerock.lang.cpp.semantics.ptrs.
+Require Export bluerock.lang.cpp.semantics.heap_types.
 
 #[local] Set Printing Coercions.
 #[local] Close Scope nat_scope.

@@ -5,19 +5,19 @@
  *)
 (** Definitions for the semantics
  *)
-Require Import bedrock.prelude.base.
+Require Import bluerock.prelude.base.
 
 Require Import stdpp.coPset.
 Require Import iris.bi.monpred.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 Require Import iris.proofmode.classes.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.translation_unit.
-Require Import bedrock.lang.bi.errors.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.translation_unit.
+Require Import bluerock.iris.extra.bi.errors.
 
 #[local] Set Primitive Projections.
 
@@ -153,7 +153,7 @@ End KP.
 
 Definition Kreturn_inner `{Σ : cpp_logic, σ : genv} (Q : ptr -> mpred) (rt : ReturnType) : mpred :=
   match rt with
-  | Normal | ReturnVoid => Forall p : ptr, p |-> primR Tvoid (cQp.mut 1) Vvoid -* Q p
+  | Normal | ReturnVoid => Forall p : ptr, p |-> primR Tvoid 1$m Vvoid -* Q p
   | ReturnVal p => Q p
   | _ => False
   end.
