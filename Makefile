@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2024 BedRock Systems, Inc.
+# Copyright (c) 2019-2024 BlueRock Security, Inc.
 #
 # This software is distributed under the terms of the BedRock Open-Source
 # License. See the LICENSE-BedRock file in the repository root for details.
@@ -20,7 +20,7 @@ SHELL := /bin/bash
 
 BUILD_ROOT=../../_build/default/fmdeps/cpp2v-core
 COQDOC_DIR=doc/sphinx/_static/coqdoc
-COQLIB=${PWD}/../../_build/install/default/lib/coq
+ROCQLIB=${PWD}/../../_build/install/default/lib/coq
 
 doc:
 	@dune clean
@@ -32,7 +32,7 @@ doc:
 	@mkdir -p doc/sphinx/_static/css/coqdocjs doc/sphinx/_static/js/coqdocjs
 	@cp -r coqdocjs/extra/resources/*.css doc/sphinx/_static/css/coqdocjs
 	@cp -r coqdocjs/extra/resources/*.js doc/sphinx/_static/js/coqdocjs
-	@COQLIB=${COQLIB} dune build --cache=disabled @doc
+	@ROCQLIB=${ROCQLIB} dune build --cache=disabled @doc
 	@mkdir -p ${COQDOC_DIR}
 	@cp -r -t ${COQDOC_DIR} $$(find ${BUILD_ROOT} -type d -name '*.html')
 	+@$(MAKE) -C doc html

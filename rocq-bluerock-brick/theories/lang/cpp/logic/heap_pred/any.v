@@ -3,13 +3,13 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.cpp.logic.heap_pred.prelude.
-Require Import bedrock.lang.cpp.logic.heap_pred.valid.
-Require Import bedrock.lang.cpp.logic.heap_pred.everywhere.
-Require Import bedrock.lang.cpp.logic.heap_pred.tptsto.
-Require Import bedrock.lang.cpp.logic.heap_pred.prim.
-Require Import bedrock.lang.cpp.logic.heap_pred.uninit.
-Require Import bedrock.lang.cpp.logic.heap_pred.null.
+Require Import bluerock.lang.cpp.logic.heap_pred.prelude.
+Require Import bluerock.lang.cpp.logic.heap_pred.valid.
+Require Import bluerock.lang.cpp.logic.heap_pred.everywhere.
+Require Import bluerock.lang.cpp.logic.heap_pred.tptsto.
+Require Import bluerock.lang.cpp.logic.heap_pred.prim.
+Require Import bluerock.lang.cpp.logic.heap_pred.uninit.
+Require Import bluerock.lang.cpp.logic.heap_pred.null.
 
 #[local] Set Printing Coercions.
 Implicit Types (σ : genv) (p : ptr) (o : offset).
@@ -30,7 +30,6 @@ Definition primitiveR `{Σ : cpp_logic} {σ : genv} q ty :=
 mlock
 Definition anyR `{Σ : cpp_logic} {σ : genv} (ty : Rtype) (q : cQp.t) : Rep :=
   everywhereR σ.(genv_tu) primitiveR q ty.
-#[global] Arguments anyR {_ _ Σ σ} _ _ : assert.
 
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.
@@ -210,16 +209,24 @@ Section with_cpp.
     rewrite /primitiveR/=. eauto.
   Qed.
 
-  Lemma primR_anyR : ∀ t q v,
-      primR t q v |-- anyR t q.
+  Lemma initializedR_anyR : ∀ t q v,
+      initializedR t q v |-- anyR t q.
   Proof.
     intros.
-    rewrite primR.unlock.
-    iIntros "(%&#HT&Hp)".
+    rewrite initializedR.unlock.
+    iIntros "(#HT&Hp)".
     iDestruct (observe [| has_type_prop _ _ |] with "HT") as %Ht.
     rewrite tptsto_fuzzyR.unlock.
     iDestruct "Hp" as (?) "[% Hp]".
     rewrite -tptstoR_anyR_val. eauto.
+  Qed.
+
+  Lemma primR_anyR : ∀ t q v,
+      primR t q v |-- anyR t q.
+  Proof.
+    intros.
+    rewrite primR.unlock initializedR_anyR.
+    iIntros "[% $]".
   Qed.
   Lemma uninitR_anyR : ∀ t q,
       uninitR t q |-- anyR t q.

@@ -5,11 +5,11 @@
  *)
 Require Import Stdlib.ZArith.ZArith.
 
-Require Import bedrock.prelude.bytestring.
-Require bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.syntax.stmt.
-Require Export bedrock.lang.cpp.syntax.expr_notations.
-Require Export bedrock.lang.cpp.syntax.type_notations.
+Require Import bluerock.prelude.bytestring.
+Require bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.syntax.stmt.
+Require Export bluerock.lang.cpp.syntax.expr_notations.
+Require Export bluerock.lang.cpp.syntax.type_notations.
 
 #[local] Open Scope Z_scope.
 #[local] Open Scope bs_scope.

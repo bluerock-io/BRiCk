@@ -4,7 +4,7 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.parser.prelude.
+Require Import bluerock.lang.cpp.parser.prelude.
 
 Module Type PARSER_LANG.
   Parameter Inline parser_lang : lang.t.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
@@ -12,8 +12,8 @@ This file assumes the <<Elpi Program>> template (i.e., any template).
 It works in both the synterp and interp phases.
 */
 
-accumulate "bedrock.elpi.extra/Program/both/coq".	% both/coq.elpi
-accumulate "bedrock.elpi.extra/Program/both/diag".	% both/diag.elpi
-accumulate "bedrock.elpi.extra/Program/both/elpi".	% both/elpi.elpi
-accumulate "bedrock.elpi.extra/Program/both/list".	% both/list.elpi
-accumulate "bedrock.elpi.extra/Program/both/option".	% both/option.elpi
+accumulate "bluerock.elpi.extra/Program/both/coq".	% both/coq.elpi
+accumulate "bluerock.elpi.extra/Program/both/diag".	% both/diag.elpi
+accumulate "bluerock.elpi.extra/Program/both/elpi".	% both/elpi.elpi
+accumulate "bluerock.elpi.extra/Program/both/list".	% both/list.elpi
+accumulate "bluerock.elpi.extra/Program/both/option".	% both/option.elpi

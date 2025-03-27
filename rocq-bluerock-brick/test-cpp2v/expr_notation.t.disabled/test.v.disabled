@@ -1,0 +1,373 @@
+(*
+ * Copyright (c) 2022-2023 BlueRock Security, Inc.
+ * This software is distributed under the terms of the BedRock Open-Source License.
+ * See the LICENSE-BedRock file in the repository root for details.
+ *)
+Require Import Ascii ZArith.
+
+Require Import bluerock.prelude.base.
+Require Import bluerock.lang.cpp.ast.
+Require Import bluerock.lang.cpp.notations.
+Require Import bluerock.lang.cpp.code_notations.
+
+Section TestExprNotations.
+  Context (ty : type) (e : Expr).
+
+  #[local] Definition local_ref : Expr := Evar "FooBarBaz" ty.
+  #[local] Definition global_ref : Expr := Eglobal "FooBarBaz" ty.
+  #[local] Definition enum_const_ref : Expr := Eenum_const "_ZN6MyEnumE" "Const".
+  Print local_ref. Print global_ref. Print enum_const_ref.
+
+  #[local] Definition A_ascii : N := Evaluate (Ascii.N_of_ascii "A"%char).
+  #[local] Definition newline_ascii : N := Evaluate (Ascii.N_of_ascii "010"%char).
+  #[local] Definition Echar_letter : Expr := Echar (Unfold A_ascii A_ascii) ty.
+  #[local] Definition Echar_newline : Expr := Echar (Unfold newline_ascii newline_ascii) ty.
+  Print Echar_letter. Print Echar_newline.
+
+  Fixpoint to_chars (b : bs) : list N :=
+    match b with
+    | BS.EmptyString => nil
+    | BS.String b bs => Byte.to_N b :: to_chars bs
+    end.
+  #[local] Notation Estring' s ty := (Estring (to_chars s) ty) (only parsing).
+  #[local] Definition Estring_1 : Expr := Estring' "FooBarBazQux" ty.
+  Print Estring_1.
+
+  #[local] Definition Eint_1 : Expr := Eint 42 ty.
+  #[local] Definition Eint_2 : Expr := Eint 314 ty.
+  Print Eint_1. Print Eint_2.
+
+  #[local] Definition Ebool_true : Expr := Ebool true.
+  #[local] Definition Ebool_false : Expr := Ebool false.
+  Print Ebool_true. Print Ebool_false.
+
+  Check Uminus. Check Unot. Check Ubnot. Check (Uunsupported "FooBarBaz").
+
+  #[local] Definition Eunop_1 : Expr := Eunop Uminus (Eint 42 ty) ty.
+  #[local] Definition Eunop_2 : Expr := Eunop Unot (Ebool false) ty.
+  #[local] Definition Eunop_3 : Expr := Eunop Ubnot (Eint 314 ty) ty.
+  #[local] Definition Eunop_4 : Expr := Eunop (Uunsupported "FooBarBaz") e ty.
+  Print Eunop_1. Print Eunop_2. Print Eunop_3. Print Eunop_4.
+
+  Check Badd. Check Band. Check Bcmp. Check Bdiv. Check Beq. Check Bge.
+  Check Bgt. Check Ble. Check Blt. Check Bmul. Check Bneq.
+  Check Bor. Check Bmod. Check Bshl. Check Bsub.
+  Check Bxor. Check Bdotp. Check Bdotip.
+
+  #[local] Definition Ebinop_custom_Bdotp_nowrap
+    : Expr := Ebinop Bdotp
+                     (Evar "FooBarBaz" ty)
+                     (Evar "Qux" ty)
+                     ty.
+  #[local] Definition Ebinop_custom_Bdotip_nowrap
+    : Expr := Ebinop Bdotip
+                     (Evar "FooBarBaz" ty)
+                     (Evar "Qux" ty)
+                     ty.
+  #[local] Definition Ebinop_custom_Bshr_nowrap
+    : Expr := Ebinop Bshr
+                     (Eint 314 ty)
+                     (Eint 42 ty)
+                     ty.
+  Print Ebinop_custom_Bdotp_nowrap.
+  Print Ebinop_custom_Bdotip_nowrap.
+  Print Ebinop_custom_Bshr_nowrap.
+
+  #[local] Definition Ebinop_custom_Bdotp_wrap
+    : Expr := Ebinop Bdotp
+                     (Evar "FooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBaz" ty)
+                     (Evar "Qux" ty)
+                     ty.
+  #[local] Definition Ebinop_custom_Bdotip_wrap
+    : Expr := Ebinop Bdotip
+                     (Evar "FooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBazFooBarBaz" ty)
+                     (Evar "Qux" ty)
+                     ty.
+  #[local] Definition Ebinop_custom_Bshr_wrap
+    : Expr := Ebinop Bshr
+                     (Eint 31415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679 ty)
+                     (Eint 42 ty)
+                     ty.
+  Print Ebinop_custom_Bdotp_wrap.
+  Print Ebinop_custom_Bdotip_wrap.
+  Print Ebinop_custom_Bshr_wrap.
+
+  #[local] Definition Ebinop_default_Badd
+    : Expr := Ebinop Badd (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Band
+    : Expr := Ebinop Band (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bcmp
+    : Expr := Ebinop Bcmp (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bdiv
+    : Expr := Ebinop Bdiv (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Beq
+    : Expr := Ebinop Beq (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bge
+    : Expr := Ebinop Bge (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bgt
+    : Expr := Ebinop Bgt (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Ble
+    : Expr := Ebinop Ble (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Blt
+    : Expr := Ebinop Blt (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bmul
+    : Expr := Ebinop Bmul (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bneq
+    : Expr := Ebinop Bneq (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bor
+    : Expr := Ebinop Bor (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bmod
+    : Expr := Ebinop Bmod (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bshl
+    : Expr := Ebinop Bshl (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bsub
+    : Expr := Ebinop Bsub (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Ebinop_default_Bxor
+    : Expr := Ebinop Bxor (Eint 42 ty) (Eint 314 ty) ty.
+  Print Ebinop_default_Badd. Print Ebinop_default_Band. Print Ebinop_default_Bcmp.
+  Print Ebinop_default_Bdiv. Print Ebinop_default_Beq. Print Ebinop_default_Bge.
+  Print Ebinop_default_Bgt. Print Ebinop_default_Ble. Print Ebinop_default_Blt.
+  Print Ebinop_default_Bmul. Print Ebinop_default_Bneq. Print Ebinop_default_Bor.
+  Print Ebinop_default_Bmod. Print Ebinop_default_Bshl.
+  Print Ebinop_default_Bsub. Print Ebinop_default_Bxor.
+
+  #[local] Definition Ebinop_compound_1
+    : Expr := Ebinop Bshl
+                     (Ebinop Bshr
+                             (Eint 42 ty)
+                             (Eint 2 ty) ty)
+                     (Eint 314 ty) ty.
+  #[local] Definition Ebinop_compound_2
+    : Expr := Ebinop Bmul
+                     (Eint (-1)%Z ty)
+                     (Ebinop Bsub
+                             (Ebinop Bxor
+                                     (Eglobal "FOOBAR" ty)
+                                     (Ebinop Bdiv
+                                             (Eint 42 ty)
+                                             (Eint 2 ty) ty)
+                                     ty)
+                             (Eint 314 ty) ty)
+                     ty.
+  Print Ebinop_compound_1. Print Ebinop_compound_2.
+
+  #[local] Definition Ederef_Evar : Expr := Ederef (Evar "Qux" ty) ty.
+  #[local] Definition Ederef_Enull : Expr := Ederef Enull ty.
+  Print Ederef_Evar. Print Ederef_Enull.
+
+  #[local] Definition Eaddrof_local_ref : Expr := Eaddrof (Evar "Qux" ty).
+  #[local] Definition Eaddrof_global_ref : Expr := Eaddrof (Eglobal "Qux" ty).
+  Print Eaddrof_local_ref. Print Eaddrof_global_ref.
+
+  #[local] Definition Eassign_1 : Expr := Eassign (Evar "pi" ty) (Eint 314 ty) ty.
+  Print Eassign_1.
+
+  #[local] Definition Eassign_op_custom_Bshr : Expr
+    := Eassign_op Bshr (Evar "foo" ty) (Eint 21 ty) ty.
+  Print Eassign_op_custom_Bshr.
+
+  #[local] Definition Eassign_op_default_Badd
+    : Expr := Eassign_op Badd (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Band
+    : Expr := Eassign_op Band (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Bdiv
+    : Expr := Eassign_op Bdiv (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Bmul
+    : Expr := Eassign_op Bmul (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Bor
+    : Expr := Eassign_op Bor (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Bmod
+    : Expr := Eassign_op Bmod (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Bshl
+    : Expr := Eassign_op Bshl (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Bsub
+    : Expr := Eassign_op Bsub (Eint 42 ty) (Eint 314 ty) ty.
+  #[local] Definition Eassign_op_default_Bxor
+    : Expr := Eassign_op Bxor (Eint 42 ty) (Eint 314 ty) ty.
+  Print Eassign_op_default_Badd. Print Eassign_op_default_Band. Print Eassign_op_default_Bdiv.
+  Print Eassign_op_default_Bmul. Print Eassign_op_default_Bor. Print Eassign_op_default_Bmod.
+  Print Eassign_op_default_Bshl. Print Eassign_op_default_Bsub. Print Eassign_op_default_Bxor.
+
+  #[local] Definition Epreinc_1 : Expr := Epreinc e ty.
+  #[local] Definition Epreinc_2 : Expr := Epreinc (Eint 41 ty) ty.
+  Print Epreinc_1. Print Epreinc_2.
+
+  #[local] Definition Epostinc_1 : Expr := Epostinc e ty.
+  #[local] Definition Epostinc_2 : Expr := Epostinc (Eint 41 ty) ty.
+  Print Epostinc_1. Print Epostinc_2.
+
+  #[local] Definition Epredec_1 : Expr := Epredec e ty.
+  #[local] Definition Epredec_2 : Expr := Epredec (Eint 41 ty) ty.
+  Print Epredec_1. Print Epredec_2.
+
+  #[local] Definition Epostdec_1 : Expr := Epostdec e ty.
+  #[local] Definition Epostdec_2 : Expr := Epostdec (Eint 41 ty) ty.
+  Print Epostdec_1. Print Epostdec_2.
+
+  #[local] Definition Eseqand_1 : Expr := Eseqand (Ebool true) (Ebool false).
+  #[local] Definition Eseqand_2 : Expr := Eseqand (Ebool true) (Eseqand (Ebool false) (Ebool true)).
+  Print Eseqand_1. Print Eseqand_2.
+
+  #[local] Definition Eseqor_1 : Expr := Eseqor (Ebool true) (Ebool false).
+  #[local] Definition Eseqor_2 : Expr := Eseqor (Ebool true) (Eseqor (Ebool false) (Ebool true)).
+  Print Eseqor_1. Print Eseqor_2.
+
+  #[local] Definition Ecomma_1 : Expr := Ecomma e e.
+  #[local] Definition Ecomma_2 : Expr := Ecomma (Epreinc (Evar "baz" ty) ty) e.
+  Print Ecomma_1. Print Ecomma_2.
+
+  #[local] Definition Ecall_nil_1 : Expr := Ecall e []%list ty.
+  #[local] Definition Ecall_nil_2 : Expr := Ecall (Eglobal "fn" ty) []%list ty.
+  Print Ecall_nil_1. Print Ecall_nil_2.
+
+  #[local] Definition Ecall_cons_nowrap_1 : Expr := Ecall e [Eint 42 ty; Ebool false]%list ty.
+  #[local] Definition Ecall_cons_nowrap_2 : Expr := Ecall (Eglobal "fn" ty) [Eint 42 ty; Ebool false]%list ty.
+  Print Ecall_cons_nowrap_1. Print Ecall_cons_nowrap_2.
+
+  (* TODO (JH): Fix up the printing boxes s.t. the widths/splits correspond (and extra
+     breaks aren't inserted; cf. [Ecall_cons_wrap_2].
+   *)
+  #[local] Definition Ecall_cons_wrap_1 : Expr := Ecall e [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list ty.
+  #[local] Definition Ecall_cons_wrap_2 : Expr := Ecall (Eglobal "fn" ty) [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list ty.
+  Print Ecall_cons_wrap_1. Print Ecall_cons_wrap_2.
+
+  #[local] Definition Ecast_elide_1 (cast : Cast) (vc : ValCat) := Ecast cast e vc ty.
+  #[local] Definition Ecast_elide_2 (cast : Cast) (vc : ValCat) := Ecast cast (Eint 314 ty) vc ty.
+  Print Ecast_elide_1. Print Ecast_elide_2.
+
+  #[local] Definition Emember_1 : Expr := Emember (Evar "foo" (Tnamed "foo")) "bar" false ty.
+  Print Emember_1.
+
+  #[local] Definition Emember_call_nil_1 : Expr := Emember_call (inl ("fn"%bs, Direct, ty)) e []%list ty.
+  #[local] Definition Emember_call_nil_2 : Expr := Emember_call (inl ("fn"%bs, Direct, ty)) (Eglobal "foo" ty) []%list ty.
+  Print Emember_call_nil_1. Print Emember_call_nil_2.
+
+  #[local] Definition Emember_call_cons_nowrap_1 : Expr := Emember_call (inl ("fn"%bs, Direct, ty)) e [Eint 42 ty; Ebool false]%list ty.
+  #[local] Definition Emember_call_cons_nowrap_2 : Expr := Emember_call (inl ("fn"%bs, Direct, ty)) (Eglobal "foo" ty) [Eint 42 ty; Ebool false]%list ty.
+  Print Emember_call_cons_nowrap_1. Print Emember_call_cons_nowrap_2.
+
+  (* TODO (JH): Fix up the printing boxes s.t. the widths/splits correspond (and extra
+     breaks aren't inserted; cf. [Ecall_cons_wrap_2].
+   *)
+  #[local] Definition Emember_call_cons_wrap_1 : Expr := Emember_call (inl ("fn"%bs, Direct, ty)) e [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list ty.
+  #[local] Definition Emember_call_cons_wrap_2 : Expr := Emember_call (inl ("fn"%bs, Direct, ty)) (Eglobal "foo" ty) [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list ty.
+  Print Emember_call_cons_wrap_1. Print Emember_call_cons_wrap_2.
+
+  #[local] Definition Esubscript_1 : Expr := Esubscript e (Eint 42 ty) ty.
+  #[local] Definition Esubscript_2 : Expr := Esubscript (Evar "foo" ty) (Eint 314 ty) ty.
+  Print Esubscript_1. Print Esubscript_2.
+
+  #[local] Definition Esizeof_type_1 : Expr := Esizeof (inl ty) ty.
+  #[local] Definition Esizeof_type_2 : Expr := Esizeof (inl (Tptr (Tnum W8 Unsigned))) ty.
+  #[local] Definition Esizeof_type_3 : Expr := Esizeof (inl (Tnamed "Foo")) ty.
+  Print Esizeof_type_1. Print Esizeof_type_2. Print Esizeof_type_3.
+
+  #[local] Definition Esizeof_Expr_1 : Expr := Esizeof (inr e) ty.
+  #[local] Definition Esizeof_Expr_2 : Expr := Esizeof (inr (Eint 314 ty)) ty.
+  #[local] Definition Esizeof_Expr_3 : Expr := Esizeof (inr (Evar "foo" ty)) ty.
+  Print Esizeof_Expr_1. Print Esizeof_Expr_2. Print Esizeof_Expr_3.
+
+  #[local] Definition Ealignof_type_1 : Expr := Ealignof (inl ty) ty.
+  #[local] Definition Ealignof_type_2 : Expr := Ealignof (inl (Tptr (Tnum W8 Unsigned))) ty.
+  #[local] Definition Ealignof_type_3 : Expr := Ealignof (inl (Tnamed "Foo")) ty.
+  Print Ealignof_type_1. Print Ealignof_type_2. Print Ealignof_type_3.
+
+  #[local] Definition Ealignof_Expr_1 : Expr := Ealignof (inr e) ty.
+  #[local] Definition Ealignof_Expr_2 : Expr := Ealignof (inr (Eint 314 ty)) ty.
+  #[local] Definition Ealignof_Expr_3 : Expr := Ealignof (inr (Evar "foo" ty)) ty.
+  Print Ealignof_Expr_1. Print Ealignof_Expr_2. Print Ealignof_Expr_3.
+
+  #[local] Definition Eoffsetof_1 : Expr := Eoffsetof "foo" "bar" ty.
+  Print Eoffsetof_1.
+
+  #[local] Definition Econstructor_nil : Expr := Econstructor "Foo" []%list ty.
+  Print Econstructor_nil.
+
+  #[local] Definition Econstructor_cons_nowrap : Expr := Econstructor "Foo" [Eint 42 ty; Ebool false]%list ty.
+  Print Econstructor_cons_nowrap.
+
+  (* TODO (JH): Fix up the printing boxes s.t. the widths/splits correspond (and extra
+     breaks aren't inserted; cf. [Ecall_cons_wrap_2].
+   *)
+  #[local] Definition Econstructor_cons_wrap : Expr := Econstructor "Qux::Zop" [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list ty.
+  Print Econstructor_cons_wrap.
+
+  #[local] Definition Eimplicit_1 : Expr := Eimplicit e.
+  #[local] Definition Eimplicit_2 : Expr := Eimplicit (Econstructor "Foo" []%list ty).
+  Print Eimplicit_1. Print Eimplicit_2.
+
+  #[local] Definition Eimplicit_init_1 : Expr := Eimplicit_init ty.
+  #[local] Definition Eimplicit_init_2 : Expr := Eimplicit_init (Tnum W8 Unsigned).
+  Print Eimplicit_init_1. Print Eimplicit_init_2.
+
+  #[local] Definition Eif_1 : Expr := Eif (Ebool true) (Ecall (Evar "fn" ty) []%list ty) (Eassign_op Bmul (Evar "foo" ty) (Evar "bar" ty) ty) Lvalue ty.
+  Print Eif_1.
+
+  Check (Ethis ty). Check Enull.
+
+  #[local] Definition Einitlist_nil_1 : Expr := Einitlist []%list None ty.
+  #[local] Definition Einitlist_nil_2 : Expr := Einitlist []%list None (Tnum W64 Unsigned).
+  Print Einitlist_nil_1. Print Einitlist_nil_2.
+
+  #[local] Definition Einitlist_cons_no_wrap_no_default_1 : Expr := Einitlist [Eint 42 ty; Ebool false]%list None ty.
+  #[local] Definition Einitlist_cons_no_wrap_no_default_2 : Expr := Einitlist [Eint 42 ty; Ebool false]%list None (Tnum W64 Unsigned).
+  Print Einitlist_cons_no_wrap_no_default_1. Print Einitlist_cons_no_wrap_no_default_2.
+
+  #[local] Definition Einitlist_cons_wrap_no_default_1 : Expr := Einitlist [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list None ty.
+  #[local] Definition Einitlist_cons_wrap_no_default_2 : Expr := Einitlist [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list None (Tnum W64 Unsigned).
+  Print Einitlist_cons_wrap_no_default_1. Print Einitlist_cons_wrap_no_default_2.
+
+  #[local] Definition Einitlist_cons_no_wrap_default_1 : Expr := Einitlist [Eint 42 ty; Ebool false]%list (Some (Eint 314 ty)) ty.
+  #[local] Definition Einitlist_cons_no_wrap_default_2 : Expr := Einitlist [Eint 42 ty; Ebool false]%list (Some (Eint 314 ty)) (Tnum W64 Unsigned).
+  Print Einitlist_cons_no_wrap_default_1. Print Einitlist_cons_no_wrap_default_2.
+
+  #[local] Definition Einitlist_cons_wrap_default_1 : Expr := Einitlist [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list (Some (Eint 314 ty)) ty.
+  #[local] Definition Einitlist_cons_wrap_default_2 : Expr := Einitlist [Eint 42 ty; Ebool false; Estring' "FooBarBazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbazfoobarbaz" ty]%list (Some (Eint 314 ty)) (Tnum W64 Unsigned).
+  Print Einitlist_cons_wrap_default_1. Print Einitlist_cons_wrap_default_2.
+
+  #[local] Definition Enew_nonarray_nil_1 : Expr := Enew ("fn"%bs, ty) []%list (new_form.Allocating false) ty None (Some e).
+
+  #[local] Definition Enew_nonarray_nil_2 : Expr := Enew ("fn"%bs, ty) []%list (new_form.Allocating false) (Tnum W8 Unsigned) None None.
+  Print Enew_nonarray_nil_1. Print Enew_nonarray_nil_2.
+
+  #[local] Definition Enew_nonarray_cons_1 : Expr := Enew ("fn"%bs, ty) [Eint 42 ty; Ebool false]%list (new_form.Allocating false) ty None (Some e).
+  #[local] Definition Enew_nonarray_cons_2 : Expr := Enew ("fn"%bs, ty) [Eint 42 ty; Ebool false]%list (new_form.Allocating false) (Tnamed "Foo") None None.
+  Print Enew_nonarray_cons_1. Print Enew_nonarray_cons_2.
+
+  #[local] Definition Enew_array_nil_1 : Expr := Enew ("fn"%bs, ty) []%list (new_form.Allocating false) ty (Some (Eint 314 ty)) (Some e).
+  #[local] Definition Enew_array_nil_2 : Expr := Enew ("fn"%bs, ty) []%list (new_form.Allocating false) (Tnum W8 Unsigned) (Some (Eint 314 ty)) None.
+  Print Enew_array_nil_1. Print Enew_array_nil_2.
+
+  #[local] Definition Edelete_nonarray_1 : Expr := Edelete false ("fn"%bs, ty) e ty.
+  #[local] Definition Edelete_nonarray_2 : Expr := Edelete false ("fn"%bs, ty) (Evar "foo" ty) ty.
+  Print Edelete_nonarray_1. Print Edelete_nonarray_2.
+
+  #[local] Definition Edelete_array_1 : Expr := Edelete true ("fn"%bs, ty) e ty.
+  #[local] Definition Edelete_array_2 : Expr := Edelete true ("fn"%bs, ty) (Evar "foo" ty) ty.
+  Print Edelete_array_1. Print Edelete_array_2.
+
+  #[local] Definition Eandclean_1 : Expr := Eandclean e.
+  #[local] Definition Eandclean_2 : Expr := Eandclean (Evar "foo" ty).
+  Print Eandclean_1. Print Eandclean_2.
+
+  #[local] Definition Ematerialize_temp_1 : Expr := Ematerialize_temp e Xvalue.
+  #[local] Definition Ematerialize_temp_2 : Expr := Ematerialize_temp (Evar "foo" ty) Xvalue.
+  Print Ematerialize_temp_1. Print Ematerialize_temp_2.
+
+  Check Bin_alloca. Check Bin_alloca_with_align. Check Bin_launder. Check Bin_expect.
+  Check Bin_unreachable. Check Bin_trap. Check Bin_bswap16. Check Bin_bswap32.
+  Check Bin_bswap64. Check Bin_bswap128. Check Bin_bzero. Check Bin_ffs. Check Bin_ffsl.
+  Check Bin_ffsll. Check Bin_clz. Check Bin_clzl. Check Bin_clzll. Check Bin_ctz.
+  Check Bin_ctzl. Check Bin_ctzll. Check Bin_popcount. Check Bin_popcountl.
+  Check Bin_unknown "__builtin__foobarbaz"%bs.
+
+  #[local] Definition Eva_arg_1 : Expr := Eva_arg e ty.
+  #[local] Definition Eva_arg_2 : Expr := Eva_arg (Eint 217 ty) ty.
+  Print Eva_arg_1. Print Eva_arg_2.
+
+  #[local] Definition Epseudo_destructor_1 : Expr := Epseudo_destructor true ty e.
+  #[local] Definition Epseudo_destructor_2 : Expr := Epseudo_destructor false ty (Eint 217 ty).
+  Print Epseudo_destructor_1. Print Epseudo_destructor_2.
+
+  Check (Eunsupported "This was an unsupported operation" Prvalue ty).
+End TestExprNotations.

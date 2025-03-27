@@ -1,12 +1,12 @@
 /*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024 BlueRock Security, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1 WITH BedRock Exception for use over network, see repository root for details.
  */
 
 /** * Options */
 
-accumulate "bedrock.elpi.extra/Program/both/option".	% ../both/option.elpi
+accumulate "bluerock.elpi.extra/Program/both/option".	% ../both/option.elpi
 
 namespace option {
 

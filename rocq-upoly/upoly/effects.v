@@ -1,22 +1,22 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.upoly.prelude.
-Require bedrock.upoly.list.
-Require bedrock.upoly.id.
-Require bedrock.upoly.reader.
-Require bedrock.upoly.writer.
-Require bedrock.upoly.state.
-Require bedrock.upoly.optionT.
-Require bedrock.upoly.listT.
-Require bedrock.upoly.traceT.
-Require bedrock.upoly.readerT.
-Require bedrock.upoly.writerT.
-Require bedrock.upoly.stateT.
+Require Import bluerock.upoly.prelude.
+Require bluerock.upoly.list.
+Require bluerock.upoly.id.
+Require bluerock.upoly.reader.
+Require bluerock.upoly.writer.
+Require bluerock.upoly.state.
+Require bluerock.upoly.optionT.
+Require bluerock.upoly.listT.
+Require bluerock.upoly.traceT.
+Require bluerock.upoly.readerT.
+Require bluerock.upoly.writerT.
+Require bluerock.upoly.stateT.
 
 Export list.Notations.
 

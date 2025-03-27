@@ -3,9 +3,9 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.cpp.logic.heap_pred.prelude.
-Require Import bedrock.lang.cpp.logic.heap_pred.valid.
-Require Import bedrock.lang.cpp.logic.heap_pred.null.
+Require Import bluerock.lang.cpp.logic.heap_pred.prelude.
+Require Import bluerock.lang.cpp.logic.heap_pred.valid.
+Require Import bluerock.lang.cpp.logic.heap_pred.null.
 
 #[local] Set Printing Coercions.
 Implicit Types (σ : genv) (p : ptr) (o : offset).
@@ -21,11 +21,9 @@ value [v'] (see [val_related] and [tptsto_fuzzyR_val_related]).
 *)
 mlock Definition tptstoR `{Σ : cpp_logic} {σ : genv} (ty : Rtype) (q : cQp.t) (v : val) : Rep :=
   as_Rep (fun p => tptsto ty q p v).
-#[global] Arguments tptstoR {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 mlock Definition tptsto_fuzzyR `{Σ : cpp_logic, σ : genv} (ty : Rtype) (q : cQp.t) (v : val) : Rep :=
   Exists v', [| val_related ty v v' |] ** tptstoR ty q v'.
-#[global] Arguments tptsto_fuzzyR {_ _ _ _} _ _ _ : assert.	(* mlock bug *)
 
 Section tptstoR.
   Context `{Σ : cpp_logic} {σ : genv}.
@@ -34,21 +32,6 @@ Section tptstoR.
 
   Lemma _at_tptstoR (p : ptr) ty q v : p |-> tptstoR ty q v -|- tptsto ty q p v.
   Proof. by rewrite tptstoR.unlock _at_as_Rep. Qed.
-
-  #[global] Instance: Params (@tptstoR) 3 := {}.
-
-  #[global] Instance tptstoR_proper :
-    Proper (genv_eq ==> eq ==> eq ==> eq ==> (⊣⊢)) (@tptstoR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite tptstoR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance tptstoR_mono :
-    Proper (genv_leq ==> eq ==> eq ==> eq ==> (⊢)) (@tptstoR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite tptstoR.unlock. by setoid_rewrite Hσ.
-  Qed.
 
   #[global] Instance tptstoR_timeless ty q v :
     Timeless (tptstoR ty q v).
@@ -123,22 +106,6 @@ Section tptstoR.
   Proof.
     rewrite tptsto_fuzzyR.unlock. rewrite _at_exists. f_equiv=>v'.
     by rewrite _at_sep _at_only_provable.
-  Qed.
-
-  #[global] Instance: Params (@tptsto_fuzzyR) 3 := {}.
-  #[global] Instance tptsto_fuzzyR_mono :
-    Proper (genv_leq ==> eq ==> eq ==> eq ==> bi_entails) (@tptsto_fuzzyR _ _ _).
-  Proof.
-    intros σ1 σ2 Hσ ??-> ??-> ??->.
-    rewrite tptsto_fuzzyR.unlock. by setoid_rewrite Hσ.
-  Qed.
-  #[global] Instance tptsto_fuzzyR_flip_mono :
-    Proper (flip genv_leq ==> eq ==> eq ==> eq ==> flip bi_entails) (@tptsto_fuzzyR _ _ _).
-  Proof. repeat intro. by apply tptsto_fuzzyR_mono. Qed.
-  #[global] Instance tptsto_fuzzyR_proper :
-    Proper (genv_eq ==> eq ==> eq ==> eq ==> equiv) (@tptsto_fuzzyR _ _ _).
-  Proof.
-    intros σ1 σ2 [??] ??? ??? ???. split'; by apply tptsto_fuzzyR_mono.
   Qed.
 
   #[global] Instance tptsto_fuzzyR_timeless : Timeless3 tptsto_fuzzyR.

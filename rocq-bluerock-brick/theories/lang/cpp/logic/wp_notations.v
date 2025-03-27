@@ -3,12 +3,12 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.logic.
-Require Import bedrock.lang.cpp.logic.atomics.
-Require Import bedrock.lang.cpp.logic.builtins.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.logic.atomics.
+Require Import bluerock.lang.cpp.logic.builtins.
 
-Require bedrock.lang.cpp.code_notations.
+Require bluerock.lang.cpp.code_notations.
 Import type_notations.TypeNotationsInterface.
 Import expr_notations.ExprNotationsInterface.
 Import stmt_notations.StmtNotationsInterface.
@@ -95,29 +95,29 @@ Module Export Compact.
       := (wp_atom M atomic ty%cpp_type nil _)
          ( at level 10
          , ty custom CPP_type at level 200
-         , atomic custom CPP_expr at level 200
+         , atomic at level 200
          , format "'[hv  ' ::wpAtomic  '/' '[hv' '[hv' (Mask  ↦  M ;  '/' Type  ↦  ty )  ']' '/' '[' {e:  atomic ()} ']' ']' ']'"
          , only printing).
   Notation "'::wpAtomic' '(Mask' ↦ M ; 'Type' ↦ ty ) '{e:' atomic '(' v1 , .. , v2 ')}'"
       := (wp_atom M atomic ty%cpp_type (cons v1 (.. (cons v2 nil) ..)) _)
          ( at level 10
          , ty custom CPP_type at level 200
-         , atomic custom CPP_expr at level 200
+         , atomic at level 200
          , format "'[hv  ' ::wpAtomic  '/' '[hv' '[hv' (Mask  ↦  M ;  '/' Type  ↦  ty )  ']' '/' '[' {e:  atomic ( '[hv' v1 ,  '/' .. ,  '/' v2 ']' )} ']' ']' ']'"
          , only printing).
 
   Notation "'::wpBuiltin' '(Type' ↦ ty ) '{e:' builtin '()}'"
-      := (wp_builtin builtin%cpp_expr ty%cpp_type nil _)
+      := (wp_builtin builtin%pstring ty%cpp_type nil _)
          ( at level 10
          , ty custom CPP_type at level 200
-         , builtin custom CPP_expr at level 200
+         , builtin at level 200
          , format "'[hv  ' ::wpBuiltin  '/' '[hv' '[hv' (Type  ↦  ty )  ']' '/' '[' {e:  builtin ()} ']' ']' ']'"
          , only printing).
   Notation "'::wpBuiltin' '(Type' ↦ ty ) '{e:' builtin '(' v1 , .. , v2 ')}'"
-      := (wp_builtin builtin%cpp_expr ty%cpp_type (cons v1 (.. (cons v2 nil) ..)) _)
+      := (wp_builtin builtin%pstring ty%cpp_type (cons v1 (.. (cons v2 nil) ..)) _)
          ( at level 10
          , ty custom CPP_type at level 200
-         , builtin custom CPP_expr at level 200
+         , builtin at level 200
          , format "'[hv  ' ::wpBuiltin  '/' '[hv' '[hv' (Type  ↦  ty )  ']' '/' '[' {e:  builtin ( '[hv' v1 ,  '/' .. ,  '/' v2 ']' )} ']' ']' ']'"
          , only printing).
 

@@ -1,16 +1,16 @@
 (*
- * Copyright (c) 2023-2024 BlueRock Security, Inc.
+ * Copyright (c) 2023-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.syntax.prelude.
-Require Import bedrock.lang.cpp.syntax.core.
-Require Import bedrock.lang.cpp.syntax.types.
-Require Import bedrock.lang.cpp.syntax.typing.
-Require Import bedrock.lang.cpp.syntax.stmt.
-Require Import bedrock.lang.cpp.syntax.namemap.
-Require Import bedrock.lang.cpp.syntax.translation_unit.
+Require Import bluerock.lang.cpp.syntax.prelude.
+Require Import bluerock.lang.cpp.syntax.core.
+Require Import bluerock.lang.cpp.syntax.types.
+Require Import bluerock.lang.cpp.syntax.typing.
+Require Import bluerock.lang.cpp.syntax.stmt.
+Require Import bluerock.lang.cpp.syntax.namemap.
+Require Import bluerock.lang.cpp.syntax.translation_unit.
 Import UPoly.
 
 #[local] Open Scope monad_scope.
@@ -330,6 +330,13 @@ Module decltype.
                                     mret ()
             ) t) dt
         in
+        let ptr_conv dt t :=
+              qual_norm (fun dq dt => qual_norm (fun q t =>
+                                                let* _ := guard (tq_le q dq) in
+                                                let* _ := guard (dt = t \/ dt = Tvoid) in
+                                                mret ()
+                                     ) t) dt
+        in
         trace (Can_initialize dt t) $
           match drop_qualifiers dt , drop_qualifiers t with
           | Tref dt , Tref t
@@ -339,6 +346,8 @@ Module decltype.
               if is_const dt
               then ref_conv dt t
               else mfail
+          | Tptr dt , Tptr t =>
+              ptr_conv dt t
           | dt , t =>
               let* _ := guard (dt = t) in mret ()
           end.
@@ -568,7 +577,7 @@ Module decltype.
             | _ => mfail
             end
         | Estring chars t =>
-            mret $ Tref $ Tarray (Tconst t) (1 + list_numbers.lengthN chars)
+            mret $ Tref $ Tarray (Tconst t) (1 + literal_string.lengthN chars)
         | Eint _ t =>
             let* _ := guard (t ∈ [Tchar;Tuchar;Tschar;Tshort;Tushort;Tint;Tuint;Tlong;Tulong;Tlonglong;Tulonglong]) in
             mret t

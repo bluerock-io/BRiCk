@@ -1,15 +1,15 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2023
+ * Copyright (C) 2023 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Export bedrock.lang.cpp.bi.cfractional.
+Require Export bluerock.lang.cpp.bi.cfractional.
 
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
 #[local] Set Primitive Projections.
 #[local] Set Printing Coercions.

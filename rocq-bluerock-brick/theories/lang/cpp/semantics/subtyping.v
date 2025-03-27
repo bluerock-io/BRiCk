@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2020 Gregory Malecha
+ * Copyright (C) 2020 BlueRock Security, Inc.
  *
  * SPDX-License-Identifier:AGPL-3.0-or-later
  *)
@@ -12,8 +12,8 @@
  *   http://gallium.inria.fr/~tramanan/cpp/thesis/thesis.pdf
  *)
 Require Import stdpp.fin_maps.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.genv.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.genv.
 
 Section extends.
   Context {σ : genv}.

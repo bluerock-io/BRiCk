@@ -10,8 +10,10 @@
  *
  */
 #include "clang/AST/ASTConsumer.h"
+#include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
 #include <optional>
 
 #include "clang/Tooling/CommonOptionsParser.h"
@@ -131,6 +133,10 @@ public:
 		llvm::errs() << i << "\n";
 	}
 #endif
+
+		if (Compiler.getDiagnostics().getNumErrors() > 0) {
+			return nullptr;
+		}
 		auto result =
 			new ToCoqConsumer(&Compiler, to_opt(VFileOutput), to_opt(NamesFile),
 							  to_opt(Templates), to_opt(NameTest), !MangledKeys,
@@ -179,6 +185,9 @@ main(int argc, const char **argv) {
 
 	ClangTool Tool(OptionsParser.getCompilations(),
 				   OptionsParser.getSourcePathList());
+	DiagnosticOptions DiagOptions;
+	Tool.setDiagnosticConsumer(
+		new clang::TextDiagnosticPrinter(llvm::errs(), &DiagOptions, false));
 
 	return Tool.run(newFrontendActionFactory<ToCoqAction>().get());
 }

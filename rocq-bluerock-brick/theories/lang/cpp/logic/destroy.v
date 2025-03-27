@@ -5,18 +5,18 @@
  *)
 
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.bi.errors.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.wp.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.cpp.logic.const.
-Require Import bedrock.lang.cpp.logic.dispatch.
-Require Import bedrock.lang.cpp.logic.layout.
-Require Import bedrock.lang.cpp.logic.arr.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.wp.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.lang.cpp.logic.const.
+Require Import bluerock.lang.cpp.logic.dispatch.
+Require Import bluerock.lang.cpp.logic.layout.
+Require Import bluerock.lang.cpp.logic.arr.
 
 #[local] Set Printing Coercions.
 #[local] Infix "|--" := bi_entails.
@@ -127,7 +127,6 @@ End wp_gen.
 mlock Definition wp_destroy_prim `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (cv : type_qualifiers) (ty : type) (this : ptr) (Q : epred) : mpred :=
   wp_destroy_prim_body tu cv ty this Q.
-#[global] Arguments wp_destroy_prim {_ _ _ _} _ _ _ _ _ : assert.	(* mlock bug *)
 
 Section unfold.
   Context `{Σ : cpp_logic, σ : genv}.
@@ -245,14 +244,13 @@ invoking the destructor [dtor] for type [ty] on [this].
   (**
   We inline [operand_receive] (which could be hoisted and shared).
   *)
-  Exists v, p |-> primR Tvoid (cQp.mut 1) v **
-  this |-> tblockR ty (cQp.mut 1) **
+  Exists v, p |-> primR Tvoid 1$m v **
+  this |-> tblockR ty 1$m **
   Q.
 
 mlock Definition wp_destructor `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (ty : type) (dtor : ptr) (this : ptr) (Q : epred) : mpred :=
   wp_destructor_body tu ty dtor this Q.
-#[global] Arguments wp_destructor {_ _ _ _} _ _ _ _ _ : assert.	(* mlock bug *)
 
 (** Note: All we need in this file is [type_table_le]. *)
 #[local] Notation TULE tu tu' := (sub_module tu tu') (only parsing).
@@ -365,7 +363,6 @@ End dtor.
 mlock Definition wp_destroy_named `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
     (cls : globname) (this : ptr) (Q : epred) : mpred :=
   wp_destroy_named_body tu cls this Q.
-#[global] Arguments wp_destroy_named {_ _ _ _} _ _ _ _ : assert.	(* mlock bug *)
 
 Section unfold.
   Context `{Σ : cpp_logic, σ : genv}.
@@ -572,17 +569,14 @@ mlock Definition wp_destroy_val `{Σ : cpp_logic, σ : genv}
   fix wp_destroy_val tu q ty :=
     let wp_destroy_array := wp_destroy_array_body wp_destroy_val in
     wp_destroy_val_body wp_destroy_val wp_destroy_array tu q ty.
-#[global] Arguments wp_destroy_val {_ _ _ _} _ _ _ _ _ : assert.	(* mlock bug *)
 
 mlock Definition destroy_val `{Σ : cpp_logic, σ : genv}
     : ∀ (tu : translation_unit) (ty : type) (p : ptr) (Q : epred), mpred :=
   destroy_val_body wp_destroy_val.
-#[global] Arguments destroy_val {_ _ _ _} _ _ _ _ : assert.	(* mlock bug *)
 
 mlock Definition wp_destroy_array `{Σ : cpp_logic, σ : genv}
     (tu : translation_unit) (cv : type_qualifiers) (ety : type) (sz : N) (base : ptr) (Q : epred) : mpred :=
   wp_destroy_array_body wp_destroy_val tu cv ety sz base Q.
-#[global] Arguments wp_destroy_array {_ _ _ _} _ _ _ _ _ _ : assert.	(* mlock bug *)
 
 #[local] Notation V := (wp_destroy_val_body wp_destroy_val wp_destroy_array) (only parsing).
 #[local] Notation A := (wp_destroy_array_body wp_destroy_val) (only parsing).
@@ -1046,7 +1040,6 @@ mlock Definition interp `{Σ : cpp_logic, σ : genv}
     : translation_unit -> FreeTemps -> epred -> mpred :=
   fix interp tu free :=
   interp_body interp tu free.
-#[global] Arguments interp {_ _ _ _} _ free Q : assert.	(* set names *)
 (* END interp *)
 (* ^^ These BEGIN/END markers matter to our documentation *)
 

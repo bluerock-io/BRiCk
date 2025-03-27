@@ -1,16 +1,16 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2024
+ * Copyright (C) 2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.upoly.prelude.
+Require Import bluerock.upoly.prelude.
 
 (** * Monoid operations *)
 (**
 NOTE: We do not define this class in base.v or export this module from
-<<bedrock.upoly.upoly>> to minimize conflicts with Iris' monoid class.
+<<bluerock.upoly.upoly>> to minimize conflicts with Iris' monoid class.
 *)
 
 Class Monoid@{*u | } (A : Type@{u}) : Type@{u} := {

@@ -12,7 +12,7 @@
  * Another option would be to completely pre-process the
  * AST and remove these nodes.
  *)
-Require Import bedrock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.syntax.
 
 (* TODO: this should probably be moved to syntax/types *)
 

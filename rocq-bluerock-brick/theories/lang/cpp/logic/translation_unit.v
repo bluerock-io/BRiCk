@@ -7,13 +7,13 @@
 (** this module provides a denotational/axiomatic semantics to c++ compilation
     units.
  *)
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.
-Require Import bedrock.lang.cpp.logic.pred.
-Require Import bedrock.lang.cpp.logic.path_pred.
-Require Import bedrock.lang.cpp.logic.heap_pred.
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.prelude.base.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.
+Require Import bluerock.lang.cpp.logic.pred.
+Require Import bluerock.lang.cpp.logic.path_pred.
+Require Import bluerock.lang.cpp.logic.heap_pred.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
 Import ChargeNotation.
 
@@ -103,7 +103,7 @@ Section with_cpp.
 *)
       (* ^^ todo(gmm): static initialization is not yet supported *)
         | Ovar t global_init.NoInit =>
-          uninitR t (cQp.m 1)
+          uninitR t 1$m
         | _ => emp
         end.
 

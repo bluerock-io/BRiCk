@@ -3,11 +3,11 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.cpp.logic.heap_pred.prelude.
-Require Import bedrock.lang.cpp.logic.heap_pred.valid.
-Require Import bedrock.lang.cpp.logic.heap_pred.null.
-Require Import bedrock.lang.cpp.logic.heap_pred.simple.
-Require Import bedrock.lang.cpp.logic.heap_pred.any.
+Require Import bluerock.lang.cpp.logic.heap_pred.prelude.
+Require Import bluerock.lang.cpp.logic.heap_pred.valid.
+Require Import bluerock.lang.cpp.logic.heap_pred.null.
+Require Import bluerock.lang.cpp.logic.heap_pred.simple.
+Require Import bluerock.lang.cpp.logic.heap_pred.any.
 
 Import rep_defs.INTERNAL. (* for access to [unfold_at] *)
 
@@ -29,7 +29,7 @@ Section with_cpp.
   Definition blockR_aux : seal (@blockR_def). Proof. by eexists. Qed.
   Definition blockR := blockR_aux.(unseal).
   Definition blockR_eq : @blockR = _ := blockR_aux.(seal_eq).
-  #[global] Arguments blockR {_} _%_N _%_Qp.
+  #[global] Arguments blockR {_} _%_N _%_cQp.
 
   #[global] Instance blockR_timeless sz q :
     Timeless (blockR sz q).
@@ -65,7 +65,7 @@ Section with_cpp.
   Qed.
 
   Lemma blockR_disjoint (l : ptr):
-    l |-> blockR 1 (cQp.m 1) |-- l |-> blockR 1 (cQp.m 1) -* False.
+    l |-> blockR 1 1$m |-- l |-> blockR 1 1$m -* False.
   Proof.
     iIntros "K L". iCombine "K L" as "P".
     by iDestruct (observe [| _ ≤ 1 |]%Qp with "P") as %?.
@@ -77,7 +77,7 @@ Section with_cpp.
    *)
   Definition tblockR (ty : Rtype) (q : cQp.t) : Rep :=
     match size_of σ ty , align_of ty with
-    | Some sz , Some al => blockR (σ:=σ) sz q ** alignedR al
+    | Some sz , Some al => blockR sz q ** alignedR al
     | _ , _  => False
     end.
 

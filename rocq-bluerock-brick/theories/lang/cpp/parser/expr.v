@@ -4,9 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.syntax.types(drop_qualifiers).
-Require Import bedrock.lang.cpp.parser.prelude.
-Require Import bedrock.lang.cpp.parser.lang.
+Require Import bluerock.lang.cpp.syntax.types(drop_qualifiers).
+Require Import bluerock.lang.cpp.parser.prelude.
+Require Import bluerock.lang.cpp.parser.lang.
 
 #[local] Arguments force_some _ {_} : assert.	(** TODO: Upstream? *)
 
@@ -131,5 +131,9 @@ Module ParserExpr (Import Lang : PARSER_LANG).
     | None => Eunsupported "unresolved concept specialization" Tbool
     | Some val => Ebool val
     end.
+
+  Definition Estring (chars : list N) (t : type) : Expr :=
+    let str := literal_string.of_list_N chars in
+    Estring str t.
 
 End ParserExpr.

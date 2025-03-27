@@ -7,12 +7,12 @@
 (** Functionality to elaborate specifications that are written to take
     operands (i.e. [val]) and convert them to take materialized values.
  *)
-Require Import bedrock.lang.proofmode.proofmode.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.logic.
-Require Import bedrock.lang.cpp.semantics.
-Require Export bedrock.lang.cpp.specs.cpp_specs.
-Require Import bedrock.lang.cpp.specs.wp_spec_compat.
+Require Import bluerock.iris.extra.proofmode.proofmode.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.semantics.
+Require Export bluerock.lang.cpp.specs.cpp_specs.
+Require Import bluerock.lang.cpp.specs.wp_spec_compat.
 
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.
@@ -64,8 +64,8 @@ Section with_cpp.
             letI* pv := add_with "pv" ptr in
             letI* v := add_with "v" val in
             letI* := add_arg pv in
-            letI* := add_pre (pv |-> tptsto_fuzzyR t (cQp.mut 1) v) in
-            letI* := add_post (pv |-> anyR t (cQp.mut 1)) in
+            letI* := add_pre (pv |-> tptsto_fuzzyR t 1$m v) in
+            letI* := add_post (pv |-> anyR t 1$m) in
             elaborate ret ts ar (args ++ [v]) wpp
         end%I
     end.

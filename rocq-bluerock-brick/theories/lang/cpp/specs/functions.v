@@ -3,13 +3,13 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
-Require Import bedrock.lang.bi.ChargeCompat.
-Require Import bedrock.lang.bi.telescopes.
-Require Import bedrock.lang.cpp.logic.entailsN.
-Require Import bedrock.lang.bi.errors.
-Require Import bedrock.lang.proofmode.proofmode.	(** Early to get the right [ident] *)
-Require Import bedrock.lang.cpp.logic.
-Require Import bedrock.lang.cpp.specs.cpp_specs.
+Require Import bluerock.iris.extra.bi.ChargeCompat.
+Require Import bluerock.iris.extra.bi.telescopes.
+Require Import bluerock.lang.cpp.logic.entailsN.
+Require Import bluerock.iris.extra.bi.errors.
+Require Import bluerock.iris.extra.proofmode.proofmode.	(** Early to get the right [ident] *)
+Require Import bluerock.lang.cpp.logic.
+Require Import bluerock.lang.cpp.specs.cpp_specs.
 
 #[local] Set Printing Universes.
 #[local] Set Printing Coercions.
@@ -37,7 +37,7 @@ Definition SConstructor `{Σ : cpp_logic, resolve : genv} {cc : calling_conv} {a
   let this_type := Tmut (Tnamed class) in
   SFunction (cc:=cc) (Tmut Tvoid) (Tconst (Tptr this_type) :: targs) (ar:=ar)
             (\arg{this : ptr} "this" this
-             \pre this |-> tblockR (Tnamed class) (cQp.mut 1)
+             \pre this |-> tblockR (Tnamed class) 1$m
              \exact PQ this).
 
 (* A specification for a destructor *)
@@ -49,7 +49,7 @@ Definition SDestructor `{Σ : cpp_logic, resolve : genv} {cc : calling_conv}
       of virtual base classes. *)
   SFunction (cc:=cc) (Tmut Tvoid) (Tconst (Tptr this_type) :: nil)
            (\arg{this} "this" this
-            \exact add_post (_at this (tblockR (Tnamed class) (cQp.mut 1))) (PQ this)).
+            \exact add_post (_at this (tblockR (Tnamed class) 1$m)) (PQ this)).
 
 (* A specification for a method *)
 (** Sometimes, especially after a virtual function resolution,

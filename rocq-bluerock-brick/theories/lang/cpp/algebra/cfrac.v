@@ -7,8 +7,8 @@
 
 Require Import iris.algebra.cmra.
 Require Import iris.algebra.frac.
-Require Import bedrock.prelude.bool.
-Require Import bedrock.lang.bi.split_frac.
+Require Import bluerock.prelude.bool.
+Require Import bluerock.iris.extra.bi.split_frac.
 
 #[local] Set Printing Coercions.
 
@@ -259,6 +259,11 @@ Canonical Structure cQp.tR.
 (* as with C++, we make mutable the default *)
 #[global] Coercion cQp.frac : cQp.t >-> Qp.
 
+#[global] Notation "q '$m'" := (cQp.mut q) (format "q $m") : cQp_scope.
+#[global] Notation "q '$c'" := (cQp.const q) (format "q $c") : cQp_scope.
+#[global] Notation "1" := (1$m%cQp) (only parsing) : cQp_scope.
+
+
 (** ** Backwards compatibility *)
 (**
 Old code can benefit from a coercion.
@@ -290,11 +295,30 @@ End cQp_compat.
 
 Section TEST.
   Variable TEST : cQp.t -> cQp.t -> cQp.t -> cQp.t -> Prop.
+
+  Goal TEST 1 (cQp.c 1) 1$m (1/4)$c.
+  (* TEST 1$m 1$c 1$m (1 / 4)$c *)
+  Abort.
+
+  Goal ∀ m c, TEST c (cQp.c m) 1$c m$m.
+  (* ∀ (m : Qp) (c : cQp.t), TEST c m$c 1$c m$m *)
+  Abort.
+
+  Open Scope Qp.
+  Variable f : Qp -> Qp.
+
+  Goal ∀ m c, TEST c (cQp.c m) (f $ c)$c (f $ m/m) $m.
+  (* ∀ (m : Qp) (c : cQp.t), TEST c m$c (f c)$c (f (m / m))$m *)
+  Abort.
+
+  Section with_compat.
   Import cQp_compat.
 
   (* TODO: to make this work without the [%Qp], we need to register the
-     notations for [Qp] as notations in [cvq_scope]. *)
+     notations for [Qp] as notations in [cQq_scope]. *)
   Goal TEST 1 (cQp.c 1) (1/2) (cQp.c (1/4)).
+  (* TEST 1%Qp 1$c (1 / 2)%Qp (1 / 4)$c *)
   Abort.
+  End with_compat.
 
 End TEST.

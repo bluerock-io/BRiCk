@@ -1,12 +1,12 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2022-2024
+ * Copyright (C) 2022-2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.ltac2.extra.internal.init.
-Require Import bedrock.ltac2.extra.internal.constr.
+Require Import bluerock.ltac2.extra.internal.init.
+Require Import bluerock.ltac2.extra.internal.constr.
 
 (** Minor extensions to [Ltac2.Fresh] *)
 Module Fresh.

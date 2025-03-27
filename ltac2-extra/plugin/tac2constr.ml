@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2021-2023
+ * Copyright (C) 2021-2023 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -32,6 +32,11 @@ let evar_tag : _ Tac2core.map_tag =
     type valmap = Tac2val.valexpr M.t
     let valmap_eq = Util.Refl
   end)
+
+(* [compare] must be kept in sync with whatever is used in [ConstrSet] and [ConstrMap] *)
+let _ =
+  define Tac2expr.{ mltac_plugin = "br.Constr"; mltac_tactic = "compare" } (valexpr @-> valexpr @-> eret int) @@ fun c1 c2 _ sigma ->
+    Constr.compare (to_constr sigma c1) (to_constr sigma c2)
 
 module ConstrSet = struct
   include Set.Make(Constr)

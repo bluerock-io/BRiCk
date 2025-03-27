@@ -4,17 +4,17 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.lang.cpp.parser.reduction.
-Require Export bedrock.lang.cpp.syntax.stmt. (* for [Sskip] *)
-Require Import bedrock.lang.cpp.parser.name.
-Require Import bedrock.lang.cpp.parser.type.
-Require Import bedrock.lang.cpp.parser.expr.
-Require Import bedrock.lang.cpp.parser.decl.
-Require Export bedrock.lang.cpp.mparser.prelude.
-Require Export bedrock.lang.cpp.mparser.type.
-Require Export bedrock.lang.cpp.mparser.expr.
-Require Export bedrock.lang.cpp.mparser.stmt.
-Require Export bedrock.lang.cpp.mparser.tu.
+Require Import bluerock.lang.cpp.parser.reduction.
+Require Export bluerock.lang.cpp.syntax.stmt. (* for [Sskip] *)
+Require Import bluerock.lang.cpp.parser.name.
+Require Import bluerock.lang.cpp.parser.type.
+Require Import bluerock.lang.cpp.parser.expr.
+Require Import bluerock.lang.cpp.parser.decl.
+Require Export bluerock.lang.cpp.mparser.prelude.
+Require Export bluerock.lang.cpp.mparser.type.
+Require Export bluerock.lang.cpp.mparser.expr.
+Require Export bluerock.lang.cpp.mparser.stmt.
+Require Export bluerock.lang.cpp.mparser.tu.
 
 #[local] Definition parser_lang : lang.t := lang.temp.
 Include ParserName.

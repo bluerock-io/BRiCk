@@ -1,19 +1,19 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2022-2024
+ * Copyright (C) 2022-2024 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
  *)
 
-Require Import bedrock.ltac2.extra.internal.plugin.
-Require Import bedrock.ltac2.extra.internal.misc.
-Require Import bedrock.ltac2.extra.internal.init.
-Require Import bedrock.ltac2.extra.internal.constr.
-Require Import bedrock.ltac2.extra.internal.list.
-Require Import bedrock.ltac2.extra.internal.printf.
-Require Import bedrock.ltac2.extra.internal.fresh.
-Require Import bedrock.ltac2.extra.internal.control.
-Require Import bedrock.ltac2.extra.internal.std.
+Require Import bluerock.ltac2.extra.internal.plugin.
+Require Import bluerock.ltac2.extra.internal.misc.
+Require Import bluerock.ltac2.extra.internal.init.
+Require Import bluerock.ltac2.extra.internal.constr.
+Require Import bluerock.ltac2.extra.internal.list.
+Require Import bluerock.ltac2.extra.internal.printf.
+Require Import bluerock.ltac2.extra.internal.fresh.
+Require Import bluerock.ltac2.extra.internal.control.
+Require Import bluerock.ltac2.extra.internal.std.
 
 (** Environments for de Bruijn levels. *)
 Module LevelEnv.
@@ -344,9 +344,13 @@ Module LevelEnv.
     ).
 
   Ltac2 @ external make_evar_in_level_env_ocaml :
-     bool -> rel_decl list -> constr -> evar * constr array :=
+     bool -> bool -> rel_decl list -> constr -> evar * constr array :=
     "ltac2_extensions" "make_evar_in_level_env".
 
   Ltac2 make_evar_in_level_env (tc_cand : bool) (env : t) (ty : constr) :=
-    make_evar_in_level_env_ocaml tc_cand (env.(decls)) ty.
+    make_evar_in_level_env_ocaml false tc_cand (env.(decls)) ty.
+
+  Ltac2 make_evar_in_level_env_no_goal (tc_cand : bool) (env : t) (ty : constr) :=
+    make_evar_in_level_env_ocaml true tc_cand (env.(decls)) ty.
+
 End LevelEnv.

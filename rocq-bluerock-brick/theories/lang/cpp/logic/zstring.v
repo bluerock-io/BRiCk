@@ -1,5 +1,5 @@
 (*
- * Copyright (C) BlueRock Security Inc. 2019-2021
+ * Copyright (C) 2019-2021 BlueRock Security, Inc.
 
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -7,14 +7,14 @@
 Require Import Stdlib.ZArith.BinInt.
 Require Import Stdlib.Lists.List.
 
-Require Import bedrock.lang.proofmode.proofmode.
+Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.observe.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.logic.arr.
-Require Import bedrock.lang.cpp.logic.heap_pred.
+Require Import bluerock.prelude.base.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.observe.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.logic.arr.
+Require Import bluerock.lang.cpp.logic.heap_pred.
 
 Import ChargeNotation.
 #[local] Open Scope Z_scope.
@@ -436,8 +436,8 @@ Section with_ct.
             apply has_type_prop_char_0.
           - exfalso; eapply nth_error_strlen_contra; by eauto.
         }
-        suff: List.Forall (fun x => x <> 0%N /\ has_type_prop (σ:=σ) (Vchar x) Tchar)
-                          (take (Datatypes.length zs - 1) zs).
+        suff: Refine (List.Forall (fun x => x <> 0%N /\ has_type_prop (Vchar x) Tchar)
+                          (take (Datatypes.length zs - 1) zs)).
         { clear - zs. elim: zs => //= [_ [] //|a zs IH /=]. rewrite Nat.sub_0_r.
           destruct zs as [|z zs]; first done. move => /= /Forall_cons [[??]?].
           move => [//|]. simpl in IH. rewrite Nat.sub_0_r in IH. apply IH. done. }

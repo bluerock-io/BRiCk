@@ -4,15 +4,15 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
-(** Most clients should import [bedrock.lang.cpp.logic.rep] instead of this file.
+(** Most clients should import [bluerock.lang.cpp.logic.rep] instead of this file.
 This file defines the core type [Rep] of representation predicates.
 TODO: merge back into [rep.v]?
 *)
 Require Import elpi.apps.locker.locker.
-Require Import bedrock.lang.bi.prelude.
-Require Import bedrock.lang.bi.monpred.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.logic.mpred.
+Require Import bluerock.iris.extra.bi.prelude.
+Require Import bluerock.iris.extra.bi.monpred.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.logic.mpred.
 
 Import ChargeNotation.
 Implicit Types (σ : genv) (p : ptr) (o : offset).
@@ -52,11 +52,9 @@ End defs.
 
 mlock Definition at_aux `{Σ : cpp_logic} (p : ptr) (R : Rep) : mpred :=
   R.(monPred_at) p.
-#[global] Arguments at_aux {_ _ _} _ _ : assert.
 
 mlock Definition offsetR_aux `{Σ : cpp_logic} (o : offset) (R : Rep) : Rep :=
   as_Rep (fun base => R.(monPred_at) (base ,, o)).
-#[global] Arguments offsetR_aux {_ _ _} _ _ : assert.
 
 (* TODO replace by the right instances. *)
 #[global] Instance: Params (@at_aux) 4 := {}.

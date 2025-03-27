@@ -9,11 +9,11 @@
    require side conditions on the abstract machine state.
  *)
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.numbers.
-Require Export bedrock.lang.cpp.arith.operator.
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.values.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.numbers.
+Require Export bluerock.lang.cpp.arith.operator.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.values.
 
 #[local] Open Scope Z_scope.
 
