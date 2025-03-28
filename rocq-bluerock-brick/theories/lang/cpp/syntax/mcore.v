@@ -9,23 +9,21 @@ Require Export bluerock.lang.cpp.syntax.core.
 #[local] Set Primitive Projections.
 
 (** ** C++ with templates *)
-Import lang.
-
-Notation Mname := (name' temp).
-Notation Mglobname := (globname' temp).
-Notation Mobj_name := (obj_name' temp).
-Notation Mtype := (type' temp).
-Notation Mexprtype := (exprtype' temp).
-Notation Mdecltype := (decltype' temp).
-Notation MCast := (Cast' temp).
-Notation Moperator_impl := (operator_impl' temp).
-Notation MMethodRef := (MethodRef' temp).
-Notation MExpr := (Expr' temp).
-Notation Mfunction_type := (function_type' temp).
-Notation Mtemp_param := (temp_param' temp).
-Notation Mtemp_arg := (temp_arg' temp).
-Notation Matomic_name := (atomic_name' temp).
-Notation MBindingDecl := (BindingDecl' lang.temp).
-Notation MVarDecl := (VarDecl' temp).
-Notation MStmt := (Stmt' temp).
-Notation Mfield_name := (field_name.t temp).
+Notation Mname := name (only parsing).
+Notation Mglobname := globname (only parsing).
+Notation Mobj_name := obj_name (only parsing).
+Notation Mtype := type (only parsing).
+Notation Mexprtype := exprtype (only parsing).
+Notation Mdecltype := decltype (only parsing).
+Notation MCast := Cast (only parsing).
+Notation Moperator_impl := operator_impl (only parsing).
+Notation MMethodRef := MethodRef (only parsing).
+Notation MExpr := Expr (only parsing).
+Notation Mfunction_type := function_type (only parsing).
+Notation Mtemp_param := temp_param (only parsing).
+Notation Mtemp_arg := temp_arg (only parsing).
+Notation Matomic_name := atomic_name (only parsing).
+Notation MBindingDecl := BindingDecl (only parsing).
+Notation MVarDecl := VarDecl (only parsing).
+Notation MStmt := Stmt (only parsing).
+Notation Mfield_name := field_name.t (only parsing).

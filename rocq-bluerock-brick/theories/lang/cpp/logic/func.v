@@ -43,7 +43,7 @@ implement the part of http://eel.is/c++draft/class.cdtor#3 about
 members. This enables their dereference via [wp_lval_deref].
 *)
 mlock Definition svalid_members `{Σ : cpp_logic, σ : genv}
-    (cls : globname) (members : list (field_name.t lang.cpp * type)) : Rep :=
+    (cls : globname) (members : list (field_name.t * type)) : Rep :=
   reference_toR (Tnamed cls) **
   [** list] m ∈ members, _field (Field cls m.1) |-> reference_toR m.2.
 
@@ -622,7 +622,7 @@ Definition wpi_bases `{Σ : cpp_logic, σ : genv} (tu : translation_unit)
   match bases with
   | nil => Q
   | b :: bases =>
-    match List.filter (fun i => bool_decide (i.(init_path) = InitBase (lang:=lang.cpp) b)) inits with
+    match List.filter (fun i => bool_decide (i.(init_path) = InitBase b)) inits with
     | nil =>
       (*
       There is no initializer for this base class.

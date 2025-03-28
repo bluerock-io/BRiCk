@@ -20,9 +20,7 @@ Module Import internal.
   mlock Definition Not_representable : Error.t := inhabitant.
 
   Section convert.
-    Context {lang1 lang2 : lang.t}.
-
-    Definition handle_type : type_handler lang1 lang2 M := {|
+    Definition handle_type : type_handler M := {|
       handle_Tparam _ := mthrow Not_representable;
       handle_Tresult_param _ := mthrow Not_representable;
       handle_Tresult_global _ _ := mthrow Not_representable;
@@ -38,7 +36,7 @@ Module Import internal.
       handle_Tqualified cv _ t := Tqualified cv <$> t ();
     |}.
 
-    Definition handle_expr : expr_handler lang1 lang2 M := {|
+    Definition handle_expr : expr_handler M := {|
       handle_Eparam _ := mthrow Not_representable;
       handle_Eunresolved_global _ _ := mthrow Not_representable;
       handle_Eunresolved_unop _ _ _ := mthrow Not_representable;
@@ -58,12 +56,12 @@ Module Import internal.
   End convert.
 End internal.
 
-#[local] Notation USE lang1 lang2 f := (
-  f (handle_type (lang1:=lang1) (lang2:=lang2))
-    (handle_expr (lang1:=lang1) (lang2:=lang2))
+#[local] Notation USE f := (
+  f handle_type
+    handle_expr
 ) (only parsing).
-#[local] Notation M2S f := (USE lang.temp lang.cpp f).
-#[local] Notation S2M f := (USE lang.cpp lang.temp f).
+#[local] Notation M2S f := (USE f).
+#[local] Notation S2M f := (USE f).
 
 Definition untempN := M2S MTraverse.traverseN.
 Definition untempT := M2S MTraverse.traverseT.

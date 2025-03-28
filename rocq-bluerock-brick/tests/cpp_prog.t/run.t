@@ -6,23 +6,26 @@ Compiling the Coq test file.
   {|
     symbols :=
       {|
-        NM.this := NM.Raw.Leaf ObjValue;
-        NM.is_bst := NM.check_canon_ok (NM.Raw.Leaf ObjValue) I
+        TM.this := NM.Raw.Leaf ObjValue;
+        TM.is_bst :=
+          internal.NameMap.check_canon_ok (internal.NameMap.Raw.Leaf ObjValue)
+            I
       |};
     types :=
       {|
-        NM.this :=
+        TM.this :=
           NM.Raw.Node
             (NM.Raw.Node (NM.Raw.Leaf GlobDecl) "align_val_t"%cpp_name Gtype
                (NM.Raw.Leaf GlobDecl) 1%Z)
             "xx"%cpp_name (Gtypedef "align_val_t") (NM.Raw.Leaf GlobDecl) 2%Z;
-        NM.is_bst :=
-          NM.check_canon_ok
-            (NM.Raw.Node
-               (NM.Raw.Node (NM.Raw.Leaf GlobDecl) "align_val_t"%cpp_name Gtype
-                  (NM.Raw.Leaf GlobDecl) 1%Z)
-               "xx"%cpp_name (Gtypedef "align_val_t") 
-               (NM.Raw.Leaf GlobDecl) 2%Z)
+        TM.is_bst :=
+          internal.NameMap.check_canon_ok
+            (internal.NameMap.Raw.Node
+               (internal.NameMap.Raw.Node (internal.NameMap.Raw.Leaf GlobDecl)
+                  "align_val_t"%cpp_name Gtype
+                  (internal.NameMap.Raw.Leaf GlobDecl) 1%Z)
+               "xx"%cpp_name (Gtypedef "align_val_t")
+               (internal.NameMap.Raw.Leaf GlobDecl) 2%Z)
             I
       |};
     initializer := [];

@@ -1655,7 +1655,7 @@ Module Type Expr.
 
     Definition struct_inits (s : Struct) (es : list Expr) : option (list Initializer) :=
       let info :=
-          map (fun b e => {| init_path := InitBase (lang:=lang.cpp) b.1
+          map (fun b e => {| init_path := InitBase b.1
                         ; init_init := e |}) s.(s_bases) ++
           map (fun m e => {| init_path := InitField m.(mem_name)
                         ; init_init := e |}) s.(s_fields)
@@ -1688,7 +1688,7 @@ Module Type Expr.
        See <https://eel.is/c++draft/dcl.init.aggr#5>. However, the cpp2v
        frontend desugars all of these to initialize exactly one element.
      *)
-    Fixpoint find_member (fld : field_name.t lang.cpp) (ls : list Member) {struct ls} : option (nat * Member) :=
+    Fixpoint find_member (fld : field_name.t) (ls : list Member) {struct ls} : option (nat * Member) :=
       match ls with
       | nil => None
       | m :: ms =>
@@ -1699,7 +1699,7 @@ Module Type Expr.
       end.
 
     Definition wp_union_initlist (cls : globname) (u : decl.Union)
-      (fld : field_name.t lang.cpp) (e : option Expr) (this : ptr)
+      (fld : field_name.t) (e : option Expr) (this : ptr)
       (Q : FreeTemps.t -> epred) : mpred :=
       match find_member fld u.(u_fields) with
       | None => False (* UNSUPPORTED *)

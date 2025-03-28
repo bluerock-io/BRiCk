@@ -53,13 +53,13 @@ Implicit Types (n : N) (z : Z).
 Definition pred_ns : namespace := nroot .@@ "bluerock" .@@ "lang" .@@ "cpp_logic".
 
 (* Used by [has_type_prop_has_type_noptr]. No theory. *)
-Definition nonptr_prim_type {lang} (ty : type' lang) : bool :=
+Definition nonptr_prim_type (ty : type) : bool :=
   match drop_qualifiers ty with
   | Tfloat_ _ | Tchar_ _ | Tvoid | Tbool | Tenum _ | Tnum _ _ => true
   | Tnullptr | Tptr _ | Tref _ | Trv_ref _ | _ => false
   end.
 
-Lemma nonptr_prim_type_erase_qualifiers : forall {lang} (ty : type' lang),
+Lemma nonptr_prim_type_erase_qualifiers : forall (ty : type),
     nonptr_prim_type ty = nonptr_prim_type (erase_qualifiers ty).
 Proof. induction ty; simpl; eauto. Qed.
 

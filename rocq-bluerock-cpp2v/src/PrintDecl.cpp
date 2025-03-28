@@ -296,6 +296,7 @@ printClassName(CoqPrinter &print, const RecordDecl &decl,
 		VisitInjectedClassNameType) to handle argument synthesis
 		because such types get printed from other contexts.
 		*/
+		guard::ctor _{print, "Ndependent'", false};
 		return cprint.printType(print, decl.getTypeForDecl(), loc::of(decl));
 	} else
 		return cprint.printName(print, decl);
@@ -409,9 +410,7 @@ printFields(const CXXRecordDecl &decl, const ASTRecordLayout *layout,
 		if (field->isBitField())
 			fatal(cprint, loc::of(field), "bit fields are not supported");
 
-		guard::ctor _(print, "@mkMember", i != 0);
-		print.output() << (print.templates() ? "lang.temp" : "lang.cpp")
-					   << fmt::nbsp;
+		guard::ctor _(print, "mkMember", i != 0);
 		cprint.printFieldName(print, *field, loc::of(field)) << fmt::nbsp;
 		cprint.printQualType(print, field->getType(), loc::of(field))
 			<< fmt::nbsp;
@@ -441,7 +440,10 @@ printStructBases(const CXXRecordDecl &decl, const ASTRecordLayout *layout,
 
 		auto dependent = [&]() -> auto & {
 			guard::ctor _(print, "mkBase");
-			cprint.printType(print, type, loc::of(decl)) << fmt::nbsp;
+			{
+				guard::ctor _2(print, "Ndependent'");
+				cprint.printType(print, type, loc::of(decl)) << fmt::nbsp;
+			}
 			return printLayoutInfo(print, 0);
 		};
 		if (print.templates())
@@ -714,20 +716,13 @@ printInitPath(const CXXConstructorDecl &decl, const CXXCtorInitializer &init,
 			  CoqPrinter &print, ClangPrinter &cprint) {
 	auto fatal = [&](StringRef msg)
 					 NORETURN { ::fatal(cprint, loc::of(decl), msg); };
-	auto lang = [&]() {
-		print.output() << fmt::nbsp
-					   << (print.templates() ? "lang.temp" : "lang.cpp")
-					   << fmt::nbsp;
-	};
 	if (init.isMemberInitializer()) {
 		auto fd = init.getMember();
 		always_assert(fd && "member initializer without member");
-		guard::ctor _(print, "@InitField", false);
-		lang();
+		guard::ctor _(print, "InitField", false);
 		return cprint.printFieldName(print, *fd, loc::of(decl));
 	} else if (init.isBaseInitializer()) {
 		guard::ctor _(print, "@InitBase", false);
-		lang();
 		return printClassName(print, init.getBaseClass(), cprint,
 							  loc::of(decl));
 	} else if (init.isIndirectMemberInitializer()) {
@@ -735,7 +730,6 @@ printInitPath(const CXXConstructorDecl &decl, const CXXCtorInitializer &init,
 		if (!fd)
 			fatal("indirect field initializer without field");
 		guard::ctor _1(print, "@InitIndirect", false);
-		lang();
 		auto id = printIndirectFieldChain(decl, *fd, print, cprint);
 		print.output() << fmt::nbsp;
 		guard::ctor _2(print, "field_name.Id", false);

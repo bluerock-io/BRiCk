@@ -12,11 +12,11 @@ Set Primitive Projections.
 Export core(Stmt'(..)).
 Export core(VarDecl'(..)).
 
-Notation Stmt := (Stmt' lang.cpp).
-Notation MStmt := (Stmt' lang.temp).
+Notation Stmt := Stmt.
+Notation MStmt := Stmt (only parsing).
 
-Notation VarDecl := (VarDecl' lang.cpp).
-Notation MVarDecl := (VarDecl' lang.temp).
+Notation VarDecl := VarDecl.
+Notation MVarDecl := VarDecl (only parsing).
 
-Definition Sskip {lang} : Stmt' lang := Sseq nil.
+Definition Sskip : Stmt := Sseq nil.
 

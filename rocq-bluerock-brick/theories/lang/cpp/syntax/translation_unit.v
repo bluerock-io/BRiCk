@@ -18,24 +18,17 @@ Export decl.
 #[local] Tactic Notation "solve_decision" := intros; solve_decision.
 
 (** ** Type Declarations *)
-Variant GlobDecl' {lang} : Set :=
+Variant GlobDecl' : Set :=
   | Gtype     (* this is a type declaration, but not a definition *)
-  | Gunion    (_ : Union' lang) (* union body *)
-  | Gstruct   (_ : Struct' lang) (* struct body *)
-  | Genum     (_ : type' lang) (_ : list ident) (* *)
-  | Gconstant (_ : type' lang) (init : option (Expr' lang)) (* used for enumerator constants*)
-  | Gtypedef  (_ : type' lang)
+  | Gunion    (_ : Union) (* union body *)
+  | Gstruct   (_ : Struct) (* struct body *)
+  | Genum     (_ : type) (_ : list ident) (* *)
+  | Gconstant (_ : type) (init : option Expr) (* used for enumerator constants*)
+  | Gtypedef  (_ : type)
   | Gunsupported (_ : PrimString.string).
-#[global] Arguments GlobDecl' : clear implicits.
-#[global] Arguments Gunion _ & _ : assert.
-#[global] Arguments Gstruct _ & _ : assert.
-#[global] Arguments Genum _ & _ _ : assert.
-#[global] Arguments Gconstant _ & _ _ : assert.
-#[global] Arguments Gtypedef _ & _ : assert.
-#[global] Arguments Gunsupported _ & _ : assert.
-#[global] Instance: forall {lang}, EqDecision (GlobDecl' lang).
+Notation GlobDecl := GlobDecl'.
+#[global] Instance: EqDecision GlobDecl.
 Proof. solve_decision. Defined.
-Notation GlobDecl := (GlobDecl' lang.cpp).
 
 (** *** The Type Table *)
 Definition type_table : Type := NM.t GlobDecl.
@@ -43,8 +36,8 @@ Definition type_table : Type := NM.t GlobDecl.
 (** ** Value Declarations *)
 
 Module global_init.
-  Variant t {lang : lang.t} : Set :=
-  | Init (_ : Expr' lang)
+  Variant t : Set :=
+  | Init (_ : Expr)
   | ImplicitInit
     (* ^^ This arises because template instantiations are only carried out
           as much as they are needed. For example,
@@ -65,14 +58,13 @@ Module global_init.
   | Delayed (* for <<static>> variables declared in functions.
                These are initialized during the first call to the function *)
   | Extern.
-  #[global] Arguments t _ : clear implicits.
-  #[global] Instance t_eq {lang} : EqDecision (t lang).
+  #[global] Instance t_eq : EqDecision t.
   Proof. solve_decision. Defined.
 
   Import UPoly.
   #[universes(polymorphic)]
-  Definition fmap {lang lang' : lang.t} `{FMap M} (f : Expr' lang -> Expr' lang')
-    (gi : global_init.t lang) : global_init.t lang' :=
+  Definition fmap `{FMap M} (f : Expr -> Expr)
+    (gi : global_init.t) : global_init.t :=
     match gi with
     | global_init.Init e => global_init.Init $ f e
     | global_init.ImplicitInit => global_init.ImplicitInit
@@ -82,8 +74,8 @@ Module global_init.
     end.
 
   #[universes(polymorphic)]
-  Definition traverse {lang lang' : lang.t} `{MRet M, Ap M} (f : Expr' lang -> M (Expr' lang'))
-    (gi : global_init.t lang) : M (global_init.t lang') :=
+  Definition traverse `{MRet M, Ap M} (f : Expr -> M Expr)
+    (gi : global_init.t) : M (global_init.t) :=
     match gi with
     | global_init.Init e => global_init.Init <$> f e
     | global_init.ImplicitInit => mret global_init.ImplicitInit
@@ -94,34 +86,24 @@ Module global_init.
 End global_init.
 
 (* Values in Object files. These can be externed. *)
-Variant ObjValue' {lang} : Set :=
-| Ovar         (_ : type' lang) (_ : global_init.t lang)
-| Ofunction    (_ : Func' lang)
-| Omethod      (_ : Method' lang)
-| Oconstructor (_ : Ctor' lang)
-| Odestructor  (_ : Dtor' lang).
-#[global] Arguments ObjValue' : clear implicits.
-#[global] Arguments Ovar _ & _ _ : assert.
-#[global] Arguments Ofunction _ & _ : assert.
-#[global] Arguments Omethod _ & _ : assert.
-#[global] Arguments Oconstructor _ & _ : assert.
-#[global] Arguments Odestructor _ & _ : assert.
-#[global] Instance: forall {lang}, EqDecision (ObjValue' lang).
+Variant ObjValue' : Set :=
+| Ovar         (_ : type) (_ : global_init.t)
+| Ofunction    (_ : Func)
+| Omethod      (_ : Method)
+| Oconstructor (_ : Ctor)
+| Odestructor  (_ : Dtor).
+Notation ObjValue := ObjValue'.
+#[global] Instance: EqDecision ObjValue.
 Proof. solve_decision. Defined.
-Notation ObjValue := (ObjValue' lang.cpp).
 
 (**
 TODO: [Tmember_func], [type_of_value] seem misplaced
 *)
 
-Definition type_of_classname {lang} : classname' lang -> type' lang :=
-  match lang with
-  | lang.cpp => Tnamed
-  | lang.temp => fun x => x
-  end.
+Definition type_of_classname : classname -> type := Tnamed.
 
 (** [type_of_value o] returns the type of the given [ObjValue] *)
-Definition type_of_value {lang} (o : ObjValue' lang) : type' lang :=
+Definition type_of_value (o : ObjValue) : type :=
   normalize_type
   match o with
   | Ovar t _ => t
@@ -141,9 +123,9 @@ Definition type_of_value {lang} (o : ObjValue' lang) : type' lang :=
 Definition symbol_table : Type := NM.t ObjValue.
 
 (** ** Initializers *)
-Variant GlobalInit' {lang} : Set :=
+Variant GlobalInit' : Set :=
   (* initialization by an expression *)
-| ExprInit (_ : Expr' lang)
+| ExprInit (_ : Expr)
   (* zero initialization *)
 | ZeroInit
   (* declaration will be initialized from within a function.
@@ -157,25 +139,21 @@ Variant GlobalInit' {lang} : Set :=
      See https://eel.is/c++draft/stmt.dcl#3
    *)
 | FunctionInit (at_most_once : bool).
-#[global] Arguments GlobalInit' : clear implicits.
-#[global] Arguments ExprInit _ & _ : assert.
-#[global] Instance: forall {lang}, EqDecision (GlobalInit' lang).
+Notation GlobalInit := GlobalInit'.
+#[global] Instance: EqDecision GlobalInit.
 Proof. solve_decision. Defined.
-Notation GlobalInit := (GlobalInit' lang.cpp).
 
 (** [GlobalInitializer] represents an initializer for a
     global variable.
  *)
-Record GlobalInitializer' {lang} : Set := Build_GlobalInitializer
-  { g_name : obj_name' lang
-  ; g_type : type' lang
-  ; g_init : GlobalInit' lang
+Record GlobalInitializer' : Set := Build_GlobalInitializer
+  { g_name : obj_name
+  ; g_type : type
+  ; g_init : GlobalInit
   }.
-#[global] Arguments GlobalInitializer' : clear implicits.
-#[global] Arguments Build_GlobalInitializer _ & _ _ _ : assert.
-#[global] Instance: forall {lang}, EqDecision (GlobalInitializer' lang).
+Notation GlobalInitializer := GlobalInitializer'.
+#[global] Instance: EqDecision GlobalInitializer.
 Proof. solve_decision. Defined.
-Notation GlobalInitializer := (GlobalInitializer' lang.cpp).
 
 (** An initialization block is a sequence of variable initializers
     that will be run when the compilation unit is loaded.
@@ -187,10 +165,9 @@ Notation GlobalInitializer := (GlobalInitializer' lang.cpp).
     This means that, to be completely precise, this type needs to be
     something a bit more exotic that permits concurrent initialization.
  *)
-Definition InitializerBlock' lang : Set :=
-  list (GlobalInitializer' lang).
-Notation InitializerBlock := (InitializerBlock' lang.cpp).
-#[global] Instance InitializerBlock_empty {lang} : Empty (InitializerBlock' lang) :=
+Definition InitializerBlock : Set :=
+  list GlobalInitializer.
+#[global] Instance InitializerBlock_empty : Empty InitializerBlock :=
   nil.
 
 (** ** Aliases *)

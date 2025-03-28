@@ -180,7 +180,7 @@ Section with_lang.
     | Nunsupported note => "?" ++ note
     end
 
-  with printTA (ta : temp_arg' lang.cpp) : list PrimString.string :=
+  with printTA (ta : temp_arg) : list PrimString.string :=
       match ta with
       | Atype t => [printT t]
       | Avalue e => [printE e]

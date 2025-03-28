@@ -9,7 +9,6 @@ Require Import bluerock.lang.cpp.syntax.typing. (* TODO: use [typed]? *)
 Require Import bluerock.lang.cpp.syntax.overloadable.
 Require Import bluerock.lang.cpp.parser.expr.
 
-#[local] Definition parser_lang : lang.t := lang.temp.
 Include ParserExpr.
 
 (** ** Template-only derived expressions emitted by cpp2v *)
