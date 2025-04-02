@@ -453,6 +453,17 @@ Module Type PTRS_MIXIN (Import P : PTRS_INTF_MINIMAL).
       offset_cong σ (o1 ,, o) (o2 ,, o).
     Proof. intros. exact /offset_cong_offset2 /offset_cong_partial_reflexive. Qed.
 
+    Lemma offset_cong_subs {ty1 ty2 : type} {n1 n2 : Z} (sz1 sz2 : N) :
+      size_of σ ty1 = Some sz1 ->
+      size_of σ ty2 = Some sz2 ->
+      (sz1 * n1 = sz2 * n2)%Z ->
+      offset_cong σ (.[ ty1 ! n1 ]) (.[ ty2 ! n2 ]).
+    Proof.
+      move=> Hsz1 Hsz2 E.
+      rewrite /offset_cong same_property_iff !eval_o_sub //= Hsz1 Hsz2 /= E.
+      eauto.
+    Qed.
+
     #[global] Instance ptr_cong_reflexive : Reflexive (ptr_cong σ).
     Proof.
       red; unfold ptr_cong; intros p; exists p, (.[ Tbyte ! 0 ]), (.[ Tbyte ! 0]).
