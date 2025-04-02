@@ -11,7 +11,6 @@ Require Import bluerock.lang.cpp.semantics.
 Require Import bluerock.lang.cpp.logic.pred.
 Require Import bluerock.lang.cpp.syntax.
 
-(* TODO: disable paradoxes
 Section with_cpp.
   Context `{Σ : cpp_logic} {σ : genv}.
   (*
@@ -90,4 +89,3 @@ Section with_cpp.
     Qed.
   End type_ptr_object_representation_full_is_unsound.
 End with_cpp.
-*)

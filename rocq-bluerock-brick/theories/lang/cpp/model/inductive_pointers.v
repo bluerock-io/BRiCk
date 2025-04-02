@@ -322,17 +322,14 @@ Module PTRS_IMPL <: PTRS_INTF.
       eval_offset σ ([] ↾ wf) = Some 0.
   Proof. by unfold eval_offset, eval_raw_offset; simpl. Qed.
 
-  Lemma eval_o_sub σ ty (i : Z) :
-    eval_offset _ (o_sub _ ty i) =
-      (* This order enables reducing for known ty. *)
-      (fun n => Z.of_N n * i) <$> size_of _ ty.
+  Lemma eval_o_sub' σ ty (i : Z) sz :
+    size_of σ ty = Some sz ->
+    eval_offset σ (o_sub σ ty i) = Some (Z.of_N sz * i).
   Proof.
-    rewrite /o_sub/eval_offset/eval_raw_offset/=.
+    move=> E. rewrite (comm_L _ _ i) /o_sub/eval_offset/eval_raw_offset /=.
     rewrite /= /mkOffset /mk_offset_seg/=/o_sub_off/=.
-    case_decide; subst => //=;
-      case: size_of=> [sz|] //=.
-    by f_equiv; lia.
-    by rewrite (comm_L _ i) right_id_L.
+    case_decide; subst; rewrite /= {}E //=.
+    by rewrite right_id_L.
   Qed.
 
   Lemma eval_o_field σ f n cls st :

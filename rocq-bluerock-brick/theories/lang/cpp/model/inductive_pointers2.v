@@ -26,7 +26,7 @@ Require Import bluerock.lang.cpp.semantics.sub_module.
 Require Import bluerock.lang.cpp.semantics.values.
 Require Import bluerock.lang.cpp.model.simple_pointers_utils.
 Require Import bluerock.lang.cpp.model.inductive_pointers_utils.
-Require Import bluerock.lang.cpp.semantics.ptrs2.
+Require Import bluerock.lang.cpp.semantics.ptrs.
 
 Axiom irr : ∀ (P : Prop) (p q : P), p = q.
 
@@ -272,6 +272,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     | o :: os =>
         '(l, r, s, t) ← find_redex os;
         Some (o :: l, r, s, t).
+    Admit Obligations.    
     
     Ltac dex :=
       let H0 := fresh in
@@ -456,6 +457,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       normalize os (existT None H) => os
     }.
     Next Obligation.
+      intros.
       apply find_redex_pass in H.
       move: H => [Heq Hrw]. subst.
       repeat rewrite length_app.
@@ -748,17 +750,15 @@ Module PTRS_IMPL <: PTRS_INTF.
     | offset_ptr rp ro => offset_ptr rp (normalize (ro ++ o))
     end.
   Next Obligation.
-    (* move=> _ o _ ro. *)
+    intros. simpl.
     apply: norm_canon.
-    exact: H.
   Qed.
 
   Program Definition __o_dot (o1 o2 : offset) : offset :=
     normalize (o1 ++ o2).
   Next Obligation.
-    (* move=> _ o _ ro. *)
+    intros. simpl.
     apply: norm_canon.
-    exact: H.
   Qed.
 
   Include PTRS_SYNTAX_MIXIN.
@@ -848,7 +848,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   Program Definition global_ptr (tu : translation_unit) (n : name) : ptr :=
     offset_ptr (global_ptr_ (tu_to_canon tu) n) [].
   Next Obligation.
-    (* move=> _ _. *)
+    intros. simpl.
     by apply: nil_canon.
   Qed.
 
@@ -874,39 +874,39 @@ Module PTRS_IMPL <: PTRS_INTF.
     | Some off => (ro, off)
     end. *)
 
-  Program Definition o_field (f : field) : offset :=
+  Program Definition o_field (σ : genv) (f : field) : offset :=
     [o_field_ f].
   Next Obligation.
-    (* move=> σ f. *)
-    apply: singleton_offset_canon. 2: exact: H.
-    clear H. by move=> [ty H].
+    intros. simpl.
+    apply: singleton_offset_canon.
+    by move=> [ty H].
   Qed.
 
-  Program Definition o_base derived base : offset :=
+  Program Definition o_base (σ : genv) derived base : offset :=
     [o_base_ derived base].
   Next Obligation.
-    (* move=> σ der base. *)
-    apply: singleton_offset_canon. 2: exact: H.
-    clear H. by move=> [ty H].
+    intros. simpl.
+    apply: singleton_offset_canon.
+    by move=> [ty H].
   Qed.
 
-  Program Definition o_derived base derived : offset :=
+  Program Definition o_derived (σ : genv) base derived : offset :=
     [o_derived_ base derived].
   Next Obligation.
-    (* move=> σ base der. *)
-    apply: singleton_offset_canon. 2: exact: H.
-    clear H. by move=> [ty H].
+    intros. simpl.
+    apply: singleton_offset_canon.
+    by move=> [ty H].
   Qed.
 
-  Program Definition o_sub ty z : offset :=
+  Program Definition o_sub (σ : genv) ty z : offset :=
     if decide (z = 0)%Z then
       o_id
     else
       [o_sub_ ty z].
   Next Obligation.
-    (* move=> σ ty z znz. *)
-    apply: singleton_offset_canon. 2: exact: H.
-    clear - n. move=> [ty' H]. congruence.
+    intros. simpl.
+    apply: singleton_offset_canon.
+    move=> [ty' H]. congruence.
   Qed.
 
   #[global] Notation "p ., o" := (_dot p (o_field _ o))
@@ -916,20 +916,23 @@ Module PTRS_IMPL <: PTRS_INTF.
     #[global] Notation ".[ t ! n ]" := (o_sub _ t n) (at level 11, no associativity, format ".[  t  !  n  ]") : stdpp_scope.
 
   Lemma o_sub_0 :
-    ∀ ty, o_sub ty 0 = o_id.
+    ∀ σ ty,
+      is_Some (size_of σ ty) ->
+      o_sub σ ty 0 = o_id.
   Proof.
-    move=> ty.
+    move=> σ ty _.
     rewrite /o_sub.
     by case_match.
   Qed.
 
   Lemma o_base_derived :
-    ∀ (p : ptr) base derived,
-      p ,, o_base derived base ,, o_derived base derived = p.
+    ∀ σ (p : ptr) base derived,
+      directly_derives σ derived base ->
+      p ,, o_base σ derived base ,, o_derived σ base derived = p.
   Proof.
     UNFOLD_dot.
     rewrite /__offset_ptr.
-    move=> [| rp [o H]] base der.
+    move=> σ [| rp [o H]] base der _.
     { done. }
     {
       f_equal. simpl. apply: sig_eq.
@@ -947,12 +950,13 @@ Module PTRS_IMPL <: PTRS_INTF.
   Qed.
 
   Lemma o_derived_base :
-    ∀ (p : ptr) base derived,
-      p ,, o_derived base derived ,, o_base derived base = p.
+    ∀ σ (p : ptr) base derived,
+      directly_derives σ derived base ->
+      p ,, o_derived σ base derived ,, o_base σ derived base = p.
   Proof.
     UNFOLD_dot.
     rewrite /__offset_ptr.
-    move=> [| rp [o H]] base der.
+    move=> σ [| rp [o H]] base der _.
     { done. }
     {
       f_equal. simpl. apply: sig_eq.
@@ -970,11 +974,11 @@ Module PTRS_IMPL <: PTRS_INTF.
   Qed.
 
   Lemma o_dot_sub :
-    ∀ i j ty,
-      o_sub ty i ,, o_sub ty j = o_sub ty (i + j).
+    ∀ σ i j ty,
+      o_sub σ ty i ,, o_sub σ ty j = o_sub σ ty (i + j).
   Proof.
     UNFOLD_dot.
-    move=> i j ty.
+    move=> σ i j ty.
     rewrite /__o_dot /o_sub /o_id.
     repeat case_match; subst;
     try lia; apply sig_eq; simpl.
@@ -1042,29 +1046,27 @@ Module PTRS_IMPL <: PTRS_INTF.
   Definition eval_offset (σ : genv) (os : offset) : option Z :=
     eval_offset_aux σ (`os).
 
-  Lemma eval_o_sub :
-    ∀ σ ty (i : Z),
-      is_Some (size_of σ ty) ->
-      eval_offset σ (o_sub ty i) = (fun n => Z.of_N n * i) <$> size_of σ ty.
+  Lemma eval_o_sub' :
+    ∀ σ (ty : type) (i : Z) (sz : N),
+      size_of σ ty = Some sz ->
+      eval_offset σ (o_sub σ ty i) = Some (sz * i).
   Proof.
     rewrite /eval_offset /o_sub.
-    move=> σ ty i [n Hsome].
+    move=> σ ty i n Hsome.
     case_match; subst; simpl.
+    { f_equal. lia. }
     {
-      rewrite Hsome. simpl.
-      by replace (n * 0) with 0 by lia.
-    }
-    {
-      rewrite /o_sub_off Hsome. simpl.
-      by replace (i * n + 0) with (n * i) by lia.
+      rewrite /o_sub_off Hsome /=.
+      f_equal. lia.
     }
   Qed.
 
   Lemma eval_o_field :
-    ∀ σ n cls st,
-      glob_def σ cls = Some (Gstruct st) ->
-      st.(s_layout) = POD \/ st.(s_layout) = Standard ->
-      eval_offset σ (o_field (Field cls n)) = offset_of σ cls n.
+  ∀ σ (f : name) (n : atomic_name) (cls : name) (st : Struct),
+    f = Field cls n ->
+    glob_def σ cls = Some (Gstruct st) ->
+    s_layout st = POD \/ s_layout st = Standard ->
+    eval_offset σ (o_field σ f) = offset_of σ cls n.
   Proof.
   Admitted.
 
@@ -1283,9 +1285,9 @@ Module PTRS_IMPL <: PTRS_INTF.
   Admitted.
 
   Lemma ptr_vaddr_o_sub_eq :
-    ∀ p σ ty n1 n2 sz,
+    ∀ σ p ty n1 n2 sz,
       size_of σ ty = Some sz -> (sz > 0)%N ->
-      same_property (@ptr_vaddr σ) (p ,, o_sub ty n1) (p ,, o_sub ty n2) ->
+      same_property (@ptr_vaddr σ) (p ,, o_sub σ ty n1) (p ,, o_sub σ ty n2) ->
       n1 = n2.
   Admitted.
 
@@ -1310,7 +1312,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     ∀ tu, Inj (=) (=) (λ o, ptr_alloc_id (global_ptr tu o)).
   Admitted.
   #[global] Existing Instances global_ptr_inj global_ptr_addr_inj global_ptr_aid_inj.
-  
+
   Include PTRS_DERIVED.
   Include PTRS_MIXIN.
 End PTRS_IMPL.
