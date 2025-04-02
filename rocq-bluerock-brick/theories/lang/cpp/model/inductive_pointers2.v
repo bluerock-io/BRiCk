@@ -1046,29 +1046,27 @@ Module PTRS_IMPL <: PTRS_INTF.
   Definition eval_offset (σ : genv) (os : offset) : option Z :=
     eval_offset_aux σ (`os).
 
-  Lemma eval_o_sub :
-    ∀ σ ty (i : Z),
-      is_Some (size_of σ ty) ->
-      eval_offset σ (o_sub σ ty i) = (fun n => Z.of_N n * i) <$> size_of σ ty.
+  Lemma eval_o_sub' :
+    ∀ σ (ty : type) (i : Z) (sz : N),
+      size_of σ ty = Some sz ->
+      eval_offset σ (o_sub σ ty i) = Some (sz * i).
   Proof.
     rewrite /eval_offset /o_sub.
-    move=> σ ty i [n Hsome].
+    move=> σ ty i n Hsome.
     case_match; subst; simpl.
+    { f_equal. lia. }
     {
-      rewrite Hsome. simpl.
-      by replace (n * 0) with 0 by lia.
-    }
-    {
-      rewrite /o_sub_off Hsome. simpl.
-      by replace (i * n + 0) with (n * i) by lia.
+      rewrite /o_sub_off Hsome /=.
+      f_equal. lia.
     }
   Qed.
 
   Lemma eval_o_field :
-    ∀ σ n cls st,
-      glob_def σ cls = Some (Gstruct st) ->
-      st.(s_layout) = POD \/ st.(s_layout) = Standard ->
-      eval_offset σ (o_field σ (Field cls n)) = offset_of σ cls n.
+  ∀ σ (f : name) (n : atomic_name) (cls : name) (st : Struct),
+    f = Field cls n ->
+    glob_def σ cls = Some (Gstruct st) ->
+    s_layout st = POD \/ s_layout st = Standard ->
+    eval_offset σ (o_field σ f) = offset_of σ cls n.
   Proof.
   Admitted.
 
