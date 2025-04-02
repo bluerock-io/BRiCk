@@ -730,7 +730,7 @@ Module PTRS_IMPL <: PTRS_INTF.
 
   End rw_lemmas.
 
-  Inductive root_ptr : Set :=
+  Variant root_ptr : Set :=
   | nullptr_
   | global_ptr_ (tu : translation_unit_canon) (o : obj_name)
   | fun_ptr_ (tu : translation_unit_canon) (o : obj_name)
