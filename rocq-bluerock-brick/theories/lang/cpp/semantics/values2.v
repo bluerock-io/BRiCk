@@ -8,19 +8,19 @@
 Require Import Stdlib.Strings.Ascii.
 Require Import stdpp.gmap.
 
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.option.
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.option.
+Require Import bluerock.prelude.numbers.
 
-Require Import bedrock.lang.cpp.reserved_notation. (* TODO *)
-Require Import bedrock.lang.cpp.arith.operator.
-Require Import bedrock.lang.cpp.arith.builtins.
-Require Import bedrock.lang.cpp.syntax.
-Require Export bedrock.lang.cpp.semantics.types.
-Require Export bedrock.lang.cpp.semantics.sub_module.
-Require Export bedrock.lang.cpp.semantics.genv.
-Require Export bedrock.lang.cpp.semantics.ptrs2.
-Require Export bedrock.lang.cpp.semantics.heap_types.
+Require Import bluerock.lang.cpp.reserved_notation. (* TODO *)
+Require Import bluerock.lang.cpp.arith.operator.
+Require Import bluerock.lang.cpp.arith.builtins.
+Require Import bluerock.lang.cpp.syntax.
+Require Export bluerock.lang.cpp.semantics.types.
+Require Export bluerock.lang.cpp.semantics.sub_module.
+Require Export bluerock.lang.cpp.semantics.genv.
+Require Export bluerock.lang.cpp.semantics.ptrs2.
+Require Export bluerock.lang.cpp.semantics.heap_types.
 
 #[local] Set Printing Coercions.
 #[local] Close Scope nat_scope.
@@ -507,7 +507,7 @@ Module Type HAS_TYPE (Import P : PTRS) (Import R : RAW_BYTES) (Import V : VAL_MI
     Axiom has_int_type' : forall sz sgn v,
         has_type_prop v (Tnum sz sgn) <->
           (exists z, v = Vint z /\ bitsize.bound (int_rank.bitsize sz) sgn z) \/
-          (exists r, v = Vraw r /\ Tnum (lang:=lang.cpp) sz sgn = Tuchar).
+          (exists r, v = Vraw r /\ Tnum sz sgn = Tuchar).
 
   End with_genv.
 

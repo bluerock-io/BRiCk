@@ -1,4 +1,4 @@
-(*
+(* 
  * Copyright (c) 2020 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -11,22 +11,22 @@ difference is that this file defines offset normalization as a string-rewrite sy
 instead of using a Coq function.
 *)
 
-From Equations Require Import Equations.
+Require Import Equations.Prop.Equations.
 
 Require Import stdpp.relations.
 Require Import stdpp.gmap.
-Require Import bedrock.prelude.base.
-Require Import bedrock.prelude.addr.
-Require Import bedrock.prelude.avl.
-Require Import bedrock.prelude.bytestring.
-Require Import bedrock.prelude.numbers.
+Require Import bluerock.prelude.base.
+Require Import bluerock.prelude.addr.
+Require Import bluerock.prelude.avl.
+Require Import bluerock.prelude.bytestring.
+Require Import bluerock.prelude.numbers.
 
-Require Import bedrock.lang.cpp.syntax.
-Require Import bedrock.lang.cpp.semantics.sub_module.
-Require Import bedrock.lang.cpp.semantics.values.
-Require Import bedrock.lang.cpp.model.simple_pointers_utils.
-Require Import bedrock.lang.cpp.model.inductive_pointers_utils.
-Require Import bedrock.lang.cpp.semantics.ptrs2.
+Require Import bluerock.lang.cpp.syntax.
+Require Import bluerock.lang.cpp.semantics.sub_module.
+Require Import bluerock.lang.cpp.semantics.values.
+Require Import bluerock.lang.cpp.model.simple_pointers_utils.
+Require Import bluerock.lang.cpp.model.inductive_pointers_utils.
+Require Import bluerock.lang.cpp.semantics.ptrs2.
 
 Axiom irr : ∀ (P : Prop) (p q : P), p = q.
 
