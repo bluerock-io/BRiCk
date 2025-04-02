@@ -1223,10 +1223,10 @@ Section with_cpp.
         valid_ptr p2 ** pinned_ptr va p1
     |-- pinned_ptr_Z (Z.of_N va + z * Z.of_N o) p2.
   Proof.
-    move => <- o_eq.
+    move => <- Eo.
     iIntros "[val pin1]".
     iApply (offset_pinned_ptr_Z with "val") => //.
-    rewrite eval_o_sub o_eq /= Z.mul_comm //.
+    by rewrite eval_o_sub Eo //= Z.mul_comm.
   Qed.
 
   Lemma shift_pinned_ptr_sub ty z va (p1 p2 : ptr) o:

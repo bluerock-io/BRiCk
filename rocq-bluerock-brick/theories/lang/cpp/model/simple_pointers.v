@@ -263,14 +263,11 @@ Module SIMPLE_PTRS_IMPL <: PTRS_INTF.
     Proof. rewrite _dot.unlock /o_sub /o_sub_off. case: size_of=> //=. Qed.
 
     Definition eval_offset (_ : genv) (o : offset) : option Z := o.
-    Lemma eval_o_sub ty (i : Z) :
-      eval_offset _ (o_sub _ ty i) =
-        (* This order enables reducing for known ty. *)
-        (fun n => Z.of_N n * i) <$> size_of _ ty.
-    Proof.
-      rewrite /o_sub/o_sub_off. case: size_of => //= sz.
-      by rewrite (comm _ i).
-    Qed.
+
+    Lemma eval_o_sub' ty (i : Z) sz :
+      size_of σ ty = Some sz ->
+      eval_offset σ (o_sub σ ty i) = Some (Z.of_N sz * i).
+    Proof. move=> E. by rewrite (comm_L _ _ i) /o_sub /o_sub_off E /=. Qed.
 
     Lemma eval_o_field f n cls st :
       f = Field cls n ->
