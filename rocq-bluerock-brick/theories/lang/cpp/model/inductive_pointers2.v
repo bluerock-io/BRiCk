@@ -744,7 +744,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   #[global] Instance ptr_countable : Countable ptr.
   Admitted.
 
-  Program Definition __offset_ptr (p : ptr) (o : offset) : ptr :=
+  #[program] Definition __offset_ptr (p : ptr) (o : offset) : ptr :=
     match p with
     | invalid_ptr_ => invalid_ptr_
     | offset_ptr rp ro => offset_ptr rp (normalize (ro ++ o))
