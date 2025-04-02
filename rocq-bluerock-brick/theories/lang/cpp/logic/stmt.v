@@ -95,7 +95,7 @@ Module Type Stmt.
     (* the variables declared in a destructing declaration must have initializers *)
     Record destructuring_declaration (d : VarDecl) : Prop := {}.
 
-    Fixpoint wp_destructure (ρ_init : region) (ds : list (BindingDecl' lang.cpp))
+    Fixpoint wp_destructure (ρ_init : region) (ds : list BindingDecl)
       (ρ : region) (k : region -> FreeTemps -> epred) (free : FreeTemps) {struct ds} : mpred :=
       match ds with
       | nil => k ρ free

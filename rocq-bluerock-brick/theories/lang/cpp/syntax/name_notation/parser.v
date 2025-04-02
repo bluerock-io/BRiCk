@@ -117,8 +117,8 @@ Module internal.
                        const function_qualifiers.Nl <$> op_token "&"]) in
       fold_right function_qualifiers.join function_qualifiers.N <$> quals.
 
-    Definition basic_types {lang} : list (list PrimString.string * type' lang) :=
-      let s_or_u_l (b : list PrimString.string) (s u : type' lang) :=
+    Definition basic_types : list (list PrimString.string * type) :=
+      let s_or_u_l (b : list PrimString.string) (s u : type) :=
         [(b, s); ("signed" :: b, s); ("unsigned" :: b, u)]%pstring
       in
       let s_or_u b := s_or_u_l [b] in
@@ -157,10 +157,10 @@ Module internal.
       | l :: ls => p :: l :: interleave p ls
       end.
 
-    #[local] Definition basic_type_otree {lang} :=
-      Eval vm_compute in keyword_set.compile 1000 $ (fun '(x,y) => (interleave None (List.map Some x), y)) <$> @basic_types lang.
+    #[local] Definition basic_type_otree :=
+      Eval vm_compute in keyword_set.compile 1000 $ (fun '(x,y) => (interleave None (List.map Some x), y)) <$> @basic_types.
 
-    Definition basic_type {lang} : M (type' lang) :=
+    Definition basic_type : M type :=
       Eval red in
       match basic_type_otree as X return X = basic_type_otree -> _ with
       | None => fun pf => ltac:(exfalso; inversion pf)
@@ -234,7 +234,7 @@ Module internal.
       let* _ := exact s in
       ws.
 
-    Definition get_args {lang} (ls : list (type' lang)) : list (type' lang) :=
+    Definition get_args (ls : list type) : list type :=
       match ls with
       | [Tvoid] => []
       | _ => ls
@@ -281,10 +281,6 @@ Module internal.
     end.
 
   Section with_lang.
-    Context {lang : lang.t}.
-    Notation type := (type' lang).
-    Notation name := (name' lang).
-
     Variant Result : Set :=
     | NoCheck
     | Unknown
@@ -308,8 +304,8 @@ Module internal.
     Section body.
       Variable parse_type : unit -> M type.
       Variable parse_name : unit -> M name.
-      Variable parse_name_component : unit -> M (atomic_name' lang * option (list (temp_arg' lang))).
-      Variable parse_expr : unit -> M (Expr' lang).
+      Variable parse_name_component : unit -> M (atomic_name * option (list temp_arg)).
+      Variable parse_expr : unit -> M Expr.
 
       Definition parse_args (no_start_paren : bool) : M (list type * function_arity) :=
         let args := sepBy (spaced ",") (parse_type ()) in
@@ -397,7 +393,7 @@ Module internal.
     (* The core parsers are based on fuel to handle the mutual recursion *)
     Definition parse_type' : M type :=
       let* quals :=
-        star (((fun _ => tqualified (lang:=lang) QC) <$> keyword "const") <|>
+        star (((fun _ => tqualified QC) <$> keyword "const") <|>
               ((fun _ => tqualified QV) <$> keyword "volatile"))
       in
       let build_named_type ctor nm :=
@@ -425,7 +421,7 @@ Module internal.
 
    Definition parse_name': M name :=
      commit (keyword "typename") (fun _ => Ndependent <$> parse_type ()) $
-     (let* (x : list (atomic_name' _ * _)) :=
+     (let* (x : list (atomic_name * _)) :=
         optional (op_token "::") *> sepBy (op_token "::") (parse_name_component ())
       in
       match x with
@@ -463,7 +459,7 @@ Module internal.
      | _ => None
      end.
 
-   Fixpoint template_arg (fuel : nat) : M (temp_arg' lang) :=
+   Fixpoint template_arg (fuel : nat) : M temp_arg :=
      (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) <|>
      (Apack <$> (spaced "...<" *>
       match fuel with
@@ -477,7 +473,7 @@ Module internal.
        specialization after them. They are complex because function names include their
        arguments.
      *)
-    Definition parse_name_component' : M (atomic_name' lang * option (list (temp_arg' lang))) :=
+    Definition parse_name_component' : M (atomic_name * option (list temp_arg)) :=
       let* (nm : name_type) :=
         let operator _ :=
           (Op <$> operator) <|>
@@ -489,7 +485,7 @@ Module internal.
         $ commit (exact "@") (fun _ => (Anon <$> decimal) <|> (FirstDecl <$> ident))
         $ commit (exact ".") (fun _ => FirstChild <$> ident) (Simple <$> ident)
       in
-      let mk_atomic_name (nm : name_type) (args : option _) : M (atomic_name' _) :=
+      let mk_atomic_name (nm : name_type) (args : option _) : M atomic_name :=
         match args with
         | None => match nm with
                  | Simple nm => mret $ Nid nm
@@ -552,7 +548,7 @@ Module internal.
       in
       num <$> optional (op_token "-") <*> decimal.
 
-    Definition parse_expr' : M (Expr' lang) :=
+    Definition parse_expr' : M Expr :=
       let* _ := ws in
       let int_literal :=
         let* num := parse_z in
@@ -622,7 +618,7 @@ Module internal.
         | _ => NoCheck
         end
     end.
-  Definition no_check {lang : lang.t} : name' lang -> Result lang :=
+  Definition no_check : name -> Result :=
     fun _ => NoCheck.
 
 End internal.

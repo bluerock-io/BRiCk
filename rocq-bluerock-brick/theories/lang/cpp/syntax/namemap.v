@@ -14,18 +14,14 @@ Require Import bluerock.lang.cpp.syntax.compare.
 
 (** ** Name maps *)
 
-#[global] Declare Instance name_comparison {lang} :
-  Comparison (compareN (lang:=lang)).	(** TODO *)
+#[global] Declare Instance name_comparison :
+  Comparison (compareN).	(** TODO *)
 
 Module Import internal.
 
-  Module Type LANG.
-    Parameter Inline lang : lang.t.
-  End LANG.
-
-  Module NameMap (Lang : LANG).
+  Module NameMap.
     Module Compare.
-      Definition t : Type := name' Lang.lang.
+      Definition t : Type := name.
       #[local] Definition compare : t -> t -> comparison := compareN.
       #[local] Infix "?=" := compare.
       #[local] Lemma compare_sym x y : (y ?= x) = CompOpp (x ?= y).
@@ -44,11 +40,9 @@ Module Import internal.
 End internal.
 
 Module NM.
-  #[local] Definition lang := lang.cpp.
   Include NameMap.
 End NM.
 
 Module TM.
-  #[local] Definition lang := lang.temp.
   Include NameMap.
 End TM.

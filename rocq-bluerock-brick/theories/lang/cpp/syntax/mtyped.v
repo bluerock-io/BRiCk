@@ -17,7 +17,7 @@ Require Import bluerock.lang.cpp.syntax.untemp.
 
 Import UPoly.
 
-Definition tu_to_ext (tu : translation_unit) : @typed.decltype.internal.ext_tu lang.temp :=
+Definition tu_to_ext (tu : translation_unit) : typed.decltype.internal.ext_tu :=
   {| typed.decltype.internal.ext_symbols nm :=
       match trace.runO $ untempN nm with
       | Some nm =>

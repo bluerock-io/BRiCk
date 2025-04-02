@@ -9,8 +9,7 @@ Require Import bluerock.lang.cpp.parser.lang.
 
 (** * Derived declaration helpers emitted by cpp2v *)
 
-Module ParserDecl (Import Lang : PARSER_LANG).
-  #[local] Notation obj_name := (obj_name' parser_lang).
+Module ParserDecl.
 
   Definition pure_virt (on : obj_name) : obj_name * option obj_name :=
     (on, None).
@@ -18,7 +17,7 @@ Module ParserDecl (Import Lang : PARSER_LANG).
     (on, Some on).
 
   (* This is used for base classes. *)
-  Definition mkBase (on : classname' parser_lang) (li : LayoutInfo) : classname' parser_lang * LayoutInfo :=
+  Definition mkBase (on : classname) (li : LayoutInfo) : classname * LayoutInfo :=
     (on, li).
 
 End ParserDecl.

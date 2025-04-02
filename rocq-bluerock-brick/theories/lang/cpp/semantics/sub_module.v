@@ -75,7 +75,7 @@ End compat_le.
     information than [b].
     For example, [a] might be a type declaration while [b] is a compatible
     definition. *)
-Definition GlobDecl_le {lang} (a b : GlobDecl' lang) : bool :=
+Definition GlobDecl_le (a b : GlobDecl) : bool :=
   match a , b with
   | Gtype , Gtype
   | Gtype , Genum _ _
@@ -102,12 +102,11 @@ Definition GlobDecl_le {lang} (a b : GlobDecl' lang) : bool :=
   | Gunsupported m , Gunsupported m' => bool_decide (m = m')
   | _ , _ => false
   end.
-Definition GlobDecl_ler {lang} := λ g1 g2, Is_true $ GlobDecl_le (lang:=lang) g1 g2.
-Arguments GlobDecl_ler {lang} !_ _ /.
+Definition GlobDecl_ler := λ g1 g2, Is_true $ GlobDecl_le g1 g2.
+Arguments GlobDecl_ler !_ _ /.
 
 Section GlobDecl_ler.
-  Context {lang : lang.t}.
-  #[local] Notation GlobDecl_ler := (GlobDecl_ler (lang:=lang)).
+  #[local] Notation GlobDecl_ler := (GlobDecl_ler).
   #[local] Instance GlobDecl_le_refl : Reflexive GlobDecl_ler.
   Proof.
     intros []; rewrite /= ?require_eq_refl; smash.
@@ -139,18 +138,18 @@ End GlobDecl_ler.
 
    Note this relation is reflexive and symmetric, but *not* transitive.
  *)
-Definition GlobDecl_compat {lang} gd1 gd2 :=
-  GlobDecl_ler (lang:=lang) gd1 gd2 \/ GlobDecl_ler gd2 gd1.
+Definition GlobDecl_compat gd1 gd2 :=
+  GlobDecl_ler gd1 gd2 \/ GlobDecl_ler gd2 gd1.
 
-#[local] Instance GlobDecl_compat_refl {lang} : Reflexive (@GlobDecl_compat lang).
+#[local] Instance GlobDecl_compat_refl : Reflexive GlobDecl_compat.
 Proof. left. reflexivity. Qed.
 
-#[local] Instance GlobDecl_compat_sym {lang} : Symmetric (@GlobDecl_compat lang).
+#[local] Instance GlobDecl_compat_sym : Symmetric GlobDecl_compat.
 Proof. red. rewrite /GlobDecl_compat; destruct 1; tauto. Qed.
 
 (** TODO: consolidate with other definitions *)
-Lemma enum_compat {lang} {t1 t2 a b} :
-  GlobDecl_compat (lang:=lang) (Genum t1 a) (Genum t2 b) ->
+Lemma enum_compat {t1 t2 a b} :
+  GlobDecl_compat (Genum t1 a) (Genum t2 b) ->
   t1 = t2.
 Proof.
   rewrite /GlobDecl_compat/GlobDecl_ler/=.
@@ -311,10 +310,10 @@ Section ObjValue_ler.
     intros a b c.
     destruct a, b => //=; (destruct c => //=; intros;
     repeat lazymatch goal with
-           | H : Func' _ |- _ => destruct H; simpl in *
-           | H : Method' _ |- _ => destruct H; simpl in *
-           | H : Ctor' _ |- _ => destruct H; simpl in *
-           | H : Dtor' _ |- _ => destruct H; simpl in *
+           | H : Func' |- _ => destruct H; simpl in *
+           | H : Method' |- _ => destruct H; simpl in *
+           | H : Ctor' |- _ => destruct H; simpl in *
+           | H : Dtor' |- _ => destruct H; simpl in *
            | H : false = true |- _ => inversion H
            | H : true = false |- _ => inversion H
            | H : bool_decide _ = true |- _ => apply bool_decide_eq_true_1 in H; subst

@@ -16,7 +16,6 @@ Require Export bluerock.lang.cpp.mparser.expr.
 Require Export bluerock.lang.cpp.mparser.stmt.
 Require Export bluerock.lang.cpp.mparser.tu.
 
-#[local] Definition parser_lang : lang.t := lang.temp.
 Include ParserName.
 Include ParserType.
 Include ParserExpr.

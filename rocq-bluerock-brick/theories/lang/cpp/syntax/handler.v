@@ -27,63 +27,63 @@ The handler for a constructor receives the constructor's arguments as
 well as (delayed) traversal results.
 *)
 
-Record type_handler'@{u} {lang} {N T E : Type@{u}} : Type@{u} := {
+Record type_handler'@{u} {N T E : Type@{u}} : Type@{u} := {
   (** Dependent types *)
   handle_Tparam (_ : ident) : T;
   handle_Tresult_param (_ : ident) : T;
-  handle_Tresult_global (_ : name' lang) (_ : unit -> N) : T;
-  handle_Tresult_unop (_ : RUnOp) (_ : decltype' lang)
+  handle_Tresult_global (_ : name) (_ : unit -> N) : T;
+  handle_Tresult_unop (_ : RUnOp) (_ : decltype)
     (_ : unit -> T) : T;
-  handle_Tresult_binop (_ : RBinOp) (_ _ : decltype' lang)
+  handle_Tresult_binop (_ : RBinOp) (_ _ : decltype)
     (_ _ : unit -> T) : T;
-  handle_Tresult_call (_ : name' lang) (_ : list (decltype' lang))
+  handle_Tresult_call (_ : name) (_ : list decltype)
     (_ : unit -> N) (_ : unit -> list T) : T;
-  handle_Tresult_member_call (_ : name' lang) (_ : decltype' lang) (_ : list (decltype' lang))
+  handle_Tresult_member_call (_ : name) (_ : decltype) (_ : list decltype)
     (_ : unit -> N) (_ : unit -> T) (_ : unit -> list T) : T;
-  handle_Tresult_parenlist (_ : decltype' lang) (_ : list (decltype' lang))
+  handle_Tresult_parenlist (_ : decltype) (_ : list decltype)
     (_ : unit -> T) (_ : unit -> list T) : T;
-  handle_Tresult_member (_ : decltype' lang) (_ : name' lang) (_ : unit -> T) (_ : unit -> N) : T;
+  handle_Tresult_member (_ : decltype) (_ : name) (_ : unit -> T) (_ : unit -> N) : T;
   (** Alias expansion *)
-  handle_Tnamed (_ : name' lang) (_ : unit -> N) : T;
+  handle_Tnamed (_ : name) (_ : unit -> N) : T;
   (** Reference collapsing *)
-  handle_Tref (_ : type' lang) (_ : unit -> T) : T;
-  handle_Trv_ref (_ : type' lang) (_ : unit -> T) : T;
-  handle_Tqualified (_ : type_qualifiers) (_ : type' lang) (_ : unit -> T) : T;
+  handle_Tref (_ : type) (_ : unit -> T) : T;
+  handle_Trv_ref (_ : type) (_ : unit -> T) : T;
+  handle_Tqualified (_ : type_qualifiers) (_ : type) (_ : unit -> T) : T;
 }.
 Arguments type_handler' : clear implicits.
-Notation type_handler lang1 lang2 M := (
-  type_handler' lang1
-    (M (name' lang2%type))
-    (M (decltype' lang2%type))
-    (M (Expr' lang2%type))
+Notation type_handler M := (
+  type_handler'
+    (M name)
+    (M decltype)
+    (M Expr)
 ).
 
-Record expr_handler'@{u} {lang} {N T E : Set} {F : Set -> Type@{u}} : Type@{u} := {
+Record expr_handler'@{u} {N T E : Set} {F : Set -> Type@{u}} : Type@{u} := {
   (** Dependent terms *)
   handle_Eparam (_ : ident) : F E;
-  handle_Eunresolved_global (_ : name' lang) (_ : unit -> F N) : F E;
-  handle_Eunresolved_unop (_ : RUnOp) (_ : Expr' lang) (_ : unit -> F E) : F E;
-  handle_Eunresolved_binop (_ : RBinOp) (_ _ : Expr' lang) (_ _ : unit -> F E) : F E;
-  handle_Eunresolved_call (_ : name' lang) (_ : list (Expr' lang))
+  handle_Eunresolved_global (_ : name) (_ : unit -> F N) : F E;
+  handle_Eunresolved_unop (_ : RUnOp) (_ : Expr) (_ : unit -> F E) : F E;
+  handle_Eunresolved_binop (_ : RBinOp) (_ _ : Expr) (_ _ : unit -> F E) : F E;
+  handle_Eunresolved_call (_ : name) (_ : list Expr)
     (_ : unit -> F N) (_ : unit -> list (F E)) : F E;
-  handle_Eunresolved_member_call (_ : name' lang) (_ : Expr' lang) (_ : list (Expr' lang))
+  handle_Eunresolved_member_call (_ : name) (_ : Expr) (_ : list Expr)
     (_ : unit -> F N) (_ : unit -> F E) (_ : unit -> list (F E)) : F E;
-  handle_Eunresolved_parenlist (_ : option (type' lang)) (_ : list (Expr' lang))
+  handle_Eunresolved_parenlist (_ : option type) (_ : list Expr)
     (_ : unit -> option (F T)) (_ : unit -> list (F E)) : F E;
-  handle_Eunresolved_member (_ : Expr' lang) (_ : name' lang) (_ : unit -> F E) (_ : unit -> F N) : F E;
+  handle_Eunresolved_member (_ : Expr) (_ : name) (_ : unit -> F E) (_ : unit -> F N) : F E;
   (** Embedded expression types *)
   handle_expr_type : F T -> F T;
   (** casts *)
-  handle_Eunresolved_cast (_ : type' lang) (_ : unit -> F T) (_ : Expr' lang) (_ : unit -> F E) : F E;
+  handle_Eunresolved_cast (_ : type) (_ : unit -> F T) (_ : Expr) (_ : unit -> F E) : F E;
 
-  handle_unresolved_init (_ : type' lang) (_ : unit -> F T) (_ : option (Expr' lang * (unit -> F E))) : F (T * option E)%type
+  handle_unresolved_init (_ : type) (_ : unit -> F T) (_ : option (Expr * (unit -> F E))) : F (T * option E)%type
 }.
 Arguments expr_handler' : clear implicits.
-Notation expr_handler lang1 lang2 M := (
-  expr_handler' lang1
-    (name' lang2%type)
-    (type' lang2%type)
-    (Expr' lang2%type) M
+Notation expr_handler M := (
+  expr_handler'
+    name
+    type
+    Expr M
 ).
 
 (**
@@ -93,15 +93,15 @@ handlers as they aren't involved in the mutually recursive traversals
 on names, types, and expressions.
 *)
 
-Record core_traversal@{u} {lang lang'} {F : Set -> Type@{u}} : Type@{u} :=
+Record core_traversal@{u} {F : Set -> Type@{u}} : Type@{u} :=
 { (** Traversal functions *)
-  handle_traverseN (_ : name' lang) : F (name' lang');
-  handle_traverseT (_ : type' lang) : F (type' lang');
-  handle_traverseE (_ : Expr' lang) : F (Expr' lang');
-  handle_traverseS (_ : Stmt' lang) : F (Stmt' lang');
+  handle_traverseN (_ : name) : F name;
+  handle_traverseT (_ : type) : F type;
+  handle_traverseE (_ : Expr) : F Expr;
+  handle_traverseS (_ : Stmt) : F Stmt;
   (** Initializers *)
-  handle_classname (_ : classname' lang) : F (classname' lang');
-  handle_traverseE_init (_ : type' lang) (_ : option (Expr' lang)) : F (type' lang' * option (Expr' lang'))%type;
+  handle_classname (_ : classname) : F classname;
+  handle_traverseE_init (_ : type) (_ : option Expr) : F (type * option Expr)%type;
 }.
 Arguments core_traversal : clear implicits.
 
@@ -110,10 +110,9 @@ Arguments core_traversal : clear implicits.
 Section handlers.
   Universe u.
   Context {F : Set -> Type@{u}} `{!FMap F, !MRet F, AP : !Ap F}.
-  Context {lang1 lang2 : lang.t}.
 
   (** Just traverse *)
-  Definition handle_type_traverse : type_handler lang1 lang2 F := {|
+  Definition handle_type_traverse : type_handler F := {|
     handle_Tparam T := mret $ Tparam T;
     handle_Tresult_param X := mret $ Tresult_param X;
     handle_Tresult_global _ n := Tresult_global <$> n ();
@@ -130,7 +129,7 @@ Section handlers.
   |}.
 
   (** Just traverse *)
-  Definition handle_expr_traverse : expr_handler lang1 lang2 F := {|
+  Definition handle_expr_traverse : expr_handler F := {|
     handle_Eparam X := mret $ Eparam X;
     handle_Eunresolved_global _ n := Eunresolved_global <$> n ();
     handle_Eunresolved_unop o _ e := Eunresolved_unop o <$> e ();
@@ -156,10 +155,10 @@ of lenses for the handler types.
 *)
 Section lens.
   Universe u.
-  Context {lang : lang.t} {N T E : Type@{u}}.
-  #[local] Notation type_handler := (type_handler' lang N T E).
+  Context {N T E : Type@{u}}.
+  #[local] Notation type_handler := (type_handler' N T E).
 
-  Definition _handle_Tnamed : type_handler ~l> name' lang -> (unit -> N) -> T  := {|
+  Definition _handle_Tnamed : type_handler ~l> name -> (unit -> N) -> T  := {|
     Lens.view r := r.(handle_Tnamed);
     Lens.over f r := {|
       handle_Tparam := r.(handle_Tparam);

@@ -14,10 +14,6 @@ Require Export bluerock.lang.cpp.syntax.extras.
 Set Primitive Projections.
 
 Section with_lang.
-  Context {lang : lang.t}.
-  #[local] Notation type := (type' lang).
-  #[local] Notation exprtype := (exprtype' lang).
-  #[local] Notation decltype := (decltype' lang).
 
 (** ** Qualifier normalization *)
 (**
@@ -169,7 +165,7 @@ function type."
 | Tarray_proper : Proper (equiv ==> eq ==> equiv) Tarray
 | Tincomplete_array_proper : Proper (equiv ==> equiv) Tincomplete_array
 | Tvariable_array_proper : Proper (equiv ==> eq ==> equiv) Tvariable_array
-(* | Tfunction_proper cc ar : Proper (equiv ==> equiv ==> equiv) (@Tfunction lang cc ar) *)
+(* | Tfunction_proper cc ar : Proper (equiv ==> equiv ==> equiv) (@Tfunction cc ar) *)
 | Tmember_pointer_proper gn : Proper (equiv ==> equiv) (Tmember_pointer gn)
 | Tqualified_proper q : Proper (equiv ==> equiv) (Tqualified q)
 .
@@ -700,7 +696,7 @@ Inductive tref_spec : type_qualifiers -> type -> type -> Prop :=
 Lemma tref_ok q t : tref_spec q t (tref q t).
 Proof. revert q. induction t; auto. Qed.
 
-Lemma tref_nonref_unqual cv (t : type' lang) :
+Lemma tref_nonref_unqual cv (t : type) :
   ~~ is_ref t -> ~~ is_qualified t -> tref cv t = Tref $ tqualified cv t.
 Proof. by destruct t. Qed.
 
@@ -744,7 +740,7 @@ Inductive trv_ref_spec : type_qualifiers -> type -> type -> Prop :=
 Lemma trv_ref_ok q t : trv_ref_spec q t (trv_ref q t).
 Proof. revert q; induction t; auto. Qed.
 
-Lemma trv_ref_nonref_unqual cv (t : type' lang) :
+Lemma trv_ref_nonref_unqual cv (t : type) :
   ~~ is_ref t -> ~~ is_qualified t -> trv_ref cv t = Trv_ref $ tqualified cv t.
 Proof. by destruct t. Qed.
 
@@ -903,7 +899,7 @@ Definition array_type : exprtype -> option exprtype :=
 (**
 [class_name t] returns the name of the class that this type refers to
 *)
-Definition class_name (t : type) : option (name' lang) :=
+Definition class_name (t : type) : option name' :=
   match drop_qualifiers t with
   | Tnamed gn => Some gn
   | _ => None
@@ -923,15 +919,15 @@ Definition is_arithmetic (ty : type) : bool :=
   end.
 
 (* [as_function ty] returns the [function_type'] if [ty] is a function type. *)
-Definition as_function {lang} (ty : functype' lang) : option (function_type' lang) :=
+Definition as_function (ty : functype) : option function_type' :=
   match ty with
   | Tfunction ft => Some ft
   | _ => None
   end.
 
 (* extracts the parameter information from a function type *)
-Definition args_for {lang} (ft : function_type' lang)
-  : list (decltype' lang) * function_arity :=
+Definition args_for (ft : function_type)
+  : list decltype' * function_arity :=
   (ft.(ft_params), ft.(ft_arity)).
 
 (**
@@ -1093,12 +1089,12 @@ return the underlying type [u] (defaulting, respectively, to a dummy
 type and to [None]).
 *)
 
-Definition as_ref' {A} (f : exprtype' lang -> A) (x : A) (t : type) : A :=
+Definition as_ref' {A} (f : exprtype -> A) (x : A) (t : type) : A :=
   if drop_qualifiers t is (Tref u | Trv_ref u) then f u else x.
 Notation as_ref := (as_ref' (fun u => u) Tvoid).
 Notation as_ref_option := (as_ref' Some None).
 
-Lemma as_ref'_erase_qualifiers {A} (f : exprtype' lang -> A) (x : A) t :
+Lemma as_ref'_erase_qualifiers {A} (f : exprtype -> A) (x : A) t :
   as_ref' f x (erase_qualifiers t) = as_ref' (f ∘ erase_qualifiers) x t.
 Proof. induction t; cbn; auto. Qed.
 Lemma as_ref_erase_qualifiers t :
@@ -1106,7 +1102,7 @@ Lemma as_ref_erase_qualifiers t :
 Proof. induction t; cbn; auto. Qed.
 
 Section as_ref'.
-  Context {A : Type} (f : exprtype' lang -> A) (x : A).
+  Context {A : Type} (f : exprtype -> A) (x : A).
   #[local] Notation as_ref' := (as_ref' f x).
 
   Lemma as_ref_drop_qualifiers t : as_ref' (drop_qualifiers t) = as_ref' t.
@@ -1164,7 +1160,7 @@ Qed.
 (**
 [drop_reference] removes any leading reference types.
 *)
-Fixpoint drop_reference (t : type) : exprtype' lang :=
+Fixpoint drop_reference (t : type) : exprtype :=
   match drop_qualifiers t with
   | Tref u | Trv_ref u => drop_reference u
   | _ => t	(* We do not normalize qualifiers here to promote sharing *)
@@ -1174,7 +1170,7 @@ Succeed Example TEST_drop_reference : drop_reference (Tconst Tint) = Tconst Tint
 Succeed Example TEST_drop_reference : drop_reference (Tconst (Tref Tint)) = Tint := eq_refl.
 Succeed Example TEST_drop_reference : drop_reference (Tconst (Tref (Tconst Tint))) = Tconst Tint := eq_refl.
 
-Lemma drop_reference_ref (t : type' lang) u :
+Lemma drop_reference_ref (t : type) u :
   drop_qualifiers t = Tref u -> drop_reference t = drop_reference u.
 Proof.
   destruct t; first [done|cbn].
@@ -1182,7 +1178,7 @@ Proof.
   { (* [Tqualified] *) by move=>->. }
 Qed.
 
-Lemma drop_reference_rv_ref (t : type' lang) u :
+Lemma drop_reference_rv_ref (t : type) u :
   drop_qualifiers t = Trv_ref u -> drop_reference t = drop_reference u.
 Proof.
   destruct t; first [done|cbn].
@@ -1190,7 +1186,7 @@ Proof.
   { (* [Tqualified] *) by move=>->. }
 Qed.
 
-Lemma drop_reference_non_ref (t : type' lang) u :
+Lemma drop_reference_non_ref (t : type) u :
   drop_qualifiers t = u -> ~~ is_ref u -> drop_reference t = t.
 Proof.
   move=><-. destruct t; first [done|cbn]. by case_match.
@@ -1247,7 +1243,7 @@ Definition is_volatile : type -> bool :=
 
    TODO technically the [this] parameter is [const].
  *)
-Definition Tmember_func {lang} (ty : exprtype' lang) (fty : functype' lang) : functype' lang :=
+Definition Tmember_func (ty : exprtype) (fty : functype) : functype :=
   match fty with
   | Tfunction ft => Tfunction $ {| ft_cc := ft.(ft_cc) ; ft_arity := ft.(ft_arity)
                                 ; ft_return := ft.(ft_return) ; ft_params := Tptr ty :: ft.(ft_params) |}

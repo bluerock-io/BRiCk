@@ -507,7 +507,7 @@ Module Type HAS_TYPE (Import P : PTRS) (Import R : RAW_BYTES) (Import V : VAL_MI
     Axiom has_int_type' : forall sz sgn v,
         has_type_prop v (Tnum sz sgn) <->
           (exists z, v = Vint z /\ bitsize.bound (int_rank.bitsize sz) sgn z) \/
-          (exists r, v = Vraw r /\ Tnum (lang:=lang.cpp) sz sgn = Tuchar).
+          (exists r, v = Vraw r /\ Tnum sz sgn = Tuchar).
 
   End with_genv.
 

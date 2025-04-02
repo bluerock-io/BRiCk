@@ -21,7 +21,6 @@ Require Import bluerock.lang.cpp.parser.decl.
 Require Import bluerock.lang.cpp.parser.notation.
 Require Import bluerock.lang.cpp.parser.reduction.
 
-#[local] Definition parser_lang : lang.t := lang.cpp.
 Include ParserName.
 Include ParserType.
 Include ParserExpr.
@@ -151,7 +150,7 @@ End translation_unit.
 Export translation_unit(decls).
 #[local] Notation K := translation_unit.t (only parsing).
 
-Definition Dvariable (n : obj_name) (t : type) (init : global_init.t lang.cpp) : K :=
+Definition Dvariable (n : obj_name) (t : type) (init : global_init.t) : K :=
   _symbols n $ Ovar t init.
 
 Definition Dfunction (n : obj_name) (f : Func) : K :=

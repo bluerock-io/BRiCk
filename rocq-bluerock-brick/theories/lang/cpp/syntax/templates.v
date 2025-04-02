@@ -11,28 +11,24 @@ instantiation (bound in a translation unit) to a _template
 pre-instance_ comprising the instance's template name (bound in a
 template file) and arguments.
 *)
-Definition temp_name : Set := name' lang.temp.
+Definition temp_name : Set := name.
 
 Section tpreinst.
-  Context {lang : lang.t}.
-
   (* TODO: this type probably does not need to be parametric in [lang.t]
      The only meaningful instantation is [lang.cpp]
    *)
-  Record tpreinst' : Set := TPreInst {
+  Record tpreinst : Set := TPreInst {
     tpreinst_name : temp_name;
-    tpreinst_args : list (temp_arg' lang);
+    tpreinst_args : list temp_arg;
   }.
 
-  #[global] Instance tpreinst'_inhabited : Inhabited tpreinst'.
+  #[global] Instance tpreinst_inhabited : Inhabited tpreinst.
   Proof. solve_inhabited. Qed.
 
-  #[global] Instance tpreinst'_eq_dec : EqDecision tpreinst'.
+  #[global] Instance tpreinst_eq_dec : EqDecision tpreinst.
   Proof. solve_decision. Defined.
 End tpreinst.
-Add Printing Constructor tpreinst'.
-#[global] Arguments tpreinst' : clear implicits.
-#[global] Arguments TPreInst {_} _ & _ : assert.
+Add Printing Constructor tpreinst.
 
 (** ** Template instances *)
 Section tinst.
@@ -40,28 +36,25 @@ Section tinst.
   #[local] Set Polymorphic Inductive Cumulativity.
   #[local] Unset Auto Template Polymorphism.
   Universe uV.
-  Context {lang : lang.t} {V : Type@{uV}}.
+  Context {V : Type@{uV}}.
 
-  Record tinst' : Type@{uV} := TInst {
-    tinst_params : list (temp_param' lang.temp);
-    tinst_args : list (temp_arg' lang);
+  Record tinst : Type@{uV} := TInst {
+    tinst_params : list temp_param;
+    tinst_args : list temp_arg;
     tinst_value : V;
   }.
 
-  #[global] Instance tinst'_inhabited `{!Inhabited V} : Inhabited tinst'.
+  #[global] Instance tinst_inhabited `{!Inhabited V} : Inhabited tinst.
   Proof. solve_inhabited. Qed.
 
-  #[global] Instance tinst'_eq_dec
+  #[global] Instance tinst_eq_dec
       `{!EqDecision V} :
-    EqDecision tinst'.
+    EqDecision tinst.
   Proof. solve_decision. Defined.
 End tinst.
-Add Printing Constructor tinst'.
-#[global] Arguments tinst' : clear implicits.
-#[global] Arguments TInst {_ _} _ _ & _ : assert.
-
-Notation temp_param := (temp_param' lang.cpp).
-Notation temp_arg := (temp_arg' lang.cpp).
+Add Printing Constructor tinst.
+#[global] Arguments tinst : clear implicits.
+#[global] Arguments TInst {_} _ _ & _ : assert.
 
 Require Import bluerock.lang.cpp.syntax.translation_unit.
 
@@ -100,25 +93,24 @@ Section template.
     Template t.(template_params) <$> f t.(template_value).
 End template.
 
-Import lang.
-Notation Mtpreinst := (tpreinst' temp).
-Notation Mtinst := (tinst' temp).
-Notation MUnion := (Union' temp).
-Notation MStruct := (Struct' temp).
-Notation MFunctionBody := (FunctionBody' temp).
-Notation MFunc := (Func' temp).
-Notation MMethod := (Method' temp).
-Notation MCtor := (Ctor' temp).
-Notation MDtor := (Dtor' temp).
-Notation MObjValue := (ObjValue' temp).
-Notation MGlobDecl := (GlobDecl' temp).
-Notation MGlobalInit := (GlobalInit' temp).
-Notation MGlobalInitializer := (GlobalInitializer' temp).
-Notation MInitializer := (Initializer' temp).
-Notation MMember := (Member' temp).
-Notation MInitializerBlock := (InitializerBlock' temp).
-Notation Mfield_name := (field_name.t lang.temp).
-Notation MInitPath := (InitPath' lang.temp).
+Notation Mtpreinst := tpreinst (only parsing).
+Notation Mtinst := tinst (only parsing).
+Notation MUnion := Union (only parsing).
+Notation MStruct := Struct (only parsing).
+Notation MFunctionBody := FunctionBody (only parsing).
+Notation MFunc := Func (only parsing).
+Notation MMethod := Method (only parsing).
+Notation MCtor := Ctor (only parsing).
+Notation MDtor := Dtor (only parsing).
+Notation MObjValue := ObjValue (only parsing).
+Notation MGlobDecl := GlobDecl (only parsing).
+Notation MGlobalInit := GlobalInit (only parsing).
+Notation MGlobalInitializer := GlobalInitializer (only parsing).
+Notation MInitializer := Initializer (only parsing).
+Notation MMember := Member (only parsing).
+Notation MInitializerBlock := InitializerBlock (only parsing).
+Notation Mfield_name := field_name.t (only parsing).
+Notation MInitPath := InitPath (only parsing).
 
 (** ** Template TUs *)
 (**

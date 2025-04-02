@@ -105,7 +105,7 @@ Section with_cpp.
     rewrite TCLt_N blockR_eq/blockR_def.
     destruct (N.to_nat n) eqn:Hn; [ lia | ] => {Hn} /=.
     rewrite o_sub_0 ?_offsetR_id; [ | by eauto].
-    assert (TCEq (zero_sized_array (lang:=lang.cpp) Tbyte) false) by done.
+    assert (TCEq (zero_sized_array Tbyte) false) by done.
     apply _.
   Qed.
   #[global] Instance blockR_valid_ptr sz q : Observe validR (blockR sz q).

@@ -22,7 +22,7 @@ Module decltype.
   on [to_valcat t] is simpler than matching on [t] when [t] might be
   an xvalue reference to a function type.
   *)
-  Definition to_exprtype {lang} (t : decltype' lang) : ValCat * exprtype' lang :=
+  Definition to_exprtype (t : decltype) : ValCat * exprtype :=
     match drop_qualifiers t with
     | Tref u => (Lvalue, u)
     | Trv_ref u =>
@@ -51,7 +51,7 @@ Module decltype.
       end
     | _ => (Prvalue, t)	(** Promote sharing, rather than normalize qualifiers *)
     end.
-  Definition to_valcat {lang} (t : decltype' lang) : ValCat := (to_exprtype t).1.
+  Definition to_valcat (t : decltype) : ValCat := (to_exprtype t).1.
 
   (**
   Compute a declaration type from a value category and expression
@@ -60,7 +60,7 @@ Module decltype.
   Up to dropping qualifiers on reference and function types, this is
   intended to be a partial inverse of [to_exprtype].
   *)
-  Definition of_exprtype {lang} (vc : ValCat) (t : exprtype' lang) : decltype' lang :=
+  Definition of_exprtype (vc : ValCat) (t : exprtype) : decltype :=
     (**
     As [t : Mexprtype], we do not need [tref], [trv_ref].
     *)
@@ -72,13 +72,6 @@ Module decltype.
 
   Module internal.
   Section with_lang.
-    Context {lang : lang.t}.
-    #[local] Notation Expr := (Expr' lang).
-    #[local] Notation decltype := (decltype' lang).
-    #[local] Notation exprtype := (exprtype' lang).
-    #[local] Notation function_type := (function_type' lang).
-    #[local] Notation functype := (functype' lang).
-
     (**
     The declaration type of an explicit cast to type [t] or a call to
     a function or overloaded operator returning type [t] or a
@@ -113,7 +106,7 @@ Module decltype.
     Section fixpoint.
       Context (of_expr : Expr -> M decltype).
 
-      Definition of_cast (base : decltype) (c : Cast' lang) : M decltype :=
+      Definition of_cast (base : decltype) (c : Cast) : M decltype :=
         match c with
         | Cdependent t
         | Cbitcast t
@@ -218,7 +211,7 @@ Module decltype.
           mret $ if lval : bool then Tref ty else Trv_ref ty
         end.
 
-      Definition of_member_call (f : MethodRef' lang) : M decltype :=
+      Definition of_member_call (f : MethodRef) : M decltype :=
         match f with
         | inl (_, _, ft) =>
             from_functype ft
@@ -230,7 +223,7 @@ Module decltype.
             end
         end.
 
-      Definition from_operator_impl (f : operator_impl' lang) : M decltype :=
+      Definition from_operator_impl (f : operator_impl) : M decltype :=
         from_functype $ operator_impl.functype f.
 
       Definition of_subscript (e1 e2 : Expr) (t : exprtype) : M decltype :=
@@ -356,21 +349,21 @@ Module decltype.
   End with_lang.
   End internal.
 
-  Fixpoint of_expr {lang} (e : Expr' lang) : M (decltype' lang) :=
+  Fixpoint of_expr (e : Expr) : M decltype :=
     internal.of_expr_body of_expr e.
 
 End decltype.
 
 Module exprtype.
 
-  Definition of_expr {lang} (e : Expr' lang) : M (ValCat * exprtype' lang) :=
+  Definition of_expr (e : Expr) : M (ValCat * exprtype) :=
     decltype.to_exprtype <$> decltype.of_expr e.
 
-  Definition of_expr_drop {lang} (e : Expr' lang) : M (exprtype' lang) :=
+  Definition of_expr_drop (e : Expr) : M exprtype :=
     drop_reference <$> decltype.of_expr e.
 
-  Definition of_expr_check {lang} (P : ValCat -> Prop) `{!∀ vc, Decision (P vc)}
-      (e : Expr' lang) : M (exprtype' lang) :=
+  Definition of_expr_check (P : ValCat -> Prop) `{!∀ vc, Decision (P vc)}
+      (e : Expr) : M exprtype :=
     of_expr e >>= fun p => guard (P p.1) ;; mret p.2.
 
 End exprtype.
@@ -378,10 +371,10 @@ End exprtype.
 (**
 Convenience functions
 *)
-Definition decltype_of_expr {lang} (e : Expr' lang) : decltype' lang :=
+Definition decltype_of_expr (e : Expr) : decltype :=
   default (Tunsupported "decltype_of_expr: cannot determine declaration type") $
   decltype.of_expr e.
-Definition exprtype_of_expr {lang} (e : Expr' lang) : ValCat * exprtype' lang :=
+Definition exprtype_of_expr (e : Expr) : ValCat * exprtype :=
   decltype.to_exprtype $ decltype_of_expr e.
-Definition valcat_of {lang} (e : Expr' lang) : ValCat := (exprtype_of_expr e).1.
-Definition type_of {lang} (e : Expr' lang) : exprtype' lang := (exprtype_of_expr e).2.
+Definition valcat_of (e : Expr) : ValCat := (exprtype_of_expr e).1.
+Definition type_of (e : Expr) : exprtype := (exprtype_of_expr e).2.
