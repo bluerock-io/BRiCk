@@ -735,7 +735,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   | global_ptr_ (tu : translation_unit_canon) (o : obj_name)
   | fun_ptr_ (tu : translation_unit_canon) (o : obj_name)
   | alloc_ptr_ (a : alloc_id) (va : vaddr).
-  Inductive ptr_ : Set :=
+  Variant ptr_ : Set :=
   | invalid_ptr_
   | offset_ptr (p : root_ptr) (o : offset).
   Definition ptr := ptr_.
