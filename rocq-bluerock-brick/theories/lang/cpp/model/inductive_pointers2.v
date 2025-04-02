@@ -223,6 +223,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     }
   Admitted.
 
+  (** *** Offsets *)
   Definition offset := {o : raw_offset | roff_canon o}.
   #[global] Instance offset_eq_dec : EqDecision offset.
   Proof.
