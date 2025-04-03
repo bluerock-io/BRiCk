@@ -38,6 +38,7 @@
   coq-iris
   rocq-lens
   rocq-lens-elpi
+  rocq-equations
   (rocq-bluerock-cpp2v :with-test)
   elpi
   coq-elpi))

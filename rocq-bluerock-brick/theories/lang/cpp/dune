@@ -3,4 +3,4 @@
   (name bluerock.lang.cpp)
   (package rocq-bluerock-brick)
   (plugins rocq-bluerock-brick.plugin)
-  (theories bluerock.prelude bluerock.iris.extra iris stdpp elpi Ltac2))
+  (theories bluerock.prelude bluerock.iris.extra iris stdpp elpi Ltac2 Equations Equations.Prop Equations.Type))
