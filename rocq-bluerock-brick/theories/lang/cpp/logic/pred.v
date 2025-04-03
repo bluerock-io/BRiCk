@@ -1373,7 +1373,7 @@ Section with_cpp.
   #[global] Instance valid_ptr_sub_0 (p : ptr) ty :
     HasSize ty ->
     Observe (valid_ptr (p ,, o_sub σ ty 0)) (valid_ptr p).
-  Proof. intros. rewrite o_sub_0 // offset_ptr_id. refine _. Qed.
+  Proof. intros. rewrite offset_ptr_sub_0 //. refine _. Qed.
   #[global] Instance type_ptr_sub_0 (p : ptr) ty :
     HasSize ty ->
     Observe (valid_ptr (p ,, o_sub σ ty 0)) (type_ptr ty p).

@@ -191,7 +191,7 @@ Section arrR.
     generalize dependent i.
     induction Rs => i Hi /=; [ rewrite arrR_nil | rewrite arrR_cons ].
     { simpl in *; have ->:i = 0; first lia.
-      rewrite o_sub_0 // _offsetR_id. iIntros "[#$ $]". }
+      rewrite _offsetR_sub_0 //. iIntros "[#$ $]". }
     { case (decide (0 < i)%Z) => Hlt.
       { rewrite {1}(IHRs (i -1)%Z); last by simpl in *; split; lia.
         rewrite _offsetR_sep _offsetR_sub_sub. iIntros "($ & $ & $ & x)".
@@ -213,7 +213,7 @@ Section arrR.
   Proof.
     induction xs => /=.
     { apply: (observe_both (is_Some _)) => Hsz.
-      rewrite arrR_nil /= o_sub_0 // _offsetR_id.
+      rewrite arrR_nil /= _offsetR_sub_0 //.
       iSplit; last iIntros "[_ $]". iIntros "X"; repeat iSplit => //.
       iApply (observe with "X"). }
     { by rewrite !arrR_cons IHxs !_offsetR_sep !_offsetR_succ_sub Nat2Z.inj_succ -!assoc. }
@@ -372,7 +372,7 @@ Section with_array_R.
     elim: xs i Hlen => [|x xs IHxs] [|i] /= Hlen; try lia;
                         rewrite arrayR_cons.
     { apply: (observe_lhs (is_Some (size_of resolve ty))) => Hsz.
-      rewrite o_sub_0 // _offsetR_id. iDestruct 1 as "[$ _]". }
+      rewrite _offsetR_sub_0 //. iDestruct 1 as "[$ _]". }
     { rewrite (IHxs i); try lia.
       rewrite _offsetR_succ_sub Nat2Z.inj_succ.
       iDestruct 1 as "(_ & _ & $)". }

@@ -56,9 +56,9 @@ Section with_cpp.
     rewrite blockR_eq/blockR_def _at_sep.
     destruct sz; eauto.
     have->: (N.to_nat (N.pos p) = S (N.to_nat (N.pos p - 1))) by lia.
-    rewrite -cons_seq /= o_sub_0 => //.
-    rewrite !_at_offsetR _offsetR_id _at_sep.
-    iIntros "(?&B&C)".
+    rewrite -cons_seq /= _offsetR_sub_0 //.
+    rewrite !_at_offsetR _at_sep.
+    iIntros "(_&B&_)".
     iDestruct (observe (nullptr |-> nonnullR) with "B") as "X".
     rewrite _at_nonnullR.
     by iDestruct "X" as %[].
@@ -104,7 +104,7 @@ Section with_cpp.
   Proof.
     rewrite TCLt_N blockR_eq/blockR_def.
     destruct (N.to_nat n) eqn:Hn; [ lia | ] => {Hn} /=.
-    rewrite o_sub_0 ?_offsetR_id; [ | by eauto].
+    rewrite _offsetR_sub_0; last done.
     assert (TCEq (zero_sized_array Tbyte) false) by done.
     apply _.
   Qed.
@@ -113,12 +113,11 @@ Section with_cpp.
     rewrite blockR_eq/blockR_def.
     destruct sz.
     { iIntros "[#A _]".
-      rewrite o_sub_0; last by econstructor.
-      rewrite _offsetR_id. eauto. }
+      by rewrite _offsetR_sub_0. }
     { iIntros "[_ X]".
       unfold N.to_nat. destruct (Pos.to_nat p) eqn:?; first lia.
       simpl. iDestruct "X" as "[X _]".
-      rewrite o_sub_0; last by econstructor. rewrite _offsetR_id.
+      rewrite _offsetR_sub_0 //.
       iApply (observe with "X"). }
   Qed.
 
