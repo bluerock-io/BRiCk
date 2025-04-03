@@ -37,7 +37,7 @@ Section with_cpp.
   Proof.
     iIntros (p) "H #V NV". iApply "NV".
     iApply ("H" $! (p_base ,, o_sub σ ty (-i)) i ty with "[//]").
-    by rewrite o_sub_sub Z.add_opp_diag_l o_sub_0 ?offset_ptr_id.
+    by rewrite o_sub_sub Z.add_opp_diag_l offset_ptr_sub_0.
   Qed.
 
   Lemma not_strict_valid_ptr_sub_bad' ty (Hsz : is_Some (size_of σ ty)) :

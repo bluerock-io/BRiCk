@@ -426,7 +426,7 @@ Section raw_type_ptrs.
       intros p ty cnt sz Hsz.
       pose proof (raw_type_ptrs_array_aux ty cnt p 0 sz Hsz) as Haux.
       split'; iIntros "P";
-        rewrite o_sub_0 in Haux; auto; rewrite offset_ptr_id in Haux;
+        rewrite offset_ptr_sub_0 // in Haux;
         rewrite raw_type_ptrs_eq/raw_type_ptrs_def.
       - iDestruct "P" as (array_sz) "[%Harray_sz tptrs]".
         apply size_of_array_shatter in Harray_sz as [sz' [? [Hsz' Harray_sz]]]; subst.
@@ -510,16 +510,15 @@ Section with_rawable.
     - rewrite replicateN_0 dropN_nil /rawsR !arrayR_nil.
       done.
     - destruct i as [| i' _] using N.peano_ind=>//.
-      + rewrite -> o_sub_0 in *; auto.
+      + rewrite offset_ptr_sub_0; last done.
         specialize (IHrs (p .[ Tbyte ! 1 ]) 0%N).
-        rewrite -> offset_ptr_id in *.
-        rewrite -> N.sub_0_r in *.
+        rewrite ->!N.sub_0_r in *.
         rewrite lengthN_cons replicateN_succ /rawsR !arrayR_cons
                 !_at_sep !_at_offsetR.
         iIntros "(#tptr & raw & raws)".
         iFrame "#"; iSplitL "raw".
         * rewrite rawR.unlock. by rewrite anyR_tptsto_fuzzyR_val_2.
-        * rewrite o_sub_0 in IHrs; auto; rewrite offset_ptr_id in IHrs.
+        * rewrite offset_ptr_sub_0 in IHrs; last done.
           iApply IHrs.
           rewrite dropN_zero /rawsR _at_type_ptrR; iFrame "#∗".
       + replace (dropN (N.succ i') (r :: rs))
@@ -544,7 +543,7 @@ Section with_rawable.
     rewrite HR_encode.
     iIntros "[#tptr H]"; iDestruct "H" as (rs) "[%Hrs raws]".
     pose proof (_at_rawable_R_obj_repr_aux 0 p q rs) as Haux.
-    rewrite o_sub_0 in Haux; auto; rewrite offset_ptr_id in Haux.
+    rewrite offset_ptr_sub_0 in Haux; last done.
     rewrite dropN_zero N.sub_0_r (Hencode_sz x) in Haux; last by assumption.
     by iApply Haux.
   Qed.
@@ -593,7 +592,7 @@ Section blockR_transport.
     iDestruct (raw_type_ptrs_blockR_obs with "block") as "#raw_tptrs"; eauto.
     assert (sz = 0 \/ 0 < sz)%N as [Hsz | Hsz] by lia.
     - subst; rewrite blockR_eq/blockR_def !_at_sep !_at_offsetR/=.
-      rewrite o_sub_0; eauto; rewrite !offset_ptr_id !_at_emp.
+      rewrite !offset_ptr_sub_0 // !_at_emp.
       iDestruct "block" as "[_ $]".
       rewrite _at_validR.
       iDestruct "cong" as "#(cong & tptr & tptr')".
@@ -628,15 +627,16 @@ Section blockR_transport.
 
         assert (sz' = 0 \/ 0 < sz')%N as [Hsz' | Hsz'] by lia. 1: {
           iIntros (p p') "#(cong & tptrs & tptrs')"; subst.
-          rewrite !N2Nat.inj_succ/= o_sub_0; eauto; rewrite !offset_ptr_id !_offsetR_id.
-          iIntros "[any $]"; iRevert "any".
+          rewrite !N2Nat.inj_succ/= !_at_offsetR !offset_ptr_sub_0 //.
+          rewrite !(right_id emp).
           iApply _at_anyR_ptr_congP_transport.
-          by iFrame "cong"; iDestruct "cong" as "(_&_&$)".
+          (* TODO AUTO: Missing [Typeclasses Opaque ptr_congP]. *)
+          iFrame "cong #".
         }
 
         iIntros (p p') "#(cong & tptrs & tptrs')".
         rewrite !seqN_S_start !N2Nat.inj_succ/=.
-        rewrite o_sub_0; eauto; rewrite !_offsetR_id !offset_ptr_id.
+        rewrite !_at_offsetR !offset_ptr_sub_0 //.
         iDestruct "tptrs" as "[tptr tptrs]".
         iDestruct "tptrs'" as "[tptr' tptrs']".
         iIntros "[any REST]"; iSplitL "any".
@@ -650,7 +650,7 @@ Section blockR_transport.
              iSplitR.
              ++ iPureIntro. exact: ptr_cong_o_sub.
              ++ iSplitL "tptrs"; destruct sz' using N.peano_ind; try lia;
-                  rewrite seqN_S_start/= o_sub_0; eauto; rewrite !offset_ptr_id.
+                  rewrite seqN_S_start/= !offset_ptr_sub_0 //.
                 ** by iDestruct "tptrs" as "[$ _]".
                 ** by iDestruct "tptrs'" as "[$ _]".
           -- setoid_rewrite _at_offsetR.

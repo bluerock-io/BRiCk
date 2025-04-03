@@ -803,6 +803,49 @@ Section with_cpp.
     apply iff_forall => p. by rewrite _at_only_provable.
   Qed.
 
+  Section o_sub.
+    Context {σ : genv}.
+
+    Lemma _offsetR_sub_0 ty R
+      (Hsz : is_Some (size_of σ ty)) :
+      _offsetR (.[ ty ! 0 ]) R -|- R.
+    Proof. by rewrite o_sub_0 // _offsetR_id. Qed.
+
+    Lemma _offsetR_sub_sub ty a b R :
+      .[ ty ! a ] |-> (.[ ty ! b ] |-> R) ⊣⊢
+      .[ ty ! a + b ] |-> R.
+    Proof. by rewrite _offsetR_dot o_dot_sub. Qed.
+
+    Lemma _offsetR_succ_sub ty z R :
+      .[ ty ! 1 ] |-> (.[ ty ! z ] |-> R) ⊣⊢
+      .[ ty ! Z.succ z] |-> R.
+    Proof. by rewrite _offsetR_sub_sub Z.add_1_l. Qed.
+
+    Lemma _offsetR_sub_succ ty z R :
+      .[ ty ! z ] |-> (.[ ty ! 1 ] |-> R) ⊣⊢
+      .[ ty ! Z.succ z] |-> R.
+    Proof. by rewrite _offsetR_sub_sub Z.add_1_r. Qed.
+
+    Lemma _at_sub_0 p ty R
+      (Hsz : is_Some (size_of σ ty)) :
+      p .[ ty ! 0 ] |-> R -|- p |-> R.
+    Proof. by rewrite offset_ptr_sub_0. Qed.
+
+    Lemma _at_sub_sub p ty a b R :
+      p .[ ty ! a ] |-> (.[ ty ! b ] |-> R) ⊣⊢
+      p .[ ty ! a + b ] |-> R.
+    Proof. by rewrite -!_at_offsetR _offsetR_sub_sub. Qed.
+
+    Lemma _at_succ_sub p ty z R :
+      p .[ ty ! 1 ] |-> (.[ ty ! z ] |-> R) ⊣⊢
+      p .[ ty ! Z.succ z] |-> R.
+    Proof. by rewrite -!_at_offsetR _offsetR_succ_sub. Qed.
+
+    Lemma _at_sub_succ p ty z R :
+      p .[ ty ! z ] |-> .[ ty ! 1 ] |-> R ⊣⊢
+      p .[ ty ! Z.succ z] |-> R.
+    Proof. by rewrite -!_at_offsetR _offsetR_sub_succ. Qed.
+  End o_sub.
 End with_cpp.
 
 #[global] Typeclasses Opaque pureR as_Rep.

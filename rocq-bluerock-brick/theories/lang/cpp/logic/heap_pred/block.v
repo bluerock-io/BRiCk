@@ -54,11 +54,9 @@ Section with_cpp.
     nullptr |-> blockR sz q |-- [| sz = 0%N |].
   Proof.
     rewrite blockR_eq/blockR_def _at_sep.
-    destruct sz; eauto.
-    have->: (N.to_nat (N.pos p) = S (N.to_nat (N.pos p - 1))) by lia.
-    rewrite -cons_seq /= o_sub_0 => //.
-    rewrite !_at_offsetR _offsetR_id _at_sep.
-    iIntros "(?&B&C)".
+    elim /N.peano_ind: sz => [|sz _] /=. by eauto.
+    rewrite N2Nat.inj_succ /= _offsetR_sub_0 //.
+    iIntros "(_&B&_)".
     iDestruct (observe (nullptr |-> nonnullR) with "B") as "X".
     rewrite _at_nonnullR.
     by iDestruct "X" as %[].
@@ -104,22 +102,20 @@ Section with_cpp.
   Proof.
     rewrite TCLt_N blockR_eq/blockR_def.
     destruct (N.to_nat n) eqn:Hn; [ lia | ] => {Hn} /=.
-    rewrite o_sub_0 ?_offsetR_id; [ | by eauto].
+    rewrite _offsetR_sub_0; last done.
     assert (TCEq (zero_sized_array Tbyte) false) by done.
     apply _.
   Qed.
   #[global] Instance blockR_valid_ptr sz q : Observe validR (blockR sz q).
   Proof.
     rewrite blockR_eq/blockR_def.
-    destruct sz.
-    { iIntros "[#A _]".
-      rewrite o_sub_0; last by econstructor.
-      rewrite _offsetR_id. eauto. }
-    { iIntros "[_ X]".
-      unfold N.to_nat. destruct (Pos.to_nat p) eqn:?; first lia.
-      simpl. iDestruct "X" as "[X _]".
-      rewrite o_sub_0; last by econstructor. rewrite _offsetR_id.
-      iApply (observe with "X"). }
+    elim /N.peano_ind: sz => [|sz _] /=.
+    { rewrite _offsetR_sub_0 //. apply _. }
+    { apply observe_sep_r.
+      rewrite N2Nat.inj_succ /=.
+      apply observe_sep_l.
+      rewrite _offsetR_sub_0 //.
+      apply _. }
   Qed.
 
   #[global] Instance tblockR_nonnull n ty q :
