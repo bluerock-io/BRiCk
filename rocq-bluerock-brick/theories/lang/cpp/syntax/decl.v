@@ -82,7 +82,8 @@ Record Union' : Set := Build_Union
 ; u_trivially_destructible : bool
   (* ^ whether objects of the union type are trivially destructible. *)
 ; u_delete : option obj_name
-  (* ^ name of [operator delete], if it exists *)
+  (* ^ name of [operator delete], if it exists.
+     See [s_delete] for more information. *)
 ; u_size : N
   (* ^ size of the union (including padding) *)
 ; u_alignment : N
@@ -116,8 +117,10 @@ Record Struct' : Set := Build_Struct
 ; s_trivially_destructible : bool
   (* ^ this is actually computable, and we could compute it *)
 ; s_delete : option obj_name
-  (* ^ the name of a [delete] member function in case virtual dispatch is used to destroy an
-     object of this type. *)
+  (* ^ the name of an class-specific <<operator delete>> that is used to delete
+     the object. Note, we do not need an <<operator delete[]>> because these
+     are statically resolved at the call site <<delete[]>> does not involve
+     <<virtual>> dispatch. *)
 ; s_layout : LayoutType
   (* ^ the type of layout semantics *)
 (* The remaining fields are implementation-dependent. They might be mandated by the per-platform ABI. *)
