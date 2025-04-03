@@ -54,10 +54,8 @@ Section with_cpp.
     nullptr |-> blockR sz q |-- [| sz = 0%N |].
   Proof.
     rewrite blockR_eq/blockR_def _at_sep.
-    destruct sz; eauto.
-    have->: (N.to_nat (N.pos p) = S (N.to_nat (N.pos p - 1))) by lia.
-    rewrite -cons_seq /= _offsetR_sub_0 //.
-    rewrite !_at_offsetR _at_sep.
+    elim /N.peano_ind: sz => [|sz _] /=. by eauto.
+    rewrite N2Nat.inj_succ /= _offsetR_sub_0 //.
     iIntros "(_&B&_)".
     iDestruct (observe (nullptr |-> nonnullR) with "B") as "X".
     rewrite _at_nonnullR.
@@ -111,14 +109,13 @@ Section with_cpp.
   #[global] Instance blockR_valid_ptr sz q : Observe validR (blockR sz q).
   Proof.
     rewrite blockR_eq/blockR_def.
-    destruct sz.
-    { iIntros "[#A _]".
-      by rewrite _offsetR_sub_0. }
-    { iIntros "[_ X]".
-      unfold N.to_nat. destruct (Pos.to_nat p) eqn:?; first lia.
-      simpl. iDestruct "X" as "[X _]".
+    elim /N.peano_ind: sz => [|sz _] /=.
+    { rewrite _offsetR_sub_0 //. apply _. }
+    { apply observe_sep_r.
+      rewrite N2Nat.inj_succ /=.
+      apply observe_sep_l.
       rewrite _offsetR_sub_0 //.
-      iApply (observe with "X"). }
+      apply _. }
   Qed.
 
   #[global] Instance tblockR_nonnull n ty q :
