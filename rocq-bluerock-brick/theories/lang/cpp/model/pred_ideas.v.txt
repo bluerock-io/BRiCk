@@ -1,0 +1,46 @@
+Variant runtime_val
+| Vundef
+| Vbyte (b : byte)
+| Vptr_chunk (b : byte) (a : alloc_id)
+
+Record State := {
+  storage : gmap vaddr runtime_val;
+  objects : gmap alloc_id type
+  starts  : gmap alloc_id vaddr
+}
+
+(*
+Inductive raw_offset_seg : Set :=
+| o_field_ (* type-name: *) (f : field)
+| o_sub_ (ty : type) (z : Z)
+| o_base_ (derived base : globname)
+| o_derived_ (base derived : globname).
+*)
+
+Inductive wt_offset_seg {types : type_table} {vt : validity_type} : raw_offset_seg -> type -> type -> Prop :=
+| WtArr i n ty :
+    (if vt = Relaxed then i ≤ n else i < n) ->
+    wt_offset (o_sub_ ty i) (Tarray ty n) ty
+| WtField fn cn ty fs :
+    types[cn] = Some (Gstruct fs) ->
+    fs[fn] = ty ->
+    wt_offset (o_field_ (cn, fn)) (Tnamed cn) ty.
+
+Indutive wt_offset {types : type_table} {vt : validity_type} : raw_offset -> type -> type -> Prop := ...
+
+Definition type_ptr p ty :=
+  starts[p.alloc_id] = p.base_vaddr /\
+  wt_offset types vt (extract_offset p) objects[p.alloc_id] ty
+
+Definition _valid_ptr vt p :=
+  p = nullptr /\ vt = Relaxed
+  \/
+  starts[p.alloc_id] = p.base_vaddr /\
+  exists ty,
+    wt_offset types vt (extract_offset p) objects[p.alloc_id] ty
+
+Definition vals_encode (ty : type) (vs : list runtime_val) (v : val) := TODO
+
+Definition tptsto ty p v :=
+  type_ptr p ty /\
+  vals_encode ty (slice_gmap (ptr_vaddr p) (size_ty ty) storage) v
