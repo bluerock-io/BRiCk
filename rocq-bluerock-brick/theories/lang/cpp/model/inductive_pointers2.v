@@ -1,4 +1,4 @@
-(* 
+(*
  * Copyright (c) 2020 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -273,8 +273,8 @@ Module PTRS_IMPL <: PTRS_INTF.
     | o :: os =>
         '(l, r, s, t) ← find_redex os;
         Some (o :: l, r, s, t).
-    Admit Obligations.    
-    
+    Admit Obligations.
+
     Ltac dex :=
       let H0 := fresh in
       move=> H0;
@@ -443,7 +443,7 @@ Module PTRS_IMPL <: PTRS_INTF.
         }
       }
     Qed.
-    
+
     Lemma length_app {A} :
       ∀ xs ys : list A,
         length (xs ++ ys) = (length xs + length ys)%nat.
@@ -451,7 +451,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       move=> xs ys.
       induction xs; simpl; auto.
     Qed.
-    
+
     Equations normalize (os : raw_offset) : raw_offset by wf (length os) lt :=
     normalize os with (existT (find_redex os) eq_refl) => {
       normalize os (existT (Some (l, r, s, t)) H) => normalize (l ++ t ++ r);
@@ -644,7 +644,7 @@ Module PTRS_IMPL <: PTRS_INTF.
       }
       { apply norm_canon. }
     Qed.
-  
+
   End norm_lemmas.
 
   Section rw_lemmas.
@@ -1009,7 +1009,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     | offset_ptr (alloc_ptr_ a _) _ => Some a
     | _ => None
     end.
-  
+
   Definition null_alloc_id : alloc_id := null_alloc_id.
   Lemma ptr_alloc_id_nullptr :
     ptr_alloc_id nullptr = Some null_alloc_id.
@@ -1268,7 +1268,7 @@ Module PTRS_IMPL <: PTRS_INTF.
         end
       end
     end.
-  
+
   Lemma ptr_vaddr_resp_leq :
     ∀ σ1 σ2,
       genv_leq σ1 σ2 ->
@@ -1279,7 +1279,7 @@ Module PTRS_IMPL <: PTRS_INTF.
     extensionality p.
     destruct p. easy.
   Admitted.
-  
+
   Lemma ptr_vaddr_nullptr :
     ∀ σ, @ptr_vaddr σ nullptr = Some 0%N.
   Proof.
@@ -1304,7 +1304,7 @@ Module PTRS_IMPL <: PTRS_INTF.
   Lemma global_ptr_inj :
     ∀ tu, Inj (=) (=) (global_ptr tu).
   Admitted.
-  
+
   Lemma global_ptr_addr_inj :
     ∀ σ tu, Inj (=) (=) (λ o, @ptr_vaddr σ (global_ptr tu o)).
   Admitted.
