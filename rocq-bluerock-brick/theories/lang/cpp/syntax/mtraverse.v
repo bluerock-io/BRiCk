@@ -258,7 +258,7 @@ Module MTraverse.
           Einitlist_union <$> atomic_name.traverse traverseT fld <*> traverse (T:=eta option) traverseE oe <*> ET (traverseT t)
 
       | Enew fn es pass_align t sz init => Enew <$> prod.traverse traverseN traverseT fn <*> traverse (T:=eta list) traverseE es <*> mret pass_align <*> traverseT t <*> traverse (T:=eta option) traverseE sz <*> traverse (T:=eta option) traverseE init
-      | Edelete a fn e t => Edelete a <$> prod.traverse traverseN traverseT fn <*> traverseE e <*> traverseT t
+      | Edelete a fn e t => Edelete a <$> traverseN fn <*> traverseE e <*> traverseT t
       | Eandclean e => Eandclean <$> traverseE e
       | Ematerialize_temp e vc => Ematerialize_temp <$> traverseE e <*> mret vc
       | Eatomic ao es t => Eatomic ao <$> traverse (T:=eta list) traverseE es <*> ET (traverseT t)

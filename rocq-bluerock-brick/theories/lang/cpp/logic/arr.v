@@ -80,46 +80,6 @@ Section validR.
     rewrite _at_offsetR _at_validR _at_only_provable.
     apply valid_o_sub_size.
   Qed.
-
-  Lemma _offsetR_sub_0 ty R
-    (Hsz : is_Some (size_of resolve ty)) :
-    _offsetR (.[ ty ! 0 ]) R -|- R.
-  Proof. by rewrite o_sub_0 // _offsetR_id. Qed.
-
-  Lemma _offsetR_sub_sub ty a b R :
-    .[ ty ! a ] |-> (.[ ty ! b ] |-> R) ⊣⊢
-    .[ ty ! a + b ] |-> R.
-  Proof. by rewrite _offsetR_dot o_dot_sub. Qed.
-
-  Lemma _offsetR_succ_sub ty z R :
-    .[ ty ! 1 ] |-> (.[ ty ! z ] |-> R) ⊣⊢
-    .[ ty ! Z.succ z] |-> R.
-  Proof. by rewrite _offsetR_sub_sub Z.add_1_l. Qed.
-
-  Lemma _offsetR_sub_succ ty z R :
-    .[ ty ! z ] |-> (.[ ty ! 1 ] |-> R) ⊣⊢
-    .[ ty ! Z.succ z] |-> R.
-  Proof. by rewrite _offsetR_sub_sub Z.add_1_r. Qed.
-
-  Lemma _at_sub_0 p ty R
-    (Hsz : is_Some (size_of resolve ty)) :
-    p .[ ty ! 0 ] |-> R -|- p |-> R.
-  Proof. by rewrite offset_ptr_sub_0. Qed.
-
-  Lemma _at_sub_sub p ty a b R :
-    p .[ ty ! a ] |-> (.[ ty ! b ] |-> R) ⊣⊢
-    p .[ ty ! a + b ] |-> R.
-  Proof. by rewrite -!_at_offsetR _offsetR_sub_sub. Qed.
-
-  Lemma _at_succ_sub p ty z R :
-    p .[ ty ! 1 ] |-> (.[ ty ! z ] |-> R) ⊣⊢
-    p .[ ty ! Z.succ z] |-> R.
-  Proof. by rewrite -!_at_offsetR _offsetR_succ_sub. Qed.
-
-  Lemma _at_sub_succ p ty z R :
-    p .[ ty ! z ] |-> .[ ty ! 1 ] |-> R ⊣⊢
-    p .[ ty ! Z.succ z] |-> R.
-  Proof. by rewrite -!_at_offsetR _offsetR_sub_succ. Qed.
 End validR.
 
 Definition arrR_def `{Σ : cpp_logic} {σ : genv} ty (Rs : list Rep) : Rep :=
@@ -231,7 +191,7 @@ Section arrR.
     generalize dependent i.
     induction Rs => i Hi /=; [ rewrite arrR_nil | rewrite arrR_cons ].
     { simpl in *; have ->:i = 0; first lia.
-      rewrite o_sub_0 // _offsetR_id. iIntros "[#$ $]". }
+      rewrite _offsetR_sub_0 //. iIntros "[#$ $]". }
     { case (decide (0 < i)%Z) => Hlt.
       { rewrite {1}(IHRs (i -1)%Z); last by simpl in *; split; lia.
         rewrite _offsetR_sep _offsetR_sub_sub. iIntros "($ & $ & $ & x)".
@@ -253,7 +213,7 @@ Section arrR.
   Proof.
     induction xs => /=.
     { apply: (observe_both (is_Some _)) => Hsz.
-      rewrite arrR_nil /= o_sub_0 // _offsetR_id.
+      rewrite arrR_nil /= _offsetR_sub_0 //.
       iSplit; last iIntros "[_ $]". iIntros "X"; repeat iSplit => //.
       iApply (observe with "X"). }
     { by rewrite !arrR_cons IHxs !_offsetR_sep !_offsetR_succ_sub Nat2Z.inj_succ -!assoc. }
@@ -412,7 +372,7 @@ Section with_array_R.
     elim: xs i Hlen => [|x xs IHxs] [|i] /= Hlen; try lia;
                         rewrite arrayR_cons.
     { apply: (observe_lhs (is_Some (size_of resolve ty))) => Hsz.
-      rewrite o_sub_0 // _offsetR_id. iDestruct 1 as "[$ _]". }
+      rewrite _offsetR_sub_0 //. iDestruct 1 as "[$ _]". }
     { rewrite (IHxs i); try lia.
       rewrite _offsetR_succ_sub Nat2Z.inj_succ.
       iDestruct 1 as "(_ & _ & $)". }

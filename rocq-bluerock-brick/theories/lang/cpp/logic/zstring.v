@@ -711,7 +711,7 @@ Section with_ct.
             Observe (.[Tchar ! z] |-> validR) (bufR q sz zs).
         Proof.
           intros **; generalize dependent zs; induction z; intros **; simpl in *.
-          - rewrite ->o_sub_0 by eauto; rewrite _offsetR_id; refine _.
+          - rewrite _offsetR_sub_0 //. refine _.
           - assert (Z.pos p < sz \/ Z.pos p = sz)%Z
               as [Hp | Hp] by lia; last by (rewrite Hp; refine _).
             unfold Observe, bufR.

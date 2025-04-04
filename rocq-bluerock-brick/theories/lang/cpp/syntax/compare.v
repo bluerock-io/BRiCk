@@ -1705,13 +1705,13 @@ Module Expr.
 
     Record box_Edelete : Set := Box_Edelete {
       box_Edelete_0 : bool;
-      box_Edelete_1 : name * type;
+      box_Edelete_1 : name;
       box_Edelete_2 : Expr;
       box_Edelete_3 : type;
     }.
     Definition box_Edelete_compare (b1 b2 : box_Edelete) : comparison :=
       compare_lex (Bool.compare b1.(box_Edelete_0) b2.(box_Edelete_0)) $ fun _ =>
-      compare_lex (prod.compare compareN compareT b1.(box_Edelete_1) b2.(box_Edelete_1)) $ fun _ =>
+      compare_lex (compareN b1.(box_Edelete_1) b2.(box_Edelete_1)) $ fun _ =>
       compare_lex (compareE b1.(box_Edelete_2) b2.(box_Edelete_2)) $ fun _ =>
       compareT b1.(box_Edelete_3) b2.(box_Edelete_3).
 

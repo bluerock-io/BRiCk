@@ -1447,15 +1447,7 @@ public:
 		print.output() << fmt::BOOL(expr->isArrayForm()) << fmt::nbsp;
 
 		if (auto op = expr->getOperatorDelete()) {
-			if (op->isDestroyingOperatorDelete()) {
-				logging::fatal() << "destroying delete is not supported\n";
-				logging::die();
-			}
-			print.begin_tuple();
 			cprint.printName(print, *op);
-			print.next_tuple();
-			cprint.printQualType(print, op->getType(), loc::of(op));
-			print.end_tuple();
 		} else {
 			logging::fatal() << "missing [delete] operator\n";
 			logging::die();
