@@ -16,7 +16,7 @@ Require Import bluerock.prelude.list_numbers.
 Extract from [val] the [count] lowest bits starting from [from].
 Follows [get_range_bits] but on [N].
 
-TODO: this one generalizes bluerock.lang.cpp.arith.builtins._get_byte. Consider
+TODO: this one generalizes bluerock.prelude.arith.builtins._get_byte. Consider
 unifying them.
 *)
 Definition get_range_bitsN (val from count : N) : N :=

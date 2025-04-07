@@ -17,7 +17,7 @@ Require Import bluerock.iris.extra.base_logic.own_instances.
 
 Require Import bluerock.prelude.base.
 Require Import bluerock.prelude.option.
-Require Import bluerock.lang.cpp.arith.z_to_bytes.
+Require Import bluerock.prelude.arith.z_to_bytes.
 Require Import bluerock.lang.cpp.algebra.cfrac.
 Require Import bluerock.lang.cpp.syntax.
 Require Import bluerock.lang.cpp.semantics.

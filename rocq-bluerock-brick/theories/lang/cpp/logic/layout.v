@@ -8,7 +8,7 @@ Require Import bluerock.prelude.numbers.
 Require Import bluerock.prelude.list.
 Require Import bluerock.iris.extra.proofmode.proofmode.
 
-Require Import bluerock.lang.cpp.arith.z_to_bytes.
+Require Import bluerock.prelude.arith.z_to_bytes.
 Require Import bluerock.lang.cpp.syntax.
 Require Import bluerock.lang.cpp.logic.pred.
 Require Import bluerock.lang.cpp.logic.path_pred.
