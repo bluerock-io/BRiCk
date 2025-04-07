@@ -7,7 +7,7 @@
 Require Import stdpp.strings.
 Require Export bluerock.prelude.pstring.
 Require Import bluerock.lang.cpp.syntax.prelude.
-Require Export bluerock.lang.cpp.arith.types.
+Require Export bluerock.prelude.arith.types.
 
 
 (* TODO: is this worth its own file? *)

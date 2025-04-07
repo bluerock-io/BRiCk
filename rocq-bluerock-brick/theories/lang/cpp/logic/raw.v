@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2020-2023 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -8,8 +8,8 @@ Require Import bluerock.iris.extra.proofmode.proofmode.
 Require Import iris.bi.lib.fractional.
 
 Require Import bluerock.lang.cpp.bi.cfractional.
-Require Import bluerock.lang.cpp.arith.z_to_bytes.
-Require Import bluerock.lang.cpp.arith.builtins.
+Require Import bluerock.prelude.arith.z_to_bytes.
+Require Import bluerock.prelude.arith.builtins.
 Require Import bluerock.lang.cpp.syntax.
 Require Import bluerock.lang.cpp.semantics.
 Require Import bluerock.lang.cpp.logic.arr.

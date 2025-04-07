@@ -13,8 +13,8 @@ Require Import bluerock.prelude.option.
 Require Import bluerock.prelude.numbers.
 
 Require Import bluerock.lang.cpp.reserved_notation. (* TODO *)
-Require Import bluerock.lang.cpp.arith.operator.
-Require Import bluerock.lang.cpp.arith.builtins.
+Require Import bluerock.prelude.arith.operator.
+Require Import bluerock.prelude.arith.builtins.
 Require Import bluerock.lang.cpp.syntax.
 Require Export bluerock.lang.cpp.semantics.types.
 Require Export bluerock.lang.cpp.semantics.sub_module.

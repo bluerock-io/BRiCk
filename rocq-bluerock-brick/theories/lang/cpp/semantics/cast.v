@@ -11,7 +11,7 @@ Require Import elpi.apps.locker.locker.
 
 Require Import bluerock.prelude.base.
 Require Import bluerock.prelude.numbers.
-Require Export bluerock.lang.cpp.arith.operator.
+Require Export bluerock.prelude.arith.operator.
 Require Import bluerock.lang.cpp.syntax.
 Require Import bluerock.lang.cpp.semantics.values.
 Require Import bluerock.lang.cpp.semantics.genv.

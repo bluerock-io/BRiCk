@@ -9,7 +9,7 @@ Require Import bluerock.iris.extra.bi.ChargeCompat.
 Require Import bluerock.iris.extra.bi.errors.
 Require Import bluerock.lang.cpp.syntax.
 Require Import bluerock.lang.cpp.semantics.
-Require Import bluerock.lang.cpp.arith.builtins.
+Require Import bluerock.prelude.arith.builtins.
 Require Import bluerock.lang.cpp.logic.pred.
 Require Import bluerock.lang.cpp.logic.path_pred.
 Require Import bluerock.lang.cpp.logic.heap_pred.
