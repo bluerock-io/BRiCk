@@ -155,7 +155,8 @@ Section with_lang.
           | Avalue e => printE e
           | Apack ts =>
               ((fun tas => "..." ++ (angles $ sepBy ", " tas)) <$> traverse printTA ts)
-          | Atemplate _ => mfail
+          | Atemplate nm =>
+              (fun b => "template " ++ b) <$> printN "" nm
           | Aunsupported note => mfail
           end
         in

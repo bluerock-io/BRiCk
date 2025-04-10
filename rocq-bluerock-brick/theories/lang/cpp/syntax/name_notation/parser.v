@@ -460,6 +460,8 @@ Module internal.
      end.
 
    Fixpoint template_arg (fuel : nat) : M temp_arg :=
+     commit (keyword "template") (fun _ => Atemplate <$> parse_name')
+     $
      (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) <|>
      (Apack <$> (spaced "...<" *>
       match fuel with
@@ -599,7 +601,7 @@ Module internal.
     with parse_name (fuel : nat) :=
       parse_name' (fun _ => NEXT fuel parse_type) (fun _ => NEXT fuel parse_name_component)
     with parse_name_component (fuel : nat) :=
-      parse_name_component' (fun _ => NEXT fuel parse_type) (fun _ => NEXT fuel parse_expr)
+      parse_name_component' (fun _ => NEXT fuel parse_type) (fun _ => NEXT fuel parse_name_component) (fun _ => NEXT fuel parse_expr)
     with parse_expr (fuel : nat) :=
       parse_expr' (fun _ => NEXT fuel parse_name).
 
@@ -749,6 +751,8 @@ Module Type TESTS.
   Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
   Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
 
+  Succeed Example _0 : TEST "C<template C>" (Ninst (Nglobal (Nid "C")) [Atemplate (Nglobal (Nid "C"))]) := eq_refl.
+  Succeed Example _0 : TEST "C<template C::CC>" (Ninst (Nglobal (Nid "C")) [Atemplate (Nscoped (Nglobal (Nid "C")) (Nid "CC"))]) := eq_refl.
 
   (* known issues *)
 
