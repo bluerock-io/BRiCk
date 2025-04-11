@@ -302,9 +302,10 @@ Module internal.
       | OpLit (_ : PrimString.string).
 
     Section body.
+      Notation name_component := (name_type * option (list type * function_arity * function_qualifiers.t) * option (list temp_arg))%type.
       Variable parse_type : unit -> M type.
       Variable parse_name : unit -> M name.
-      Variable parse_name_component : unit -> M (atomic_name * option (list temp_arg)).
+      Variable parse_name_component : unit -> M name_component.
       Variable parse_expr : unit -> M Expr.
 
       Definition parse_args (no_start_paren : bool) : M (list type * function_arity) :=
@@ -419,14 +420,82 @@ Module internal.
       let* post := parse_postfix_type in
       mret $ post (List.fold_right (fun f x => f x) t quals).
 
-   Definition parse_name': M name :=
+    Fixpoint as_conv (q : function_qualifiers.t) (t : type) : option (type * list type * function_qualifiers.t) :=
+      match t with
+      | Tqualified cv t =>
+          as_conv (function_qualifiers.join q $ function_qualifiers.mk (q_const cv) (q_volatile cv) Prvalue) t
+      | Tref t => as_conv (function_qualifiers.join q $ function_qualifiers.mk false false Lvalue) t
+      | Trv_ref t => as_conv (function_qualifiers.join q $ function_qualifiers.mk false false Xvalue) t
+      | Tfunction ft => Some (ft.(ft_return), ft.(ft_params), q)
+      | _ => None
+      end.
+
+    Definition mk_atomic_name (last : option PrimString.string) (nm : name_type)
+      (args : option (list type * function_arity * _)) : M atomic_name :=
+     match args with
+     | None => match nm with
+              | Simple nm => mret $ Nid nm
+              | FirstDecl nm => mret $ Nfirst_decl nm
+              | FirstChild nm => mret $ Nfirst_child nm
+              | Anon n => mret $ Nanon n
+              | OpConv t =>
+                  (* NOTE: this is a hack because <<int()>> is parsed as a function type. *)
+                  match as_conv function_qualifiers.N t with
+                  | Some (ret, args, q) =>
+                      match args with
+                      | nil => mret $ Nop_conv q ret
+                      | _ => mfail
+                      end
+                  | None => mfail
+                  end
+              | Dtor _
+              | Op _
+              | OpLit _ => mfail
+              end
+     | Some (args, ar, quals) =>
+         match nm with
+         | Dtor nm =>
+             if bool_decide (Some nm = last /\ args = []) then
+               mret $ Ndtor
+             else mfail
+         | Simple nm => mret $ Nfunction quals nm args
+         | Op oo => mret $ Nop quals oo args
+         | OpConv t =>
+             match args with
+             | nil => mret $ Nop_conv quals t
+             | _ => mfail
+             end
+         | OpLit n =>
+             match quals with
+             | function_qualifiers.N => mret $ Nop_lit n args
+             | _ => mfail
+             end
+         | FirstDecl n => mfail
+         | FirstChild n => mfail
+         | Anon _ => mfail
+         end
+     end.
+
+    Section mfold_left.
+      Context {T U : Type}.
+      Variable f : T -> U -> M T.
+      Fixpoint mfold_left (ls : list U) (acc : T) : M T :=
+        match ls with
+        | nil => mret acc
+        | l :: ls =>
+            let* acc := f acc l in mfold_left ls acc
+        end.
+    End mfold_left.
+
+    Definition parse_name': M name :=
      commit (keyword "typename") (fun _ => Ndependent <$> parse_type ()) $
-     (let* (x : list (atomic_name * _)) :=
+     (let* (x : list (name_type * _ * _)) :=
         optional (op_token "::") *> sepBy (op_token "::") (parse_name_component ())
       in
       match x with
       | nil => mfail (* unreachable *)
-      | (nm, oinst) :: xs =>
+      | (nt, args, oinst) :: xs =>
+          let* nm := mk_atomic_name None nt args in
           let sp oi :=
             match oi with
             | None => fun x => x
@@ -436,30 +505,30 @@ Module internal.
           let* root :=
             (mret $ sp oinst $ Nglobal nm)
           in
-          mret (List.fold_left (fun '(acc, last) '(nm, oinst) =>
-                                  match nm with
-                                  | Nfunction function_qualifiers.N fnm args =>
-                                      if bool_decide (Nid fnm = last) then
-                                        (sp oinst (Nscoped acc $ Nctor args), nm)
-                                      else
-                                        (sp oinst (Nscoped acc nm), nm)
-                                  | _ =>
-                                      (sp oinst (Nscoped acc nm), nm)
-                                  end) xs
-            (root, nm)).1
+          let f '(acc, last) '(nt, args, oinst) :=
+            let last_name :=
+              match last with
+              | Nid x => Some x
+              | _ => None
+              end
+            in
+            let* nm := mk_atomic_name last_name nt args in
+            mret match nm with
+              | Nfunction function_qualifiers.N fnm args =>
+                  if bool_decide (Nid fnm = last) then
+                    (sp oinst (Nscoped acc $ Nctor args), nm)
+                  else
+                    (sp oinst (Nscoped acc nm), nm)
+              | _ =>
+                  (sp oinst (Nscoped acc nm), nm)
+              end
+          in
+          fst <$> mfold_left f xs (root, nm)
       end).
 
-   Fixpoint as_conv (q : function_qualifiers.t) (t : type) : option (type * list type * function_qualifiers.t) :=
-     match t with
-     | Tqualified cv t =>
-         as_conv (function_qualifiers.join q $ function_qualifiers.mk (q_const cv) (q_volatile cv) Prvalue) t
-     | Tref t => as_conv (function_qualifiers.join q $ function_qualifiers.mk false false Lvalue) t
-     | Trv_ref t => as_conv (function_qualifiers.join q $ function_qualifiers.mk false false Xvalue) t
-     | Tfunction ft => Some (ft.(ft_return), ft.(ft_params), q)
-     | _ => None
-     end.
-
    Fixpoint template_arg (fuel : nat) : M temp_arg :=
+     commit (keyword "template") (fun _ => Atemplate <$> parse_name')
+     $
      (Atype <$> parse_type ()) <|> (Avalue <$> parse_expr ()) <|>
      (Apack <$> (spaced "...<" *>
       match fuel with
@@ -473,7 +542,7 @@ Module internal.
        specialization after them. They are complex because function names include their
        arguments.
      *)
-    Definition parse_name_component' : M (atomic_name * option (list temp_arg)) :=
+    Definition parse_name_component' : M (_ * _ * option (list temp_arg)) :=
       let* (nm : name_type) :=
         let operator _ :=
           (Op <$> operator) <|>
@@ -485,48 +554,6 @@ Module internal.
         $ commit (exact "@") (fun _ => (Anon <$> decimal) <|> (FirstDecl <$> ident))
         $ commit (exact ".") (fun _ => FirstChild <$> ident) (Simple <$> ident)
       in
-      let mk_atomic_name (nm : name_type) (args : option _) : M atomic_name :=
-        match args with
-        | None => match nm with
-                 | Simple nm => mret $ Nid nm
-                 | FirstDecl nm => mret $ Nfirst_decl nm
-                 | FirstChild nm => mret $ Nfirst_child nm
-                 | Anon n => mret $ Nanon n
-                 | OpConv t =>
-                     (* NOTE: this is a hack because <<int()>> is parsed as a function type. *)
-                     match as_conv function_qualifiers.N t with
-                     | Some (ret, args, q) =>
-                         match args with
-                         | nil => mret $ Nop_conv q ret
-                         | _ => mfail
-                         end
-                     | None => mfail
-                     end
-                 | Dtor _
-                 | Op _
-                 | OpLit _ => mfail
-                 end
-        | Some (args, ar, quals) =>
-              match nm with
-              | Dtor _ => mret $ Ndtor
-              | Simple nm => mret $ Nfunction quals nm args
-              | Op oo => mret $ Nop quals oo args
-              | OpConv t =>
-                  match args with
-                  | nil => mret $ Nop_conv quals t
-                  | _ => mfail
-                  end
-              | OpLit n =>
-                  match quals with
-                  | function_qualifiers.N => mret $ Nop_lit n args
-                  | _ => mfail
-                  end
-              | FirstDecl n => mfail
-              | FirstChild n => mfail
-              | Anon _ => mfail
-              end
-        end
-      in
       let* template_args :=
         let template_arg := template_arg 10 in
         optional (quoted (spaced "<") (spaced ">") $ sepBy (op_token ",") template_arg) in
@@ -535,8 +562,8 @@ Module internal.
                   let* quals := parse_qualifiers in
                   mret (args, arity, quals))
       in
-      let* nm := let* a := parse_args in mk_atomic_name nm a in
-      mret (nm, template_args)
+      let* a := parse_args in
+      mret (nm, a, template_args)
     .
 
     Definition parse_z : M Z :=
@@ -599,7 +626,7 @@ Module internal.
     with parse_name (fuel : nat) :=
       parse_name' (fun _ => NEXT fuel parse_type) (fun _ => NEXT fuel parse_name_component)
     with parse_name_component (fuel : nat) :=
-      parse_name_component' (fun _ => NEXT fuel parse_type) (fun _ => NEXT fuel parse_expr)
+      parse_name_component' (fun _ => NEXT fuel parse_type) (fun _ => NEXT fuel parse_name_component) (fun _ => NEXT fuel parse_expr)
     with parse_expr (fuel : nat) :=
       parse_expr' (fun _ => NEXT fuel parse_name).
 
@@ -638,6 +665,8 @@ Definition parse_type (input : PrimString.string) : option type :=
 Module Type TESTS.
   #[local] Definition TEST (input : PrimString.string) (nm : name) : Prop :=
     (parse_name input) = Some nm.
+  #[local] Definition TEST_fail (input : PrimString.string) : Prop :=
+    (parse_name input) = None.
   #[local] Definition TEST_type (input : PrimString.string) (nm : type) : Prop :=
     (parse_type input) = Some nm.
 
@@ -749,9 +778,14 @@ Module Type TESTS.
   Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
   Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
 
+  Succeed Example _0 : TEST "C<template C>" (Ninst (Nglobal (Nid "C")) [Atemplate (Nglobal (Nid "C"))]) := eq_refl.
+  Succeed Example _0 : TEST "C<template C::CC>" (Ninst (Nglobal (Nid "C")) [Atemplate (Nscoped (Nglobal (Nid "C")) (Nid "CC"))]) := eq_refl.
+
+  Succeed Example _0 : TEST_fail "C::~D()" := eq_refl.
+  Succeed Example _0 : TEST_fail "C::~C(int)" := eq_refl.
+  Succeed Example _0 : TEST "C::~C()" (Nscoped (Nglobal (Nid "C")) Ndtor) := eq_refl.
 
   (* known issues *)
-
 
   (* NOTE: non-standard names *)
   Succeed Example _0 : TEST "Msg::@msg" (Nscoped Msg (Nfirst_decl "msg")) := eq_refl.

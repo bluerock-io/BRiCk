@@ -61,6 +61,8 @@ Definition canonical : list (PrimString.string * name) :=
   ; ("C<1b, 0b>", (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tbool); Avalue (Eint 0 Tbool)]) )
     (* this is not actually valid C++ syntax but it is necessary in order to parse names without context *)
   ; ("C<1, ...<int, long>>", Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]])
+  ; ("C<template CC>", Ninst (Nglobal (Nid "C")) [Atemplate (Nglobal (Nid "CC"))])
+  ; ("C<template CC::foo, int>", Ninst (Nglobal (Nid "C")) [Atemplate (Nscoped (Nglobal (Nid "CC")) (Nid "foo")); Atype Tint])
   ]%pstring.
 
 (* parsing the left will produce the right *)
