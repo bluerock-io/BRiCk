@@ -212,7 +212,6 @@ Section oinv.
 End oinv.
 
 
-#[global] Typeclasses Transparent na_own na_inv.
 
 (** Non-atomic invariants for monPred. *)
 (* TODO FM-2323 *)
@@ -229,6 +228,7 @@ Section na_inv_alloc.
   Notation monPredI := (monPredI K (iPropI Σ)).
 
   Implicit Types (i j : K) (p : na_inv_pool_name) (P Q R : monPred).
+  #[local] Typeclasses Transparent na_own na_inv.
 
   #[global] Instance na_own_weakly_objective p E :
     WeaklyObjective (na_own p E : monPred) := _.
@@ -255,10 +255,7 @@ Section na_inv_alloc.
     iNext. iLeft. by iFrame.
   Qed.
 End na_inv_alloc.
-#[global] Typeclasses Opaque na_own na_inv.
 
-
-#[global] Typeclasses Transparent cinv_own cinv.
 
 (** Cancelable invariants for monPred *)
 (* TODO FM-2323 *)
@@ -267,6 +264,8 @@ End na_inv_alloc.
 (* Allocation rules for monPred that are tied specifically to iProp. *)
 Section allocation.
   Context {K J : biIndex} `{!invGS Σ, !cinvG Σ}.
+  #[local] Typeclasses Transparent cinv_own cinv.
+
 
   Notation monPred := (monPred K (iPropI Σ)).
   Notation monPredI := (monPredI K (iPropI Σ)).
@@ -345,5 +344,3 @@ Section allocation.
     iIntros "!>". eauto with iFrame.
   Qed.
 End allocation.
-
-#[global] Typeclasses Opaque cinv_own cinv.
