@@ -56,13 +56,13 @@ Section inv.
 End inv.
 
 (*** Non-atomic invariants for iProp *)
-#[global] Typeclasses Transparent na_own na_inv.
 (* Copy from
   https://gitlab.mpi-sws.org/iris/iris/-/blob/90b6007faea2b61546aed01fe0ed9936b55468d1/iris/base_logic/lib/na_invariants.v *)
 Section na_inv.
   Import iris.algebra.gset iris.algebra.coPset.
   Context `{!invGS Σ, !na_invG Σ}.
   #[local] Existing Instance na_inv_inG.
+  #[local] Typeclasses Transparent na_own na_inv.
 
   Implicit Types (P : iProp Σ).
 
@@ -85,15 +85,14 @@ Section na_inv.
     iNext. iLeft. by iFrame.
   Qed.
 End na_inv.
-#[global] Typeclasses Opaque na_own na_inv.
 
 (*** Cancelable invariants for iProp *)
-#[global] Typeclasses Transparent cinv_own cinv.
 (* Copy from
   https://gitlab.mpi-sws.org/iris/iris/-/blob/7ccdfe0df5832b69742306302144b5358c9ed843/iris/base_logic/lib/cancelable_invariants.v *)
 Section cinv.
   Context `{!invGS Σ, !cinvG Σ}.
   #[local] Existing Instance cinv_inG.
+  #[local] Typeclasses Transparent cinv_own cinv.
 
   Implicit Types (P : iProp Σ).
 
@@ -155,5 +154,3 @@ Section cinv.
     iIntros "!>". eauto with iFrame.
   Qed.
 End cinv.
-
-#[global] Typeclasses Opaque cinv_own cinv.
