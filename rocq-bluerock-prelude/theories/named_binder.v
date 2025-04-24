@@ -126,8 +126,6 @@ Module Binder.
     in
     go c.
 
-  Ltac2 Eval name_binders true '(fun (x : NamedBinder Z "test") => x = x).
-
 End Binder.
 
 (* [TCForceEq] disregards typeclass_instances opacity.  *)
