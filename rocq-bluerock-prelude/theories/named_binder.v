@@ -8,6 +8,7 @@
 Require Import Stdlib.Strings.PrimString.
 Require Import bluerock.prelude.base.
 Require Export bluerock.prelude.tactics.base_dbs.
+Require bluerock.ltac2.extra.extra.
 
 Export PStringNotations.
 
@@ -66,6 +67,67 @@ Module Binder.
     refine f.
 
   Ltac id_of := ltac2:(str |- to_id_fun (Option.get (Ltac1.to_constr str))).
+
+  Import bluerock.ltac2.extra.extra.
+  Import Constr.Unsafe.
+
+  (* Passing [true] to the first argument will remove occurances of [NamedBinder]
+     when they do not occur in products or lambdas.
+   *)
+  Ltac2 name_binders (b : bool) (c : constr) : constr :=
+    let get_name name :=
+      match kind name with
+      | String name => Pstring.to_string name
+      | _ => let name := Std.eval_vm None name in
+             match kind name with
+             | String name => Pstring.to_string name
+             | _ => throw_invalid! "Unreduced primitive string"
+             end
+      end
+    in
+    let rec go c :=
+      match kind c with
+      | Lambda b t =>
+          let t := go t in
+          let b :=
+            lazy_match! Binder.type b with
+            | NamedBinder ?ty ?name =>
+                let b := Constr.Binder.map_type (fun _ => ty) b in
+                let name := get_name name in
+                let name := Ident.of_string name in
+                Constr.Binder.map_name (fun _ => name) b
+            | _ => b
+            end
+          in
+          make_lambda b t
+      | Prod b t =>
+          let t := go t in
+          let b :=
+            lazy_match! Binder.type b with
+            | NamedBinder ?ty ?name =>
+                let b := Constr.Binder.map_type (fun _ => ty) b in
+                let name := get_name name in
+                let name := Ident.of_string name in
+                Constr.Binder.map_name (fun _ => name) b
+            | _ => b
+            end
+          in
+          make_prod b t
+      | App _ _ =>
+          if b then
+            lazy_match! c with
+            | NamedBinder ?x _ => go x
+            | _ => Constr.Unsafe.map go c
+            end
+          else
+            Constr.Unsafe.map go c
+      | _ => Constr.Unsafe.map go c
+      end
+    in
+    go c.
+
+  Ltac2 Eval name_binders true '(fun (x : NamedBinder Z "test") => x = x).
+
 End Binder.
 
 (* [TCForceEq] disregards typeclass_instances opacity.  *)

@@ -32,6 +32,7 @@ depends: [
   "rocq-lens-elpi"
   "elpi"
   "coq-elpi"
+  "ltac2-extra"
   "odoc" {with-doc}
 ]
 build: [
