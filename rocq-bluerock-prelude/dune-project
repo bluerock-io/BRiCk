@@ -38,4 +38,5 @@
   rocq-lens
   rocq-lens-elpi
   elpi
-  coq-elpi))
+  coq-elpi
+  ltac2-extra))

@@ -6,7 +6,7 @@
   stdpp
   bluerock.upoly
   elpi elpi.apps.locker elpi.apps.NES
-  Lens Lens.Elpi Ltac2))
+  Lens Lens.Elpi Ltac2 bluerock.ltac2.extra))
 
 ; Copy dependencies --- typically Elpi files needed for `From ⋯ Extra
 ; Dependency` --- into dune's build directory. Arrange for the dummy
