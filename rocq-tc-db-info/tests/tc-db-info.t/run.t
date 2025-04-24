@@ -14,24 +14,27 @@
   
   Db: test
   Class: C
-  Transparent terms per depth
+  Transparent terms per depth:
   Depth 1
     tt' (modes {}) in Hint Resolve [Exact] (exact Cu')
     unit' (modes {}) in Hint Resolve [Exact] (exact Cu')
   Db: test
   Class: C
-  Transparent terms per depth
+  Transparent terms per depth:
   Depth 1
     test.tt' (modes {}) in Hint Resolve [Exact] (exact Cu')
     test.unit' (modes {}) in Hint Resolve [Exact] (exact Cu')
   Db: test
   Class: C
-  Transparent terms per depth
+  Transparent terms per depth:
   Depth 1
     tt' (modes {-}) in Hint Resolve [Exact] (exact Cu')
     unit' (modes {!}) in Hint Resolve [Exact] (exact Cu')
   Db: test
   Class: C
-  Transparent terms per depth
+  Transparent terms per depth:
   Depth 1
     unit' (modes {!}) in Hint Resolve [Exact] (exact Cu')
+  Db: test
+  Class: C
+  No transparent terms found.

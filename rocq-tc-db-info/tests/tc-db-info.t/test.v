@@ -28,3 +28,8 @@ HintDb Opacity Info test For C.
 Set HintDb Opacity Info Ignore Outputs.
 HintDb Opacity Info test For C.
 
+
+Create HintDb opac discriminated.
+Hint Opaque unit' : opac.
+
+HintDb Opacity Info test For C With Opacity Of opac.

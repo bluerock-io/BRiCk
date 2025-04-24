@@ -19,6 +19,11 @@ VERNAC COMMAND EXTEND Db_commands_extension CLASSIFIED AS QUERY
 | [ "HintDb" "Opacity" "Info" ident_list_sep(ids,",")
   "For" reference_list_sep(refs,",") ] -> {
     let refs = List.map Nametab.locate refs in
-    Main.db_opacity_info ids refs
+    Main.db_opacity_info ids None refs
+  }
+| [ "HintDb" "Opacity" "Info" ident_list_sep(ids,",")
+  "For" reference_list_sep(refs,",") "With" "Opacity" "Of" ident(tc_id) ] -> {
+    let refs = List.map Nametab.locate refs in
+    Main.db_opacity_info ids (Some tc_id) refs
   }
 END

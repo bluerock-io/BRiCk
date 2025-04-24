@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2021-2022 BlueRock Security, Inc.
+ * Copyright (c) 2021-2025 BlueRock Security, Inc.
  *
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
@@ -102,6 +102,7 @@ Section allocation.
     iApply own_inv_to_inv. done.
   Qed.
 End allocation.
+#[global] Hint Opaque own_inv : typeclass_instances br_opacity.
 
 (* A proof that inv is objective if its content is objective. *)
 Section minv.
@@ -211,6 +212,7 @@ Section oinv.
   Qed.
 End oinv.
 
+#[global] Hint Opaque oinv : typeclass_instances br_opacity.
 
 
 (** Non-atomic invariants for monPred. *)
@@ -256,6 +258,7 @@ Section na_inv_alloc.
   Qed.
 End na_inv_alloc.
 
+#[global] Hint Opaque na_own na_inv : typeclass_instances br_opacity.
 
 (** Cancelable invariants for monPred *)
 (* TODO FM-2323 *)
