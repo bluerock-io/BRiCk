@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2022-2023 BlueRock Security, Inc.
+ * Copyright (c) 2022-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -143,6 +143,8 @@ Section raw_type_ptrs.
   Definition raw_type_ptrsR_aux : seal (@raw_type_ptrsR_def). Proof. by eexists. Qed.
   Definition raw_type_ptrsR := raw_type_ptrsR_aux.(unseal).
   Definition raw_type_ptrsR_eq : @raw_type_ptrsR = _ := raw_type_ptrsR_aux.(seal_eq).
+
+  #[global] Hint Opaque raw_type_ptrsR : br_opacity.
 
   Lemma type_ptr_raw_type_ptrs :
     forall (ty : type) (p : ptr),

@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2020 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *
@@ -42,6 +42,10 @@ Require Export bluerock.iris.extra.bi.own.
 
 Set Default Proof Using "Type".
 Set Suggest Proof Using.
+
+#[global] Hint Opaque
+  base_logic.lib.cancelable_invariants.cinv
+  base_logic.lib.cancelable_invariants.cinv_own : br_opacity.
 
 (** Duplicates from cancelable_invariants. This one is not tied to iProp. *)
 (* The statements and (most of) the proofs should stay the same as those of
@@ -168,4 +172,4 @@ Section proofs.
   Qed.
 End proofs.
 
-#[global] Typeclasses Opaque cinv_own cinv.
+#[global] Hint Opaque cinv_own cinv : typeclass_instances br_opacity.

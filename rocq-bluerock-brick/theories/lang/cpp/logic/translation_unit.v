@@ -26,6 +26,7 @@ Section with_cpp.
       validR
     else
       svalidR.
+  #[global] Hint Opaque init_validR : br_opacity.
   #[global] Instance init_validR_persistent : Persistent1 init_validR.
   Proof. intros; rewrite /init_validR; case_match; apply _. Qed.
   #[global] Instance init_validR_affine : Affine1 init_validR := _.
@@ -55,6 +56,7 @@ Section with_cpp.
           | Some body => as_Rep (dtor_at tu d)
           end
         end.
+  #[global] Hint Opaque denoteSymbol : br_opacity.
 
   #[global] Instance denoteSymbol_persistent {tu n o} : Persistent (denoteSymbol tu n o).
   Proof. rewrite /denoteSymbol; repeat case_match; apply _. Qed.

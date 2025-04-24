@@ -25,6 +25,7 @@ Definition non_beginning_ptr `{cpp_logic} {σ} p' : mpred :=
   ∃ p o, [| p' = p ,, o /\
     (* ensure that o is > 0 *)
     some_Forall2 N.lt (ptr_vaddr p) (ptr_vaddr p') |] ∧ valid_ptr p.
+#[global] Hint Opaque non_beginning_ptr : br_opacity.
 
 Section non_beginning_ptr.
   Context `{cpp_logic} {σ}.

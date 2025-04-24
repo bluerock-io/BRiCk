@@ -362,7 +362,7 @@ let merge_modes = function
 
 
 
-let go_db clss db_name =
+let go_db clss o_ts db_name =
 
   let results = ref Names.GlobRef.Map.empty in
 
@@ -370,7 +370,11 @@ let go_db clss db_name =
   let modes = Hints.Hint_db.modes db in
   (* TODO: Unexpected breakage from https://github.com/coq/coq/pull/20201 *)
   let modes : Hints.hint_mode array list Names.GlobRef.Map.t = Obj.magic modes in
-  let ts = Hints.Hint_db.transparent_state db in
+  let ts =
+    match o_ts with
+    | Some ts -> ts
+    | None -> Hints.Hint_db.transparent_state db
+  in
 
   let go_hint modes head hint =
     match hint_pattern (Global.env()) Evd.empty hint with
@@ -389,25 +393,42 @@ let go_db clss db_name =
       out (str "Db: " ++ Names.Id.print db_name);
       Names.GlobRef.Map.iter (fun k res ->
         out (str "Class: " ++ Printer.pr_global k);
-        out (str "Transparent terms per depth");
+        let fn _ elems =
+          let f (modes, l, hint) =
+            if not (ModeSet.should_ignore modes) then
+              Some (Label.pr l ++ spc ()
+                    ++ str "(modes " ++ ModeSet.pp modes ++ str ")" ++ spc ()
+                    ++ str "in" ++ spc () ++ pr_hint hint)
+            else
+              None
+          in
+          let elems = CList.map_filter f elems in
+          if elems = [] then None else Some elems
+        in
+        let res = IntMap.filter_map fn res in
+        if IntMap.is_empty res then
+          out (str "No transparent terms found.")
+        else
+        let _ = () in
+        out (str "Transparent terms per depth:");
         IntMap.iter (fun d elems ->
-            let pr_set (modes, l, hint) =
-              if not (ModeSet.should_ignore modes) then
-                Some (Label.pr l ++ spc ()
-                      ++ str "(modes " ++ ModeSet.pp modes ++ str ")" ++ spc ()
-                      ++ str "in" ++ spc () ++ pr_hint hint)
-              else
-                None
-            in
             out (str "Depth " ++ int d ++ str "" ++ fnl () ++
                  spc () ++ spc () ++
                  h (
-                   prlist_with_sep fnl (fun x -> x) (CList.map_filter pr_set elems)
+                   prlist_with_sep fnl (fun x -> x) elems
                  )
                 )
         ) res
       ) (!results)
     ) clss
 
-let db_opacity_info dbs clss =
-  List.iter (go_db clss) dbs
+let db_opacity_info dbs o_opacity_db clss =
+  let o_ts =
+    match o_opacity_db with
+    | Some db ->
+      let db = Hints.searchtable_map (Names.Id.to_string db) in
+      let ts = Hints.Hint_db.transparent_state db in
+      Some ts
+    | None -> None
+  in
+  List.iter (go_db clss o_ts) dbs

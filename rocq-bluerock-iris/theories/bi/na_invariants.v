@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2021 BlueRock Security, Inc.
+ * Copyright (c) 2021-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *
@@ -31,6 +31,9 @@ Require Import bluerock.iris.extra.bi.own.
 Set Default Proof Using "Type".
 Set Suggest Proof Using.
 
+#[global] Hint Opaque
+  base_logic.lib.na_invariants.na_inv
+  base_logic.lib.na_invariants.na_own : br_opacity.
 
 (** Extraction of non-atomic invariants that is general w.r.t HasOwn,
   and not tied to iProp.
@@ -60,7 +63,8 @@ Section defs.
 End defs.
 
 Global Instance: Params (@na_inv) 5 := {}.
-#[global] Typeclasses Opaque na_own na_inv.
+
+#[global] Hint Opaque na_own na_inv : typeclass_instances br_opacity.
 
 (* TODO: allocation rules are missing. These rely on the specific model of PROP,
   so the client of this library needs the provide the corresponding model of

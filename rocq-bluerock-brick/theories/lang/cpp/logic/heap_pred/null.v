@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2023 BlueRock Security, Inc.
+ * Copyright (c) 2023-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -28,14 +28,6 @@ Section with_cpp.
   Proof. rewrite nullR.unlock. apply _. Qed.
   #[global] Instance nullR_timeless : Timeless nullR.
   Proof. rewrite nullR.unlock. apply _. Qed.
-  #[global] Instance nullR_fractional : Fractional (λ _, nullR).
-  Proof. apply _. Qed.
-  #[global] Instance nullR_as_fractional q : AsFractional nullR (λ _, nullR) q.
-  Proof. exact: Build_AsFractional. Qed.
-  #[global] Instance nullR_cfractional : CFractional (λ _, nullR).
-  Proof. apply _. Qed.
-  #[global] Instance nullR_as_cfractional q : AsCFractional nullR (λ _, nullR) q.
-  Proof. solve_as_cfrac. Qed.
 
   Lemma _at_nonnullR p : _at p nonnullR -|- [| p <> nullptr |].
   Proof. by rewrite nonnullR.unlock _at_as_Rep. Qed.
