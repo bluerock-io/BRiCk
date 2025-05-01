@@ -149,8 +149,29 @@ Module Constr.
     Ltac2 make_prod (b : binder) (c : constr) : constr :=
       make (Prod b c).
 
+    Ltac2 make_prod' (b : binder) (f : constr -> constr) : constr :=
+      let v := Fresh.in_goal (Option.default @x (Constr.Binder.name b)) in
+      let t := Constr.Binder.type b in
+      let fn := Constr.in_context v t (fun _ =>
+              let v := Control.hyp v in
+              Control.refine (fun _ => f v)) in
+      match Constr.Unsafe.kind fn with
+      | Lambda _ body' => make (Prod b body')
+      | _ => Control.assert_true false ; t
+      end.
+
+    Ltac2 make_arrow (t0 : constr) (t1 : constr) : constr :=
+      Constr.Unsafe.make (Prod (Constr.Binder.make None t0) t1).
+
     Ltac2 make_lambda (b : binder) (c : constr) : constr :=
       make (Lambda b c).
+
+    Ltac2 make_lambda' (b : binder) (f : constr -> constr) : constr :=
+      let v := Fresh.in_goal (Option.default @x (Constr.Binder.name b)) in
+      let t := Constr.Binder.type b in
+      Constr.in_context v t (fun _ =>
+        let v := Control.hyp v in
+        Control.refine (fun _ => f v)).
 
     (** [let b := c1 in c2] *)
     Ltac2 make_let_in (b : binder) (c1 : constr) (c2 : constr) : constr :=
