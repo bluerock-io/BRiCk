@@ -69,6 +69,25 @@ Variant reflectPQ (P Q : Prop) : bool -> Prop :=
 | rPQ_true  (_ : P) : reflectPQ P Q true
 | rPQ_false (_ : Q) : reflectPQ P Q false.
 
+#[global] Instance: Params reflectPQ 0 := {}.
+#[global] Instance: Proper (impl ==> impl ==> eq ==> impl) reflectPQ.
+Proof.
+  unfold impl; intros P1 P2 HP Q1 Q2 HQ ? b ->.
+  inversion_clear 1; constructor; tauto.
+Qed.
+#[global] Instance: Proper (flip impl ==> flip impl ==> eq ==> flip impl) reflectPQ.
+Proof. solve_proper. Qed.
+#[global] Instance: Proper (iff ==> iff ==> eq ==> iff) reflectPQ.
+Proof.
+  move=> P1 P2 + Q1 Q2 + ? b ->.
+  (* Slow, [subrelation] seems too hard :-(. *)
+  (* move=> HP HQ; split; by rewrite HP HQ. *)
+  rewrite (iff_impl_alt P1) (iff_impl_alt Q1) => -[HP1 HP2] [HQ1 HQ2]; split.
+  { by rewrite HP1 HQ1. }
+  by rewrite HP2 HQ2.
+Qed.
+
+
 Lemma Is_true_is_true b : Is_true b ↔ is_true b.
 Proof. by destruct b. Qed.
 Lemma Is_true_eq b : Is_true b ↔ b = true.
