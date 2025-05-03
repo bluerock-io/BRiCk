@@ -52,6 +52,12 @@ Proof. destruct b1, b2; constructor; naive_solver. Qed.
 Lemma contraNN {b1 b2 : bool} : (b1 -> b2) -> ~~ b2 -> ~~ b1.
 Proof. by destruct b1, b2. Qed.
 
+Lemma iff_impl_alt P1 P2 : (P1 <-> P2) <-> (impl P1 P2 /\ impl P2 P1).
+Proof. by []. Qed.
+
+Lemma bool_neq_negb b1 b2 : b1 <> b2 <-> b1 = ~~ b2.
+Proof. by destruct b1, b2. Qed.
+
 (**
 More flexible version of [reflect]: using [H : reflectPQ (m < n) (n ≤ m) b]
 instead of [H : reflect (m < n) b] avoids introducing [~(m < n)] in the context.
@@ -92,6 +98,9 @@ Proof. by case: b. Qed.
 
 Lemma bool_decide_is_true b : bool_decide (is_true b) = b.
 Proof. by case: b. Qed.
+
+Lemma bool_decide_bool_neq_xorb (b1 b2 : bool): bool_decide (b1 <> b2) = xorb b1 b2.
+Proof. by destruct b1, b2. Qed.
 
 #[global] Instance andb_left_id : LeftId (=) true andb := andb_true_l.
 #[global] Instance andb_right_id : RightId (=) true andb := andb_true_r.
