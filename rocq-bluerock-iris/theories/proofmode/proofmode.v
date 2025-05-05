@@ -68,6 +68,10 @@ Section class_instances_intuitionistically_if.
   (*   IntoPersistent b P Q → IntoPersistent false (□?b P) Q. *)
   (* Proof. case: b => //=; apply _. Qed. *)
 
+  #[global] Instance into_pure_intuitionistically_if b P φ :
+    IntoPure P φ → IntoPure (□?b P) φ.
+  Proof. destruct b => //=. apply _. Qed.
+
   #[global] Instance into_sep_intuitionistically_if `{BiPositive PROP} b P Q1 Q2:
     IntoSep P Q1 Q2 → IntoSep (□?b P) (□?b Q1) (□?b Q2).
   Proof. case: b => //=; apply _. Qed.

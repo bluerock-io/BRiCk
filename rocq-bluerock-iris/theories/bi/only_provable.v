@@ -188,6 +188,9 @@ Section bi.
   Lemma intuitionistically_only_provable P : □ [| P |] ⊣⊢@{PROP} [| P |].
   Proof. by rewrite /bi_intuitionistically !persistently_only_provable only_provable_unfold. Qed.
 
+  Lemma intuitionistically_if_only_provable b P : □?b [| P |] ⊣⊢@{PROP} [| P |].
+  Proof. destruct b => //=. apply intuitionistically_only_provable. Qed.
+
   Lemma pure_impl_only_provable_wand (φ : Prop) (Q : PROP) :
     (⌜ φ ⌝ → Q) ⊣⊢ ([| φ |] -∗ Q).
   Proof.
