@@ -34,10 +34,10 @@ Elpi Accumulate derive Db derive.stdpp.inhabited.db.
 
 Elpi Accumulate derive lp:{{
   namespace derive.inhabited {
-    pred main i:gref, i:string, o:list prop.
-    main TyGR Prefix Clauses :- std.do! [
+    func main gref, string -> list prop.
+    main TyGR Prefix Clauses :-
       InstanceName is Prefix ^ "inhabited",
-      derive-original-gref TyGR OrigGR,
+      derive-original-gref TyGR OrigGR, !,
       TyInhabited = {{ Inhabited lp:{{global OrigGR}} }},
       std.assert-ok! (coq.elaborate-skeleton TyInhabited _ ETyInhabited) "[derive.inh.main] [TyInhabited]",
       std.assert-ok! (coq.typecheck {{ lp:BoInhabited : lp:ETyInhabited }} _) "typechecking the [Inhabited t] instance failed",
@@ -48,11 +48,10 @@ Elpi Accumulate derive lp:{{
       Clauses = [inhabited-done OrigGR, inhabited OrigGR (const C)],
       std.forall Clauses (x\
         coq.elpi.accumulate _ "derive.stdpp.inhabited.db" (clause _ _ x)
-      ),
-    ].
+      ).
     main _ _ _ :- usage.
 
-    pred usage.
+    func usage.
     usage :- coq.error
 "Usage: #[only(inhabited)] derive T
 where T is an inductive or a definition that unfolds to an inductive.

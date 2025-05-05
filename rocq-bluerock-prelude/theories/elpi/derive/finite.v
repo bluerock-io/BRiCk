@@ -86,7 +86,7 @@ Elpi File derive.finite.elpi lp:{{
         mk-finite-constructor Ctor RestValues T CtorsValues
       ].
 
-      pred mk-finite i:string, i:list term, i:gref, i:gref, o:constant.
+      func mk-finite string, list term, gref, gref -> constant.
       mk-finite InstanceName Ctors VariantGR OrigGR C :- std.do![
         VariantTy = global VariantGR,
         OriginalTy = global OrigGR,
@@ -137,10 +137,10 @@ Elpi File derive.finite.elpi lp:{{
 Elpi Accumulate derive File derive.finite.elpi.
 Elpi Accumulate derive lp:{{
   namespace derive.finite {
-    pred main i:gref, i:string, o:list prop.
-    main TyGR Prefix Clauses :- std.do! [
+    func main gref, string -> list prop.
+    main TyGR Prefix Clauses :-
       bluerock.get-indt TyGR VariantI,
-      derive-original-gref TyGR OrigGR,
+      derive-original-gref TyGR OrigGR, !,
       coq.env.indt VariantI _ _ _ _ Ctors _,
       std.map Ctors (c\ c'\ c' = global (indc c)) CTerms,
       FiniteName is Prefix ^ "finite",
@@ -148,11 +148,10 @@ Elpi Accumulate derive lp:{{
       Clauses = [finite-done OrigGR, finite OrigGR (const C)],
       std.forall Clauses (x\
         coq.elpi.accumulate _ "derive.stdpp.finite.db" (clause _ _ x)
-      ),
-    ].
+      ).
     main _ _ _ :- usage.
 
-    pred usage.
+    func usage.
     usage :- coq.error
 "Usage: #[only(finite)] derive T
 where T is an inductive or a definition that unfolds to an inductive.
