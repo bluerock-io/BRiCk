@@ -30,6 +30,22 @@ Lemma and_proper_r {P Q R} :
   (P -> (Q <-> R)) -> P ∧ Q <-> P ∧ R.
 Proof. by split => - [] /[dup] HP /H /[apply]. Qed.
 
+Lemma or_proper_l {P Q R} `{!Decision P} :
+  (¬ P -> (Q <-> R)) -> Q ∨ P <-> R ∨ P.
+Proof.
+  move => H.
+  case (decide P).
+  - by split; right.
+  - by move /H ->.
+Qed.
+
+Lemma or_proper_r {P Q R} `{!Decision P} :
+  (¬ P -> (Q <-> R)) -> P ∨ Q <-> P ∨ R.
+Proof.
+  move => /or_proper_l H.
+  by rewrite or_comm H or_comm.
+Qed.
+
 (** Workaround https://github.com/coq/coq/issues/4230. Taken from Software Foundations. *)
 #[global] Remove Hints Bool.trans_eq_bool : core.
 

@@ -222,6 +222,8 @@ Module char_type.
     8 * bytesN t.
   #[global] Arguments bitsN !_ /.
 
+  #[global] Notation bitsZ t := (Z.of_N (bitsN t)).
+
 End char_type.
 Notation char_type := char_type.t.
 
@@ -300,6 +302,8 @@ Module int_rank.
     | I128 => Evaluate (8 * bytesN I128)
     end.
 
+  #[global] Notation bitsZ t := (Z.of_N (bitsN t)).
+
   Definition t_leb (a b : t) : bool :=
     match a , b with
     | Ichar , _ => true
@@ -324,9 +328,9 @@ Module int_rank.
   Definition t_max (a b : t) : t :=
     if bool_decide (t_le a b) then b else a.
 
-  Notation max_val sz := (bitsize.max_val (bitsize sz)) (only parsing).
-  Notation min_val sz := (bitsize.min_val (bitsize sz)) (only parsing).
-  Notation bound sz  := (bitsize.bound (bitsize sz))   (only parsing).
+  #[global] Notation max_val sz := (bitsize.max_val (bitsize sz)) (only parsing).
+  #[global] Notation min_val sz := (bitsize.min_val (bitsize sz)) (only parsing).
+  #[global] Notation bound sz  := (bitsize.bound (bitsize sz))   (only parsing).
 
 End int_rank.
 Notation int_rank := int_rank.t.
