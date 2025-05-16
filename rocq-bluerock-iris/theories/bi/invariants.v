@@ -28,6 +28,7 @@
 
 Require Export iris.base_logic.lib.invariants. (* << export [invGS] *)
 
+Require bluerock.prelude.tactics.base_dbs.
 Require Import bluerock.iris.extra.proofmode.proofmode.
 
 Set Default Proof Using "Type".

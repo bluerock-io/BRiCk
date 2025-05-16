@@ -18,3 +18,5 @@
 +unknown-option
 -w
 +future-coercion-class-field
+-w
++mismatched-hint-db
