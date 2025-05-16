@@ -26,6 +26,7 @@
 
   TODO: These should be upstreamed to Iris's code base. **)
 
+Require bluerock.prelude.tactics.base_dbs.
 Require Export bluerock.iris.extra.si_logic.bi.
 
 Require Import iris.algebra.proofmode_classes.
