@@ -16,43 +16,6 @@ Require Stdlib.Numbers.Cyclic.Int63.PrimInt63.
 #[local] Set Primitive Projections.
 #[local] Open Scope positive_scope.
 
-(* TODO: upstream *)
-Class LeibnizComparison {T} (cmp : T -> T -> comparison) : Prop :=
-  leibniz_cmp_eq : forall a b, cmp a b = Eq -> a = b.
-Arguments leibniz_cmp_eq {_} _ {_} _ _.
-
-Lemma comparison_refl {A cmp} {C : Comparison cmp} :
-  forall a : A, cmp a a = Eq.
-Proof.
-  intros.
-  generalize (compare_antisym a a).
-  destruct (cmp a a); simpl; eauto; inversion 1.
-Qed.
-
-Lemma comparison_not_eq {A cmp} {C : Comparison cmp} :
-  forall a b : A, cmp a b <> Eq -> a <> b.
-Proof.
-  intros; intro. subst. apply H. apply comparison_refl.
-Qed.
-Lemma comparison_not_eq_Lt {A cmp} {C : Comparison cmp} :
-  forall {a b : A}, cmp a b = Lt -> a <> b.
-Proof.
-  intros; intro. subst. eapply (comparison_not_eq b b); congruence.
-Qed.
-Lemma comparison_not_eq_Gt {A cmp} {C : Comparison cmp} :
-  forall {a b : A}, cmp a b = Gt -> a <> b.
-Proof.
-  intros; intro. subst. eapply (comparison_not_eq b b); congruence.
-Qed.
-
-Definition from_comparison {A cmp} {C : Comparison cmp} {LC : @LeibnizComparison A cmp} : EqDecision A :=
-  fun l r => match cmp l r as C return cmp l r = C -> _ with
-          | Eq => fun pf => left (LC _ _ pf)
-          | Lt => fun pf => right (comparison_not_eq_Lt pf)
-          | Gt => fun pf => right (comparison_not_eq_Gt pf)
-          end eq_refl.
-(* END upstream *)
-
 (* BEGIN: temporary infrastructure *)
   Structure comparator :=
     { _car : Set
@@ -107,7 +70,7 @@ Instance bs_cmp_leibniz : LeibnizComparison bs_cmp.
 Proof.
   red.
   induction a; move=> [|y ys]; eauto; try inversion 1.
-  generalize (leibniz_cmp_eq byte_cmp b y).
+  generalize (LeibnizComparison.cmp_eq byte_cmp b y).
   case_match; try inversion H1.
   intros; f_equal; eauto.
 Qed.
@@ -887,7 +850,14 @@ Module atomic_name.
   End compare.
 
 End atomic_name.
-#[global] Instance atomic_name_compare {A : Set} `{!Compare A} : Compare (atomic_name_ A) := atomic_name.compare compare.
+#[global] Instance atomic_name_compare {A : Set} `{!Compare A}
+  : Compare (atomic_name_ A) := atomic_name.compare compare.
+#[global] Instance atomic_name_comparison {A : Set} `{!@Comparison A cmpA}
+  : Comparison (atomic_name.compare cmpA).
+Proof. Admitted.
+#[global] Instance atomic_name_leibniz_comparison {A : Set} `{!@Comparison A cmpA} `{LeibnizComparison cmpA}
+  : LeibnizComparison (atomic_name.compare cmpA).
+Proof. Admitted.
 
 Module Cast.
   Section compare.
@@ -2421,7 +2391,6 @@ End compare_instances.
 #[global] Declare Instance temp_arg_comparison :
   Comparison (temp_arg.compare (compareN) (compareT) (compareE)). (* TODO *)
 
-
 #[global] Declare Instance name_leibniz_comparison :
   LeibnizComparison (compareN).	(* TODO *)
 #[global] Declare Instance type_leibniz_comparison :
@@ -2437,14 +2406,14 @@ End compare_instances.
 
 
 #[global] Instance name_eq_dec : EqDecision name :=
-  from_comparison.
+  LeibnizComparison.from_comparison.
 #[global] Instance type_eq_dec : EqDecision type :=
-  from_comparison.
+  LeibnizComparison.from_comparison.
 #[global] Instance Expr_eq_dec : EqDecision Expr :=
-  from_comparison.
+  LeibnizComparison.from_comparison.
 #[global] Instance VarDecl_eq_dec : EqDecision VarDecl :=
-  from_comparison.
+  LeibnizComparison.from_comparison.
 #[global] Instance Stmt_eq_dec : EqDecision Stmt :=
-  from_comparison.
+  LeibnizComparison.from_comparison.
 #[global] Instance temp_arg_eq_dec : EqDecision temp_arg :=
-  from_comparison.
+  LeibnizComparison.from_comparison.

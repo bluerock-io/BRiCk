@@ -31,7 +31,7 @@ Module Import internal.
     End Compare.
     Module Key := OrderedType_from_Alt Compare.
     Lemma eqL : forall a b, Key.eq a b -> @eq _ a b.
-    Proof. apply leibniz_cmp_eq; refine _. Qed.
+    Proof. apply LeibnizComparison.cmp_eq; refine _. Qed.
     Include FMapAVL.Make Key.
     Include FMapExtra.MIXIN Key.
     Include FMapExtra.MIXIN_LEIBNIZ Key.

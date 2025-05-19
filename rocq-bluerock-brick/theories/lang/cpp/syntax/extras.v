@@ -3,6 +3,7 @@
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
+Require Import bluerock.prelude.compare.
 Require Import bluerock.lang.cpp.syntax.prelude.
 Require Import bluerock.lang.cpp.syntax.core.
 Require Import bluerock.lang.cpp.syntax.compare.
@@ -32,7 +33,7 @@ Proof. apply by_prim_tag_comparison. Qed.
 Proof. apply by_prim_tag_leibniz. compute. by destruct x, y; compute. Qed.
 
 #[global] Instance function_quailfiers_eq_dec : EqDecision function_qualifiers.t :=
-  from_comparison.
+  LeibnizComparison.from_comparison.
 
-#[global] Instance atomic_name__eq_dec {A : Set} `{!EqDecision A} : EqDecision (atomic_name_ A).
-Proof. solve_decision. Defined.
+#[global] Instance atomic_name__eq_dec : EqDecision (atomic_name_ type) :=
+  LeibnizComparison.from_comparison.
