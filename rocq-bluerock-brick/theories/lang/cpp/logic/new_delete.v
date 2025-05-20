@@ -415,9 +415,8 @@ Module Type Expr__newdelete.
                 Exists storage_ptr : ptr,
                   [| storage_val = Vptr storage_ptr |] **
                   if bool_decide (storage_ptr = nullptr) then
-                    [| new_args <> nil |] ** Q (Vptr storage_ptr) free
-                    (* ^^ [new_args <> nil] exists because the default <<operator new>>
-                       is never allowed to return [nullptr] *)
+                    [| can_throw <$> tu.(symbols) !! new_fn.1 = Some exception_spec.NoThrow |] ** Q (Vptr storage_ptr) free
+                    (* ^^ only <<noexcept>> overloads for <<operator new>> are allowed to return <<nullptr>> *)
                   else
                     (* C++ requires the resulting pointer to be aligned to
                         <<__STDCPP_DEFAULT_NEW_ALIGNMENT__>> even in cases when the

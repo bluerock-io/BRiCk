@@ -171,14 +171,46 @@ Section with_monad.
   Definition obj_value (o : ObjValue) : M :=
     match o with
     | Ovar t ie => type t
-    | Ofunction (Build_Func t args _ _ ob) =>
+    | Ofunction (Build_Func t args _ _ exc ob) =>
         type t <+> lst (type ∘ snd) args <+> opt function_body ob
+        <+> if exc is exception_spec.Unknown
+            then match ob with
+                 | None => OK
+                 | _ => FAIL
+                 end
+            else OK
     | Omethod m =>
-        type m.(m_return) <+> classname m.(m_class) <+> lst (type ∘ snd) m.(m_params) <+> opt (or_default stmt) m.(m_body)
+        type m.(m_return) <+> classname m.(m_class)
+        <+> lst (type ∘ snd) m.(m_params)
+        <+> opt (or_default stmt) m.(m_body)
+        <+> if m.(m_exception) is exception_spec.Unknown
+            then match m.(m_body) with
+                 | None => OK
+                 | _ => FAIL
+                 end
+            else OK
+
     | Oconstructor c =>
-        classname c.(c_class) <+> lst (type ∘ snd) c.(c_params) <+> OK (* TODO *)
+        let check_body '(li, s) :=
+              lst (expr ∘ init_init) li <+> stmt s in
+        classname c.(c_class) <+> lst (type ∘ snd) c.(c_params)
+        <+> opt (or_default check_body) c.(c_body)
+        <+> if c.(c_exception) is exception_spec.Unknown
+            then match c.(c_body) with
+                 | None => OK
+                 | _ => FAIL
+                 end
+            else OK
+
     | Odestructor d =>
         classname d.(d_class) <+> opt (or_default stmt) d.(d_body)
+        <+> if d.(d_exception) is exception_spec.Unknown
+            then match d.(d_body) with
+                 | None => OK
+                 | _ => FAIL
+                 end
+            else OK
+
     end.
 
   Definition glob_decl (gd : GlobDecl) : M :=

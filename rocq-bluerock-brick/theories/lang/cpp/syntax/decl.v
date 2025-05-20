@@ -160,6 +160,39 @@ Proof. solve_decision. Defined.
 
 (** ** Value Declarations *)
 
+Module exception_spec.
+  Variant t : Set :=
+    | Unknown (* Fused for performance *)
+    | NoThrow
+    | MayThrow.
+
+  #[global] Instance: SubsetEq t :=
+    fun a b => a = Unknown \/ a = b.
+  #[global] Instance: RelDecision (⊆@{t}).
+  Proof. intros [ | | ]  [ | | ]; compute; intuition congruence. Defined.
+  #[global] Instance: Reflexive (⊆@{t}).
+  Proof. intros [ | | ]; compute; intuition congruence. Qed.
+  #[global] Instance: Transitive (⊆@{t}).
+  Proof. intros [ | | ] [ | | ] [ | | ]; compute; intuition congruence. Qed.
+
+  Import PrimInt63.
+  Definition prim_tag (r : exception_spec.t) : PrimInt63.int :=
+    match r with
+    | exception_spec.Unknown => 0
+    | exception_spec.NoThrow => 1
+    | exception_spec.MayThrow => 2
+    end%uint63.
+
+  Definition compare (x y : exception_spec.t) : comparison :=
+    PrimInt63.compare (prim_tag x) (prim_tag y).
+
+  #[global] Instance: Comparison compare.
+  Proof. apply by_prim_tag_comparison. Qed.
+  #[global] Instance: LeibnizComparison compare.
+  Proof. intros [ | | ] [ | | ]; compute; done. Qed.
+  #[global] Instance: EqDecision t := LeibnizComparison.from_comparison.
+End exception_spec.
+
 (** *** Functions *)
 Variant FunctionBody' : Set :=
 | Impl (_ : Stmt)
@@ -174,10 +207,11 @@ Record Func' : Set := Build_Func
 ; f_params : list (ident * type)
 ; f_cc     : calling_conv
 ; f_arity  : function_arity
+; f_exception : exception_spec.t
 ; f_body   : option FunctionBody
 }.
 Notation Func := Func'.
-#[global] Arguments Build_Func _ _ _ _ _ : assert.
+#[global] Arguments Build_Func _ _ _ _ _ _ : assert.
 #[global] Instance: EqDecision Func.
 Proof. solve_decision. Defined.
 #[global] Instance Func_inhabited : Inhabited Func.
@@ -191,10 +225,11 @@ Record Method' : Set := Build_Method
 ; m_params  : list (ident * type)
 ; m_cc      : calling_conv
 ; m_arity   : function_arity
+; m_exception : exception_spec.t
 ; m_body    : option (OrDefault Stmt)
 }.
 Notation Method := Method'.
-#[global] Arguments Build_Method _ _ _ _ _ _ _ : assert.
+#[global] Arguments Build_Method _ _ _ _ _ _ _ _ : assert.
 #[global] Instance: EqDecision Method.
 Proof. solve_decision. Defined.
 
@@ -204,6 +239,7 @@ Definition static_method (m : Method)
    ; f_params := m.(m_params)
    ; f_cc := m.(m_cc)
    ; f_arity := m.(m_arity)
+   ; f_exception := m.(m_exception)
    ; f_body := match m.(m_body) with
                | Some (UserDefined body) => Some (Impl body)
                | _ => None
@@ -233,10 +269,11 @@ Record Ctor' : Set := Build_Ctor
 ; c_params : list (ident * type)
 ; c_cc     : calling_conv
 ; c_arity  : function_arity
+; c_exception : exception_spec.t
 ; c_body   : option (OrDefault (list Initializer * Stmt))
 }.
 Notation Ctor := Ctor'.
-#[global] Arguments Build_Ctor _ _ _ _ _ : assert.
+#[global] Arguments Build_Ctor _ _ _ _ _ _ : assert.
 #[global] Instance: EqDecision Ctor.
 Proof. solve_decision. Defined.
 
@@ -245,27 +282,14 @@ Proof. solve_decision. Defined.
 Record Dtor' : Set := Build_Dtor
 { d_class  : classname
 ; d_cc     : calling_conv
+; d_exception : exception_spec.t
 ; d_body   : option (OrDefault Stmt)
 }.
 Notation Dtor := Dtor'.
-#[global] Arguments Build_Dtor _ _ _ : assert.
+#[global] Arguments Build_Dtor _ _ _ _ : assert.
 #[global] Instance: EqDecision Dtor.
 Proof. solve_decision. Defined.
 
 Variant Dtor_type : Set := Dt_Deleting | Dt_Complete | Dt_Base | Dt_Comdat.
 #[global] Instance: EqDecision Dtor_type.
 Proof. solve_decision. Defined.
-
-(*
-Definition dtor_name (type : Dtor_type) (cls : globname) : obj_name :=
-  match cls with
-  | BS.String _ (BS.String _ s) =>
-    ("_ZN" ++ s ++ "D" ++ ("0" (*match type with
-                          | Dt_Deleting => "0"
-                          | Dt_Complete => "1"
-                          | Dt_Base => "2"
-                          | Dt_Comdat => "5"
-                          end *)) ++ "Ev")
-  | _ => ""
-  end%bs.
-*)

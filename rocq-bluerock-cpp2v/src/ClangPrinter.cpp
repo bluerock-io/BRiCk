@@ -13,6 +13,7 @@
 #include <clang/AST/ExprCXX.h>
 #include <clang/AST/Mangle.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Sema/Sema.h>
 #include <optional>
 
 using namespace clang;
@@ -339,6 +340,103 @@ ClangPrinter::trace(StringRef whence, loc::loc loc) {
 fmt::Formatter &
 ClangPrinter::printVariadic(CoqPrinter &print, bool va) const {
 	return print.output() << (va ? "Ar_Variadic" : "Ar_Definite");
+}
+
+fmt::Formatter &
+ClangPrinter::printExceptionSpec(CoqPrinter &print,
+								 const clang::FunctionDecl &decl) {
+	static constexpr auto NO_THROW = "exception_spec.NoThrow";
+	static constexpr auto MAY_THROW = "exception_spec.MayThrow";
+	static constexpr auto UNKNOWN = "exception_spec.Unknown";
+	int retries = 0;
+	auto fpt = decl.getFunctionType()->getAs<FunctionProtoType>();
+
+	auto defaults_to_noexcept = [&]() {
+		if (isa<CXXDestructorDecl>(decl))
+			return true;
+		if (auto ctor = dyn_cast<CXXConstructorDecl>(&decl)) {
+			return ctor->isDefaultConstructor() || ctor->isCopyConstructor() ||
+				   ctor->isMoveConstructor();
+		}
+		if (auto mem = dyn_cast<CXXMethodDecl>(&decl)) {
+			return mem->isCopyAssignmentOperator() ||
+				   mem->isMoveAssignmentOperator();
+		}
+		return false;
+	};
+
+	while (fpt && retries++ <= 1) {
+		if constexpr (ClangPrinter::debug) {
+			llvm::errs() << decl.getQualifiedNameAsString() << "@"
+						 << (void *)(&decl) << " exception info "
+						 << fpt->getExceptionSpecType() << "\n";
+		}
+
+		switch (fpt->getExceptionSpecType()) {
+		case EST_Dynamic: {
+			// This is incorrect
+			logging::unsupported() << "UNSUPPORTED: throws() at "
+								   << decl.getLocation().printToString(
+										  compiler_->getSourceManager())
+								   << ".\n";
+			return print.output() << UNKNOWN;
+		}
+
+		case EST_None: {
+			// In C++, certain functions are implicitly declared no-throw, e.g.
+			// default constructors.
+			// For concrete functions, [EST_BasicNoexcept] is used to track
+			// these, but this not the case for templates.
+			// To make the decision robust we use [UNKNOWN] when we are in
+			// a dependent context for these functions
+			if (decl.isDependentContext() && defaults_to_noexcept()) {
+				return print.output() << UNKNOWN;
+			}
+		}
+		case EST_DynamicNone:
+		case EST_MSAny:
+		case EST_NoexceptFalse:
+			return print.output() << MAY_THROW;
+
+		case EST_BasicNoexcept:
+		case EST_NoexceptTrue:
+			return print.output() << NO_THROW;
+
+			// TODO: The remaining cases are instances where clang has not
+			// resolved the exception specification yet. This information
+			// can be filled in via the [Sema] object, in particular:
+			// - sema.EvaluateImplicitExceptionSpec,
+			// - sema.ResolveExceptionSpec
+
+		case EST_DependentNoexcept:
+		case EST_Unevaluated: {
+			auto &sema = this->getCompiler().getSema();
+			fpt = sema.ResolveExceptionSpec(decl.getLocation(), fpt);
+			// if (decl.isImplicit()) {
+			// 	sema.EvaluateImplicitExceptionSpec(
+			// 		decl.getLocation(), const_cast<FunctionDecl *>(&decl));
+			// } else {
+			// sema.ResolveExceptionSpec(
+			// 	decl.getLocation(),
+			// 	decl.getFunctionType()->getAs<FunctionProtoType>());
+			// }
+			break;
+		}
+
+		case EST_Uninstantiated:
+			break;
+
+		case EST_Unparsed:
+			return print.output() << UNKNOWN;
+		}
+	};
+	logging::log(logging::Level::VERBOSER)
+		<< "Unresolved exception specification on "
+		<< decl.getQualifiedNameAsString()
+		<< " (clang value = " << decl.getExceptionSpecType() << ")"
+		<< "\n";
+
+	return print.output() << UNKNOWN;
 }
 
 fmt::Formatter &

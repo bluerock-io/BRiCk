@@ -66,6 +66,9 @@ Module ParserExpr.
   Definition Egnu_null (t : type) : Expr :=
     Ecast (Cptr2int t) Enull.
 
+  Definition Enoexcept (_ : Expr) (val : bool) : Expr :=
+    Ebool val.
+
   Definition Ealignof_preferred (e : type + Expr) (t : type) :=
     Eunsupported "alignof_preferred" t.
 

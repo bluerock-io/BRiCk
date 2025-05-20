@@ -270,6 +270,8 @@ public:
 
 	fmt::Formatter& printVariadic(CoqPrinter&, bool) const;
 
+	fmt::Formatter& printExceptionSpec(CoqPrinter&, const clang::FunctionDecl&);
+
 	unsigned getTypeSize(const clang::BuiltinType* type) const;
 
 	// Expressions

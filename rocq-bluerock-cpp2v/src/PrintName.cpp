@@ -912,8 +912,6 @@ printAtomicName(const DeclContext& ctx, const Decl& decl, CoqPrinter& print,
 	}
 }
 
-static fmt::Formatter& printName(CoqPrinter&, const Decl&, ClangPrinter&);
-
 static fmt::Formatter&
 printName(CoqPrinter& print, const Decl& decl, ClangPrinter& cprint) {
 	if (ClangPrinter::debug && cprint.trace(Trace::Name))
