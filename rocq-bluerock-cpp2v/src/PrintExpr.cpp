@@ -1560,14 +1560,14 @@ public:
 	}
 
 	void VisitCXXNoexceptExpr(const CXXNoexceptExpr* expr) {
-		// note: i should record the fact that this is a noexcept expression
-		print.ctor("Ebool");
+		print.ctor("Enoexcept");
+		cprint.printExpr(print, expr->getOperand(), names) << fmt::nbsp;
 		print.boolean(expr->getValue());
 		print.end_ctor();
 	}
 
 	void VisitTypeTraitExpr(const TypeTraitExpr* expr) {
-		// note: i should record the fact that this is a noexcept expression
+		// note: i should record the fact that this is a type trait expression
 		print.ctor("Ebool");
 		print.boolean(expr->getValue());
 		print.end_ctor();

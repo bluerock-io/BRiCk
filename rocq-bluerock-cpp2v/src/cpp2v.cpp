@@ -183,11 +183,12 @@ main(int argc, const char **argv) {
 		logging::set_level(logging::NONE);
 	}
 
+	llvm::IntrusiveRefCntPtr<DiagnosticOptions> DiagOptions =
+		new DiagnosticOptions();
 	ClangTool Tool(OptionsParser.getCompilations(),
 				   OptionsParser.getSourcePathList());
-	DiagnosticOptions DiagOptions;
-	Tool.setDiagnosticConsumer(
-		new clang::TextDiagnosticPrinter(llvm::errs(), &DiagOptions, false));
+	Tool.setDiagnosticConsumer(new clang::TextDiagnosticPrinter(
+		llvm::errs(), DiagOptions.get(), false));
 
 	return Tool.run(newFrontendActionFactory<ToCoqAction>().get());
 }

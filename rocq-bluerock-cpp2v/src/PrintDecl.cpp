@@ -645,7 +645,8 @@ printFunction(CoqPrinter &print, const FunctionDecl &decl, ClangPrinter &cprint,
 		<< fmt::line;
 	printFunctionParams(print, decl, cprint) << fmt::nbsp;
 	cprint.printCallingConv(print, decl) << fmt::nbsp;
-	cprint.printVariadic(print, decl.isVariadic()) << fmt::line;
+	cprint.printVariadic(print, decl.isVariadic()) << fmt::nbsp;
+	cprint.printExceptionSpec(print, decl) << fmt::line;
 	if (auto body = decl.getBody()) {
 		guard::some some(print, false);
 		guard::ctor _(print, "Impl", false);
@@ -677,6 +678,7 @@ printMethod(CoqPrinter &print, const CXXMethodDecl &decl, ClangPrinter &cprint,
 	printFunctionParams(print, decl, cprint) << fmt::nbsp;
 	cprint.printCallingConv(print, decl) << fmt::nbsp;
 	cprint.printVariadic(print, decl.isVariadic()) << fmt::nbsp;
+	cprint.printExceptionSpec(print, decl) << fmt::nbsp;
 	if (auto body = decl.getBody()) {
 		guard::some some(print);
 		guard::ctor _(print, "UserDefined");
@@ -777,7 +779,7 @@ printInitializer(const CXXConstructorDecl &ctor, const CXXCtorInitializer &init,
 	if (!e)
 		fatal(cprint, loc::of(ctor), "initializer without expression");
 	guard::ctor _(print, "Build_Initializer");
-	printInitPath(ctor, init, print, cprint) << fmt::line;
+	printInitPath(ctor, init, print, cprint) << fmt::nbsp;
 	return cprint.printExpr(print, e);
 }
 
@@ -803,6 +805,7 @@ printConstructor(CoqPrinter &print, const CXXConstructorDecl &decl,
 	printFunctionParams(print, decl, cprint) << fmt::nbsp;
 	cprint.printCallingConv(print, decl) << fmt::nbsp;
 	cprint.printVariadic(print, decl.isVariadic()) << fmt::nbsp;
+	cprint.printExceptionSpec(print, decl) << fmt::nbsp;
 	if (auto body = decl.getBody()) {
 		guard::some s(print);
 		guard::ctor ud(print, "UserDefined");
@@ -823,6 +826,7 @@ printDestructor(CoqPrinter &print, const CXXDestructorDecl &decl,
 	guard::ctor _(print, "Build_Dtor");
 	printClassName(print, decl.getParent(), cprint, loc::of(decl)) << fmt::nbsp;
 	cprint.printCallingConv(print, decl) << fmt::nbsp;
+	cprint.printExceptionSpec(print, decl) << fmt::nbsp;
 	if (auto body = decl.getBody()) {
 		guard::some some(print);
 		guard::ctor _(print, "UserDefined");

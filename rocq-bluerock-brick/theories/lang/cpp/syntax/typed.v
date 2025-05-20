@@ -538,6 +538,7 @@ Module decltype.
 
         | Evar ln t =>
             let* vt := var_type ln in
+            (* type type annotation on a variable is a [decltype]. *)
             let* _ := require_eq t vt in
             mret $ tref QM t
         | Eenum_const n c =>

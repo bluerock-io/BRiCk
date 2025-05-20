@@ -402,7 +402,7 @@ Module MTraverse.
       Build_Func
         <$> traverseT f.(f_return)
         <*> traverse (T:=eta list) (prod.traverse mret traverseT) f.(f_params)
-        <*> mret f.(f_cc) <*> mret f.(f_arity)
+        <*> mret f.(f_cc) <*> mret f.(f_arity) <*> mret f.(f_exception)
         <*> traverse (T:=eta option) traverseF_bodyS f.(f_body).
 
     Definition traverseM (f : Method) : F Method :=
@@ -412,6 +412,7 @@ Module MTraverse.
                    <*> traverse (T:=eta list) (prod.traverse mret traverseT) f.(m_params)
                    <*> mret f.(m_cc)
                    <*> mret f.(m_arity)
+                   <*> mret f.(m_exception)
                    <*> traverse (T:=eta option) (traverse (T:=eta OrDefault) traverseS) f.(m_body).
 
     Definition traverseP (i : InitPath) : F InitPath :=
@@ -438,12 +439,14 @@ Module MTraverse.
         <*> traverse (T:=eta list) (traverse (T:=eta (prod _)) traverseT) c.(c_params)
         <*> mret c.(c_cc)
         <*> mret c.(c_arity)
+        <*> mret c.(c_exception)
         <*> traverse (T:=eta option) (traverse (T:=eta OrDefault) (prod.traverse (traverse (T:=eta list) traverseI) traverseS)) c.(c_body).
 
     Definition traverseDtor (d : Dtor) : F Dtor :=
       Build_Dtor
         <$> traverseCN d.(d_class)
         <*> mret d.(d_cc)
+        <*> mret d.(d_exception)
         <*> traverse (T:=eta option) (traverse (T:=eta OrDefault) traverseS) d.(d_body).
 
     Definition traverseMember (m : Member) : F Member :=

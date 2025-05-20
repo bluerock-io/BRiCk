@@ -96,6 +96,15 @@ Notation ObjValue := ObjValue'.
 #[global] Instance: EqDecision ObjValue.
 Proof. solve_decision. Defined.
 
+Definition can_throw (ov : ObjValue') : exception_spec.t :=
+  match ov with
+  | Ovar _ _ => exception_spec.Unknown
+  | Ofunction fn => fn.(f_exception)
+  | Omethod meth => meth.(m_exception)
+  | Oconstructor ct => ct.(c_exception)
+  | Odestructor dt => dt.(d_exception)
+  end.
+
 (**
 TODO: [Tmember_func], [type_of_value] seem misplaced
 *)
