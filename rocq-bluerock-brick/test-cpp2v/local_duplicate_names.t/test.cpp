@@ -5,7 +5,7 @@ void test() {
       /* Check that renaming [T] in the generated AST preserves the binding structure */
       (void) z.x;
     }
-    { union T { char c }; T z; /* Ditto */ (void) z.c; }
+    { union T { char c; }; T z; /* Ditto */ (void) z.c; }
   }
   { using T = long long; }
 }
