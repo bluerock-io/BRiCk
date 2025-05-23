@@ -432,3 +432,15 @@ let db_opacity_info dbs o_opacity_db clss =
     | None -> None
   in
   List.iter (go_db clss o_ts) dbs
+
+
+open Ltac2_plugin
+open Tac2ffi
+open Tac2externals
+
+let define s = define { mltac_plugin = "tc_db_info"; mltac_tactic = s }
+
+let () =
+  define "db_opacity_info" (option ident @-> list ident @-> list reference @-> ret unit) @@
+  fun o_ts dbs clss ->
+  db_opacity_info dbs o_ts clss
