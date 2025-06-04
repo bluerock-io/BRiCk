@@ -41,9 +41,16 @@ Module internal.
       | Some t => mret t
       | None => Tnamed <$> traverse ()
       end.
+    Definition handle_Tref (_ : type) (traverse : unit -> M type) : M type :=
+      tref QM <$> traverse ().
+    Definition handle_Trv_ref (_ : type) (traverse : unit -> M type) : M type :=
+      trv_ref QM <$> traverse ().
 
     Definition handle_type : type_handler M :=
-      (handle_type_traverse &: _handle_Tnamed .= handle_Tnamed)%lens.
+      (handle_type_traverse
+       &: _handle_Tnamed .= handle_Tnamed
+       &: _handle_Tref .= handle_Tref
+       &: _handle_Trv_ref .= handle_Trv_ref)%lens.
   End resolve.
 End internal.
 
@@ -63,3 +70,16 @@ Section resolve.
   Definition resolveVD := USE traverseD.
 
 End resolve.
+
+Succeed Example _1 :
+  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  trace.runO (resolveN tu "test(int& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
+Succeed Example _1 :
+  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  trace.runO (resolveN tu "test(int&& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
+Succeed Example _1 :
+  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  trace.runO (resolveN tu "test(int& &&)") = Some ("test(int&)"%cpp_name) := eq_refl.
+Succeed Example _1 :
+  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  trace.runO (resolveN tu "test(int&& &&)") = Some ("test(int&&)"%cpp_name) := eq_refl.
