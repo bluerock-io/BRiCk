@@ -176,4 +176,42 @@ Section lens.
       handle_Tqualified := r.(handle_Tqualified);
     |};
   |}.
+
+  Definition _handle_Tref : type_handler ~l> _  := {|
+    Lens.view r := r.(handle_Tref);
+    Lens.over f r := {|
+      handle_Tparam := r.(handle_Tparam);
+      handle_Tresult_param := r.(handle_Tresult_param);
+      handle_Tresult_global := r.(handle_Tresult_global);
+      handle_Tresult_unop := r.(handle_Tresult_unop);
+      handle_Tresult_binop := r.(handle_Tresult_binop);
+      handle_Tresult_call := r.(handle_Tresult_call);
+      handle_Tresult_member_call := r.(handle_Tresult_member_call);
+      handle_Tresult_parenlist := r.(handle_Tresult_parenlist);
+      handle_Tresult_member := r.(handle_Tresult_member);
+      handle_Tnamed := r.(handle_Tnamed);
+      handle_Tref := f r.(handle_Tref);
+      handle_Trv_ref := r.(handle_Trv_ref);
+      handle_Tqualified := r.(handle_Tqualified);
+    |};
+  |}.
+  Definition _handle_Trv_ref : type_handler ~l> _ := {|
+    Lens.view r := r.(handle_Trv_ref);
+    Lens.over f r := {|
+      handle_Tparam := r.(handle_Tparam);
+      handle_Tresult_param := r.(handle_Tresult_param);
+      handle_Tresult_global := r.(handle_Tresult_global);
+      handle_Tresult_unop := r.(handle_Tresult_unop);
+      handle_Tresult_binop := r.(handle_Tresult_binop);
+      handle_Tresult_call := r.(handle_Tresult_call);
+      handle_Tresult_member_call := r.(handle_Tresult_member_call);
+      handle_Tresult_parenlist := r.(handle_Tresult_parenlist);
+      handle_Tresult_member := r.(handle_Tresult_member);
+      handle_Tnamed := r.(handle_Tnamed);
+      handle_Tref := r.(handle_Tref);
+      handle_Trv_ref := f r.(handle_Trv_ref);
+      handle_Tqualified := r.(handle_Tqualified);
+    |};
+  |}.
+
 End lens.
