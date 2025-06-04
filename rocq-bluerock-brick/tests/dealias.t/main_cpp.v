@@ -34,3 +34,7 @@ Succeed Example _1 := TEST "test(Tr)" "test(int&)".
 Succeed Example _1 := TEST "test(Trr)" "test(int&&)".
 Succeed Example _1 := TEST "test(Tr&)" "test(int&)".
 Succeed Example _1 := TEST "test(Trr&)" "test(int&)".
+
+Succeed Example _1 := TEST "test(Tr_r)" "test(int&)".
+Succeed Example _1 := TEST "test(Tr_rr)" "test(int&)".
+Succeed Example _1 := TEST "test(Trr_r)" "test(int&)".
