@@ -4,6 +4,9 @@
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
+Require Import bluerock.prelude.zip_with_index.
+Require Import bluerock.prelude.zip_with_indexN.
+
 Require Export bluerock.iris.extra.algebra.big_op.
 Require Export iris.bi.big_op.
 
@@ -334,3 +337,82 @@ Section power.
   Lemma power_sep_emp n : emp ⊣⊢@{PROP} emp ^^ n.
   Proof. by rewrite power_unit. Qed.
 End power.
+
+Section zip_with_index.
+  Context {A : Type}.
+  Context {PROP : bi}.
+
+  Implicit Types (x : A) (xs : list A) (i j : nat).
+
+  Section big_sepL.
+    Implicit Type (f : nat → A → PROP).
+
+    Lemma big_sepL_zip_with_index_from j xs f :
+      ([∗ list] k ↦ x ∈ xs, f (k + j) x) ⊣⊢ [∗ list] kx ∈ zip_with_index_from j xs, f kx.1 kx.2.
+    Proof.
+      elim: xs j => [|x xs IHxs] j //=. f_equiv. rewrite -(IHxs (S j)).
+      apply big_sepL_proper => k y _. by rewrite Nat.add_succ_r.
+    Qed.
+
+    Lemma big_sepL_zip_with_index xs f :
+      ([∗ list] k ↦ x ∈ xs, f k x) ⊣⊢ [∗ list] kx ∈ zip_with_index xs, f kx.1 kx.2.
+    Proof.
+      rewrite -big_sepL_zip_with_index_from. apply big_sepL_proper => k y _. by rewrite right_id_L.
+    Qed.
+  End big_sepL.
+
+  Section big_sepL_sepM.
+    Implicit Type (f : nat * A → PROP).
+
+    Lemma big_sepL_sepM_zip_with_index_from j xs f :
+      ([∗ list] kx ∈ zip_with_index_from j xs, f kx) ⊣⊢
+      ([∗ map] k ↦ x ∈ list_to_map (M := gmap nat A) (zip_with_index_from j xs), f (k, x)).
+    Proof.
+      elim: xs j => [|x xs IHxs] j /=. by rewrite big_sepM_empty.
+      rewrite /= big_sepM_insert ? {}IHxs //. apply not_elem_of_list_to_map_1.
+      rewrite fst_zip ?length_seq //. set_solver by lia.
+    Qed.
+
+    Lemma big_sepL_sepM_zip_with_index xs f :
+      ([∗ list] kx ∈ zip_with_index xs, f kx) ⊣⊢
+      ([∗ map] k ↦ x ∈ list_to_map (zip_with_index xs), f (k, x)).
+    Proof. apply big_sepL_sepM_zip_with_index_from. Qed.
+  End big_sepL_sepM.
+End zip_with_index.
+
+Section zip_with_indexN_from.
+  #[local] Open Scope N_scope.
+  Context {A : Type}.
+  Context {PROP : bi}.
+  Implicit Types (x : A) (xs : list A) (i j : N).
+
+  Section big_sepL.
+    Lemma big_sepL_zip_with_indexN xs (f : nat → A → PROP) :
+      ([∗ list] k ↦ x ∈ xs, f k x) ⊣⊢ [∗ list] kx ∈ zip_with_indexN xs, f (N.to_nat kx.1) kx.2.
+    Proof.
+      apply big_sepL_gen_proper. by rewrite length_zip_with_indexN.
+      move => k a1 [k2 a2] /=.
+      rewrite !list_lookup_lookupN lookupN_zip_with_indexN => ? -[<- ?]; simplify_eq.
+      by rewrite left_id_L !Nat2N.id.
+    Qed.
+  End big_sepL.
+
+  Section big_sepL_sepM.
+    Implicit Type (f : N * A → PROP).
+
+    Lemma big_sepL_sepM_zip_with_indexN_from xs j f :
+      ([∗ list] kx ∈ zip_with_indexN_from j xs, f kx) ⊣⊢
+      [∗ map] k ↦ x ∈ list_to_map (M := gmap N A) (zip_with_indexN_from j xs), f (k, x).
+    Proof.
+      elim: xs j => [|x xs IHxs] j /=. by rewrite big_sepM_empty.
+      rewrite zip_with_indexN_from_cons /= big_sepM_insert ? {}IHxs //. apply not_elem_of_list_to_map_1.
+      rewrite fst_zip. set_solver by lia.
+      rewrite length_lengthN seqN_lengthN -length_lengthN //.
+    Qed.
+
+    Lemma big_sepL_sepM_zip_with_indexN xs f :
+      ([∗ list] kx ∈ zip_with_indexN xs, f kx) ⊣⊢
+      [∗ map] k ↦ x ∈ list_to_map (M := gmap N A) (zip_with_indexN xs), f (k, x).
+    Proof. apply big_sepL_sepM_zip_with_indexN_from. Qed.
+  End big_sepL_sepM.
+End zip_with_indexN_from.
