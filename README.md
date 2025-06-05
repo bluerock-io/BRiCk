@@ -41,10 +41,6 @@ See [this README.md](ocaml-logger-lib/README.md).
 
 See [this README.md](ocaml-stdlib-extra/README.md).
 
-## OCaml bindings for SWI-Prolog
-
-See [this README.md](ocaml-swipl/README.md).
-
 ## Instrumentation for the Rocq compiler
 
 See [this README.md](rocq-tools/README.md).
