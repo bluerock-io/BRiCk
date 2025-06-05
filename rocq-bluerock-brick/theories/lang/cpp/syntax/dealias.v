@@ -17,6 +17,21 @@ Require Import bluerock.lang.cpp.syntax.mtraverse.
 (**
 Expand type aliases using the alias information stored within a
 [translation_unit].
+
+NOTE: The current implementation relies on the fact that aliases
+are already removed from definition, e.g.
+<<
+using T = int;
+using U = T;
+>>
+will be represented the same way as
+<<
+using T = int;
+using U = int;
+>>
+This avoids the potential for loops and makes de-aliasing structurally
+recursive. Without this, we would need to rely on fuel (or well-foundedness
+arguments to fully de-alias a type/name.
 *)
 
 #[local] Open Scope monad_scope.
@@ -25,7 +40,7 @@ Expand type aliases using the alias information stored within a
 Module internal.
   Import UPoly.
   (**
-  This is not monadic because not finding a value is not an error.
+  Not monadic because not finding a value is not an error.
   *)
   Definition find_alias (tu : translation_unit) (n : name) : option decltype :=
     match NM.find n tu.(types) with
@@ -36,11 +51,11 @@ Module internal.
   Section resolve.
     Context (tu : translation_unit).
 
-    Definition handle_Tnamed (gn : name) (traverse : unit -> M name) : M type :=
-      match find_alias tu gn with
-      | Some t => mret t
-      | None => Tnamed <$> traverse ()
-      end.
+    Definition handle_Tnamed (_ : name) (traverse : unit -> M name) : M type :=
+      (fun nm => match find_alias tu nm with
+              | None => Tnamed nm
+              | Some t => t
+              end) <$> traverse ().
     Definition handle_Tref (_ : type) (traverse : unit -> M type) : M type :=
       tref QM <$> traverse ().
     Definition handle_Trv_ref (_ : type) (traverse : unit -> M type) : M type :=
