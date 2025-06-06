@@ -720,7 +720,10 @@ printAtomicName(const DeclContext& ctx, const Decl& decl, CoqPrinter& print,
 				unsigned count{0};
 				int result{-1};
 				const NamedDecl* const target;
-				Finder(const NamedDecl* _target) : target(_target) {}
+				const std::string target_name;
+				Finder(const NamedDecl* _target)
+					: target(_target), target_name(_target->getNameAsString()) {
+				}
 				bool shouldVisitLambdaBody() const {
 					return false;
 				}
@@ -729,7 +732,7 @@ printAtomicName(const DeclContext& ctx, const Decl& decl, CoqPrinter& print,
 						result = count;
 						return false; // stop traversal
 					} else if (auto nd2 = dyn_cast<NamedDecl>(d)) {
-						if (target->getName() == nd2->getName())
+						if (target_name == nd2->getNameAsString())
 							++count;
 					}
 					return true;
