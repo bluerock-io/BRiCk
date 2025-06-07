@@ -82,11 +82,6 @@ static cl::opt<bool>
 			 cl::desc("Do not use the system clang resource directory"),
 			 cl::Optional, cl::cat(Cpp2V));
 
-static cl::opt<bool>
-	MangledKeys("mangled-keys",
-				cl::desc("use mangled names as keys in translation units"),
-				cl::Optional, cl::cat(Cpp2V));
-
 static cl::opt<std::string> NameTest("name-test",
 									 cl::desc("print structured names"),
 									 cl::value_desc("filename"), cl::Optional,
@@ -144,7 +139,7 @@ public:
 		}
 		auto result =
 			new ToCoqConsumer(&Compiler, to_opt(VFileOutput), to_opt(NamesFile),
-							  to_opt(Templates), to_opt(NameTest), !MangledKeys,
+							  to_opt(Templates), to_opt(NameTest),
 							  Trace::fromBits(TraceBits.getBits()), Comment,
 							  !NoSharing, CheckTypes, !NoElaborate, !NoAliases);
 		return std::unique_ptr<clang::ASTConsumer>(result);

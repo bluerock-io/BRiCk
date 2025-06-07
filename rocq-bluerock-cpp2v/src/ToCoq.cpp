@@ -123,7 +123,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 	with_open_file(
 		output_file_, [&](Formatter& fmt) {
 			Cache cache;
-			CoqPrinter print(fmt, /*templates*/ false, structured_keys_, cache);
+			CoqPrinter print(fmt, /*templates*/ false, cache);
 			ClangPrinter cprint(compiler_, ctxt, trace_, comment_, typedefs_);
 
 			parser(print);
@@ -197,7 +197,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 
 	with_open_file(notations_file_, [&](Formatter& spec_fmt) {
 		Cache c;
-		CoqPrinter print(spec_fmt, /*templates*/ false, structured_keys_, c);
+		CoqPrinter print(spec_fmt, /*templates*/ false, c);
 		ClangPrinter cprint(compiler_, ctxt, trace_, comment_, typedefs_);
 		// PrintSpec printer(ctxt);
 
@@ -211,7 +211,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 
 	with_open_file(templates_file_, [&](Formatter& fmt) {
 		Cache c;
-		CoqPrinter print(fmt, /*templates*/ true, structured_keys_, c);
+		CoqPrinter print(fmt, /*templates*/ true, c);
 		ClangPrinter cprint(compiler_, ctxt, trace_, comment_, typedefs_);
 
 		parser(print);
@@ -241,7 +241,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 
 	with_open_file(name_test_file_, [&](Formatter& fmt) {
 		Cache c;
-		CoqPrinter print(fmt, /*templates*/ true, /*structured_keys*/ true, c);
+		CoqPrinter print(fmt, /*templates*/ true, c);
 		ClangPrinter cprint(compiler_, ctxt, trace_, comment_);
 
 		auto testnames = [&](const std::string id,
