@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  */
@@ -16,6 +16,7 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/Type.h"
 #include <Formatter.hpp>
+#include <iostream>
 
 using namespace clang;
 using namespace fmt;
@@ -453,6 +454,12 @@ public:
 
 	void VisitInjectedClassNameType(const InjectedClassNameType* type,
 									CoqPrinter& print, ClangPrinter& cprint) {
+		// PrintingPolicy p;
+		// unsupported_type(print, cprint, type);
+
+		// std::cerr << "VisitInjectedClassNameType: "
+		// 		  // << type->getTemplateName()
+		// 		  << " - " << type->getTemplateName(p).<< "\n";
 		always_assert(print.templates());
 
 		if (auto decl = type->getDecl()) {
