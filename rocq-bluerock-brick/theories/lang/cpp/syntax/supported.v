@@ -56,6 +56,7 @@ Section with_monad.
     | Ndependent t => type t
     | Nunsupported _ => FAIL
     end
+
   with type (t : type) : M :=
     match t with
     | Tunsupported _ => FAIL
@@ -78,6 +79,7 @@ Section with_monad.
     | Tdecltype e | Texprtype e => expr e
     | Tnamed n | Tenum n => name n
     end
+
   with expr (e : Expr) : M :=
     match e with
     | Evar _ t => type t
@@ -89,10 +91,30 @@ Section with_monad.
     | Ebinop _ e1 e2 t => expr e1 <+> type t
     | Ederef e t => expr e <+> type t
     | Eaddrof e => expr e
+    | Esubscript e1 e2 t => expr e1 <+> expr e2 <+> type t
+    | Esizeof et t
+    | Ealignof et t =>
+        match et with
+        | inr e => expr e
+        | inl t => type t
+        end <+> type t
+    | Eoffsetof t1 _ t2 => type t1 <+> type t2
     | Eassign e1 e2 t | Eassign_op _ e1 e2 t => expr e1 <+> expr e2 <+> type t
     | Epreinc e t | Epostinc e t | Epredec e t | Epostdec e t => expr e <+> type t
     | Eseqand e1 e2 | Eseqor e1 e2 | Ecomma e1 e2 => expr e1 <+> expr e2
     | Ecall e es => expr e <+> lst expr es
+    | Eoperator_call _ _ es => lst expr es
+    | Epseudo_destructor _ t e => type t <+> expr e
+    | Einitlist es oe t => lst expr es <+> opt expr oe <+> type t
+    | Einitlist_union _ oe t => opt expr oe <+> type t
+    | Emember_call _ mr e es =>
+        match mr with
+        | inr e => expr e
+        | inl _ => OK
+        end <+> expr e <+> lst expr es
+    | Enew (n, t) es _ t1 oe1 oe2 =>
+        name n <+> type t <+> lst expr es <+> type t1 <+> opt expr oe1 <+> opt expr oe2
+    | Edelete _ n e t => name n <+> expr e <+> type t
     | Eexplicit_cast _ t e => type t <+> expr e
     | Ecast c e => cast c <+> expr e
     | Emember _ e an _ t => expr e <+> atomic_name type an <+> type t
@@ -102,15 +124,28 @@ Section with_monad.
     | Eva_arg e t => expr e <+> type t
     | Eatomic _ es t => lst expr es <+> type t
     | Eandclean e => expr e
+    | Ematerialize_temp e _ => expr e
     | Ethis t => type t
     | Eif e1 e2 e3 t => expr e1 <+> expr e2 <+> expr e3 <+> type t
     | Eif2 _ e1 e2 e3 e4 t => expr e1 <+> expr e2 <+> expr e3 <+> expr e4 <+> type t
     | Elambda nm es => name nm <+> lst expr es
     | Econstructor nm es t => name nm <+> lst expr es <+> type t
     | Eimplicit e => expr e
+    | Emember_ignore _ _ e => expr e
     | Eimplicit_init t => type t
-    | _ => OK
+    | Eparam _ => OK
+    | Eunresolved_global n => name n
+    | Eunresolved_unop _ e => expr e
+    | Eunresolved_binop _ e1 e2 => expr e1 <+> expr e2
+    | Eunresolved_call n es => name n <+> lst expr es
+    | Eunresolved_member_call _ _ _
+    | Eunresolved_parenlist _ _
+    | Eunresolved_member _ _ => OK
+    | Earrayloop_init _ e _ _ e2 t => expr e <+> expr e2 <+> type t
+    | Earrayloop_index _ t => type t
+    | Eunsupported msg t => FAIL
     end
+
   with stmt (s : Stmt) : M :=
     match s with
     | Sseq ss => lst stmt ss
@@ -132,6 +167,7 @@ Section with_monad.
     | Sgoto _ => FAIL
     | Sunsupported _ => FAIL
     end
+
   with var_decl (v : VarDecl) : M :=
     match v with
     | Dvar _ t oe => type t <+> opt expr oe
@@ -139,11 +175,13 @@ Section with_monad.
     | Dinit _ n t None => name n <+> type t
     | Dinit _ n t (Some e) => name n <+> type t <+> expr e
     end
+
   with binding_decl (b : BindingDecl) : M :=
     match b with
     | Bvar _ t e => type t <+> expr e
     | Bbind _ t e => type t <+> expr e
     end
+
   with cast (c : Cast) : M :=
     match c with
     | Cdependent t | Cbitcast t | Clvaluebitcast t | Cnoop t | Cint2ptr t | Cptr2int t
