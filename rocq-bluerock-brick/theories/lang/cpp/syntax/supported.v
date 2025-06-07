@@ -11,29 +11,28 @@ Require Import bluerock.lang.cpp.syntax.translation_unit.
 Module check.
 Section with_monad.
 
-
-  Definition M := bool.
-  Definition op := andb.
-  Definition OK : M := true.
-  Definition FAIL : M := false.
+  Definition M := list PrimString.string.
+  Definition op : M -> M -> M := List.app.
+  Definition OK : M := [].
+  Definition FAIL (msg : PrimString.string) : M := msg :: nil.
 
   #[local] Infix "<+>" := op (at level 30).
   #[local] Notation opt f := (from_option f OK).
-  #[local] Notation lst f := (List.forallb f).
+  #[local] Notation lst f xs := (List.concat (List.map f xs)).
 
   Definition atomic_name (type : type -> M) (an : atomic_name) : M :=
     match an with
     | Nid _ => OK
-    | Nfunction _ _ ts => List.forallb type ts
-    | Nctor ts => List.forallb type ts
+    | Nfunction _ _ ts => lst type ts
+    | Nctor ts => lst type ts
     | Ndtor => OK
-    | Nop _ _ ts => List.forallb type ts
+    | Nop _ _ ts => lst type ts
     | Nop_conv _ t => type t
-    | Nop_lit _ ts => List.forallb type ts
+    | Nop_lit _ ts => lst type ts
     | Nanon _
     | Nanonymous
     | Nfirst_decl _ | Nfirst_child _ => OK
-    | Nunsupported_atomic _ => FAIL
+    | Nunsupported_atomic msg => FAIL msg
     end.
 
   Section temp_arg.
@@ -42,9 +41,9 @@ Section with_monad.
       match a with
       | Atype t => type t
       | Avalue e => expr e
-      | Apack xs => List.forallb temp_arg xs
+      | Apack xs => lst temp_arg xs
       | Atemplate n => name n
-      | Aunsupported _ => FAIL
+      | Aunsupported msg => FAIL msg
       end.
   End temp_arg.
 
@@ -54,12 +53,12 @@ Section with_monad.
     | Nglobal an => atomic_name type an
     | Nscoped n s => name n <+> atomic_name type s
     | Ndependent t => type t
-    | Nunsupported _ => FAIL
+    | Nunsupported msg => FAIL msg
     end
 
   with type (t : type) : M :=
     match t with
-    | Tunsupported _ => FAIL
+    | Tunsupported msg => FAIL msg
     | Tparam _
     | Tresult_param _ => OK
     | Tresult_global n => name n
@@ -143,7 +142,7 @@ Section with_monad.
     | Eunresolved_member _ _ => OK
     | Earrayloop_init _ e _ _ e2 t => expr e <+> expr e2 <+> type t
     | Earrayloop_index _ t => type t
-    | Eunsupported msg t => FAIL
+    | Eunsupported msg t => FAIL msg
     end
 
   with stmt (s : Stmt) : M :=
@@ -151,7 +150,7 @@ Section with_monad.
     | Sseq ss => lst stmt ss
     | Sdecl ds => lst var_decl ds
     | Sif ovd e s1 s2 => opt var_decl ovd <+> expr e <+> stmt s1 <+> stmt s2
-    | Sif_consteval _ _ => false
+    | Sif_consteval _ _ => FAIL "if consteval"
     | Swhile ovd e s => opt var_decl ovd <+> expr e <+> stmt s
     | Sdo s e => stmt s <+> expr e
     | Sfor os oe1 oe2 s =>
@@ -164,8 +163,8 @@ Section with_monad.
     | Sasm _ _ lpe1 lpe2 _ => lst (expr ∘ snd) lpe1 <+> lst (expr ∘ snd) lpe2
     | Sattr _ s => stmt s
     | Slabeled _ s => stmt s
-    | Sgoto _ => FAIL
-    | Sunsupported _ => FAIL
+    | Sgoto _ => FAIL "goto"
+    | Sunsupported msg => FAIL msg
     end
 
   with var_decl (v : VarDecl) : M :=
@@ -189,7 +188,8 @@ Section with_monad.
     | Cnull2ptr t | Cnull2memberptr t
     | Cbuiltin2fun t | Cctor t | Cdynamic t => type t
     | Cderived2base ts t | Cbase2derived ts t => lst type ts <+> type t
-    | Cfloat _ | Cint2float _ | Cfloat2int _ | Cl2r_bitcast _ => FAIL
+    | Cfloat _ | Cint2float _ | Cfloat2int _ => FAIL "float"
+    | Cl2r_bitcast _ => FAIL "l2r_bitcast"
     | _ => OK
     end.
 
@@ -207,36 +207,38 @@ Section with_monad.
   Definition classname : classname -> M := name.
 
   Definition obj_value (o : ObjValue) : M :=
+    let params (ps : list (localname * core.type)) : M :=
+      lst (type ∘ snd) ps
+    in
     match o with
     | Ovar t ie => type t
     | Ofunction (Build_Func t args _ _ exc ob) =>
-        type t <+> lst (type ∘ snd) args <+> opt function_body ob
+        type t <+> params args <+> opt function_body ob
         <+> if exc is exception_spec.Unknown
             then match ob with
                  | None => OK
-                 | _ => FAIL
+                 | _ => FAIL "unknown exception spec"
                  end
             else OK
     | Omethod m =>
         type m.(m_return) <+> classname m.(m_class)
-        <+> lst (type ∘ snd) m.(m_params)
+        <+> params m.(m_params)
         <+> opt (or_default stmt) m.(m_body)
         <+> if m.(m_exception) is exception_spec.Unknown
             then match m.(m_body) with
                  | None => OK
-                 | _ => FAIL
+                 | _ => FAIL "unknown exception spec"
                  end
             else OK
 
     | Oconstructor c =>
-        let check_body '(li, s) :=
-              lst (expr ∘ init_init) li <+> stmt s in
-        classname c.(c_class) <+> lst (type ∘ snd) c.(c_params)
+        let check_body '(li, s) := lst (expr ∘ init_init) li <+> stmt s in
+        classname c.(c_class) <+> params c.(c_params)
         <+> opt (or_default check_body) c.(c_body)
         <+> if c.(c_exception) is exception_spec.Unknown
             then match c.(c_body) with
                  | None => OK
-                 | _ => FAIL
+                 | _ => FAIL "unknown exception spec"
                  end
             else OK
 
@@ -245,7 +247,7 @@ Section with_monad.
         <+> if d.(d_exception) is exception_spec.Unknown
             then match d.(d_body) with
                  | None => OK
-                 | _ => FAIL
+                 | _ => FAIL "unknown exception spec"
                  end
             else OK
 
@@ -253,7 +255,7 @@ Section with_monad.
 
   Definition glob_decl (gd : GlobDecl) : M :=
     match gd with
-    | Gunsupported _ => FAIL
+    | Gunsupported msg => FAIL msg
     | _ => OK
     end.
 
