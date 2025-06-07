@@ -142,7 +142,13 @@ ClangPrinter::printValueDeclExpr(CoqPrinter& print, const ValueDecl* decl,
 			printName(print, *decl);
 	}
 	print.output() << fmt::nbsp;
-	printQualType(print, decl->getType(), loc::of(decl));
+	if (auto bd = dyn_cast<BindingDecl>(decl)) {
+		auto hv = bd->getHoldingVar();
+		printQualType(print, hv ? hv->getType() : decl->getType(),
+					  loc::of(decl));
+	} else {
+		printQualType(print, decl->getType(), loc::of(decl));
+	}
 	return print.end_ctor();
 }
 
@@ -666,6 +672,10 @@ public:
 #endif
 			}
 		} else {
+			// expr->dump();
+			// var_decl->dump();
+			// auto found_decl = expr->getFoundDecl();
+			// found_decl->dump();
 			cprint.printValueDeclExpr(print, var_decl, names);
 		}
 	}
