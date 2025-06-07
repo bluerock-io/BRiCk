@@ -7,6 +7,7 @@
 Require Import bluerock.prelude.base.
 Require Export bluerock.prelude.list.
 Require Export bluerock.prelude.numbers.
+Require bluerock.prelude.under_rel_proper.
 
 #[global] Instance set_unfold_elem_of_seq (n start len : nat) P :
   SetUnfold (start ≤ n < start + len)%nat P →
@@ -1048,11 +1049,18 @@ Section listZ.
     lengthZ xs = m - n <-> lengthN xs = Z.to_N (m - n) ∧ n ≤ m.
   Proof. lia. Qed.
 
-  #[global] Instance list_lookupZ {A} : Lookup Z A (list A) | 20 :=
-    fun k l =>
-    if bool_decide (0 ≤ k)
-      then l !! (Z.to_nat k)
-      else None.
+  Fixpoint list_lookupZ {A} : Lookup Z A (list A) :=
+    fun k xs =>
+    match xs with
+    | [] => None
+    | x :: xs' =>
+        match Z.compare k 0 with
+        | Lt => None
+        | Eq => Some x
+        | Gt => xs' !! (Z.pred k)
+        end
+    end.
+  #[global] Existing Instance list_lookupZ | 20.
 
   #[global] Instance list_insertZ {A} : Insert Z A (list A) | 20 :=
     fun k a l =>
@@ -1194,23 +1202,36 @@ Section listZ.
   Lemma lookupZ_Some_to_nat {A} (xs : list A) (k : Z) x :
     xs !! k = Some x <-> (0 ≤ k) ∧ xs !! Z.to_nat k = Some x.
   Proof.
-    rewrite {1}/lookup /list_lookupZ.
-    case: bool_decide_reflect.
-    - tauto.
-    - split => [|[]] //.
+    rewrite {1}/lookup.
+    elim: xs k => [|x0 xs IH] k /=.
+    - rewrite lookup_nil. by intuition.
+    - rewrite lookup_cons.
+      case: Z.compare_spec => Hk.
+      + rewrite Hk/=; by intuition.
+      + rewrite Z2Nat.nonpos; last lia.
+        intuition => //; lia.
+      + rewrite {}IH.
+        rewrite {4}[k]Zsucc_pred Z2Nat.inj_succ; last lia.
+        f_equiv; split; lia.
   Qed.
 
   Lemma lookupZ_Some_to_N {A} (xs : list A) (k : Z) x :
     xs !! k = Some x <-> (0 ≤ k) ∧ xs !! Z.to_N k = Some x.
   Proof. by rewrite lookupZ_Some_to_nat /lookupN /list_lookupN Z_N_nat. Qed.
 
+  Lemma and_ex {A} (P : Prop) (Q : A -> Prop) : P ∧ ex Q ↔ ∃ x, P ∧ Q x.
+  Proof. firstorder. Qed.
+
   Lemma lookupZ_None {A} (xs : list A) (k : Z) :
     xs !! k = None <-> (k < 0 ∨ lengthZ xs ≤ k).
   Proof.
-    rewrite /lookup /list_lookupZ.
-    case: bool_decide_reflect => Hk.
-    - rewrite lookup_ge_None /lengthN; lia.
-    - split => // ?; lia.
+    rewrite -[X in _ <-> X]dec_stable_iff eq_None_not_Some/is_Some.
+    apply not_iff_compat.
+    etrans; first apply Morphisms_Prop.ex_iff_morphism => a.
+    { apply lookupZ_Some_to_N. }
+    rewrite not_or Z.nlt_ge Z.nle_gt.
+    rewrite -and_ex -[ex _]lookupN_is_Some.
+    split; lia.
   Qed.
 
   Lemma lookupZ_None_inv {A} (xs : list A) (k : Z) :
@@ -1224,8 +1245,7 @@ Section listZ.
   Lemma lookupZ_nil {A} (k : Z) :
     @nil A !! k = None.
   Proof.
-    rewrite /lookup /list_lookupZ /=.
-    by case: bool_decide_reflect.
+    by rewrite /lookup /list_lookupZ /=.
   Qed.
 
   Lemma lookupZ_app {A} (xs xs' : list A) (k : Z) :
@@ -1261,6 +1281,69 @@ Section listZ.
       rewrite Z2Nat.inj_succ //.
   Qed.
 
+  Lemma list_lookupZ_eq_list_lookup {A} (xs : list A) (i : Z) :
+    xs !! i = if bool_decide (0 ≤ i)%Z then xs !! (Z.to_nat i) else None.
+  Proof.
+    apply option_eq => b.
+    rewrite lookupZ_Some_to_nat.
+    rewrite -[X in X ∧ _]bool_decide_eq_true.
+    case: bool_decide; intuition; discriminate.
+  Qed.
+
+  Lemma list_lookupZ_fmap {A B} (f : A -> B) (xs : list A) (i : Z) :
+    (f <$> xs) !! i = f <$> xs !! i.
+  Proof.
+    rewrite 2!list_lookupZ_eq_list_lookup list_lookup_fmap.
+    by case bool_decide.
+  Qed.
+
+  Ltac simpl_decide :=
+    repeat
+      lazymatch goal with
+      | H : ?P |- context [ bool_decide ?P ] =>
+          rewrite (bool_decide_eq_true_2 _ H)
+      | H : ¬ ?P |- context [ bool_decide ?P ] =>
+          rewrite (bool_decide_eq_false_2 _ H)
+      end.
+
+  Ltac simpl_decide_with tac :=
+    repeat
+      match goal with
+      | |- context [ bool_decide ?P ] =>
+          let H := fresh in
+          first
+            [ assert (H : P) ;
+              [ tac | rewrite (bool_decide_eq_true_2 _ H) {H} ]
+            | assert (H : ¬ P) ;
+              [ tac | rewrite (bool_decide_eq_false_2 _ H) {H} ] ]
+      end.
+
+  Lemma lookupZ_snoc {A} x (xs : list A) (k : Z) :
+    (xs ++ [x]) !! k =
+      if bool_decide (k = lengthZ xs)
+        then Some x
+        else xs !! k.
+  Proof.
+    rewrite lookupZ_app lookupZ_cons lookupZ_nil.
+    case: (Z.lt_total k (lengthZ xs)) => [Hk_len|[Hk_len|Hk_len]].
+    - by simpl_decide_with lia.
+    - by simpl_decide_with lia.
+    - simpl_decide_with lia.
+      rewrite symmetry_iff lookupZ_None; lia.
+  Qed.
+
+  Lemma elem_of_if_lookupZ_Some {A} {x : A} {xs : list A} (k : Z) : xs !! k = Some x -> x ∈ xs.
+  Proof. rewrite lookupZ_Some_to_nat => - [?]; apply elem_of_list_lookup_2. Qed.
+
+  Lemma lookupZ_is_Some_iff {A} x (xs : list A) : (∃ k : Z, xs !! k = Some x) <-> x ∈ xs.
+  Proof.
+    split.
+    - move => [k]; apply elem_of_if_lookupZ_Some.
+    - move => /elem_of_list_lookup [i Hxs].
+      exists (Z.of_nat i); rewrite lookupZ_Some_to_nat Nat2Z.id.
+      by split; [lia |].
+  Qed.
+
   Lemma lookupZ_insertZ {A} x (xs : list A) (k k' : Z) :
     <[ k' := x ]> xs !! k =
       if bool_decide (k = k' ∧ 0 ≤ k < lengthZ xs)
@@ -1269,18 +1352,22 @@ Section listZ.
   Proof.
     case: bool_decide_reflect.
     - rewrite /lengthN => - [] <- [? ?].
-      rewrite /lookup /list_lookupZ /insert /list_insertZ.
+      rewrite /insert /list_insertZ lookupZ_Some_to_nat.
       rewrite bool_decide_eq_true_2 // list_lookup_insert //.
       lia.
-    -
-      rewrite /lengthN !not_and_l Z.nlt_ge.
-      rewrite /lookup /list_lookupZ /insert /list_insertZ.
-      case: bool_decide_reflect => //.
-      case: bool_decide_reflect => // ? ? [Hk|[Hneg|Hlen]].
-      + rewrite list_lookup_insert_ne //; lia.
-      + contradiction.
-      + have ? : (length xs <= Z.to_nat k)%nat by lia.
-        rewrite !(lookup_ge_None_2, length_insert) //.
+    - rewrite !not_and_l Z.nlt_ge insertZ_eq_insertN.
+      case: bool_decide_reflect => // ? [Hk|[Hneg|Hlen]].
+      + rewrite option_eq => x'; rewrite 2!lookupZ_Some_to_N.
+        apply and_proper_r => Hk0.
+        have ? :  Z.to_N k' ≠ Z.to_N k by lia.
+        by rewrite lookupN_insertN_neq.
+      + rewrite option_eq => x'; rewrite 2!lookupZ_Some_to_N.
+        apply and_proper_r => Hk0.
+        have ? :  Z.to_N k' ≠ Z.to_N k by lia.
+        by rewrite lookupN_insertN_neq.
+      + rewrite option_eq => x'; rewrite 2!lookupZ_Some_to_nat.
+        move: Hlen; rewrite -lengthN_fold => Hlen.
+        rewrite !(lookup_ge_None_2, length_insert) //; lia.
   Qed.
 
   Lemma lookupZ_insertZ_eq {A} x (xs : list A) (k : Z)
@@ -1382,16 +1469,28 @@ Section rangeZ.
       lia.
   Qed.
 
+  Lemma lookupZ_rangeZ i j k x : rangeZ i k !! j = Some x <-> (i ≤ x < k ∧ x = i + j)%Z.
+  Proof.
+    case: (Z.le_ge_cases k i).
+    { move => Hji; rewrite rangeZ_oob // lookupZ_nil; split; [discriminate | lia]. }
+    move => Hle.
+    elim/Zlt_lower_bound_ind: Hle j => {}k IH Hle j.
+    move: (Zle_lt_or_eq _ _ Hle) => /or_comm [|Hlt].
+    { move => <-. rewrite rangeZ_nil lookupZ_nil; split; [discriminate | lia]. }
+    rewrite rangeZ_snoc // lookupZ_snoc lengthN_rangeZ Z2N.id; last lia.
+    case: bool_decide_reflect.
+    - move => ->; rewrite inj_iff; lia.
+    - move => Hj; rewrite IH; lia.
+  Qed.
+
+  Import under_rel_proper.
+
   Lemma elem_of_rangeZ x i j : x ∈ rangeZ i j <-> (i ≤ x < j).
   Proof.
-    case: (Z.le_ge_cases j i).
-    { move => Hji; rewrite rangeZ_oob // elem_of_nil; lia. }
-    move => Hle.
-    elim/Zlt_lower_bound_ind: Hle => {}j IH Hle.
-    move: (Zle_lt_or_eq _ _ Hle) => /or_comm [|Hlt].
-    { move => <-; rewrite rangeZ_nil elem_of_nil; lia. }
-    rewrite rangeZ_snoc // elem_of_app elem_of_list_singleton.
-    rewrite IH; lia.
+    rewrite -lookupZ_is_Some_iff.
+    under Morphisms_Prop.ex_iff_morphism => k
+      do rewrite lookupZ_rangeZ.
+    split; [case| exists (x - i)]; lia.
   Qed.
 
   Lemma NoDup_rangeZ i j : NoDup (rangeZ i j).
@@ -1406,6 +1505,53 @@ Section rangeZ.
     constructor.
     - rewrite elem_of_rangeZ; lia.
     - apply: IH; lia.
+  Qed.
+
+  Lemma rangeZ_nil_inv i j : rangeZ i j = [] <-> j ≤ i.
+  Proof.
+    split.
+    - case: (Z.lt_ge_cases i j) => Hij.
+      + by rewrite rangeZ_cons // => [=].
+      + by rewrite rangeZ_oob.
+    - by move => Hrng; rewrite rangeZ_oob.
+  Qed.
+
+  Lemma rangeZ_cons_inv i j x xs : rangeZ i j = x :: xs <-> i < j ∧ i = x ∧ rangeZ (i+1) j = xs.
+  Proof.
+    split.
+    - case: (Z.lt_ge_cases i j) => Hij.
+      + by rewrite rangeZ_cons // => [=].
+      + by rewrite rangeZ_oob.
+    - move => - [Hij [] Hxi Hrng].
+      by rewrite rangeZ_cons // -Hxi Hrng.
+  Qed.
+
+  Lemma rangeZ_app_inv i j xs0 xs1 :
+    rangeZ i j = xs0 ++ xs1 <->
+    j < i ∧ xs0 = [] ∧ xs1 = [] ∨
+    ∃ k, i ≤ k ∧ rangeZ i k = xs0 ∧
+         k ≤ j ∧ rangeZ k j = xs1.
+  Proof.
+    elim: xs0 i => [|x xs0 IH] i.
+    - cbn; split.
+      + intros Hxs1.
+        case: (Z.lt_ge_cases j i) => Hij; [left|right].
+        { move: Hxs1; rewrite rangeZ_oob //; lia. }
+        exists i; rewrite rangeZ_nil Hxs1 //.
+      + move => [[Hoob [] ? ->] | [k [] Hik [] Hrng_ik [] Hkj <-]].
+        * rewrite rangeZ_oob //; lia.
+        * move: Hrng_ik; rewrite rangeZ_nil_inv => Hki.
+          by have <- : i = k by lia.
+    - rewrite /= rangeZ_cons_inv {}IH.
+      split.
+      + move => [?] [?] [?|]; first lia.
+        move => [k] [Hik] [Hrng_ik] [Hkj Hrng_kj].
+        right; exists k. rewrite rangeZ_cons_inv Hrng_ik Hrng_kj.
+        repeat split; lia.
+      + move => [[?] [//] | [k] [Hik] [+] [Hkj Hrng_kj]].
+        rewrite rangeZ_cons_inv => - [{}Hik] [<-] Hrng_ik.
+        split; [lia| split; [done|right]].
+        exists k. rewrite Hrng_kj Hrng_ik; split => //; lia.
   Qed.
 
 End rangeZ.
