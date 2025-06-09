@@ -78,9 +78,9 @@ static cl::opt<std::string> Templates("templates", cl::desc("print templates"),
 									  cl::cat(Cpp2V));
 
 static cl::opt<bool>
-	MangledKeys("mangled-keys",
-				cl::desc("use mangled names as keys in translation units"),
-				cl::Optional, cl::cat(Cpp2V));
+	NoSystem("no-system",
+			 cl::desc("Do not use the system clang resource directory"),
+			 cl::Optional, cl::cat(Cpp2V));
 
 static cl::opt<std::string> NameTest("name-test",
 									 cl::desc("print structured names"),
@@ -139,7 +139,7 @@ public:
 		}
 		auto result =
 			new ToCoqConsumer(&Compiler, to_opt(VFileOutput), to_opt(NamesFile),
-							  to_opt(Templates), to_opt(NameTest), !MangledKeys,
+							  to_opt(Templates), to_opt(NameTest),
 							  Trace::fromBits(TraceBits.getBits()), Comment,
 							  !NoSharing, CheckTypes, !NoElaborate, !NoAliases);
 		return std::unique_ptr<clang::ASTConsumer>(result);
@@ -158,6 +158,26 @@ public:
 		return this->clang::ASTFrontendAction::BeginSourceFileAction(CI);
 	}
 };
+
+std::optional<std::string>
+getClangResourceDir() {
+	// Run clang with -print-resource-dir and capture output
+	std::string Result;
+	std::array<char, 128> Buffer;
+	std::unique_ptr<FILE, decltype(&pclose)> Pipe(
+		popen("clang -print-resource-dir", "r"), pclose);
+	if (!Pipe) {
+		return {}; // Fallback
+	}
+	while (fgets(Buffer.data(), Buffer.size(), Pipe.get()) != nullptr) {
+		Result += Buffer.data();
+	}
+	// Trim trailing newline
+	if (!Result.empty() && Result.back() == '\n') {
+		Result.pop_back();
+	}
+	return {Result};
+}
 
 int
 main(int argc, const char **argv) {
@@ -187,6 +207,22 @@ main(int argc, const char **argv) {
 		new DiagnosticOptions();
 	ClangTool Tool(OptionsParser.getCompilations(),
 				   OptionsParser.getSourcePathList());
+
+	if (!NoSystem.getValue()) {
+		auto rdir = getClangResourceDir();
+		if (rdir.has_value()) {
+			std::string arg = "-resource-dir=";
+			arg += rdir.value();
+			// Place this at the beginning of the arguments in case it is overloaded later
+			Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(
+				arg.c_str(), ArgumentInsertPosition::BEGIN));
+			logging::log(logging::Level::VERBOSER) << "Using " << arg << "\n";
+		} else {
+			logging::log(logging::Level::VERBOSER)
+				<< "Could not detect the system resource directory.\n";
+		}
+	}
+
 	Tool.setDiagnosticConsumer(new clang::TextDiagnosticPrinter(
 		llvm::errs(), DiagOptions.get(), false));
 

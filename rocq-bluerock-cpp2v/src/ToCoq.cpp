@@ -120,82 +120,84 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 			   << "#[local] Open Scope pstring_scope." << fmt::line;
 	};
 
-	with_open_file(output_file_, [&](Formatter& fmt) {
-		Cache cache;
-		CoqPrinter print(fmt, /*templates*/ false, structured_keys_, cache);
-		ClangPrinter cprint(compiler_, ctxt, trace_, comment_, typedefs_);
+	with_open_file(
+		output_file_, [&](Formatter& fmt) {
+			Cache cache;
+			CoqPrinter print(fmt, /*templates*/ false, cache);
+			ClangPrinter cprint(compiler_, ctxt, trace_, comment_, typedefs_);
 
-		parser(print);
-		bytestring(print) << fmt::line;
+			parser(print);
+			bytestring(print) << fmt::line;
 
-		if (sharing) {
-			auto preprint = [&](const Decl* decl) {
-				auto cp = cprint.withDecl(decl);
-				PRINTER<clang::Type> type_fn = [&](auto prefix, auto num,
-												   auto* type) {
-					print.output() << "#[local] Definition " << prefix << num
-								   << " : type := ";
-					cp.printType(print, type, loc::of(type));
-					print.output() << "." << fmt::line;
+			if (sharing) {
+				auto preprint = [&](const Decl* decl) {
+					auto cp = cprint.withDecl(decl);
+					PRINTER<clang::Type> type_fn = [&](auto prefix, auto num,
+													   auto* type) {
+						print.output() << "#[local] Definition " << prefix
+									   << num << " : type := ";
+						cp.printType(print, type, loc::of(type));
+						print.output() << "." << fmt::line;
+					};
+					PRINTER<clang::NamedDecl> name_fn =
+						[&](auto prefix, auto num, auto* decl) {
+							print.output() << "#[local] Definition " << prefix
+										   << num << " : name := ";
+							cp.printName(print, decl, loc::of(decl));
+							print.output() << "." << fmt::line;
+						};
+					prePrintDecl(decl, cache, type_fn, name_fn);
 				};
-				PRINTER<clang::NamedDecl> name_fn = [&](auto prefix, auto num,
-														auto* decl) {
-					print.output() << "#[local] Definition " << prefix << num
-								   << " : name := ";
-					cp.printName(print, decl, loc::of(decl));
-					print.output() << "." << fmt::line;
-				};
-				prePrintDecl(decl, cache, type_fn, name_fn);
-			};
+
+				for (auto decl : mod.declarations()) {
+					preprint(decl);
+				}
+				for (auto decl : mod.definitions()) {
+					preprint(decl);
+				}
+				print.output() << fmt::line;
+			}
+
+			print.output()
+				<< "Require Import bluerock.lang.cpp.parser.plugin.cpp2v."
+				<< fmt::line;
+			print.output() << "cpp.prog module" << fmt::indent << fmt::line;
+			if (ctxt->getTargetInfo().isBigEndian()) {
+				print.output() << "abi Big" << fmt::line;
+			} else {
+				always_assert(ctxt->getTargetInfo().isLittleEndian());
+				print.output() << "abi Little" << fmt::line;
+			}
+			print.output() << "defns" << fmt::indent << fmt::line;
 
 			for (auto decl : mod.declarations()) {
-				preprint(decl);
+				printDecl(decl, print, cprint);
 			}
 			for (auto decl : mod.definitions()) {
-				preprint(decl);
+				printDecl(decl, print, cprint);
 			}
-			print.output() << fmt::line;
-		}
+			for (auto decl : mod.asserts()) {
+				printDecl(decl, print, cprint);
+			}
 
-		print.output() << "Require Import bluerock.lang.cpp.parser.plugin.cpp2v."
-					   << fmt::line;
-		print.output() << "cpp.prog module" << fmt::indent << fmt::line;
-		if (ctxt->getTargetInfo().isBigEndian()) {
-			print.output() << "abi Big" << fmt::line;
-		} else {
-			always_assert(ctxt->getTargetInfo().isLittleEndian());
-			print.output() << "abi Little" << fmt::line;
-		}
-		print.output() << "defns" << fmt::indent << fmt::line;
+			// TODO I still need to generate the initializer
 
-		for (auto decl : mod.declarations()) {
-			printDecl(decl, print, cprint);
-		}
-		for (auto decl : mod.definitions()) {
-			printDecl(decl, print, cprint);
-		}
-		for (auto decl : mod.asserts()) {
-			printDecl(decl, print, cprint);
-		}
+			print.output() << "." << fmt::outdent << fmt::outdent << fmt::line;
 
-		// TODO I still need to generate the initializer
-
-		print.output() << "." << fmt::outdent << fmt::outdent << fmt::line;
-
-		if (check_types_) {
-			print.output()
-				<< fmt::line << "Require bluerock.lang.cpp.syntax.typed."
-				<< fmt::line
-				<< "Succeed Example well_typed : "
-				   "typed.decltype.check_tu module = trace.Success tt"
-				   " := ltac:(vm_compute; reflexivity)."
-				<< fmt::line;
-		}
-	});
+			if (check_types_) {
+				print.output()
+					<< fmt::line << "Require bluerock.lang.cpp.syntax.typed."
+					<< fmt::line
+					<< "Succeed Example well_typed : "
+					   "typed.decltype.check_tu module = trace.Success tt"
+					   " := ltac:(vm_compute; reflexivity)."
+					<< fmt::line;
+			}
+		});
 
 	with_open_file(notations_file_, [&](Formatter& spec_fmt) {
 		Cache c;
-		CoqPrinter print(spec_fmt, /*templates*/ false, structured_keys_, c);
+		CoqPrinter print(spec_fmt, /*templates*/ false, c);
 		ClangPrinter cprint(compiler_, ctxt, trace_, comment_, typedefs_);
 		// PrintSpec printer(ctxt);
 
@@ -209,7 +211,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 
 	with_open_file(templates_file_, [&](Formatter& fmt) {
 		Cache c;
-		CoqPrinter print(fmt, /*templates*/ true, structured_keys_, c);
+		CoqPrinter print(fmt, /*templates*/ true, c);
 		ClangPrinter cprint(compiler_, ctxt, trace_, comment_, typedefs_);
 
 		parser(print);
@@ -239,7 +241,7 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 
 	with_open_file(name_test_file_, [&](Formatter& fmt) {
 		Cache c;
-		CoqPrinter print(fmt, /*templates*/ true, /*structured_keys*/ true, c);
+		CoqPrinter print(fmt, /*templates*/ true, c);
 		ClangPrinter cprint(compiler_, ctxt, trace_, comment_);
 
 		auto testnames = [&](const std::string id,

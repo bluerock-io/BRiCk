@@ -7,5 +7,5 @@ Compiling the C++ code, use "make Q=" for debugging.
 
 Compiling the generated Coq files.
   $ dune build
-       = false
+       = ("bitfields are not supported"%pstring :: nil)%list
        : check.M

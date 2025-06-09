@@ -23,14 +23,11 @@ class CoqPrinter {
 private:
 	fmt::Formatter& output_;
 	const bool templates_;
-	const bool structured_keys_;
 	Cache& name_cache_;
 
 public:
-	CoqPrinter(fmt::Formatter& output, bool templates, bool structured_keys,
-			   Cache& c)
-		: output_(output), templates_(templates),
-		  structured_keys_(structured_keys), name_cache_{c} {}
+	CoqPrinter(fmt::Formatter& output, bool templates, Cache& c)
+		: output_(output), templates_(templates), name_cache_{c} {}
 
 	bool reference(const clang::Type* p) {
 		return name_cache_.reference(p, output_);
@@ -44,9 +41,6 @@ public:
 	}
 	bool templates() const {
 		return templates_;
-	}
-	bool structured_keys() const {
-		return structured_keys_;
 	}
 
 	[[noreturn]] void die() {
