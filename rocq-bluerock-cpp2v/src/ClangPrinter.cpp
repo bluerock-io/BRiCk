@@ -48,24 +48,6 @@ ClangPrinter::getLambdaClass() const {
 	return std::nullopt;
 }
 
-namespace {
-std::optional<int>
-getParameterNumber(const ParmVarDecl *decl) {
-	always_assert(decl->getDeclContext()->isFunctionOrMethod() &&
-				  "function or method");
-	if (auto fd = dyn_cast_or_null<FunctionDecl>(decl->getDeclContext())) {
-		int i = 0;
-		for (auto p : fd->parameters()) {
-			if (p == decl)
-				return std::optional<int>(i);
-			++i;
-		}
-		llvm::errs() << "failed to find parameter\n";
-	}
-	return std::optional<int>();
-}
-} // namespace
-
 fmt::Formatter &
 ClangPrinter::printParamName(CoqPrinter &print, const ParmVarDecl *decl) {
 	if (trace(Trace::Name))
