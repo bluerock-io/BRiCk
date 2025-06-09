@@ -9,6 +9,8 @@
  * See the LICENSE-LLVM file in the repositroy root for details.
  *
  */
+#include <sys/utsname.h>
+
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -184,6 +186,17 @@ getClangResourceDir() {
 	return getCommandOutput("clang -print-resource-dir");
 }
 
+std::optional<std::string>
+getMacSysRoot() {
+	return getCommandOutput("xcrun --show-sdk-path");
+}
+
+bool isDarwin() {
+	struct utsname name;
+	uname(&name);
+	return strcmp(name.sysname, "Darwin") == 0;
+}
+
 void addOpt(ClangTool& Tool, const char* opt, std::optional<std::string> value, const char* desc) {
 	if (value.has_value()) {
 		std::string arg{opt};
@@ -229,6 +242,15 @@ main(int argc, const char **argv) {
 
 	if (!NoSystem.getValue()) {
 		addOpt(Tool, "-resource-dir=", getClangResourceDir(), "the system resource directory");
+
+		logging::log(logging::Level::VERBOSER) << "Is this a Darwin platform (Mac/iOS)? " << isDarwin() << "\n";
+
+		if (isDarwin()) {
+			// XXX: On Mac, this lets us find the C++ stdlib that comes
+			// with the _system_ SDK (say, clang 16), not the C++
+			// stdlib that comes with the _user_ compiler.
+			addOpt(Tool, "-isysroot", getMacSysRoot(), "the Mac sysroot directory");
+		}
 	}
 
 	Tool.setDiagnosticConsumer(new clang::TextDiagnosticPrinter(
