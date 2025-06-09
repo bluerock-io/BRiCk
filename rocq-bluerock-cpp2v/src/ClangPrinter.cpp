@@ -375,12 +375,16 @@ ClangPrinter::printExceptionSpec(CoqPrinter &print,
 				return print.output() << UNKNOWN;
 			}
 		}
+		[[fallthrough]];
 		case EST_DynamicNone:
+		[[fallthrough]];
 		case EST_MSAny:
+		[[fallthrough]];
 		case EST_NoexceptFalse:
 			return print.output() << MAY_THROW;
 
 		case EST_BasicNoexcept:
+		[[fallthrough]];
 		case EST_NoexceptTrue:
 			return print.output() << NO_THROW;
 
@@ -391,6 +395,7 @@ ClangPrinter::printExceptionSpec(CoqPrinter &print,
 			// - sema.ResolveExceptionSpec
 
 		case EST_DependentNoexcept:
+		[[fallthrough]];
 		case EST_Unevaluated: {
 			auto &sema = this->getCompiler().getSema();
 			fpt = sema.ResolveExceptionSpec(decl.getLocation(), fpt);
