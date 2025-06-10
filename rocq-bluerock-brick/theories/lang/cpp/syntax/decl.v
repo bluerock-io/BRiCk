@@ -161,10 +161,34 @@ Proof. solve_decision. Defined.
 (** ** Value Declarations *)
 
 Module exception_spec.
+  (**
+  C++11 exception specifications for functions.
+
+  This type is equivalent to <<option(NoThrow | MayThrow)>>, but flattened into a single
+  variant for performance. The <<option>> is necessary because information is not always
+  available, e.g. for templated functions with <<noexcept>> specifications depending on
+  template parameters.
+
+  Functions marked as [NoThrow] can throw exceptions internally, but those
+  exceptions are not propagated to callers in the usual way.
+  - Starting with C++17, throwing an exception from a [NoThrow] function is
+    guaranteed to call <<std::terminate>> and terminate program execution.
+    And in this scenario, unwinding the stack and calling destructors is optional.
+  - Before C++17, the language also included dynamic exception specifications,
+    with more complex behavior
+    (see <https://en.cppreference.com/w/cpp/language/except_spec.html>).
+
+  Currently, BRiCK does _not_ support exceptions, so semantics for
+  the different scenarios are not defined yet.
+
+  For now, BRiCk only uses this to infer whether a <<new()>> operator overload signals
+  allocation failure by throwing exceptions ([MayThrow] case), or returning
+  <<nullptr>> ([NoThrow] case).
+  *)
   Variant t : Set :=
-    | Unknown (* Fused for performance *)
-    | NoThrow
-    | MayThrow.
+    | Unknown (** Unknown exception spec. *)
+    | NoThrow (** Not supposed to throw exceptions *)
+    | MayThrow (** Allowed to throw exceptions. *).
 
   #[global] Instance: SubsetEq t :=
     fun a b => a = Unknown \/ a = b.
