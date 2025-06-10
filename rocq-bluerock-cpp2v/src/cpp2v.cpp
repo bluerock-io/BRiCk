@@ -9,6 +9,8 @@
  * See the LICENSE-LLVM file in the repositroy root for details.
  *
  */
+#include <sys/utsname.h>
+
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -160,12 +162,11 @@ public:
 };
 
 std::optional<std::string>
-getClangResourceDir() {
-	// Run clang with -print-resource-dir and capture output
+getCommandOutput(const char* command) {
 	std::string Result;
 	std::array<char, 128> Buffer;
 	std::unique_ptr<FILE, decltype(&pclose)> Pipe(
-		popen("clang -print-resource-dir", "r"), pclose);
+		popen(command, "r"), pclose);
 	if (!Pipe) {
 		return {}; // Fallback
 	}
@@ -177,6 +178,37 @@ getClangResourceDir() {
 		Result.pop_back();
 	}
 	return {Result};
+}
+
+
+std::optional<std::string>
+getClangResourceDir() {
+	return getCommandOutput("clang -print-resource-dir");
+}
+
+std::optional<std::string>
+getMacSysRoot() {
+	return getCommandOutput("xcrun --show-sdk-path");
+}
+
+bool isDarwin() {
+	struct utsname name;
+	uname(&name);
+	return strcmp(name.sysname, "Darwin") == 0;
+}
+
+void addOpt(ClangTool& Tool, const char* opt, std::optional<std::string> value, const char* desc) {
+	if (value.has_value()) {
+		std::string arg{opt};
+		arg += value.value();
+		// Place this at the beginning of the arguments in case it is overloaded later
+		Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(
+			arg.c_str(), ArgumentInsertPosition::BEGIN));
+		logging::log(logging::Level::VERBOSER) << "Using " << arg << "\n";
+	} else {
+		logging::log(logging::Level::VERBOSER)
+			<< "Could not detect " << desc << ".\n";
+	}
 }
 
 int
@@ -209,17 +241,15 @@ main(int argc, const char **argv) {
 				   OptionsParser.getSourcePathList());
 
 	if (!NoSystem.getValue()) {
-		auto rdir = getClangResourceDir();
-		if (rdir.has_value()) {
-			std::string arg = "-resource-dir=";
-			arg += rdir.value();
-			// Place this at the beginning of the arguments in case it is overloaded later
-			Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(
-				arg.c_str(), ArgumentInsertPosition::BEGIN));
-			logging::log(logging::Level::VERBOSER) << "Using " << arg << "\n";
-		} else {
-			logging::log(logging::Level::VERBOSER)
-				<< "Could not detect the system resource directory.\n";
+		addOpt(Tool, "-resource-dir=", getClangResourceDir(), "the system resource directory");
+
+		logging::log(logging::Level::VERBOSER) << "Is this a Darwin platform (Mac/iOS)? " << isDarwin() << "\n";
+
+		if (isDarwin()) {
+			// XXX: On Mac, this lets us find the C++ stdlib that comes
+			// with the _system_ SDK (say, clang 16), not the C++
+			// stdlib that comes with the _user_ compiler.
+			addOpt(Tool, "-isysroot", getMacSysRoot(), "the Mac sysroot directory");
 		}
 	}
 
