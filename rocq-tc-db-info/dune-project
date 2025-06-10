@@ -24,3 +24,5 @@
  (name tc-db-info)
  (synopsis "Tools for analyzing hint databases")
  (depends coq-stdlib tc-db-info-plugin))
+
+(subst disabled)

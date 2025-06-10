@@ -24,3 +24,4 @@
  (name rocq-upoly)
  (synopsis "Extension to std++ Rocq library for universe polymorphic monads")
  (depends (coq-stdpp (>= dev.2024-02-09.0.cafd7113))))
+(subst disabled)

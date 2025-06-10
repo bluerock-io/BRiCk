@@ -27,3 +27,4 @@
  (depends
   rocq-lens
   coq-elpi))
+(subst disabled)

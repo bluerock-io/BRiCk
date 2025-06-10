@@ -40,3 +40,4 @@
   elpi
   coq-elpi
   ltac2-extra))
+(subst disabled)
