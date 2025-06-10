@@ -376,13 +376,13 @@ ClangPrinter::printExceptionSpec(CoqPrinter &print,
 			}
 		}
 		[[fallthrough]];
-		case EST_DynamicNone: // throw(), not enforced
-		[[fallthrough]];
 		case EST_MSAny:
 		[[fallthrough]];
 		case EST_NoexceptFalse:
 			return print.output() << MAY_THROW;
 
+		case EST_DynamicNone: // throw(), not enforced
+		[[fallthrough]];
 		case EST_NoThrow: // __declspec(nothrow); throwing exceptions from such functions is UB.
 		// - https://learn.microsoft.com/en-us/cpp/cpp/nothrow-cpp?view=msvc-170
 		// - https://archive.is/frXcn /
