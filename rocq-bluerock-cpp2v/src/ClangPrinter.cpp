@@ -48,24 +48,6 @@ ClangPrinter::getLambdaClass() const {
 	return std::nullopt;
 }
 
-namespace {
-std::optional<int>
-getParameterNumber(const ParmVarDecl *decl) {
-	always_assert(decl->getDeclContext()->isFunctionOrMethod() &&
-				  "function or method");
-	if (auto fd = dyn_cast_or_null<FunctionDecl>(decl->getDeclContext())) {
-		int i = 0;
-		for (auto p : fd->parameters()) {
-			if (p == decl)
-				return std::optional<int>(i);
-			++i;
-		}
-		llvm::errs() << "failed to find parameter\n";
-	}
-	return std::optional<int>();
-}
-} // namespace
-
 fmt::Formatter &
 ClangPrinter::printParamName(CoqPrinter &print, const ParmVarDecl *decl) {
 	if (trace(Trace::Name))
@@ -393,12 +375,16 @@ ClangPrinter::printExceptionSpec(CoqPrinter &print,
 				return print.output() << UNKNOWN;
 			}
 		}
+		[[fallthrough]];
 		case EST_DynamicNone:
+		[[fallthrough]];
 		case EST_MSAny:
+		[[fallthrough]];
 		case EST_NoexceptFalse:
 			return print.output() << MAY_THROW;
 
 		case EST_BasicNoexcept:
+		[[fallthrough]];
 		case EST_NoexceptTrue:
 			return print.output() << NO_THROW;
 
@@ -409,6 +395,7 @@ ClangPrinter::printExceptionSpec(CoqPrinter &print,
 			// - sema.ResolveExceptionSpec
 
 		case EST_DependentNoexcept:
+		[[fallthrough]];
 		case EST_Unevaluated: {
 			auto &sema = this->getCompiler().getSema();
 			fpt = sema.ResolveExceptionSpec(decl.getLocation(), fpt);
