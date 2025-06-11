@@ -20,7 +20,6 @@ the following, assuming the package is installed.
  (...
   (binaries
    (coqc-perf as coqc)
-   (coqdep-werr as coqdep)
    ...)
   ...)
  ...)
@@ -32,15 +31,10 @@ rely on relative paths to the executable instead.
  (...
   (binaries
    (.../rocq-tools/bin/coqc_perf.exe as coqc)
-   (.../rocq-tools/bin/coqdep_warn.exe as coqdep)
    ...)
   ...)
  ...)
 ```
-In the above, we also set up `coqdep-warn` as a wrapper for `coqdep`, to allow
-passing extra flags to `coqdep`, which is currently not possible with dune. In
-the wrapper, we simply pass `-w +all` to make all warnings fatal.
-
 With this setup, the compilation of your project will now additionally collect
 several pieces of data, which are all embedded into `.glob` files:
 - Per-command performance data generated using Coq's profiling mechanism, with
