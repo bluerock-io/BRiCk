@@ -8,7 +8,6 @@
 (rule
  (target dummy.v)
  (deps
-  (package coq-elpi) ; Hack for workspace build.
   (:elpi_files (glob_files_rec *.elpi)))
  (action
   (with-stdout-to %{target}

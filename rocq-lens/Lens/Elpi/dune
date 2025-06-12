@@ -6,5 +6,4 @@
 ; Hack to ensure the coq-elpi package is avalable. *)
 (rule
  (targets dummy.v)
- (deps (package coq-elpi))
  (action (with-stdout-to %{targets} (echo "(* dummy file *)"))))
