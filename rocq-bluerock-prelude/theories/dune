@@ -18,3 +18,9 @@
  (action
   (with-stdout-to %{target}
    (run coq-dummy-gen %{deps}))))
+
+(install
+ (files
+  (glob_files_rec (elpi/*.elpi with_prefix coq/user-contrib/bluerock/prelude/elpi/)))
+ (section lib_root)
+ (package rocq-bluerock-prelude))
