@@ -12,7 +12,7 @@
   (:elpi_files (glob_files_rec *.elpi)))
  (action
   (with-stdout-to %{target}
-   (run coq-dummy-gen %{elpi_files}))))
+   (run rocq_elpi_shafile %{elpi_files}))))
 
 (install
  (files (glob_files_rec (*.elpi with_prefix coq/user-contrib/bluerock/elpi/extra/)))
