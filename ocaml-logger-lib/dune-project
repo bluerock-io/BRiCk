@@ -19,3 +19,4 @@
  (synopsis "Generic logging library with efficient event recording")
  (depends
   stdlib-extra))
+(subst disabled)

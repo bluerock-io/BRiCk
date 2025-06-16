@@ -4,4 +4,4 @@
    (../rocq-tools/bin/coqc_perf.exe as coqc))
   (coq
    (coqdep_flags :standard -w +all)
-   (flags (:standard %{read-lines:../flags/coqc})))))
+   (flags (:standard %{read-lines:flags/coqc})))))

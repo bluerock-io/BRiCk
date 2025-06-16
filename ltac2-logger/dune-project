@@ -19,3 +19,4 @@
  (name ltac2-logger)
  (synopsis "Logging library for Ltac2 (Rocq theories)")
  (depends coq-core stdlib-extra rocq-extra logger-lib coq-stdlib))
+(subst disabled)

@@ -75,14 +75,6 @@
  (package rocq-tools)
  (libraries rocq_tools))
 
-; Wrapper for "coqdep" that turn all warnings into errors.
-(executable
- (name coqdep_werr)
- (public_name coqdep-werr)
- (modules coqdep_werr rocq_dummy)
- (package rocq-tools)
- (libraries rocq_tools))
-
 ; Glob file "file system" utility.
 (executable
  (name glob_fs)

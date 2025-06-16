@@ -18,3 +18,5 @@
  (name rocq-bluerock-rocq-internals)
  (synopsis "Plugin to expose some internals of Rocq")
  (depends coq-core))
+
+(subst disabled)

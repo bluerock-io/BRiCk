@@ -15,3 +15,4 @@
  (name ltac2-llm)
  (synopsis "Ltac2 OpenAI bindings.")
  (depends coq-stdlib ltac2-llm-plug))
+(subst disabled)

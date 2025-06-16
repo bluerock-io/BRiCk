@@ -7,12 +7,11 @@ license: "LicenseRef-BedRock"
 homepage: "https://github.com/bluerock-io/BRiCk"
 bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [
-  "dune" {>= "3.8"}
+  "dune" {>= "3.17"}
   "coq-core"
   "odoc" {with-doc}
 ]
 build: [
-  ["dune" "subst"] {dev}
   [
     "dune"
     "build"

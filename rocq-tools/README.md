@@ -20,7 +20,6 @@ the following, assuming the package is installed.
  (...
   (binaries
    (coqc-perf as coqc)
-   (coqdep-werr as coqdep)
    ...)
   ...)
  ...)
@@ -32,16 +31,11 @@ rely on relative paths to the executable instead.
  (...
   (binaries
    (.../rocq-tools/bin/coqc_perf.exe as coqc)
-   (.../rocq-tools/bin/coqdep_warn.exe as coqdep)
    ...)
   ...)
  ...)
 ```
-In the above, we also set up `coqdep-warn` as a wrapper for `coqdep`, to allow
-passing extra flags to `coqdep`, which is currently not possible with dune. In
-the wrapper, we simply pass `-w +all` to make all warnings fatal.
-
-With this setup, the compilation of your project will now additionally collect 
+With this setup, the compilation of your project will now additionally collect
 several pieces of data, which are all embedded into `.glob` files:
 - Per-command performance data generated using Coq's profiling mechanism, with
   instruction counts, timing, and memory allocation data. A short summary with
@@ -69,7 +63,7 @@ $ globfs ls _build/default/test-lib/test.glob
 _build/default/test-lib/test.glob:perf.json
 _build/default/test-lib/test.glob:perf.csvline
 _build/default/test-lib/test.glob:log.json
-_build/default/test-lib/test.glob:stderr 
+_build/default/test-lib/test.glob:stderr
 $ globfs extract _build/default/test-lib/test.glob:perf.json
 $ ls _build/default/test-lib/
 test.glob
@@ -153,10 +147,10 @@ $ coqc-perf.summary-diff data_ref/perf_summary.csv data/perf_summary.csv
 |---------:|---------:|---------:|---------:|----------
 |   +0.53% |    140.2 |    141.0 |     +0.7 | test1.v
 |   +8.12% |    668.9 |    723.3 |    +54.3 | test2.v
-|          |          |          |          |           
+|          |          |          |          |
 |    -nan% |      0.0 |      0.0 |     +0.0 | cpp2v-generated
 |   +6.49% |    848.7 |    903.8 |    +55.1 | other
-|   +6.20% |    889.7 |    944.9 |    +55.1 | total 
+|   +6.20% |    889.7 |    944.9 |    +55.1 | total
 ```
 The first given CSV file is the reference data (e.g., from a master pipeline).
 

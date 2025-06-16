@@ -18,3 +18,5 @@
  (name elpi-extra)
  (synopsis "Extension of the (Rocq) Elpi standard library")
  (depends coq-stdlib coq-elpi ltac2-extra))
+
+(subst disabled)

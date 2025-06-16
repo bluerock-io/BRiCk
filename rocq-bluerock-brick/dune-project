@@ -42,3 +42,4 @@
   (rocq-bluerock-cpp2v :with-test)
   elpi
   coq-elpi))
+(subst disabled)

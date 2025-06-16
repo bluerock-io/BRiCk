@@ -40,3 +40,4 @@
   rocq-lens-elpi
   elpi
   coq-elpi))
+(subst disabled)
