@@ -18,7 +18,7 @@ homepage: "https://github.com/bluerock-io/BRiCk"
 bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [
   "dune" {>= "3.14"}
-  "coq-stdpp" {>= "dev.2024-02-09.0.cafd7113"}
+  "coq-stdpp" {>= "dev.2024-02-09.0.cafd7113" | = "dev"}
   "odoc" {with-doc}
 ]
 build: [

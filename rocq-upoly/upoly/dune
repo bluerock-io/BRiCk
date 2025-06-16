@@ -3,4 +3,4 @@
 (coq.theory
  (name bluerock.upoly)
  (package rocq-upoly)
- (theories stdpp))
+ (theories stdpp Stdlib))

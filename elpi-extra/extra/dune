@@ -3,12 +3,14 @@
 (coq.theory
  (name bluerock.elpi.extra)
  (package elpi-extra)
- (theories elpi elpi.apps.NES bluerock.ltac2.extra))
+ (theories
+  Stdlib
+  elpi elpi_elpi elpi.apps.NES
+  Ltac2 bluerock.ltac2.extra))
 
 (rule
  (target dummy.v)
  (deps
-  (package coq-elpi) ; Hack for workspace build.
   (:elpi_files (glob_files_rec *.elpi)))
  (action
   (with-stdout-to %{target}

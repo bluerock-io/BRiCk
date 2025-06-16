@@ -18,7 +18,7 @@
 (package
  (name tc-db-info-plugin)
  (synopsis "Plugin for analyzing hint databases")
- (depends coq-core))
+ (depends coq-core rocq-bluerock-rocq-internals))
 
 (package
  (name tc-db-info)
