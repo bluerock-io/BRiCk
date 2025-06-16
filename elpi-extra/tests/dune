@@ -9,4 +9,4 @@
  (deps (glob_files_rec *.elpi))
  (action
   (with-stdout-to %{target}
-   (run coq-dummy-gen %{deps}))))
+   (run rocq_elpi_shafile %{deps}))))

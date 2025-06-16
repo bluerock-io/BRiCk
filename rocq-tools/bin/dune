@@ -107,13 +107,6 @@
  (package rocq-tools)
  (libraries rocq_tools yojson))
 
-; Generate a dummy Coq file with hashes for dependencies.
-(executable
- (name dummy_gen)
- (public_name coq-dummy-gen)
- (modules dummy_gen)
- (package rocq-tools))
-
 ; Filter dune output for cache store error.
 (executable
  (name filter_dune_output)
