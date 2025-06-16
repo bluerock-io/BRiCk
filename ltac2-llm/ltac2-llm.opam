@@ -5,7 +5,7 @@ license: "LicenseRef-LICENSE-BedRock"
 depends: [
   "dune" {>= "3.13"}
   "coq-stdlib"
-  "ltac2-llm-plug"
+  "ltac2-llm-plugin"
   "odoc" {with-doc}
 ]
 build: [

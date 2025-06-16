@@ -2,5 +2,8 @@
 (coq.theory
  (name bluerock.ltac2.extra)
  (package ltac2-extra)
- (theories Ltac2 Stdlib)
+ (theories
+  Ltac2
+  Stdlib ; for ltac2-extra/theories/internal/char.v
+  )
  (plugins ltac2-extra.plugin))

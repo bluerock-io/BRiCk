@@ -2,5 +2,5 @@
 (coq.theory
  (name bluerock.ltac2.logger)
  (package ltac2-logger)
- (theories Ltac2 bluerock.ltac2.extra)
+ (theories Ltac2 bluerock.ltac2.extra Stdlib)
  (plugins ltac2-logger.plugin))

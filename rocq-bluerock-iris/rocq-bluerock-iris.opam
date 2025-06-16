@@ -29,8 +29,10 @@ depends: [
   "rocq-upoly"
   "coq-stdpp"
   "coq-iris"
+  "rocq-bluerock-prelude"
   "rocq-lens"
   "rocq-lens-elpi"
+  "ltac2-extra"
   "elpi"
   "coq-elpi"
   "odoc" {with-doc}

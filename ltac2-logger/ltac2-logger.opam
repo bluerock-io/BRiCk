@@ -13,6 +13,7 @@ depends: [
   "rocq-extra"
   "logger-lib"
   "coq-stdlib"
+  "ltac2-extra"
   "odoc" {with-doc}
 ]
 build: [

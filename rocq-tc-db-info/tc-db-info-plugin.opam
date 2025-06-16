@@ -9,6 +9,7 @@ bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [
   "dune" {>= "3.17"}
   "coq-core"
+  "rocq-bluerock-rocq-internals"
   "odoc" {with-doc}
 ]
 build: [

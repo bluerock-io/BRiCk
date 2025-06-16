@@ -32,6 +32,8 @@ depends: [
   "rocq-lens"
   "rocq-lens-elpi"
   "rocq-equations"
+  "rocq-bluerock-prelude"
+  "rocq-bluerock-iris"
   "rocq-bluerock-cpp2v" {with-test}
   "elpi"
   "coq-elpi"
