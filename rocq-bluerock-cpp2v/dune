@@ -20,6 +20,10 @@
   (env-vars
    (BUILD_TYPE Release)
    (BUILD_ARGS "")))
+ (br_timing
+  (env-vars
+   (BUILD_TYPE Release)
+   (BUILD_ARGS "")))
  (_
   (env-vars
    (BUILD_TYPE Debug)
