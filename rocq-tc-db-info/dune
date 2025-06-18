@@ -5,10 +5,5 @@
   (flags :standard %{read-lines:flags/ocamlc})
   (ocamlopt_flags :standard -O3 -unbox-closures)
   (coq
-    (coqdep_flags :standard -w +all)
-   (flags
-    (:standard
-      -w +deprecated-hint-without-locality
-      -w +deprecated-instance-without-locality
-      -w +unknown-option
-      -w +future-coercion-class-field)))))
+   (coqdep_flags :standard -w +all)
+   (flags (:standard %{read-lines:flags/coqc})))))
