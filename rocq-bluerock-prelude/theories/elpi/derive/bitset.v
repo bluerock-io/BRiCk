@@ -25,7 +25,6 @@ Elpi Db derive.bitset.db lp:{{
   pred finite-type-done o:gref.
   pred bitset-done o:gref.
 }}.
-Elpi Accumulate derive File derive.finite_type.elpi.
 Elpi Accumulate derive lp:{{
   namespace derive.bitset {
     pred mk-simple-bitset i:string, i:gref, i:gref.
@@ -71,7 +70,7 @@ Elpi Accumulate derive lp:{{
 
 #[synterp] Elpi Accumulate derive lp:{{
   namespace derive.bitset {
-    pred main i:string, i:string, i:bool, o:list prop.
+    func main string, string, bool -> list prop.
     main TypeName _ UseToBit CL :- std.do! [
       coq.env.begin-module TypeName none,
       if (UseToBit is tt)
@@ -110,8 +109,8 @@ Elpi Accumulate derive Db derive.bitset.db.
 
 Elpi Accumulate derive lp:{{
   namespace derive.finset {
-    pred main i:gref, i:string, i:bool, o:list prop.
-    main TyGR _Prefix UseToBit Clauses :- std.do! [
+    func main gref, string, bool -> list prop.
+    main TyGR _Prefix UseToBit Clauses :-
       derive-original-gref TyGR OrigGR,
       coq.gref->id TyGR TypeName,
       if (UseToBit is tt)
@@ -119,15 +118,14 @@ Elpi Accumulate derive lp:{{
           derive.bitset.to-bits (global TyGR) ToBit,
           derive.bitset.mk-bitset TypeName TyGR OrigGR ToBit,
         ])
-        (derive.bitset.mk-simple-bitset TypeName TyGR OrigGR),
+        (derive.bitset.mk-simple-bitset TypeName TyGR OrigGR), !,
       Clauses = [bitset-done TyGR],
       std.forall Clauses (x\
         coq.elpi.accumulate _ "derive.bitset.db" (clause _ _ x)
-      ),
-    ].
+      ).
     main _ _ _ _ :- usage.
 
-    pred usage.
+    func usage.
     usage :- coq.error
 "Usage: #[only(bitset)] derive T
 where T is an inductive or a definition that unfolds to an inductive.
