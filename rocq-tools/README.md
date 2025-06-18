@@ -25,13 +25,17 @@ the following, assuming the package is installed.
  ...)
 ```
 If the package is not installed, but simply in the dune workspace, you need to
-rely on relative paths to the executable instead.
+rely on relative paths to the executable instead. For instance:
 ```
 (env
- (...
+ (br_timing ; profile with timing enabled
   (binaries
    (.../rocq-tools/bin/coqc_perf.exe as coqc)
    ...)
+  ; Other flags
+  ...)
+ (...
+  ; Other flags, repeated.
   ...)
  ...)
 ```

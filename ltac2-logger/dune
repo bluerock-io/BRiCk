@@ -1,7 +1,14 @@
 (env
- (_
+ (br_timing
   (binaries
    (../rocq-tools/bin/coqc_perf.exe as coqc))
+  (flags :standard %{read-lines:flags/ocamlc})
+  (ocamlopt_flags :standard -O3 -unbox-closures)
+  (coq
+   (coqdep_flags :standard -w +all)
+   (flags (:standard %{read-lines:flags/coqc}))))
+ ; Same, but without coqc_perf
+ (_
   (flags :standard %{read-lines:flags/ocamlc})
   (ocamlopt_flags :standard -O3 -unbox-closures)
   (coq
