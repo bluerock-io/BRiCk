@@ -11,8 +11,9 @@ bug-reports: "https://github.com/bluerock-io/BRiCk/issues"
 depends: [
   "dune" {>= "3.17"}
   "coq-core"
-  "stdlib-extra"
   "coq-stdlib"
+  "stdlib-extra"
+  "rocq-extra"
   "odoc" {with-doc}
 ]
 build: [
