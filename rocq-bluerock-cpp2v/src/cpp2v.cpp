@@ -121,6 +121,12 @@ static cl::opt<bool>
 			  cl::desc("do not emit typedef and using declarations"),
 			  cl::Optional, cl::ValueOptional, cl::cat(Cpp2V));
 
+static cl::opt<std::string>
+	Interactive("for-interactive",
+				cl::desc("INTERNAL USE: the output will be interpreted "
+						 "directly within a process"),
+				cl::value_desc("module_name"), cl::Optional, cl::cat(Cpp2V));
+
 class ToCoqAction : public clang::ASTFrontendAction {
 public:
 	virtual std::unique_ptr<clang::ASTConsumer>
@@ -140,11 +146,11 @@ public:
 		if (Compiler.getDiagnostics().getNumErrors() > 0) {
 			return nullptr;
 		}
-		auto result =
-			new ToCoqConsumer(&Compiler, to_opt(VFileOutput), to_opt(NamesFile),
-							  to_opt(Templates), to_opt(NameTest),
-							  Trace::fromBits(TraceBits.getBits()), Comment,
-							  !NoSharing, CheckTypes, !NoElaborate, !NoAliases);
+		auto *result = new ToCoqConsumer(
+			&Compiler, to_opt(VFileOutput), to_opt(NamesFile),
+			to_opt(Templates), to_opt(NameTest),
+			Trace::fromBits(TraceBits.getBits()), Comment, !NoSharing,
+			CheckTypes, !NoElaborate, !NoAliases, to_opt(Interactive));
 		return std::unique_ptr<clang::ASTConsumer>(result);
 	}
 

@@ -92,3 +92,97 @@ let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_e
   | _ ->
     CErrors.user_err Pp.(str "cpp.prog failed to return a head constructor. Please report!" ++ fnl () ++
                         Printer.pr_econstr_env env evd body)
+
+let temp_file ?(prefix="ocaml_temp_") ?(suffix=".tmp") content =
+    (* Generate a unique temporary file name *)
+    let temp_file = Filename.temp_file prefix suffix in
+
+    (* Open the file for writing *)
+    let oc = open_out temp_file in
+
+    try
+      (* Write the content to the file *)
+      output_string oc content;
+
+      (* Flush and close the file *)
+      flush oc;
+      close_out oc;
+
+      let unlink () =
+        try Sys.remove temp_file
+        with _ -> ()
+      in
+
+      (* Return the path to the created temporary file *)
+      temp_file , unlink
+    with e ->
+      (* Clean up in case of an exception *)
+      close_out_noerr oc;
+      let _ = try Sys.remove temp_file with _ -> () in
+      raise e
+
+let cpp_command_prog name flags prog =
+  let temp_cpp , unlink = temp_file ~suffix:".cpp" prog in
+  let temp_v = Filename.temp_file "_" ".v" in
+  let flags =
+    let flags =
+      match flags with
+      | None -> []
+      | Some flags ->
+        Feedback.msg_notice Pp.(str "Note that cpp.prog does not guarantee the working directory," ++ Pp.brk (0,0) ++
+                                str "so relative paths may yield inconsistent results between different editors." ++ fnl () ++
+                               str "Current working directory: " ++ str (Unix.getcwd ())) ;
+        Str.split (Str.regexp "[ \n\r\x0c\t]+") flags
+    in
+    "cpp2v" ::
+    "-for-interactive" :: Names.Id.to_string name ::
+    "--no-sharing" :: (* to avoid polluting the namespace. It would be better to put this in a [Module]
+                         if we are not in a [Section] *)
+    "-o" :: temp_v ::
+    temp_cpp ::
+    "--" :: flags
+  in
+  let stdin , stdout , stderr =
+    Unix.open_process_args_full "cpp2v" (Array.of_list flags) (Unix.environment ())
+  in
+
+  (* Read all output *)
+  let rec read_all channel buffer =
+    try
+      let line = input_line channel in
+      Buffer.add_string buffer line;
+      Buffer.add_char buffer '\n';
+      read_all channel buffer
+    with End_of_file -> buffer
+  in
+
+  (* Capture stdout and stderr *)
+  let stderr_buffer = Buffer.create 4096 |> read_all stderr in
+  if Buffer.length stderr_buffer > 0 then
+    Feedback.msg_warning Pp.(str "Command produced warnings!" ++ fnl () ++ str (Buffer.contents stderr_buffer)) ;
+
+  (* this might have problems with coq-lsp if the requried file has its own requires *)
+  let current_state = Vernacstate.freeze_full_state () in
+  let _new_state =
+    Vernacinterp.interp ~intern:Vernacinterp.fs_intern ~st:current_state
+      (CAst.make Vernacexpr.{ control = [] ;
+                              attrs = [] ;
+                              expr = VernacSynterp (VernacLoad (false (* not verbose *),
+                                                                temp_v (* filename *)))  })
+  in
+  ()
+
+(*
+   If we need to avoid using <<Load>>, e.g. to suport coq-lsp, then we can use
+   this structure.
+
+  see: toplevel/vernac.ml:105
+  let source = Option.default (Loc.InFile {dirpath=None; file}) source in
+  let in_pa = Procq.Parsable.make ~loc:Loc.(initial source)
+      (Gramlib.Stream.of_channel stdout) in
+
+  (* I can loop this until it says None *)
+  Procq.Entry.parse (Pvernac.main_entry None) in_pa
+
+  assert false
+*)
