@@ -53,6 +53,7 @@ static cl::opt<std::string> VFileOutput("module",
 										cl::desc("print translation unit"),
 										cl::value_desc("filename"),
 										cl::Optional, cl::cat(Cpp2V));
+
 static cl::alias DashO("o", cl::desc("alias for --module"),
 					   cl::value_desc("filename"), cl::aliasopt(VFileOutput));
 
@@ -162,11 +163,10 @@ public:
 };
 
 std::optional<std::string>
-getCommandOutput(const char* command) {
+getCommandOutput(const char *command) {
 	std::string Result;
 	std::array<char, 128> Buffer;
-	std::unique_ptr<FILE, decltype(&pclose)> Pipe(
-		popen(command, "r"), pclose);
+	std::unique_ptr<FILE, decltype(&pclose)> Pipe(popen(command, "r"), pclose);
 	if (!Pipe) {
 		return {}; // Fallback
 	}
@@ -180,7 +180,6 @@ getCommandOutput(const char* command) {
 	return {Result};
 }
 
-
 std::optional<std::string>
 getClangResourceDir() {
 	return getCommandOutput("clang -print-resource-dir");
@@ -191,13 +190,16 @@ getMacSysRoot() {
 	return getCommandOutput("xcrun --show-sdk-path");
 }
 
-bool isDarwin() {
+bool
+isDarwin() {
 	struct utsname name;
 	uname(&name);
 	return strcmp(name.sysname, "Darwin") == 0;
 }
 
-void addOpt(ClangTool& Tool, const char* opt, std::optional<std::string> value, const char* desc) {
+void
+addOpt(ClangTool &Tool, const char *opt, std::optional<std::string> value,
+	   const char *desc) {
 	if (value.has_value()) {
 		std::string arg{opt};
 		arg += value.value();
@@ -241,15 +243,18 @@ main(int argc, const char **argv) {
 				   OptionsParser.getSourcePathList());
 
 	if (!NoSystem.getValue()) {
-		addOpt(Tool, "-resource-dir=", getClangResourceDir(), "the system resource directory");
+		addOpt(Tool, "-resource-dir=", getClangResourceDir(),
+			   "the system resource directory");
 
-		logging::log(logging::Level::VERBOSER) << "Is this a Darwin platform (Mac/iOS)? " << isDarwin() << "\n";
+		logging::log(logging::Level::VERBOSER)
+			<< "Is this a Darwin platform (Mac/iOS)? " << isDarwin() << "\n";
 
 		if (isDarwin()) {
 			// XXX: On Mac, this lets us find the C++ stdlib that comes
 			// with the _system_ SDK (say, clang 16), not the C++
 			// stdlib that comes with the _user_ compiler.
-			addOpt(Tool, "-isysroot", getMacSysRoot(), "the Mac sysroot directory");
+			addOpt(Tool, "-isysroot", getMacSysRoot(),
+				   "the Mac sysroot directory");
 		}
 	}
 
