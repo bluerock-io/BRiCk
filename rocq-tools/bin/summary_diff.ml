@@ -210,7 +210,7 @@ let print_md_data totals combined =
   print_md_summary totals
 
 let print_gitlab_data totals combined =
-  let fn url =  info "\nFull performance report URL: %s/index.html\n\n" url in
+  let fn url =  info "\n[Full performance report](%s/index.html)\n\n" url in
   Option.iter fn !diff_base_url;
   print_md_header ();
   print_md_summary totals;
