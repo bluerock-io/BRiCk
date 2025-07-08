@@ -170,8 +170,8 @@ let print_md_summary (total_ref, total_new, total_diff, (num_dis, total_dis), (n
     info ("|" ^^ color (snd total_diff) " %+7.2f%% " ^^ "| %8.1f | %8.1f | %+8.1f | %s\n")
       (snd total_diff) n0 n1 d infostring
   in
-  print_summary "cpp2v-generated" total_ref.bt_cpp2v total_new.bt_cpp2v total_diff.bt_cpp2v;
-  print_summary "other"           total_ref.bt_other total_new.bt_other total_diff.bt_other;
+  print_summary "proofs, tests"     total_ref.bt_other total_new.bt_other total_diff.bt_other;
+  print_summary "translation units" total_ref.bt_cpp2v total_new.bt_cpp2v total_diff.bt_cpp2v;
   (if num_dis > 0 then
       let disappeared_label = Printf.sprintf "disappeared files: %i" num_dis in
       print_summary disappeared_label 0 0 total_dis);
@@ -210,7 +210,7 @@ let print_md_data totals combined =
   print_md_summary totals
 
 let print_gitlab_data totals combined =
-  let fn url =  info "\nFull performance report URL: %s/index.html\n\n" url in
+  let fn url =  info "\n[Full performance report](%s/index.html)\n\n" url in
   Option.iter fn !diff_base_url;
   print_md_header ();
   print_md_summary totals;
