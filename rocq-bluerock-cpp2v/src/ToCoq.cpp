@@ -112,7 +112,8 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 		StringRef coqmod(print.templates() ? "bluerock.lang.cpp.mparser" :
 											 "bluerock.lang.cpp.parser");
 		return print.output()
-			   << "Require Import " << coqmod << "." << fmt::line << fmt::line;
+			   << (interactive_.has_value() ? "Import " : "Require Import ")
+			   << coqmod << "." << fmt::line << fmt::line;
 	};
 
 	auto bytestring = [&](CoqPrinter& print) -> auto& {
@@ -158,17 +159,20 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 				print.output() << fmt::line;
 			}
 
-			print.output()
-				<< "Require Import bluerock.lang.cpp.parser.plugin.cpp2v."
-				<< fmt::line;
-			print.output() << "cpp.prog module" << fmt::indent << fmt::line;
+			if (!interactive_.has_value()) {
+				print.output()
+					<< "Require Import bluerock.lang.cpp.parser.plugin.cpp2v."
+					<< fmt::line;
+			}
+			print.output() << "cpp.prog " << interactive_.value_or("module")
+						   << fmt::indent << fmt::line;
 			if (ctxt->getTargetInfo().isBigEndian()) {
 				print.output() << "abi Big" << fmt::line;
 			} else {
 				always_assert(ctxt->getTargetInfo().isLittleEndian());
 				print.output() << "abi Little" << fmt::line;
 			}
-			print.output() << "defns" << fmt::indent << fmt::line;
+			print.output() << "defns" << fmt::indent;
 
 			for (auto decl : mod.declarations()) {
 				printDecl(decl, print, cprint);

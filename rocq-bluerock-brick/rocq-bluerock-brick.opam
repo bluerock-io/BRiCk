@@ -34,7 +34,7 @@ depends: [
   "rocq-equations"
   "rocq-bluerock-prelude"
   "rocq-bluerock-iris"
-  "rocq-bluerock-cpp2v" {with-test}
+  "rocq-bluerock-cpp2v"
   "elpi"
   "coq-elpi"
   "odoc" {with-doc}

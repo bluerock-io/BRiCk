@@ -26,17 +26,18 @@ using namespace clang;
 class ToCoqConsumer : public clang::ASTConsumer, clang::ASTMutationListener {
 public:
 	using path = std::optional<std::string>;
-	explicit ToCoqConsumer(clang::CompilerInstance *compiler,
-						   const path output_file, const path notations_file,
-						   const path templates_file, const path name_test_file,
-						   Trace::Mask trace, bool comment, bool sharing,
-						   bool type_check, bool elaborate = true,
-						   bool typedefs = false)
+	explicit ToCoqConsumer(
+		clang::CompilerInstance *compiler, const path output_file,
+		const path notations_file, const path templates_file,
+		const path name_test_file, Trace::Mask trace, bool comment,
+		bool sharing, bool type_check, bool elaborate = true,
+		bool typedefs = false,
+		std::optional<std::string> &&interactive = std::optional<std::string>())
 		: compiler_(compiler), output_file_(output_file),
 		  notations_file_(notations_file), templates_file_(templates_file),
 		  name_test_file_(name_test_file), trace_(trace), comment_{comment},
 		  sharing_{sharing}, elaborate_(elaborate), check_types_{type_check},
-		  typedefs_{typedefs} {}
+		  typedefs_{typedefs}, interactive_{std::move(interactive)} {}
 
 public:
 	// Implementation of `clang::ASTConsumer`
@@ -81,4 +82,5 @@ private:
 	const bool elaborate_;
 	const bool check_types_;
 	const bool typedefs_;
+	const std::optional<std::string> interactive_;
 };
