@@ -34,8 +34,7 @@ Module Binder.
 
   Ltac2 Type exn ::= [Impossible].
 
-  Ltac2 binder (p : Ltac1.t) :=
-    let p := Option.get (Ltac1.to_constr p) in
+  Ltac2 binder (p : constr) :=
     (* printf "%t" p; *)
     let id := match Constr.Unsafe.kind p with
     | Constr.Unsafe.Lambda b _ =>
@@ -48,7 +47,11 @@ Module Binder.
       | None => Option.get (Pstring.of_string "anon")
       end
     in
-    refine (Unsafe.make (String str)).
+    Unsafe.make (String str).
+
+  Ltac2 binder_ltac1 (p : Ltac1.t) :=
+    let p := Option.get (Ltac1.to_constr p) in
+    refine (binder p).
 
   (* Solve the goal with [fun (x : s) => x] *)
   Ltac2 to_id_fun (s : constr) : unit :=
@@ -126,6 +129,15 @@ Module Binder.
     in
     go c.
 
+  Ltac2 with_binder_cps k f :=
+    let b := binder f in
+    let t := make_app2 k f b in
+    t.
+
+  Ltac2 with_binder_cps_ltac1 k f :=
+    let k := Option.get (Ltac1.to_constr k) in
+    let f := Option.get (Ltac1.to_constr f) in
+    Std.exact_no_check (with_binder_cps k f).
 End Binder.
 
 (* [TCForceEq] disregards typeclass_instances opacity.  *)
@@ -140,18 +152,52 @@ Class IdOfBS (name : string) (ident : () -> ()) := ID_OF_BS {}.
 #[global] Hint Extern 100 (IdOfBS ?name _) =>
   refine (@ID_OF_BS name ltac:(Binder.id_of name)) : typeclass_instances.
 
-(** Infrastructure to get names into terms using Ltac2 and a type class called [Binder] *)
+(** Infrastructure to get names into terms using Ltac2 and a type class called
+    [Binder]. Using [Binder] in recursive notation risks dangling evars. See
+    [BinderCPS] for a better alternative. *)
 Section Binder.
   #[local] Set Typeclasses Unique Instances.
   #[local] Set Typeclasses Strict Resolution.
-  (** [Binder (fun x => _)] resolves to the bytestring "x". *)
+  (** [Binder (fun x => _)] resolves to ["x"]. *)
   Class Binder {P : Type} (p : P) := binder : string.
 End Binder.
 
 Hint Opaque Binder : typeclass_instances.
-Ltac binder p :=
-  let f := ltac2:(p |- Binder.binder p) in
-  f p.
+Ltac binder := ltac2:(p |- Binder.binder_ltac1 p).
 #[global] Hint Extern 0 (Binder ?p) => binder p : typeclass_instances.
 
-#[global] Notation "'[binder' x ]" := (_ :> @Binder (forall x, True) (fun x => I)) (at level 0, x binder, only parsing).
+(** NOTE: The [binder x] notation can leave dangling evars when the binder [x]
+    has no type annotation. Rocq will often clean up these dangling evars but
+    they interact badly with tactics in terms. It is recommended to use
+    [BinderCPS] instead. *)
+#[deprecated(since="20250710", note="Use [BinderCPS] to avoid dangling evars.")]
+#[global] Notation "'[binder' x ]" :=
+  (_ :> @Binder (forall x, True) (fun x => I)) (at level 0, x binder, only parsing).
+
+
+Section CPS.
+  Variant dummy_prop : Prop := DummyValue.
+
+  #[local] Set Typeclasses Unique Instances.
+  #[local] Set Typeclasses Strict Resolution.
+  (** The class [BinderCPS] can be used on applications of higher-order
+      functions to feed the name of the binder of the function argument to the
+      higher-order function.
+
+      [_ :> BinderCPS (k (fun x => t))] resolves to [k (fun x => t) "x"].
+
+      The corresponding notation, [with_binder (k (fun x => t))], elaborates to
+      [k (fun x => t) "x" DummyValue]. Note that this requires
+      [k : (?A -> ?B) -> string -> dummy_prop -> ?T].
+
+      The extra [dummy_prop] argument is necessary because the result of
+      [with_binder (k f)] has type [@BinderCPS ?T _ (k f)], not [?T]. This can
+      block typeclass search. In order to force Rocq to unfold the type to [?T]
+      we have to instantiate it with a function type and apply the term to another argument.
+      We pick [T := dummy_prop -> ?T']. *)
+  Class BinderCPS {T} (kf : PrimString.string -> dummy_prop -> T) := my_binder : dummy_prop -> T.
+End CPS.
+
+#[global] Notation "'[with_binder' kf ]" := ((_ :> BinderCPS kf) DummyValue) (at level 0, only parsing).
+Ltac with_binder_cps := ltac2:(k f |- Binder.with_binder_cps_ltac1 k f).
+#[global] Hint Extern 0 (BinderCPS (?k ?f)) => with_binder_cps k f : typeclass_instances.

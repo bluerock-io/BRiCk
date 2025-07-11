@@ -41,32 +41,32 @@ Section with_cpp.
         let finish args :=
           match mtype ret with
           | None =>
-              wp_spec_bind wpp args (fun rv => WITH (fun pr : ptr => DONE pr [| Vptr pr = rv |]) "pr")
+              wp_spec_bind wpp args (fun rv => WITH (fun pr : ptr => DONE pr [| Vptr pr = rv |]) "pr" DummyValue)
           | Some (cv, t) =>
               wp_spec_bind wpp args (fun rv => WITH (fun pr : ptr =>
-                   DONE pr (pr |-> tptsto_fuzzyR t (cQp.mk (q_const cv) 1) rv)) "pr")
+                   DONE pr (pr |-> tptsto_fuzzyR t (cQp.mk (q_const cv) 1) rv)) "pr" DummyValue)
           end
         in
         match ar with
         | Ar_Definite => finish args
         | Ar_Variadic =>
-            letI* pv := add_with "pv" ptr in
+            add_with "pv" ptr (fun pv =>
             letI* := add_arg pv in
-            finish (args ++ [Vptr pv])
+            finish (args ++ [Vptr pv])) DummyValue
         end%I
     | t :: ts =>
         match mtype t with
         | None =>
-            letI* pv := add_with "pv" ptr in
+            add_with "pv" ptr (fun pv =>
             letI* := add_arg pv in
-            elaborate ret ts ar (args ++ [Vptr pv]) wpp
+            elaborate ret ts ar (args ++ [Vptr pv]) wpp) DummyValue
         | Some (_, t) => (* arguments are always passed as mutable *)
-            letI* pv := add_with "pv" ptr in
-            letI* v := add_with "v" val in
+            add_with "pv" ptr (fun pv =>
+            add_with "v" val (fun v =>
             letI* := add_arg pv in
             letI* := add_pre (pv |-> tptsto_fuzzyR t 1$m v) in
             letI* := add_post (pv |-> anyR t 1$m) in
-            elaborate ret ts ar (args ++ [v]) wpp
+            elaborate ret ts ar (args ++ [v]) wpp) DummyValue) DummyValue
         end%I
     end.
 
