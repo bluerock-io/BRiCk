@@ -63,6 +63,8 @@ Definition canonical : list (PrimString.string * name) :=
   ; ("C<1, ...<int, long>>", Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]])
   ; ("C<template CC>", Ninst (Nglobal (Nid "C")) [Atemplate (Nglobal (Nid "CC"))])
   ; ("C<template CC::foo, int>", Ninst (Nglobal (Nid "C")) [Atemplate (Nscoped (Nglobal (Nid "CC")) (Nid "foo")); Atype Tint])
+  ; ("foo($T)", Nglobal (Nfunction function_qualifiers.N "foo" [Tparam "T"]))
+  ; ("foo(typename $T::nested)", Nglobal (Nfunction function_qualifiers.N "foo" [Tnamed (Nscoped (Ndependent (Tparam "T")) (Nid "nested"))]))
   ]%pstring.
 
 (* parsing the left will produce the right *)

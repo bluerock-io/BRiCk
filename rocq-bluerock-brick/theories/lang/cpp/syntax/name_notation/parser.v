@@ -337,7 +337,8 @@ Module internal.
           in
           let function_entry :=
             let qualified :=
-              let* (post : list (type -> type)) := (star (NEXT fuel entry) : M (list (type -> type))) <* ws <* exact ")" in
+              let* (post : list (type -> type)) :=
+                (star (NEXT fuel entry) : M (list (type -> type))) <* ws <* exact ")" in
               if post is nil then
                 mret (fun rt => Tfunction (FunctionType rt []))
               else
@@ -403,13 +404,19 @@ Module internal.
             (fun x => Tfunction $ FunctionType x args) <$> (ctor $ Nglobal $ Nid nm)
         | Nscoped scp (Nfunction function_qualifiers.N nm args) =>
             (fun x => Tfunction $ FunctionType x args) <$> (ctor $ Nscoped scp (Nid nm))
+        | Ndependent t => mret $ t
         | _ => ctor nm
         end
       in
       let* t :=
         basic_type <|>
         (commit (exact "(") (fun _ => parse_type () <* exact ")")
-         $ commit (exact "$") (fun _ => Tparam <$> ident)
+         $ commit (exact "$") (fun _ => let* var := ident in
+                                     let* nested := star (exact "::" *> (Nid <$> ident)) in
+                                     mret match nested with
+                                     | nil => Tparam var
+                                     | _ => Tnamed (fold_right (fun an n => Nscoped n an) (Ndependent (Tparam var)) nested)
+                                     end)
          $ commit (exact "#" <|> keyword "enum")
                 (fun e => let* n := parse_name () in
                      build_named_type (name_for_parse Tenum (Some e)) n)
@@ -784,6 +791,9 @@ Module Type TESTS.
   Succeed Example _0 : TEST_fail "C::~D()" := eq_refl.
   Succeed Example _0 : TEST_fail "C::~C(int)" := eq_refl.
   Succeed Example _0 : TEST "C::~C()" (Nscoped (Nglobal (Nid "C")) Ndtor) := eq_refl.
+
+  Succeed Example _0 : TEST "foo(typename $T)" (Nglobal (Nfunction function_qualifiers.N "foo" [Tparam "T"])) := eq_refl.
+  Succeed Example _0 : TEST "foo(typename $T::nested)" (Nglobal (Nfunction function_qualifiers.N "foo" [Tnamed (Nscoped (Ndependent (Tparam "T")) (Nid "nested"))])) := eq_refl.
 
   (* known issues *)
 
