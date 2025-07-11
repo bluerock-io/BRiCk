@@ -315,7 +315,7 @@ Section with_AR.
   #[local] Notation WPP := (WpSpec PROP A R).
 
   (** [add_with T wpp] adds [T] as logical variable to [wpp] *)
-  #[program] Definition add_with {T : Type@{universes.Quant}} (wpp : T -> WPP) (name : PrimString.string) : WPP :=
+  #[program] Definition add_with {T : Type@{universes.Quant}} (wpp : T -> WPP) (name : PrimString.string) (_ : dummy_prop) : WPP :=
     {| spec_internal := funI args' P Q args K => ∃ x : NamedBinder T name, (wpp x).(spec_internal) args' P Q args K |}.
   Next Obligation.
     intros. simpl.
@@ -520,12 +520,12 @@ Section post_val.
 
   (* We opt to reify this to avoid adding extra equalities when we do not actually need them. arguments that are awkward *)
   Inductive _post : Type :=
-  | WITH [t : Type@{universes.Quant}] (_ : t -> _post) (_ : PrimString.string)
+  | WITH [t : Type@{universes.Quant}] (_ : t -> _post) (_ : PrimString.string) (_ : dummy_prop)
   | DONE (_ : RESULT) (_ : PROP).
 
   Fixpoint _postD (p : _post) (ls : list (RESULT -> PROP)) (K : RESULT -> PROP) : PROP :=
     match p with
-    | WITH f _name => ∀ x, _postD (f x) ls K (* TODO: using the name here gets in the way of proofs. *)
+    | WITH f _name _ => ∀ x, _postD (f x) ls K (* TODO: using the name here gets in the way of proofs. *)
     | DONE r P => list_sep_into ((fun p => p r) <$> ls) P -∗ K r
     end.
   #[global] Coercion _postD : _post >-> Funclass.
@@ -702,8 +702,8 @@ Section bind.
     - iIntros "($ & [$ $] & $)".
   Qed.
 
-  Lemma wp_spec_bind_add_with (T : Type) name (spec : T → _) aargs aas aps aqs args K KONT :
-      spec_internal (wp_spec_bind (add_with spec name) aargs KONT) aas aps aqs args K
+  Lemma wp_spec_bind_add_with (T : Type) name i (spec : T → _) aargs aas aps aqs args K KONT :
+      spec_internal (wp_spec_bind (add_with spec name i) aargs KONT) aas aps aqs args K
                     ⊣⊢ (∃ x : T, spec_internal (wp_spec_bind (spec x) aargs KONT) aas aps aqs args K).
   Proof.
     intros; simpl.
@@ -738,15 +738,15 @@ End bind.
 #[global] Instance: Params (@wp_spec_bind) 5 := {}.
 
 #[global] Instance add_with_ne PROP A R T n :
-  Proper (pointwise_relation _ (dist n) ==> eq ==> dist n) (@add_with PROP A R T).
+  Proper (pointwise_relation _ (dist n) ==> eq ==> eq ==> dist n) (@add_with PROP A R T).
 Proof.
-  repeat red; rewrite /add_with/wpspec_relation/=; intros ?? H ?? ? ??.
+  repeat red; rewrite /add_with/wpspec_relation/=; intros ?? H ?? ? ?? ? ??.
   f_equiv. f_equiv. by apply H.
 Qed.
 #[global] Instance add_with_proper PROP A R T :
-  Proper (pointwise_relation _ equiv ==> eq ==> equiv) (@add_with PROP A R T).
+  Proper (pointwise_relation _ equiv ==> eq ==> eq ==> equiv) (@add_with PROP A R T).
 Proof.
-  repeat red; rewrite /add_with/wpspec_relation/=; intros ?? H ?? ? ??.
+  repeat red; rewrite /add_with/wpspec_relation/=; intros ?? H ?? ? ?? ? ??.
   f_equiv. f_equiv. by apply H.
 Qed.
 
@@ -815,11 +815,11 @@ Proof. repeat red; intros ?? H ??? ???; subst; by apply H. Qed.
   : Proper (equiv ==> eq ==> eq ==> equiv) (@wp_specD PROP A R).
 Proof. repeat red; intros ?? H ??? ???; subst; by apply H. Qed.
 
-Lemma add_with_equiv {PROP : bi} {ARG RESULT : Type} : forall T name (PQ : T -> WpSpec PROP ARG RESULT) args K,
-    add_with PQ name args K ⊣⊢ (∃ x, wp_specD (PQ x) args K).
+Lemma add_with_equiv {PROP : bi} {ARG RESULT : Type} : forall T name i (PQ : T -> WpSpec PROP ARG RESULT) args K,
+    add_with PQ name i args K ⊣⊢ (∃ x, wp_specD (PQ x) args K).
 Proof. split'; intros; iIntros "A"; iDestruct "A" as (x) "A"; iExists x; iApply "A". Qed.
-Lemma spec_add_with {PROP : bi} {ARG RESULT : Type} : forall T name (PQ : T -> WpSpec PROP ARG RESULT) args K,
-    (∃ x : NamedBinder _ name, wp_specD (PQ x) args K) ⊢ add_with PQ name args K.
+Lemma spec_add_with {PROP : bi} {ARG RESULT : Type} : forall T name i (PQ : T -> WpSpec PROP ARG RESULT) args K,
+    (∃ x : NamedBinder _ name, wp_specD (PQ x) args K) ⊢ add_with PQ name i args K.
 Proof. intros; by rewrite add_with_equiv. Qed.
 
 Lemma add_arg_equiv {PROP : bi} {ARG RESULT : Type} : forall v (PQ : WpSpec PROP ARG RESULT) args K,
