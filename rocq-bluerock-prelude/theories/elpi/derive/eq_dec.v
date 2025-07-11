@@ -44,10 +44,10 @@ Elpi Accumulate derive lp:{{
    * | #[global] Instance C_eq_dec : EqDecision C. Proof. ... Defined.
    */
   namespace derive.eqdec {
-    pred main i:gref, i:string, o:list prop.
-    main TyGR Prefix Clauses :- std.do! [
+    func main gref, string -> list prop.
+    main TyGR Prefix Clauses :-
       InstanceName is Prefix ^ "eq_dec",
-      derive-original-gref TyGR OrigGR,
+      derive-original-gref TyGR OrigGR, !,
       TyEqDecision = {{ EqDecision lp:{{global OrigGR}} }},
       std.assert-ok! (coq.elaborate-skeleton TyEqDecision _ ETyEqDecision) "[derive.eqdec] [TyEqDecision]",
       std.assert-ok! (coq.typecheck {{ lp:BoEqDecision : lp:ETyEqDecision }} _) "typechecking the [EqDecision t] instance failed",
@@ -58,11 +58,10 @@ Elpi Accumulate derive lp:{{
       Clauses = [eqdec-done OrigGR, eqdec OrigGR (const C)],
       std.forall Clauses (x\
         coq.elpi.accumulate _ "derive.stdpp.eq_dec.db" (clause _ _ x)
-      ),
-    ].
+      ).
     main _ _ _ :- usage.
 
-    pred usage.
+    func usage.
     usage :- coq.error
 "Usage: #[only(eq_dec)] derive T
 where T is an inductive or a definition that unfolds to an inductive.
