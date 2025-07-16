@@ -60,6 +60,96 @@ Definition ForallT_true {A} (P : A -> Type) (go : ∀ x, P x) : ∀ l, ForallT P
   | x :: l => ForallT_cons _ _ _ (go x) (go_list l)
   end.
 
+(** ** Take / drop while *)
+Section take_while.
+
+  Context {A} (p : A -> Prop).
+  Context `{!forall x, Decision (p x)}.
+
+  Fixpoint take_while (xs : list A) : list A :=
+    match xs with
+    | [] => []
+    | x :: xs =>
+        if bool_decide (p x) then
+          x :: take_while xs
+        else
+          []
+    end.
+
+  Lemma length_take_while xs : length (take_while xs) <= length xs.
+  Proof.
+    elim: xs => // x xs IH /=.
+    case bool_decide => //=; [apply le_n_S, IH | apply Nat.le_0_l].
+  Qed.
+
+  Fixpoint drop_while (xs : list A) : list A :=
+    match xs with
+    | [] => []
+    | x :: xs =>
+        if bool_decide (p x) then
+          drop_while xs
+        else
+          x :: xs
+    end.
+
+  Lemma length_drop_while xs : length (drop_while xs) <= length xs.
+  Proof.
+    elim: xs => // x xs IH /=.
+    case bool_decide => //.
+    apply Nat.le_le_succ_r, IH.
+  Qed.
+
+End take_while.
+
+Section comparison.
+  Context {A} `{!Compare A}.
+
+  Definition compare_on {B} (f : B -> A) : Compare B :=
+    fun x y => base.compare (f x) (f y).
+
+End comparison.
+
+Module sorted.
+Section sorted.
+  Context {A} `{!Compare A}.
+
+  Definition compare_on {B} (f : B -> A) : Compare B :=
+    fun x y => base.compare (f x) (f y).
+
+  (** Remove duplicates from a sorted list *)
+  Definition nub (xs : list A) : list A :=
+    let fix go (x : option A) (xs : list A) : list A :=
+      match x, xs with
+      | None, [] => []
+      | None, x :: xs => go (Some x) xs
+      | Some x, [] => [x]
+      | Some x0, x1 :: xs =>
+          if bool_decide (base.compare.eq x0 x1) then
+            go (Some x0) xs
+          else
+            x0 :: go (Some x1) xs
+      end in
+    go None xs.
+
+  (** The intersection of two sorted lists *)
+  Fixpoint intersection (xs ys : list A) : list A :=
+    match xs with
+    | [] => []
+    | x :: xs =>
+        let ys' := drop_while (base.compare.gt x) ys in
+        match ys' with
+        | [] => []
+        | y :: ys'' =>
+            if bool_decide (base.compare.eq x y) then
+              x :: intersection xs ys''
+            else
+              intersection xs (y :: ys'')
+        end
+    end.
+
+End sorted.
+End sorted.
+
 (** ** Teach [set_solver] to reason about more list operations, similarly to set
 operations. *)
 
