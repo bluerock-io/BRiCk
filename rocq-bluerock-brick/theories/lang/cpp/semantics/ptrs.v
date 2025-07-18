@@ -115,7 +115,7 @@ Module Type PTRS.
     [wp_prval_new] axiom).
 
   From a pointer to an object, one can use offsets to constructs pointers
-  to subojects.
+  to subobjects.
 
   Our API allows tracking nested objects accurately, matching the C (object)
   memory model (as rendered by Krebbers) and the model mandated by the C++
