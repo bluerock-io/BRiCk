@@ -1,0 +1,7 @@
+(include_subdirs qualified)
+
+(coq.theory
+ (name bt_bug)
+ ; (theories Stdlib)
+ (plugins
+  rocq-bt-bug))

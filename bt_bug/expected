@@ -1,0 +1,88 @@
+Entering directory '/Users/pgiarrusso1/git-bedrock/bhv'
+File "fmdeps/cpp2v-core/bt_bug/theories/dune", lines 3-7, characters 0-73:
+3 | (coq.theory
+4 |  (name bt_bug)
+5 |  ; (theories Stdlib)
+6 |  (plugins
+7 |   rocq-bt-bug))
+    coqc_bin fmdeps/cpp2v-core/bt_bug/theories/bt_test.{glob,vo} (exit 1)
+Current value of Debug is "-all,-backtrace,-vernacinterp,-unification,-tactic-unification,-proof-using,-native-compiler,-mltop-init,-misc,-indschemes,-ho-unification,-hconstr,-hcons,-dynlink,-congruence,-comment-lexing,-RAKAM,-Cbv"
+Current value of Debug is "-all,backtrace,-vernacinterp,-unification,-tactic-unification,-proof-using,-native-compiler,-mltop-init,-misc,-indschemes,-ho-unification,-hconstr,-hcons,-dynlink,-congruence,-comment-lexing,-RAKAM,-Cbv"
+File "./fmdeps/cpp2v-core/bt_bug/theories/bt_test.v", line 5, characters 11-18:
+Error:
+bt_test already exists.
+Raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml" (inlined), line 79, characters 4-11
+Called from CErrors.user_err in file "fmdeps/coq/lib/cErrors.ml" (inlined), line 47, characters 2-39
+Called from Vernacentries.check_name_freshness in file "fmdeps/coq/vernac/vernacentries.ml", line 805, characters 4-58
+Called from Vernacentries.vernac_definition_name in file "fmdeps/coq/vernac/vernacentries.ml", line 831, characters 2-32
+Called from Vernacentries.vernac_definition in file "fmdeps/coq/vernac/vernacentries.ml", line 856, characters 13-45
+Called from Vernactypes.vtmodifyprogram.(fun) in file "fmdeps/coq/vernac/vernactypes.ml" (inlined), line 197, characters 30-40
+Called from Vernactypes.typed_vernac.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 170, characters 65-71
+Called from Vernactypes.run.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 164, characters 15-32
+Called from Vernactypes.combine_runners.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 126, characters 16-23
+Called from Vernactypes.OpaqueAccess.runner.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 114, characters 30-34
+Called from Vernactypes.combine_runners.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 125, characters 14-100
+Called from Vernactypes.combine_runners.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 126, characters 16-23
+Called from Vernactypes.Proof.runner.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 69, characters 30-34
+Called from Vernactypes.combine_runners.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 125, characters 14-100
+Called from Vernactypes.Prog.runner.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 30, characters 20-24
+Called from Vernactypes.combine_runners.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 124, characters 12-173
+Called from Vernactypes.combine_runners.(fun) in file "fmdeps/coq/vernac/vernactypes.ml", line 124, characters 12-173
+Called from Vernactypes.run in file "fmdeps/coq/vernac/vernactypes.ml", line 163, characters 14-96
+Called from Vernacinterp.interp_expr_core in file "fmdeps/coq/vernac/vernacinterp.ml", line 80, characters 60-157
+Called from Vernacinterp.interp_expr.(fun) in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 50, characters 6-46
+Called from Synterp.with_generic_atts in file "fmdeps/coq/vernac/synterp.ml" (inlined), line 71, characters 12-19
+Called from Vernacinterp.interp_expr in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 49, characters 19-121
+Called from Vernacinterp.interp_expr in file "fmdeps/coq/vernac/vernacinterp.ml", line 49, characters 19-121
+Called from Vernacinterp.interp_control.(fun) in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 113, characters 19-43
+Called from VernacControl.under_control in file "fmdeps/coq/vernac/vernacControl.ml" (inlined), line 203, characters 14-18
+Called from Vernacinterp.interp_control_gen in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 36, characters 4-137
+Called from Vernacinterp.interp_control.(fun) in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 111, characters 6-147
+Called from Vernacinterp.interp_control_gen in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 36, characters 4-137
+Called from Vernacinterp.interp_control.(fun) in file "fmdeps/coq/vernac/vernacinterp.ml", line 111, characters 6-147
+Called from Util.try_finally in file "fmdeps/coq/lib/util.ml" (inlined), line 133, characters 16-19
+Called from Vernacinterp.interp_control in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 109, characters 2-280
+Called from Vernacinterp.interp_control in file "fmdeps/coq/vernac/vernacinterp.ml", line 109, characters 2-280
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Util.try_finally in file "fmdeps/coq/lib/util.ml" (inlined), line 137, characters 6-32
+Called from Vernacinterp.interp_control in file "fmdeps/coq/vernac/vernacinterp.ml", line 109, characters 2-280
+Called from Flags.with_modified_ref in file "fmdeps/coq/lib/flags.ml" (inlined), line 17, characters 14-17
+Called from Flags.with_option in file "fmdeps/coq/lib/flags.ml" (inlined), line 26, characters 24-78
+Called from Flags.silently in file "fmdeps/coq/lib/flags.ml", line 65, characters 19-40
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Vernacinterp.interp_gen in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 151, characters 16-41
+Called from Vernacinterp.interp.(fun) in file "fmdeps/coq/vernac/vernacinterp.ml", line 165, characters 54-111
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from NewProfile.profile in file "fmdeps/coq/lib/newProfile.ml" (inlined), line 252, characters 32-36
+Called from Vernacinterp.interp in file "fmdeps/coq/vernac/vernacinterp.ml" (inlined), line 165, characters 15-115
+Called from Vernacinterp.interp in file "fmdeps/coq/vernac/vernacinterp.ml", line 165, characters 15-115
+Called from Stm.Reach.known_state.reach.(fun) in file "fmdeps/coq/stm/stm.ml", line 2034, characters 16-43
+Called from Stm.State.define in file "fmdeps/coq/stm/stm.ml", line 963, characters 6-10
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Stm.Reach.known_state.reach in file "fmdeps/coq/stm/stm.ml", line 2203, characters 4-105
+Called from Stm.observe in file "fmdeps/coq/stm/stm.ml", line 2295, characters 4-60
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Vernac.interp_vernac in file "fmdeps/coq/toplevel/vernac.ml", line 83, characters 29-50
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Vernac.load_vernac_core.loop.(fun) in file "fmdeps/coq/toplevel/vernac.ml" (inlined), line 138, characters 28-57
+Called from Flags.with_modified_ref in file "fmdeps/coq/lib/flags.ml" (inlined), line 17, characters 14-17
+Called from Flags.with_option in file "fmdeps/coq/lib/flags.ml" (inlined), line 26, characters 24-78
+Called from Flags.silently in file "fmdeps/coq/lib/flags.ml" (inlined), line 65, characters 19-40
+Called from Vernac.load_vernac_core.loop.(fun) in file "fmdeps/coq/toplevel/vernac.ml" (inlined), line 138, characters 13-61
+Called from Vernac.load_vernac_core.loop.(fun) in file "fmdeps/coq/toplevel/vernac.ml", line 138, characters 13-61
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Util.try_finally in file "fmdeps/coq/lib/util.ml" (inlined), line 133, characters 16-19
+Called from Vernac.load_vernac_core.loop in file "fmdeps/coq/toplevel/vernac.ml" (inlined), line 127, characters 8-774
+Called from Vernac.load_vernac_core.loop in file "fmdeps/coq/toplevel/vernac.ml", line 127, characters 8-774
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Util.try_finally in file "fmdeps/coq/lib/util.ml" (inlined), line 137, characters 6-32
+Called from Vernac.load_vernac_core.loop in file "fmdeps/coq/toplevel/vernac.ml", line 127, characters 8-774
+Called from Vernac.load_vernac_core.loop in file "fmdeps/coq/toplevel/vernac.ml" (inlined), line 109, characters 15-1023
+Called from Vernac.load_vernac_core in file "fmdeps/coq/toplevel/vernac.ml", line 150, characters 6-19
+Re-raised at Exninfo.iraise in file "fmdeps/coq/clib/exninfo.ml", line 81, characters 4-38
+Called from Vernac.load_vernac_core in file "fmdeps/coq/toplevel/vernac.ml", line 154, characters 4-28
+Called from Ccompile.compile in file "fmdeps/coq/toplevel/ccompile.ml", line 68, characters 18-78
+Called from Coqc.coqc_main in file "fmdeps/coq/toplevel/coqc.ml", line 38, characters 2-100
+
+
+Leaving directory '/Users/pgiarrusso1/git-bedrock/bhv'

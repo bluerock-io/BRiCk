@@ -1,0 +1,4 @@
+(library
+ (name bt_bug)
+ (public_name rocq-bt-bug)
+ (preprocess (pps ppx_inline_test)))
