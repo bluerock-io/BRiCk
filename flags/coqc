@@ -20,3 +20,5 @@
 +future-coercion-class-field
 -w
 +mismatched-hint-db
+-d
+-backtrace
