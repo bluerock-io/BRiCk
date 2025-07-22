@@ -78,19 +78,21 @@ Module Control.
   Ltac2 @ external is_section_variable : ident -> bool :=
     "ltac2_extensions" "is_section_variable".
 
+  Ltac2 Type exn ::= [ Multi_exn (exn list) ].
+
   (** This is a variant of [first0] ([first [ .. | .. ]]) which does not
       perform [Control.enter]. This is necessary to allow it to return a
       value: [Control.enter] forces a [unit] return type. *)
   Ltac2 first_of_impl (ls : (unit -> 'a) list) :=
-    let rec go ls :=
-      match ls with
-      | t :: ls => orelse t (fun _ => go ls)
-      | []      =>
-          let m := Message.of_string "[first_of] ran out of tactics" in
-          Control.zero (Tactic_failure (Some m))
-      end
-    in
-    Control.once (fun _ => go ls).
+   let rec go ls errs :=
+        match ls with
+        | t :: ls => orelse t (fun e => go ls (e :: errs))
+        | []      =>
+            let errs := List.rev errs in
+            Control.zero (Multi_exn errs)
+        end
+      in
+    Control.once (fun _ => go ls []).
 
   (** ** Goal evar *)
 
