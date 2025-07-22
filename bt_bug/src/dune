@@ -1,0 +1,10 @@
+(executable
+ (name no_bt_client_test)
+ (public_name no_bt_test))
+
+(executable
+ (name bt_client_test)
+ (public_name bt_test)
+ (libraries bt_bug)
+ ; (preprocess (pps ppx_inline_test)) ; irrelevant to the bug
+ )
