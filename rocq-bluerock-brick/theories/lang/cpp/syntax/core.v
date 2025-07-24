@@ -1059,5 +1059,3 @@ with is_dependentS (s : Stmt) : bool :=
   | Sgoto _ => false
   | Sunsupported _ => false
   end.
-
-#[global,deprecated(note="use [Apack].",since="20250206")] Notation Apack_expansion := Apack (only parsing).
