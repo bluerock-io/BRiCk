@@ -140,6 +140,53 @@ Module Type Expr.
             Q p FreeTemps.id)
       |-- wp_lval (Estring chars (Tchar_ ct)) Q.
 
+    (** The value for the corresponding character literal.
+
+        Because characters are represented uniformly as [N] within the syntax,
+        special handling is necessary for the types <<signed char>> and <<unsigned char>>
+        which are both represented using [Vint].
+
+        The injection for <<unsigned char>> is trivial, but for <<signed char>>
+        we effectively interpret the value as an <<unsigned char>> and use
+        the casting logic to cast it to a <<signed char>>.
+     *)
+    Definition char_literal (char_type : type) : option (N -> val) :=
+      match char_type with
+      | Tchar_ _ => Some $ fun n => Vchar n
+      | Tnum int_rank.Ichar Unsigned => Some $ fun n => Vint $ Z.of_N n
+      | Tnum int_rank.Ichar Signed =>
+          let bits := bitsize.bitsN $ int_rank.bitsize int_rank.Ichar in
+          Some $ fun n => Vint $ of_char bits Unsigned bits Signed n
+      | _ => None
+      end.
+
+    (* The contents of an array initialized by a string literal with the given values.
+       The [ls] does *not* contain the trailing <<NULL>> value. *)
+    Definition fit_to_array (sz : N) (ls : list N) : option (list N) :=
+      if bool_decide (sz <= lengthN ls)%N
+      then None (* the string must fit in the array: <https://eel.is/c++draft/dcl.init.string#2> *)
+      else Some $ ls ++ replicateN (sz - lengthN ls)%N 0%N.
+
+    (* Most string literals contain characters, but <<unsigned char>> and
+       <<signed char>> are integral types and are therefore represented
+       using [Vint].
+
+       For character literals, Clang inserts an explicit cast, i.e. [Cintegral ..],
+       but for string literals that cast is implicit.
+     *)
+    Axiom wp_init_string : forall (into : ptr) len chars ct Q,
+          (let (cv,ct) := decompose_type ct in
+           match fit_to_array len $ literal_string.to_list_N chars , char_literal ct with
+           | Some values , Some to_val =>
+               let q := cQp.mk (q_const cv) 1 in
+               ([∗list] i ↦ n ∈ values,
+                 into .[ ct ! i ] |-> primR ct q (to_val n)) -*
+               into |-> type_ptrR (Tarray ct len) -*
+               Q FreeTemps.id
+           | _ , _ => False
+           end)
+      |-- wp_init (Tarray ct len) into (Estring chars ct) Q.
+
     (* `this` is a prvalue *)
     Axiom wp_operand_this : forall ty Q,
           valid_ptr (_this ρ) ** Q (Vptr $ _this ρ) FreeTemps.id
