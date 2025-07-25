@@ -6,6 +6,8 @@
 Require Import stdpp.fin_maps.
 Require Import bluerock.prelude.base.
 Require Import bluerock.prelude.avl.
+Require Import bluerock.prelude.lens.
+Require Import bluerock.prelude.elpi.derive.lens.
 Require Import bluerock.prelude.pstring.
 Require Import bluerock.lang.cpp.syntax.core.
 Require Import bluerock.lang.cpp.syntax.types.
@@ -267,8 +269,12 @@ Record translation_unit : Type := makeTranslationUnit {
   initializer       : InitializerBlock;
   byte_order        : endian;
 }.
+#[only(lens)] derive translation_unit.
+
 Definition empty_tu (e : endian) : translation_unit :=
   makeTranslationUnit ∅ ∅ ∅ [] e.
+#[global] Instance : Empty translation_unit :=
+  empty_tu Little. (* << selected by a fair coin flip *)
 
 #[local]
 Definition canonicalize {T} (find : name -> option T) (tu : translation_unit) (nm : name) : option T :=
