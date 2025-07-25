@@ -1117,11 +1117,11 @@ End as_ref'.
 
 (**
 [is_aggregate_type t] returns [true] if [t] is a (possibly qualified)
-structure or array type.
+<<struct>> type.
 *)
 Definition is_aggregate_type (ty : type) : bool :=
   match drop_qualifiers ty with
-  | Tnamed _ | Tarray _ _ => true
+  | Tnamed _ => true
   | _ => false
   end.
 

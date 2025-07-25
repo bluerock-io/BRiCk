@@ -108,7 +108,10 @@ Definition default_initialize_body `{Σ : cpp_logic, σ : genv}
     p |-> uninitR rty 1$m -* |={top}=>?u Q FreeTemps.id
 
   | Tarray ety sz =>
-    default_initialize_array (default_initialize ety) tu ety sz p (fun _ => Q FreeTemps.id)
+    if bool_decide (0 < sz)%N then
+      default_initialize_array (default_initialize ety) tu ety sz p (fun _ => Q FreeTemps.id)
+    else
+      ERROR "initializing an empty array"
   | Tincomplete_array _ => ERROR "default initialize incomplete array"
   | Tvariable_array _ _ => ERROR "default initialize variable array"
 
@@ -211,6 +214,7 @@ Section default_initialize.
       | by iMod "wp"; iExFalso; rewrite ?ERROR_elim ?UNSUPPORTED_elim
       | idtac ].
     { (* arrays *)
+      case_match; eauto.
       iApply (default_initialize_array_frame' with "[HQ] wp"); [done..|].
       iIntros (?) "Q". iApply ("HQ" with "Q"). }
     { (* qualifiers *)
@@ -234,8 +238,10 @@ Section default_initialize.
       auto using fupd_elim, fupd_intro.
     all: try by iIntros ">HQ R"; iMod ("HQ" with "R").
     { (* arrays *)
+      case_match.
       apply default_initialize_array_shift'; auto.
-      intros. exact: default_initialize_frame. }
+      intros. exact: default_initialize_frame.
+      iIntros ">$". }
     { (* qualifiers *)
       do 2 (case_match; auto using fupd_elim, fupd_intro). }
   Qed.
@@ -306,6 +312,8 @@ Section default_initialize.
       [ by auto using fupd_intro
       | by iIntros "HQ R"; iApply ("HQ" with "R")
       | idtac ].
+    { (* arrays *)
+      case_bool_decide; eauto. }
     { (* qualifiers *)
       destruct (q_volatile q); auto using fupd_intro.
       destruct (q_const q); auto using fupd_intro. }
@@ -352,7 +360,8 @@ magic wands.
 #[local] Notation fupd_compatible := false (only parsing).
 
 (* BEGIN wp_initialize *)
-#[local] Definition wp_initialize_unqualified_body `{Σ : cpp_logic, σ : genv}
+#[local]
+Definition wp_initialize_unqualified_body `{Σ : cpp_logic, σ : genv}
     (u : bool) (tu : translation_unit) (ρ : region)
     (cv : type_qualifiers) (ty : decltype)
     (addr : ptr) (init : Expr) (Q : FreeTemps -> epred) : mpred :=
@@ -392,7 +401,11 @@ magic wands.
       addr |-> tptsto_fuzzyR (erase_qualifiers ty) qf v -* |={top}=>?u Q free
 
       (* non-primitives are handled via prvalue-initialization semantics *)
-    | Tarray _ _
+    | Tarray _ len =>
+        if bool_decide (0 < len)%N then
+          wp_init tu ρ (tqualified cv ty) addr init Q
+        else
+          UNSUPPORTED (initializing_type ty init)
     | Tnamed _ => wp_init tu ρ (tqualified cv ty) addr init Q
     | Tincomplete_array _ => UNSUPPORTED (initializing_type ty init)
     | Tvariable_array _ _ => UNSUPPORTED (initializing_type ty init)
@@ -482,7 +495,9 @@ Proof.
     iIntros (??) "[$ X] Y".
     iDestruct (observe (reference_to _ _) with "Y") as "#?";
     iApply ("X" with "Y"); eauto.
-  - etransitivity; [ | apply wp_init_well_typed ].
+  - (* arrays *)
+    case_bool_decide; eauto.
+    etransitivity; [ | apply wp_init_well_typed ].
     iApply wp_init_frame; [ done | ].
     iIntros (?) "X Y". iApply "X".
     rewrite /heap_type_of/=.
@@ -668,7 +683,7 @@ Section wp_initialize.
       first
         [ by iIntros (??) "HQ ?"; iApply "HQ'"; iApply "HQ"
         | by iIntros (?) "?"; iApply "HQ'"
-        | idtac ].
+        | eauto ].
     (* void *)
     iIntros (??) "($ & HQ) ?". iApply "HQ'". by iApply "HQ".
   Qed.
@@ -791,7 +806,7 @@ Section wp_initialize.
       { rewrite 2!qual_norm_map. simpl. inversion H0. done. }
       reflexivity. }
     by rewrite decompose_type_equiv.
-  (* Qed. *) Admitted. (* TODO *)
+  Qed.
 
   Lemma wp_initialize_frame tu tu' ρ obj ty e Q Q' :
     sub_module tu tu' ->
@@ -876,6 +891,15 @@ Section wp_initialize.
                          wp_initialize_decomp_spec tu ρ ty addr init Q (
                              wp_init tu ρ (tqualified cv ty') addr init Q
                            )
+  | WpInitArray cv ety len (ty' := Tarray ety len) :
+    (cv, Tarray ety len) = decompose_type ty ->
+    ~~q_volatile cv ->
+    wp_initialize_decomp_spec tu ρ ty addr init Q (
+        if bool_decide (0 < len)%N then
+          wp_init tu ρ (tqualified cv ty') addr init Q
+        else
+          UNSUPPORTED (initializing_type ty' init)
+      )
   | WpInitFuncArch cv ty' : match ty' with
                         | Tfunction _
                         | Tarch _ _
