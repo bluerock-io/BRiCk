@@ -28,6 +28,29 @@ Include ParserDecl.
 
 Module Import translation_unit.
 
+  (* Sort and remove duplicates
+     Doing both of these operations at the same time is more efficient than
+     doing them separately. Since this is computed on TUs, performance may
+     be important.
+   *)
+  Module sort.
+    Fixpoint insert (x : name) (ls : list name) : list name :=
+      match ls with
+      | nil => x :: nil
+      | l :: ls' =>
+          match compare.compareN x l with
+          | Lt => x :: ls
+          | Eq => ls
+          | Gt => l :: insert x ls'
+          end
+      end.
+    Fixpoint sort (ls : list name) : list name :=
+      match ls with
+      | nil => nil
+      | l :: ls => insert l $ sort ls
+      end.
+  End sort.
+
   (**
   We work with an exploded [translation_unit] and raw trees for
   efficiency.
@@ -35,14 +58,15 @@ Module Import translation_unit.
 
   Definition raw_symbol_table : Type := NM.Raw.t ObjValue.
   Definition raw_type_table : Type := NM.Raw.t GlobDecl.
+  Definition raw_alias_table : Type := NM.Raw.t (list name).
 
   #[global] Instance raw_structured_insert : forall {T}, Insert globname T (NM.Raw.t T) := _.
 
   Definition dup_info := list (name * (GlobDecl + ObjValue)).
   (** This representation is isomorphic to [translation_unit * list name] as shown by [decls]. *)
   Definition t : Type :=
-    raw_symbol_table -> raw_type_table -> dup_info ->
-    (raw_symbol_table -> raw_type_table -> dup_info -> translation_unit * dup_info) ->
+    raw_symbol_table -> raw_type_table -> list name -> raw_alias_table -> dup_info ->
+    (raw_symbol_table -> raw_type_table -> list name -> raw_alias_table -> dup_info -> translation_unit * dup_info) ->
     translation_unit * dup_info.
 
   Definition merge_obj_value (a b : ObjValue) : option ObjValue :=
@@ -53,12 +77,12 @@ Module Import translation_unit.
 
   (** Constructs a [translation_unit.t] with _one_ symbol, mapping [n] to [v]. *)
   Definition _symbols (n : name) (v : ObjValue) : t :=
-    fun s t dups k =>
+    fun s t ga a dups k =>
       match s !! n with
-      | None => k (<[n := v]> s) t dups
+      | None => k (<[n := v]> s) t ga a dups
       | Some v' => match merge_obj_value v v' with
-                  | Some v => k (<[n:=v]> s) t dups
-                  | None => k s t ((n, inr v) :: (n, inr v') :: dups)
+                  | Some v => k (<[n:=v]> s) t ga a dups
+                  | None => k s t ga a ((n, inr v) :: (n, inr v') :: dups)
                   end
       end.
   Definition merge_glob_decl (a b : GlobDecl) : option GlobDecl :=
@@ -69,7 +93,7 @@ Module Import translation_unit.
 
   (** Constructs a [translation_unit.t] with _one_ type, mapping [n] to [v]. *)
   Definition _types (n : name) (v : GlobDecl) : t :=
-    fun s t dups k =>
+    fun s t ga a dups k =>
       if bool_decide (Gtypedef (Tnamed n) = v \/ Gtypedef (Tenum n) = v)
       then
         (* ignore self-aliases. These arise when you do
@@ -78,22 +102,32 @@ Module Import translation_unit.
            typedef enum memory_order { .. } memory_order;
            >>
          *)
-        k s t dups
+        k s t ga a dups
       else
         match t !! n with
-        | None => k s (<[n := v]> t) dups
+        | None => k s (<[n := v]> t) ga a dups
         | Some v' => match merge_glob_decl v v' with
-                    | Some v => k s (<[n:=v]> t) dups
-                    | None => k s t ((n, inl v) :: (n, inl v') :: dups)
+                    | Some v => k s (<[n:=v]> t) ga a dups
+                    | None => k s t ga a ((n, inl v) :: (n, inl v') :: dups)
                     end
         end.
 
-  Definition _aliases (n : name) (ty : type) : t :=
+  Definition _type_alias (n : name) (ty : type) : t :=
     _types n (Gtypedef ty).
+
+  Definition _value_alias (n : name) (canon : name) : t :=
+    fun s t ga a dups k =>
+      match a !! n with
+      | None => k s t ga (<[n := canon :: nil]> a) dups
+      | Some canon' => k s t ga (<[n := canon :: canon']> a) dups
+      end.
+
+  Definition _global_alias (canon : name) : t :=
+    fun s t ga a dups k => k s t (canon :: ga) a dups.
 
   (** Constructs an empty [translation_unit.t]. *)
   Definition _skip : t :=
-    fun s t dups k => k s t dups.
+    fun s t ga a dups k => k s t ga a dups.
 
   Fixpoint array_fold {A B}
     (f : A -> B -> B) (ar : PArray.array A) (fuel : nat) (i : PrimInt63.int) (acc : B) : B :=
@@ -106,15 +140,16 @@ Module Import translation_unit.
   Definition abi_type := endian.
 
   Definition decls' (ds : PArray.array t) : t :=
-    array_fold (fun (X Y : t) s t dups K => X s t dups (fun s t dups => Y s t dups K))
+    array_fold (fun (X Y : t) s t ga a dups K => X s t ga a dups (fun s t ga a dups => Y s t ga a dups K))
       ds
       (Z.to_nat (Uint63.to_Z (PArray.length ds))) 0%uint63
-      (fun s t dups k => k s t dups).
+      (fun s t ga a dups k => k s t ga a dups).
 
   Definition decls (ds : PArray.array t) (e : abi_type) : translation_unit * dup_info :=
-    decls' ds ∅ ∅ [] $ fun s t => pair {|
+    decls' ds ∅ ∅ [] ∅ [] $ fun s t ga a => pair {|
       symbols := NM.from_raw s;
       types := NM.from_raw t;
+      namespace_aliases := (Listset (sort.sort ga), NM.from_raw $ NM.Raw.map (fun x => Listset $ sort.sort x) a);
       initializer := nil;	(** TODO *)
       byte_order := e;
     |}.
@@ -188,7 +223,16 @@ Definition Denum_constant (n : globname)
   Gconstant t $ Some $ Ecast (Cintegral t) v.
 
 Definition Dtypedef (n : globname) (t : type) : K :=
-  _aliases n t.
+  _type_alias n t.
+
+Definition Dinline_namespace (ns : name) (child : ident) : K :=
+  _value_alias ns (Nscoped ns (Nid child)).
+
+Definition Dusing_namespace (alias : name) (canonical : name) : K :=
+  _value_alias alias canonical.
+
+Definition Dglobal_using_namespace (alias : name) : K :=
+  _global_alias alias.
 
 Definition Dstatic_assert (msg : option PrimString.string) (e : Expr) : K :=
   _skip.
