@@ -202,22 +202,6 @@ Record translation_unit : Type := {
   byte_order  : endian;
 }.
 
-(*
-(** These [Lookup] instances come with no theory; use instead the unfolding
-    lemmas below and the `fin_maps` theory. *)
-#[global] Instance global_lookup : Lookup globname GlobDecl translation_unit :=
-  fun k m => m.(types) !! k.
-#[global] Instance symbol_lookup : Lookup obj_name ObjValue translation_unit :=
-  fun k m => m.(symbols) !! k.
-
-Lemma tu_lookup_globals (t : translation_unit) (n : globname) :
-  t !! n = t.(types) !! n.
-Proof. done. Qed.
-
-Lemma tu_lookup_symbols (t : translation_unit) (n : obj_name) :
-  t !! n = t.(symbols) !! n.
-Proof. done. Qed.
-*)
 
 (** [is_trivially_destructible tu ty] returns [true] if [ty] is trivially destructible.
 
@@ -243,14 +227,9 @@ Fixpoint is_trivially_destructible (tu : translation_unit) (ty : type) {struct t
                | _ => false
                end) ty.
 
-
-(* #[global] Remove Hints IM_lookup : typeclass_instances. (* TODO: structurd name lookup *) *)
-
-
 (**
 TODO: The following work on complete types seems misplaced.
 *)
-
 Fixpoint ref_to_type (t : type) : option type :=
   match t with
   | Tref t
