@@ -99,6 +99,10 @@ public:
 	IGNORE(ClassTemplatePartialSpecializationDecl)
 	IGNORE(VarTemplatePartialSpecializationDecl)
 
+	void VisitNamespaceAliasDecl(const NamespaceAliasDecl *decl, Flags) {
+		module_.add_namespace_alias(decl);
+	}
+
 	void VisitStaticAssertDecl(const StaticAssertDecl *decl, Flags) {
 		module_.add_assert(*decl);
 	}
@@ -265,6 +269,10 @@ public:
 	void VisitNamespaceDecl(const NamespaceDecl *decl, Flags flags) {
 		// namespaces can not be located inside of templates
 		always_assert(flags.none());
+
+		if (decl->isInlineNamespace()) {
+			module_.add_inline_namespace(decl);
+		}
 
 		VisitDeclContext(decl, flags);
 	}

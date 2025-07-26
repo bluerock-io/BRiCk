@@ -41,6 +41,8 @@ public:
 
 	using AssertList = std::list<const clang::StaticAssertDecl*>;
 	using DeclList = std::list<const clang::NamedDecl*>;
+	using AliasList =
+		std::set<std::pair<const clang::NamedDecl*, const clang::NamedDecl*>>;
 
 	const AssertList& asserts() const {
 		return asserts_;
@@ -62,8 +64,19 @@ public:
 		return template_definitions_;
 	}
 
+	const AliasList& aliases() const {
+		return ns_aliases_;
+	}
+
 	Module() = delete;
 	Module(Trace::Mask trace) : trace_(trace & Trace::ModuleBuilder) {}
+
+	void add_inline_namespace(const clang::NamespaceDecl* ns) {
+		add_alias(llvm::dyn_cast<clang::NamedDecl>(ns->getParent()), ns);
+	}
+	void add_namespace_alias(const clang::NamespaceAliasDecl* ns) {
+		add_alias(ns->getNamespace(), ns->getAliasedNamespace());
+	}
 
 private:
 	const bool trace_;
@@ -73,6 +86,12 @@ private:
 
 	DeclList template_declarations_;
 	DeclList template_definitions_;
+
+	AliasList ns_aliases_;
+
+	void add_alias(const clang::NamedDecl* from, const clang::NamedDecl* to) {
+		ns_aliases_.insert(std::make_pair(from, to));
+	}
 
 	AssertList asserts_;
 
