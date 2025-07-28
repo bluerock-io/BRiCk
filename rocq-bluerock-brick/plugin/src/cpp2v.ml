@@ -81,7 +81,7 @@ let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_e
         ()
       | _ ->
         (* TODO: it probably makes sense for this to be a fatal error *)
-        Feedback.msg_warning Pp.(str "Duplicate symbols found!" ++ Printer.pr_econstr_env env evd err)
+        Feedback.msg_warning Pp.(str "Duplicate symbols found!" ++ fnl () ++ Printer.pr_econstr_env env evd err ++ str ".")
     in
     let cinfo = Declare.CInfo.make ~name ~typ:None () in
     let info = Declare.Info.make () in
