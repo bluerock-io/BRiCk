@@ -19,7 +19,7 @@ Expand type aliases using the alias information stored within a
 [translation_unit].
 
 NOTE: The current implementation relies on the fact that aliases
-are already removed from definition, e.g.
+are already removed from definitions, e.g.
 <<
 using T = int;
 using U = T;
@@ -31,7 +31,7 @@ using U = int;
 >>
 This avoids the potential for loops and makes de-aliasing structurally
 recursive. Without this, we would need to rely on fuel (or well-foundedness
-arguments to fully de-alias a type/name.
+arguments) to fully de-alias a type/name.
 *)
 
 #[local] Open Scope monad_scope.
@@ -39,20 +39,12 @@ arguments to fully de-alias a type/name.
 
 Module internal.
   Import UPoly.
-  (**
-  Not monadic because not finding a value is not an error.
-  *)
-  Definition find_alias (tu : translation_unit) (n : name) : option decltype :=
-    match NM.find n tu.(types) with
-    | Some (Gtypedef ty) => Some ty
-    | _ => None
-    end.
 
   Section resolve.
     Context (tu : translation_unit).
 
     Definition handle_Tnamed (_ : name) (traverse : unit -> M name) : M type :=
-      (fun nm => match find_alias tu nm with
+      (fun nm => match translation_unit.resolve_type tu nm with
               | None => Tnamed nm
               | Some t => t
               end) <$> traverse ().
@@ -63,8 +55,8 @@ Module internal.
 
     Definition handle_type : type_handler M :=
       (handle_type_traverse
-       &: _handle_Tnamed .= handle_Tnamed
-       &: _handle_Tref .= handle_Tref
+       &: _handle_Tnamed  .= handle_Tnamed
+       &: _handle_Tref    .= handle_Tref
        &: _handle_Trv_ref .= handle_Trv_ref)%lens.
   End resolve.
 End internal.
@@ -84,17 +76,29 @@ Section resolve.
   Definition resolveS := USE traverseS.
   Definition resolveVD := USE traverseD.
 
+  (** Resolve the name of a value in a translation unit.
+      This uses the information in the alias table to attempt to resolve the symbol.
+      If the symbol is not found, then the dealiased symbol is returned but namespace
+      aliases are not resolved, because there is no way to know where the (unfound)
+      definition is supposed to live.
+   *)
+  Definition resolveValue (n : name) : M name :=
+    trace.map (fun n =>
+       match translation_unit.resolve_value tu n with
+       | None => n
+       | Some n => n
+       end) $ resolveN n.
 End resolve.
 
 Succeed Example _1 :
-  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  let tu := empty_tu Big in
   trace.runO (resolveN tu "test(int& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
-  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  let tu := empty_tu Big in
   trace.runO (resolveN tu "test(int&& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
-  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  let tu := empty_tu Big in
   trace.runO (resolveN tu "test(int& &&)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
-  let tu := {| symbols := ∅ ; types := ∅ ; initializer := []; byte_order := Big |} in
+  let tu := empty_tu Big in
   trace.runO (resolveN tu "test(int&& &&)") = Some ("test(int&&)"%cpp_name) := eq_refl.

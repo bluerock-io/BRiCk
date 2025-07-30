@@ -28,6 +28,14 @@ Compiling the Coq test file.
                (internal.NameMap.Raw.Leaf GlobDecl) 2%Z)
             I
       |};
+    namespace_aliases :=
+      ({| listset_car := [] |},
+       {|
+         TM.this := NM.Raw.Leaf (listset name);
+         TM.is_bst :=
+           internal.NameMap.check_canon_ok
+             (internal.NameMap.Raw.Leaf (listset name)) I
+       |});
     initializer := [];
     byte_order := Little
   |}

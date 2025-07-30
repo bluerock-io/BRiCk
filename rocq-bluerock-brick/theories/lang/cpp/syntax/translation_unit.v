@@ -6,6 +6,8 @@
 Require Import stdpp.fin_maps.
 Require Import bluerock.prelude.base.
 Require Import bluerock.prelude.avl.
+Require Import bluerock.prelude.lens.
+Require Import bluerock.prelude.elpi.derive.lens.
 Require Import bluerock.prelude.pstring.
 Require Import bluerock.lang.cpp.syntax.core.
 Require Import bluerock.lang.cpp.syntax.types.
@@ -181,7 +183,73 @@ Definition InitializerBlock : Set :=
 
 (** ** Aliases *)
 
-Definition alias_table : Type := NM.t type.
+(** These support
+
+    <<
+    namespace X {
+      inline namespace Y {
+        void test();
+        using namespace Bar;
+      }
+      inline namespace Z { }
+    }
+    >>
+
+    In this snippet, <<X::Y::test()>> is also exposed as <<X::test()>>.
+
+    <<inline>> is an attribute of a <<namespace>>, **not** a <<namespace>>
+    declaration, so either the entire <<namespace>> is inlined, or none of
+    it is.
+
+    This data structure stores namespace inclusions, e.g.
+    <<
+    X := [X::Y; X::Z]
+    X::Y := [Bar]
+    >>
+    as above. If <<NM>> maps to <<NM'>>, then a lookup on <<NM::xxx>> can
+    be satisfied by a lookup on <<NM'::xxx>>.
+
+    We do not include transitive dependencies, e.g. <<Bar>> is not included
+    in <<X>>.
+ *)
+Module alias_table.
+  Definition t : Type := listset name * NM.t (listset name).
+  #[global] Instance t_empty : Empty t := (∅, ∅).
+
+  Section expand_aliases.
+    (** Get all possible expansions of the name *)
+    Fixpoint all_expansions_ (aliases : NM.t (listset name)) (n : name) (fuel : nat) : list name :=
+      [n] ++
+        match aliases !! n with
+        | Some (Listset ls) =>
+            match fuel with
+            | O => ls
+            | S fuel =>
+                letM* l := ls in
+                all_expansions_ (NM.remove n aliases) l fuel
+            end
+        | None => []
+        end.
+
+    Definition all_expansions (aliases : NM.t (listset name)) (n : name) : list name :=
+      all_expansions_ aliases n (NM.cardinal aliases).
+
+    (** Expand all the aliases based on the information in the namespace table. *)
+    Fixpoint expand_aliases (tu : alias_table.t) (nm : name) : list name :=
+      match nm with
+      | Nglobal an =>
+          (* Because the global namespace can have inclusions, we need to consider <<inclusion::an>> *)
+          let '(Listset gl, al) := tu in
+          ((fun n => Nscoped n an) <$> gl) ++ all_expansions al nm
+      | Ninst ns inst =>
+          (fun ns => Ninst ns inst) <$> expand_aliases tu ns
+      | Nscoped ns an =>
+          letM* ns := expand_aliases tu ns in
+          (fun ns => Nscoped ns an) <$> all_expansions tu.2 ns
+      | _ => [nm]
+      end.
+  End expand_aliases.
+End alias_table.
 
 (** ** Translation units *)
 (**
@@ -194,30 +262,56 @@ TODO: does linking induce a (non-commutative) monoid on object files?
 Is then a translation unit a "singleton" value in this monoid?
 *)
 
-
-Record translation_unit : Type := {
-  symbols : symbol_table;
-  types : type_table;
-  initializer : InitializerBlock;
-  byte_order  : endian;
+Record translation_unit : Type := makeTranslationUnit {
+  symbols           : symbol_table;
+  types             : type_table;
+  namespace_aliases : alias_table.t;
+  initializer       : InitializerBlock;
+  byte_order        : endian;
 }.
+#[only(lens)] derive translation_unit.
 
-(*
-(** These [Lookup] instances come with no theory; use instead the unfolding
-    lemmas below and the `fin_maps` theory. *)
-#[global] Instance global_lookup : Lookup globname GlobDecl translation_unit :=
-  fun k m => m.(types) !! k.
-#[global] Instance symbol_lookup : Lookup obj_name ObjValue translation_unit :=
-  fun k m => m.(symbols) !! k.
+Definition empty_tu (e : endian) : translation_unit :=
+  makeTranslationUnit ∅ ∅ ∅ [] e.
+#[global] Instance : Empty translation_unit :=
+  empty_tu Little. (* << selected by a fair coin flip *)
 
-Lemma tu_lookup_globals (t : translation_unit) (n : globname) :
-  t !! n = t.(types) !! n.
-Proof. done. Qed.
+#[local]
+Definition canonicalize {T} (find : name -> option T) (tu : translation_unit) (nm : name) : option T :=
+  let aliases := alias_table.expand_aliases tu.(namespace_aliases) nm in
+  let process n :=
+    match find n with
+    | None => []
+    | Some v => [v]
+    end
+  in
+  match List.flat_map process aliases with
+  | t :: _ => Some t
+  | _ => None
+  end.
 
-Lemma tu_lookup_symbols (t : translation_unit) (n : obj_name) :
-  t !! n = t.(symbols) !! n.
-Proof. done. Qed.
-*)
+(** Resolves all of the aliases in a type name. *)
+Definition resolve_type (tu : translation_unit) (nm : name) : option decltype :=
+  let find n :=
+    match tu.(types) !! n with
+    | Some (Gtypedef ty) => Some ty
+    | Some (Genum _ _) => Some $ Tenum n
+    | Some _ => Some $ Tnamed n
+    | None => None
+    end
+  in
+  canonicalize find tu nm.
+
+(** Resolves all of the aliaes in a value name. *)
+Definition resolve_value (tu : translation_unit) (nm : name) : option name :=
+  let find n :=
+    match tu.(symbols) !! n with
+    | Some _ => Some n
+    | None => None
+    end
+  in
+  canonicalize find tu nm.
+
 
 (** [is_trivially_destructible tu ty] returns [true] if [ty] is trivially destructible.
 
@@ -243,14 +337,9 @@ Fixpoint is_trivially_destructible (tu : translation_unit) (ty : type) {struct t
                | _ => false
                end) ty.
 
-
-(* #[global] Remove Hints IM_lookup : typeclass_instances. (* TODO: structurd name lookup *) *)
-
-
 (**
 TODO: The following work on complete types seems misplaced.
 *)
-
 Fixpoint ref_to_type (t : type) : option type :=
   match t with
   | Tref t

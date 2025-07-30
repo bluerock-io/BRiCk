@@ -180,6 +180,16 @@ ToCoqConsumer::toCoqModule(clang::ASTContext* ctxt,
 			for (auto decl : mod.definitions()) {
 				printDecl(decl, print, cprint);
 			}
+			for (auto& [from, to] : mod.aliases()) {
+				if (from) {
+					guard::ctor _{print, "Dusing_namespace"};
+					cprint.printName(print, *from) << fmt::nbsp;
+					cprint.printName(print, *to);
+				} else {
+					guard::ctor _{print, "Dglobal_using_namespace"};
+					cprint.printName(print, *to);
+				}
+			}
 			for (auto decl : mod.asserts()) {
 				printDecl(decl, print, cprint);
 			}
