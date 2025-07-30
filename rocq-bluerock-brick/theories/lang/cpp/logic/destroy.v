@@ -540,7 +540,7 @@ Section body.
     | Tref r_ty
     | Trv_ref r_ty =>
       (*
-      NOTE rvalue references [Trv_ref] are represented as references
+      NOTE r-value references [Trv_ref] are represented as references
       [Tref].
       *)
       wp_destroy_prim tu cv (Tref r_ty) this Q
@@ -558,7 +558,7 @@ Section body.
 
     | Tfunction _ => |={top}=> UNSUPPORTED ("wp_destroy_val: function type", rty)
     | Tarch _ _ => |={top}=> UNSUPPORTED ("wp_destroy_val: arch type", rty)
-    | Tunsupported msg => |={top}=> UNSUPPORTED ("wp_destroy_val: arch type", msg)
+    | Tunsupported msg => |={top}=> UNSUPPORTED ("wp_destroy_val: unsupported type", msg)
     | _ => |={top}=> UNSUPPORTED ("wp_destroy_val: template type")
     end.
 End body.
