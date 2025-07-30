@@ -374,6 +374,7 @@ with type : Set :=
 | Tresult_member_call (on : name) (_ : type) (_ : list type)
 | Tresult_parenlist (_ :type) (_ : list type)
 | Tresult_member (_ : type) (_ : name)
+| Tauto (* this is a place-holder type *)
 
 | Tptr (t : type)
 | Tref (t : type)
@@ -879,6 +880,7 @@ with is_dependentT (t : type) : bool :=
   | Tresult_member_call _ _ _
   | Tresult_parenlist _ _ => true
   | Tresult_member _ _ => true
+  | Tauto => true
   | Tptr t
   | Tref t
   | Trv_ref t => is_dependentT t

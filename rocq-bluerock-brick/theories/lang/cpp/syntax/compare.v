@@ -1292,6 +1292,7 @@ Module type.
       | Tresult_member_call a b c => kp 21 $ Box_Tresult_member_call a b c
       | Tresult_parenlist a b => kp 22 $ Box_Tresult_parenlist a b
       | Tresult_member a b => kp 23 $ Box_Tresult_member a b
+      | Tauto => k 3%uint63
       | Tunsupported msg => kp 24 msg
       end.
 

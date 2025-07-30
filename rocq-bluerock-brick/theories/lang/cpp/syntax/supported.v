@@ -79,6 +79,7 @@ Section with_monad.
     | Tresult_member_call nm t ts => name nm <+> type t <+> lst type ts
     | Tresult_parenlist t ts => type t <+> lst type ts
     | Tresult_member t _ => type t
+    | Tauto => OK
     | Tptr t | Tref t | Trv_ref t | Tarray t _ | Tincomplete_array t => type t
     | Tnum _ _ | Tchar_ _ | Tvoid | Tbool | Tfloat_ _ | Tnullptr => OK
     | Tvariable_array t e => type t <+> expr e

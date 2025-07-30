@@ -234,6 +234,7 @@ Section with_lang.
         (parens $ concat $ join_sep ", " $ printT <$> ft.(ft_params))
     | Tarch _ note => "?" ++ note
     | Tunsupported note => "?" ++ note
+    | Tauto => "auto"
     | Tparam nm => nm
     | Tresult_param nm => "decltype(" ++ nm ++ ")"
     | Tresult_global nm => "decltype(" ++ printN nm ++ ")"

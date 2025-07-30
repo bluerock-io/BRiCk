@@ -130,6 +130,7 @@ Definition default_initialize_body `{Σ : cpp_logic, σ : genv}
   | Tunsupported msg => UNSUPPORTED msg
   | Tdecltype _ => ERROR "default initialization requires a runtime type, got 'decltype(())'"
   | Texprtype _ => ERROR "default initialization requires a runtime type, got 'decltype()'"
+  | Tauto => ERROR "default initialization requires a runtime type, got 'auto'"
   | Tparam _ | Tresult_param _ | Tresult_global _
   | Tresult_unop _ _ | Tresult_binop _ _ _
   | Tresult_call _ _ | Tresult_member_call _ _ _
@@ -446,7 +447,8 @@ Definition wp_initialize_unqualified_body `{Σ : cpp_logic, σ : genv}
     | Tparam _ | Tresult_param _ | Tresult_global _
     | Tresult_unop _ _ | Tresult_binop _ _ _
     | Tresult_call _ _ | Tresult_member_call _ _ _
-    | Tresult_member _ _ | Tresult_parenlist _ _ => UNSUPPORTED (initializing_type ty init)
+    | Tresult_member _ _ | Tresult_parenlist _ _
+    | Tauto => UNSUPPORTED (initializing_type ty init)
     end%I.
 
 mlock
