@@ -7,6 +7,9 @@ cmake_minimum_required(VERSION 3.12)
 project(cpp2v)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+if(DEFINED ENV{BUILD_TYPE})
+  set(CMAKE_BUILD_TYPE ${BUILD_TYPE})
+endif()
 
 # Picks the newest version of clang, see https://github.com/CastXML/CastXML/issues/148
 set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
