@@ -142,9 +142,10 @@ let cpp_command_prog name flags prog =
     temp_cpp ::
     "--" :: flags
   in
-  let stdin , stdout , stderr =
+  let streams =
     Unix.open_process_args_full "cpp2v" (Array.of_list flags) (Unix.environment ())
   in
+  let stdin , stdout , stderr = streams in
 
   (* Read all output *)
   let rec read_all channel buffer =
@@ -158,10 +159,27 @@ let cpp_command_prog name flags prog =
 
   (* Capture stdout and stderr *)
   let stderr_buffer = Buffer.create 4096 |> read_all stderr in
-  if Buffer.length stderr_buffer > 0 then
-    Feedback.msg_warning Pp.(str "Command produced warnings!" ++ fnl () ++ str (Buffer.contents stderr_buffer)) ;
+  let msg_text (warn_err : string) (cpp2v_stderr : string) =
+    Pp.(
+      str "Invoking cpp2v " ++ str warn_err ++ fnl() ++
+      str cpp2v_stderr ++ fnl() ++
+      str "cpp2v command line:" ++ fnl() ++ str "  " ++ prlist_with_sep (fun () -> str " ") str flags)
+  in
+  let process_status = Unix.close_process_full streams in
+  let success =
+    match process_status with
+    | WEXITED 0 -> true
+    | _ -> false
+  in
+  if not success then
+    if Buffer.length stderr_buffer = 0 then
+      CErrors.user_err Pp.(msg_text "failed with no error message!" "")
+    else
+      CErrors.user_err Pp.(msg_text "failed with the following warnings/errors!" (Buffer.contents stderr_buffer))
+  else if Buffer.length stderr_buffer > 0 then
+    Feedback.msg_warning Pp.(msg_text "produced the following warnings!" (Buffer.contents stderr_buffer));
 
-  (* this might have problems with coq-lsp if the requried file has its own requires *)
+  (* this might have problems with coq-lsp if the required file has its own requires *)
   let current_state = Vernacstate.freeze_full_state () in
   let _new_state =
     Vernacinterp.interp ~intern:Vernacinterp.fs_intern ~st:current_state

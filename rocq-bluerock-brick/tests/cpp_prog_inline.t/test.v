@@ -12,3 +12,7 @@ cpp.prog source2 prog cpp:{{
   }}.
 
 Check source2.
+
+cpp.prog buggy_source prog cpp:{{
+  void identity(int x) { return x; }
+}}.
