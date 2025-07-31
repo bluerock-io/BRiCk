@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2024 BlueRock Security, Inc.
- * This software is distributed under the terms of the BedRock Open-Source License.
- * See the LICENSE-BedRock file in the repository root for details.
+ * This software is distributed under the terms of the BedRock Open-Source
+ * License. See the LICENSE-BedRock file in the repository root for details.
  */
 
 #pragma once
@@ -12,16 +12,16 @@ class Decl;
 class NamedDecl;
 class TemplateDecl;
 class TemplateArgumentList;
-}
+} // namespace clang
 
 /// Shallow view of template specialization
 struct SDecl {
-	const clang::TemplateDecl &temp;
-	const clang::TemplateArgumentList &args;
+    const clang::TemplateDecl &temp;
+    const clang::TemplateArgumentList &args;
 
-	SDecl() = delete;
-	SDecl(const clang::TemplateDecl &t, const clang::TemplateArgumentList &a)
-		: temp{t}, args{a} {}
+    SDecl() = delete;
+    SDecl(const clang::TemplateDecl &t, const clang::TemplateArgumentList &a)
+        : temp{t}, args{a} {}
 };
 using SDeclO = std::optional<SDecl>;
 
