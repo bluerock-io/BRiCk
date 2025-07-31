@@ -582,6 +582,27 @@ Module internal.
       in
       num <$> optional (op_token "-") <*> decimal.
 
+    Definition escape_table : list (TKN * TKN) := Eval vm_compute in
+      (fun x => (char63_wrap x.1, char63_wrap x.2)) <$>
+        [("\", "\")%char63;
+         ("n", wrap_char63 13%uint63);
+         ("t", wrap_char63 9%uint63);
+         ("r", wrap_char63 10%uint63)]%char63.
+
+    Definition cpp_char : M N :=
+      let get : M TKN :=
+        let* c := char (fun _ => true) in
+        if bool_decide (c = "\".(char63_wrap))%char63 then
+          let* c := char (fun _ => true) in
+          match list_find (fun k_v => k_v.1 = c) escape_table with
+          | None => mfail
+          | Some k_v => mret k_v.2.2
+          end
+        else
+          mret c
+      in (fun x => Z.to_N $ to_Z x) <$> get.
+
+
     Definition parse_expr' : M Expr :=
       let* _ := ws in
       let int_literal :=
@@ -611,8 +632,7 @@ Module internal.
           | Some t => t
           end
         in
-        let* _ := optional (exact "'") in
-        mfail
+        (fun n => Echar n ty) <$> exact "'" *> cpp_char <* exact "'"
       in
       let simple_literal :=
         anyOf [(const (Ebool true) <$> keyword "true");
@@ -781,6 +801,7 @@ Module Type TESTS.
 
   Succeed Example _0 : TEST "C<1b, 0b>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tbool); Avalue (Eint 0 Tbool)]) := eq_refl.
   Succeed Example _0 : TEST "C<1, 0>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Avalue (Eint 0 Tint)]) := eq_refl.
+  Succeed Example _0 : TEST "C<'a', '\t'>" (Ninst (Nglobal (Nid "C")) [Avalue (Echar 97 Tchar); Avalue (Echar 9 Tchar)]) := eq_refl.
 
   Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
   Succeed Example _0 : TEST "C<1, ...<int, long>>" (Ninst (Nglobal (Nid "C")) [Avalue (Eint 1 Tint); Apack [Atype Tint; Atype Tlong]]) := eq_refl.
