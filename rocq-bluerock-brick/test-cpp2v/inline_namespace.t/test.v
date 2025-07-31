@@ -3,7 +3,7 @@ Require Import bluerock.lang.cpp.syntax.
 Require Import bluerock.lang.cpp.syntax.dealias.
 Require Import bluerock.lang.cpp.parser.plugin.cpp2v.
 
-cpp.prog module prog cpp:{{
+cpp.prog source prog cpp:{{
     namespace X {
       inline
       namespace Y {
@@ -20,7 +20,7 @@ cpp.prog module prog cpp:{{
 }}.
 
 Notation TEST a b :=
-  (dealias.resolveValue module a%cpp_name = trace.Success b%cpp_name) (only parsing).
+  (dealias.resolveValue source a%cpp_name = trace.Success b%cpp_name) (only parsing).
 
 Example _1 : TEST "X::testXYZ()" "X::Y::Z::testXYZ()" := eq_refl.
 Example _12 : TEST "X::Y::testXYZ()" "X::Y::Z::testXYZ()" := eq_refl.

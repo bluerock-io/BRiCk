@@ -2,7 +2,7 @@
 
 Compiling the Coq test file.
   $ dune build
-  module
+  source1
        : translation_unit
-  module1
+  source2
        : translation_unit

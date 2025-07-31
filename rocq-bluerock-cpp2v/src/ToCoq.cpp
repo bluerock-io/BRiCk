@@ -88,12 +88,12 @@ void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
                                 bool sharing) {
 
 #if 0
-	NoInclude noInclude(ctxt->getSourceManager());
-	FromComment fromComment(ctxt);
-	std::list<Filter*> filters;
-	filters.push_back(&noInclude);
-	filters.push_back(&fromComment);
-	Combine<Filter::What::NOTHING, Filter::max> filter(filters);
+    NoInclude noInclude(ctxt->getSourceManager());
+    FromComment fromComment(ctxt);
+    std::list<Filter*> filters;
+    filters.push_back(&noInclude);
+    filters.push_back(&fromComment);
+    Combine<Filter::What::NOTHING, Filter::max> filter(filters);
 #endif
     SpecCollector specs;
     Default filter(Filter::What::DEFINITION);
@@ -159,7 +159,7 @@ void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
                     << "Require Import bluerock.lang.cpp.parser.plugin.cpp2v."
                     << fmt::line;
             }
-            print.output() << "cpp.prog " << interactive_.value_or("module")
+            print.output() << "cpp.prog " << interactive_.value_or("source")
                            << fmt::indent << fmt::line;
             if (ctxt->getTargetInfo().isBigEndian()) {
                 print.output() << "abi Big" << fmt::line;
@@ -192,6 +192,10 @@ void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
             // TODO I still need to generate the initializer
 
             print.output() << "." << fmt::outdent << fmt::outdent << fmt::line;
+            if (!interactive_.has_value()) {
+                print.output()
+                    << "Notation module := source (only parsing)." << fmt::line;
+            }
 
             if (check_types_) {
                 print.output()
@@ -235,7 +239,7 @@ void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
         print.begin_list();
         for (auto decl : mod.template_declarations()) {
             // if (sharing)
-            // 	prePrintDecl(decl, c, print, cprint);
+            //     prePrintDecl(decl, c, print, cprint);
             if (printDecl(decl, print, cprint))
                 print.cons();
         }

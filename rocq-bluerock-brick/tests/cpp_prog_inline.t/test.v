@@ -1,14 +1,14 @@
 Require Import bluerock.lang.cpp.parser.
 Require Import bluerock.lang.cpp.parser.plugin.cpp2v.
 
-cpp.prog module prog cpp:{{
+cpp.prog source1 prog cpp:{{
       void test() { }
  }}.
 
-Check module.
+Check source1.
 
-cpp.prog module1 prog cpp:{{
+cpp.prog source2 prog cpp:{{
       int add(int x, int y) { return x + y; }
   }}.
 
-Check module1.
+Check source2.
