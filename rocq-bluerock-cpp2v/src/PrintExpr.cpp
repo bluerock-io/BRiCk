@@ -366,7 +366,7 @@ public:
                       << "Try fixing earlier errors\n";
         print.ctor("Eunsupported", false);
         print.str(expr->getStmtClassName());
-        done(expr, Done::VT);
+        done(expr, Done::DT);
     }
 
     void printBinaryOperator(const BinaryOperator *expr) {
