@@ -10,4 +10,4 @@
 
 /// Unconditional variant of `assert`
 #define always_assert(e)                                                       \
-  ((e) ? (void)0 : assertion_failed(#e, __func__, __FILE__, __LINE__))
+    ((e) ? (void)0 : assertion_failed(#e, __func__, __FILE__, __LINE__))

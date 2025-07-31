@@ -18,68 +18,71 @@ class CompilerInstance;
 
 class Module {
 public:
-  struct Flags {
-    bool in_template;
-    bool in_specialization; // explicit specialization or implicit instantiation
+    struct Flags {
+        bool in_template;
+        bool in_specialization; // explicit specialization or implicit
+                                // instantiation
 
-    Flags set_template() const { return Flags{true, in_specialization}; }
-    Flags set_specialization() const { return Flags{in_template, true}; }
+        Flags set_template() const { return Flags{true, in_specialization}; }
+        Flags set_specialization() const { return Flags{in_template, true}; }
 
-    bool none() const { return !in_template && !in_specialization; }
-  };
+        bool none() const { return !in_template && !in_specialization; }
+    };
 
-  void add_definition(const clang::NamedDecl &, Flags);
-  void add_declaration(const clang::NamedDecl &, Flags);
-  void add_assert(const clang::StaticAssertDecl &);
+    void add_definition(const clang::NamedDecl &, Flags);
+    void add_declaration(const clang::NamedDecl &, Flags);
+    void add_assert(const clang::StaticAssertDecl &);
 
-  using AssertList = std::list<const clang::StaticAssertDecl *>;
-  using DeclList = std::list<const clang::NamedDecl *>;
-  using AliasList =
-      std::set<std::pair<const clang::NamedDecl *, const clang::NamedDecl *>>;
+    using AssertList = std::list<const clang::StaticAssertDecl *>;
+    using DeclList = std::list<const clang::NamedDecl *>;
+    using AliasList =
+        std::set<std::pair<const clang::NamedDecl *, const clang::NamedDecl *>>;
 
-  const AssertList &asserts() const { return asserts_; }
+    const AssertList &asserts() const { return asserts_; }
 
-  const DeclList &declarations() const { return declarations_; }
+    const DeclList &declarations() const { return declarations_; }
 
-  const DeclList &definitions() const { return definitions_; }
+    const DeclList &definitions() const { return definitions_; }
 
-  const DeclList &template_declarations() const {
-    return template_declarations_;
-  }
+    const DeclList &template_declarations() const {
+        return template_declarations_;
+    }
 
-  const DeclList &template_definitions() const { return template_definitions_; }
+    const DeclList &template_definitions() const {
+        return template_definitions_;
+    }
 
-  const AliasList &aliases() const { return ns_aliases_; }
+    const AliasList &aliases() const { return ns_aliases_; }
 
-  Module() = delete;
-  Module(Trace::Mask trace) : trace_(trace & Trace::ModuleBuilder) {}
+    Module() = delete;
+    Module(Trace::Mask trace) : trace_(trace & Trace::ModuleBuilder) {}
 
-  void add_inline_namespace(const clang::NamespaceDecl *ns) {
-    add_alias(llvm::dyn_cast<clang::NamedDecl>(ns->getParent()), ns);
-  }
-  void add_namespace_alias(const clang::NamespaceAliasDecl *ns) {
-    add_alias(ns->getNamespace(), ns->getAliasedNamespace());
-  }
+    void add_inline_namespace(const clang::NamespaceDecl *ns) {
+        add_alias(llvm::dyn_cast<clang::NamedDecl>(ns->getParent()), ns);
+    }
+    void add_namespace_alias(const clang::NamespaceAliasDecl *ns) {
+        add_alias(ns->getNamespace(), ns->getAliasedNamespace());
+    }
 
 private:
-  const bool trace_;
+    const bool trace_;
 
-  DeclList declarations_;
-  DeclList definitions_;
+    DeclList declarations_;
+    DeclList definitions_;
 
-  DeclList template_declarations_;
-  DeclList template_definitions_;
+    DeclList template_declarations_;
+    DeclList template_definitions_;
 
-  AliasList ns_aliases_;
+    AliasList ns_aliases_;
 
-  void add_alias(const clang::NamedDecl *from, const clang::NamedDecl *to) {
-    ns_aliases_.insert(std::make_pair(from, to));
-  }
+    void add_alias(const clang::NamedDecl *from, const clang::NamedDecl *to) {
+        ns_aliases_.insert(std::make_pair(from, to));
+    }
 
-  AssertList asserts_;
+    AssertList asserts_;
 
-  void add_decl(llvm::StringRef, DeclList &, DeclList &,
-                const clang::NamedDecl &, Flags);
+    void add_decl(llvm::StringRef, DeclList &, DeclList &,
+                  const clang::NamedDecl &, Flags);
 };
 
 class Filter;

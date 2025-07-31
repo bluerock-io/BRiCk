@@ -11,12 +11,12 @@ class raw_ostream;
 
 namespace logging {
 enum Level : int {
-  FATAL = -1,
-  NONE = 0,
-  UNSUPPORTED = 5,
-  VERBOSE = 10,
-  VERBOSER = 20,
-  ALL = 1000,
+    FATAL = -1,
+    NONE = 0,
+    UNSUPPORTED = 5,
+    VERBOSE = 10,
+    VERBOSER = 20,
+    ALL = 1000,
 };
 
 llvm::raw_ostream &log(Level level = VERBOSE);

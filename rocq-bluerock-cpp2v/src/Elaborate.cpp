@@ -31,7 +31,7 @@ static raw_ostream &warning(loc::loc loc, const ASTContext &context,
 using Flags = ::Module::Flags;
 
 class Elaborate : public DeclVisitorArgs<Elaborate, void, Flags> {
-  private:
+private:
     using Visitor = DeclVisitorArgs<Elaborate, void, Flags>;
 
     clang::CompilerInstance *const ci_;
@@ -56,7 +56,7 @@ class Elaborate : public DeclVisitorArgs<Elaborate, void, Flags> {
         }
     }
 
-  public:
+public:
     Elaborate(clang::CompilerInstance *ci, bool templates, Trace::Mask trace,
               bool rec = false)
         : ci_(ci), templates_(templates), trace_(trace & Trace::Elaborate),
