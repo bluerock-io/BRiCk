@@ -1004,7 +1004,7 @@ public:
         print.ctor("Eunsupported") << fmt::nbsp << "\"float: ";
         lit->getValue().print(print.output().nobreak());
         print.output() << "\"";
-        done(lit, Done::T);
+        done(lit, Done::DT);
     }
 
     void VisitMemberExpr(const MemberExpr *expr) {
@@ -1166,12 +1166,12 @@ public:
         print.list(expr->arguments(),
                    [&](auto i) { cprint.printExpr(print, i, names); });
 #if 0
-	print.output() << fmt::nbsp << fmt::lparen;
-	for (auto i : expr->arguments()) {
-		cprint.printExpr(print, i, names);
-		print.cons();
-	}
-	print.end_list();
+        print.output() << fmt::nbsp << fmt::lparen;
+        for (auto i : expr->arguments()) {
+          cprint.printExpr(print, i, names);
+          print.cons();
+        }
+        print.end_list();
 #endif
         done(expr, Done::NONE);
     }
