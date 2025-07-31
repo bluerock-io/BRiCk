@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2024 BlueRock Security, Inc.
- * This software is distributed under the terms of the BedRock Open-Source License.
- * See the LICENSE-BedRock file in the repository root for details.
+ * This software is distributed under the terms of the BedRock Open-Source
+ * License. See the LICENSE-BedRock file in the repository root for details.
  */
 #pragma once
 #include "Location.hpp"
@@ -42,7 +42,7 @@ class NestedNameSpecifier;
 class DeclarationName;
 class IdentifierInfo;
 class Qualifiers;
-}
+} // namespace clang
 
 namespace fmt {
 class Formatter;
@@ -58,26 +58,20 @@ results in a declaration context `ctx` which _does not_ satisfy clang's
 invariants and readily leads to segmentation violations and other bad
 symptoms. Returning `ref<const DeclContext>` avoids this foot gun.
 */
-template<typename T>
-class ref final {
+template <typename T> class ref final {
 private:
-	T& ref_;
-	ref() = delete;
+  T &ref_;
+  ref() = delete;
 
 public:
-	explicit ref(T& r) : ref_{r} {}
+  explicit ref(T &r) : ref_{r} {}
 
-	operator T&() const {
-		return ref_;
-	}
+  operator T &() const { return ref_; }
 
-	using type = typename std::remove_reference<T>::type;
-	type* operator->() const {
-		return &ref_;
-	}
+  using type = typename std::remove_reference<T>::type;
+  type *operator->() const { return &ref_; }
 };
-template<typename T>
-explicit ref(T&) -> ref<T>;
+template <typename T> explicit ref(T &) -> ref<T>;
 
 /*
 C++23 permits attributes in a closure to decorate its operator().
@@ -90,216 +84,204 @@ Attribution: https://stackoverflow.com/a/70991613
 class CoqPrinter;
 struct OpaqueNames;
 
-bool is_dependent(const clang::Expr*);
+bool is_dependent(const clang::Expr *);
 
 class ClangPrinter {
 private:
-	clang::CompilerInstance* compiler_;
-	clang::ASTContext* context_;
-	clang::MangleContext* mangleContext_;
-	const Trace::Mask trace_;
-	const clang::DeclContext* decl_{nullptr};
-	const bool comment_{false};
-	const bool typedefs_;
+  clang::CompilerInstance *compiler_;
+  clang::ASTContext *context_;
+  clang::MangleContext *mangleContext_;
+  const Trace::Mask trace_;
+  const clang::DeclContext *decl_{nullptr};
+  const bool comment_{false};
+  const bool typedefs_;
 
-	ClangPrinter(const ClangPrinter& from, const clang::DeclContext* decl)
-		: compiler_(from.compiler_), context_(from.context_),
-		  mangleContext_(from.mangleContext_), trace_(from.trace_), decl_{decl},
-		  comment_{from.comment_}, typedefs_{from.typedefs_} {}
+  ClangPrinter(const ClangPrinter &from, const clang::DeclContext *decl)
+      : compiler_(from.compiler_), context_(from.context_),
+        mangleContext_(from.mangleContext_), trace_(from.trace_), decl_{decl},
+        comment_{from.comment_}, typedefs_{from.typedefs_} {}
 
 public:
-	// Silence some warnings until we can improve our diagnostics
-	static inline constexpr bool warn_well_known = false;
+  // Silence some warnings until we can improve our diagnostics
+  static inline constexpr bool warn_well_known = false;
 
-	// Make `--trace` output more verbose
-	static inline constexpr bool debug = false;
+  // Make `--trace` output more verbose
+  static inline constexpr bool debug = false;
 
-	ClangPrinter(clang::CompilerInstance* compiler, clang::ASTContext* context,
-				 Trace::Mask trace, bool comment, bool typdefs = false);
+  ClangPrinter(clang::CompilerInstance *compiler, clang::ASTContext *context,
+               Trace::Mask trace, bool comment, bool typdefs = false);
 
-	/*
+  /*
     This declaration provides context for resolving template
     argument names and for diagnostics (e.g., an approximate
     source location for type-related warnings).
     */
-	ClangPrinter withDeclContext(const clang::DeclContext* d) const {
-		return {*this, d};
-	}
-	ClangPrinter withDecl(const clang::Decl* decl) const;
+  ClangPrinter withDeclContext(const clang::DeclContext *d) const {
+    return {*this, d};
+  }
+  ClangPrinter withDecl(const clang::Decl *decl) const;
 
 private:
-	const clang::Decl* getDecl() const;
+  const clang::Decl *getDecl() const;
 
-	fmt::Formatter&
-	printNestedName(CoqPrinter&, const clang::NestedNameSpecifier*, loc::loc);
+  fmt::Formatter &printNestedName(CoqPrinter &,
+                                  const clang::NestedNameSpecifier *, loc::loc);
 
 public:
-	clang::ASTContext& getContext() {
-		return *context_;
-	}
+  clang::ASTContext &getContext() { return *context_; }
 
-	clang::CompilerInstance& getCompiler() {
-		return *compiler_;
-	}
+  clang::CompilerInstance &getCompiler() { return *compiler_; }
 
-	clang::MangleContext& getMangleContext() {
-		return *mangleContext_;
-	}
+  clang::MangleContext &getMangleContext() { return *mangleContext_; }
 
-	bool printTypedefs() const {
-		return typedefs_;
-	}
+  bool printTypedefs() const { return typedefs_; }
 
-	std::optional<std::pair<const clang::CXXRecordDecl*, clang::Qualifiers>>
-	getLambdaClass() const;
+  std::optional<std::pair<const clang::CXXRecordDecl *, clang::Qualifiers>>
+  getLambdaClass() const;
 
-	// Helpers for diagnostics
-	llvm::raw_ostream& debug_dump(loc::loc);
-	llvm::raw_ostream& error_prefix(llvm::raw_ostream&, loc::loc);
+  // Helpers for diagnostics
+  llvm::raw_ostream &debug_dump(loc::loc);
+  llvm::raw_ostream &error_prefix(llvm::raw_ostream &, loc::loc);
 
-	std::string sourceLocation(const clang::SourceLocation) const;
-	std::string sourceRange(const clang::SourceRange sr) const;
+  std::string sourceLocation(const clang::SourceLocation) const;
+  std::string sourceRange(const clang::SourceRange sr) const;
 
-	// Helpers for `--trace`
-	bool trace(Trace::Mask m) const {
-		return trace_ & m;
-	}
-	llvm::raw_ostream& trace(llvm::StringRef whence, loc::loc);
+  // Helpers for `--trace`
+  bool trace(Trace::Mask m) const { return trace_ & m; }
+  llvm::raw_ostream &trace(llvm::StringRef whence, loc::loc);
 
-	// Operators
+  // Operators
 
-	fmt::Formatter& printOverloadableOperator(CoqPrinter&,
-											  clang::OverloadedOperatorKind,
-											  loc::loc);
+  fmt::Formatter &printOverloadableOperator(CoqPrinter &,
+                                            clang::OverloadedOperatorKind,
+                                            loc::loc);
 
-	// Names
+  // Names
 
-	fmt::Formatter& printNameComment(CoqPrinter&, const clang::Decl&);
+  fmt::Formatter &printNameComment(CoqPrinter &, const clang::Decl &);
 
-	// TODO: eliminate [printNameAsKey]
-	fmt::Formatter& printNameAsKey(CoqPrinter&, const clang::Decl&); // : bs
-	fmt::Formatter& printNameAsKey(CoqPrinter&, const clang::Decl*, loc::loc);
+  // TODO: eliminate [printNameAsKey]
+  fmt::Formatter &printNameAsKey(CoqPrinter &, const clang::Decl &); // : bs
+  fmt::Formatter &printNameAsKey(CoqPrinter &, const clang::Decl *, loc::loc);
 
-	fmt::Formatter& printName(CoqPrinter&, const clang::Decl&,
-							  bool full = true); // name
-	fmt::Formatter& printName(CoqPrinter&, const clang::Decl*, loc::loc,
-							  bool full = true);
-	fmt::Formatter& printUnresolvedName(
-		CoqPrinter&, const clang::NestedNameSpecifier* /* optional */,
-		const clang::DeclarationName&,
-		llvm::ArrayRef<clang::TemplateArgumentLoc> /* optional */, loc::loc);
-	fmt::Formatter& printUnresolvedName(
-		CoqPrinter&, const clang::NestedNameSpecifier* /* optional */,
-		const clang::DeclarationName&,
-		llvm::ArrayRef<clang::TemplateArgument> /* optional */, loc::loc);
+  fmt::Formatter &printName(CoqPrinter &, const clang::Decl &,
+                            bool full = true); // name
+  fmt::Formatter &printName(CoqPrinter &, const clang::Decl *, loc::loc,
+                            bool full = true);
+  fmt::Formatter &printUnresolvedName(
+      CoqPrinter &, const clang::NestedNameSpecifier * /* optional */,
+      const clang::DeclarationName &,
+      llvm::ArrayRef<clang::TemplateArgumentLoc> /* optional */, loc::loc);
+  fmt::Formatter &printUnresolvedName(
+      CoqPrinter &, const clang::NestedNameSpecifier * /* optional */,
+      const clang::DeclarationName &,
+      llvm::ArrayRef<clang::TemplateArgument> /* optional */, loc::loc);
 
-	fmt::Formatter&
-	printUnresolvedName(CoqPrinter&,
-						const clang::NestedNameSpecifier* /* optional */,
-						const clang::DeclarationName&, loc::loc);
+  fmt::Formatter &
+  printUnresolvedName(CoqPrinter &,
+                      const clang::NestedNameSpecifier * /* optional */,
+                      const clang::DeclarationName &, loc::loc);
 
-	// TODO: Can we drop these?
-	fmt::Formatter& printUnsupportedName(CoqPrinter&, llvm::StringRef); // name
+  // TODO: Can we drop these?
+  fmt::Formatter &printUnsupportedName(CoqPrinter &, llvm::StringRef); // name
 
-	fmt::Formatter& printDtorName(CoqPrinter&,
-								  const clang::CXXRecordDecl&); // name
+  fmt::Formatter &printDtorName(CoqPrinter &,
+                                const clang::CXXRecordDecl &); // name
 
-	fmt::Formatter& printUnqualifiedName(CoqPrinter&,
-										 const clang::NamedDecl&); // : ident
-	fmt::Formatter& printUnqualifiedName(CoqPrinter&, const clang::NamedDecl*,
-										 loc::loc);
+  fmt::Formatter &printUnqualifiedName(CoqPrinter &,
+                                       const clang::NamedDecl &); // : ident
+  fmt::Formatter &printUnqualifiedName(CoqPrinter &, const clang::NamedDecl *,
+                                       loc::loc);
 
-	fmt::Formatter& printFieldName(CoqPrinter&, const clang::FieldDecl&,
-								   loc::loc);
+  fmt::Formatter &printFieldName(CoqPrinter &, const clang::FieldDecl &,
+                                 loc::loc);
 
-	// Print all parameters in scope; for example, with
-	// ```
-	// template<typename T> struct  s{
-	//   int x;
-	//   template<typename U> void f(T, U);
-	// };
-	// ```
-	// emits roughly `<T>` for `s` and `<T,U>` for `s::f`.
-	// With `as_arg`, print template arguments synthesized from parameters.
-	fmt::Formatter& printTemplateParameters(
-		CoqPrinter&, const clang::Decl&,
-		bool as_arg = false); // list temp_param or list temp_arg
+  // Print all parameters in scope; for example, with
+  // ```
+  // template<typename T> struct  s{
+  //   int x;
+  //   template<typename U> void f(T, U);
+  // };
+  // ```
+  // emits roughly `<T>` for `s` and `<T,U>` for `s::f`.
+  // With `as_arg`, print template arguments synthesized from parameters.
+  fmt::Formatter &printTemplateParameters(
+      CoqPrinter &, const clang::Decl &,
+      bool as_arg = false); // list temp_param or list temp_arg
 
-	// Print all arguments in scope
-	fmt::Formatter& printTemplateArguments(CoqPrinter&,
-										   const clang::Decl&); // list temp_arg
+  // Print all arguments in scope
+  fmt::Formatter &printTemplateArguments(CoqPrinter &,
+                                         const clang::Decl &); // list temp_arg
 
-	fmt::Formatter&
-	printTemplateArgumentList(CoqPrinter&, const clang::TemplateArgumentList&,
-							  loc::loc); // `list temp_arg`
-	fmt::Formatter&
-	printTemplateArgumentList(CoqPrinter&,
-							  llvm::ArrayRef<clang::TemplateArgument>);
-	fmt::Formatter&
-	printTemplateArgumentList(CoqPrinter&,
-							  llvm::ArrayRef<clang::TemplateArgumentLoc>);
+  fmt::Formatter &printTemplateArgumentList(CoqPrinter &,
+                                            const clang::TemplateArgumentList &,
+                                            loc::loc); // `list temp_arg`
+  fmt::Formatter &
+  printTemplateArgumentList(CoqPrinter &,
+                            llvm::ArrayRef<clang::TemplateArgument>);
+  fmt::Formatter &
+  printTemplateArgumentList(CoqPrinter &,
+                            llvm::ArrayRef<clang::TemplateArgumentLoc>);
 
-	// TODO: Adjust and use in the structured name printer
-	fmt::Formatter& printTypeTemplateParam(CoqPrinter&, unsigned depth,
-										   unsigned index, loc::loc);
-	fmt::Formatter& printNonTypeTemplateParam(CoqPrinter&, unsigned depth,
-											  unsigned index, loc::loc);
+  // TODO: Adjust and use in the structured name printer
+  fmt::Formatter &printTypeTemplateParam(CoqPrinter &, unsigned depth,
+                                         unsigned index, loc::loc);
+  fmt::Formatter &printNonTypeTemplateParam(CoqPrinter &, unsigned depth,
+                                            unsigned index, loc::loc);
 
-	// Types
+  // Types
 
-	fmt::Formatter& printQualType(CoqPrinter& print, const clang::QualType& qt,
-								  loc::loc loc);
-	fmt::Formatter& printQualTypeOption(CoqPrinter& print,
-										const clang::QualType& qt,
-										loc::loc loc);
-	// TODO: Deprecate
-	fmt::Formatter& printType(CoqPrinter& print, const clang::Type& type,
-							  loc::loc loc);
-	fmt::Formatter& printType(CoqPrinter& print, const clang::Type* t,
-							  loc::loc loc);
+  fmt::Formatter &printQualType(CoqPrinter &print, const clang::QualType &qt,
+                                loc::loc loc);
+  fmt::Formatter &printQualTypeOption(CoqPrinter &print,
+                                      const clang::QualType &qt, loc::loc loc);
+  // TODO: Deprecate
+  fmt::Formatter &printType(CoqPrinter &print, const clang::Type &type,
+                            loc::loc loc);
+  fmt::Formatter &printType(CoqPrinter &print, const clang::Type *t,
+                            loc::loc loc);
 
-	fmt::Formatter& printQualifier(CoqPrinter&, bool is_const,
-								   bool is_volatile) const;
-	fmt::Formatter& printQualifier(CoqPrinter&,
-								   const clang::QualType& qt) const;
+  fmt::Formatter &printQualifier(CoqPrinter &, bool is_const,
+                                 bool is_volatile) const;
+  fmt::Formatter &printQualifier(CoqPrinter &, const clang::QualType &qt) const;
 
-	fmt::Formatter& printValCat(CoqPrinter&, const clang::Expr* d);
+  fmt::Formatter &printValCat(CoqPrinter &, const clang::Expr *d);
 
-	fmt::Formatter& printCallingConv(CoqPrinter&, clang::CallingConv, loc::loc);
-	fmt::Formatter& printCallingConv(CoqPrinter&, const clang::FunctionDecl&);
+  fmt::Formatter &printCallingConv(CoqPrinter &, clang::CallingConv, loc::loc);
+  fmt::Formatter &printCallingConv(CoqPrinter &, const clang::FunctionDecl &);
 
-	fmt::Formatter& printVariadic(CoqPrinter&, bool) const;
+  fmt::Formatter &printVariadic(CoqPrinter &, bool) const;
 
-	fmt::Formatter& printExceptionSpec(CoqPrinter&, const clang::FunctionDecl&);
+  fmt::Formatter &printExceptionSpec(CoqPrinter &, const clang::FunctionDecl &);
 
-	unsigned getTypeSize(const clang::BuiltinType* type) const;
+  unsigned getTypeSize(const clang::BuiltinType *type) const;
 
-	// Expressions
+  // Expressions
 
-	fmt::Formatter& printExpr(CoqPrinter&, const clang::Expr* d,
-							  OpaqueNames& li);
-	fmt::Formatter& printExpr(CoqPrinter&, const clang::Expr* d);
+  fmt::Formatter &printExpr(CoqPrinter &, const clang::Expr *d,
+                            OpaqueNames &li);
+  fmt::Formatter &printExpr(CoqPrinter &, const clang::Expr *d);
 
-	fmt::Formatter& printValueDeclExpr(CoqPrinter&, const clang::ValueDecl*,
-									   OpaqueNames&);
-	fmt::Formatter& printValueDeclExpr(CoqPrinter&, const clang::ValueDecl*);
+  fmt::Formatter &printValueDeclExpr(CoqPrinter &, const clang::ValueDecl *,
+                                     OpaqueNames &);
+  fmt::Formatter &printValueDeclExpr(CoqPrinter &, const clang::ValueDecl *);
 
-	// TODO: Discuss. Rename to printFunctionParamName.
-	fmt::Formatter& printParamName(CoqPrinter&, const clang::ParmVarDecl* d);
+  // TODO: Discuss. Rename to printFunctionParamName.
+  fmt::Formatter &printParamName(CoqPrinter &, const clang::ParmVarDecl *d);
 
-	// Statements
+  // Statements
 
-	fmt::Formatter& printStmt(CoqPrinter&, const clang::Stmt* s);
+  fmt::Formatter &printStmt(CoqPrinter &, const clang::Stmt *s);
 
-	// true if printed
-	bool printLocalDecl(CoqPrinter&, const clang::Decl* d);
+  // true if printed
+  bool printLocalDecl(CoqPrinter &, const clang::Decl *d);
 
-	// Declarations
+  // Declarations
 
-	// true if printed
-	bool printDecl(CoqPrinter&, const clang::Decl* d);
+  // true if printed
+  bool printDecl(CoqPrinter &, const clang::Decl *d);
 
-	// Notation
+  // Notation
 
-	fmt::Formatter& printField(CoqPrinter&, const clang::ValueDecl*);
+  fmt::Formatter &printField(CoqPrinter &, const clang::ValueDecl *);
 };

@@ -1,0 +1,9 @@
+---
+# Since this is a clang plugin, we base our style on LLVM
+BasedOnStyle: LLVM
+IndentWidth: 4
+---
+Language:        Cpp
+UseTab:          Never
+IndentAccessModifiers: false
+AccessModifierOffset: -4
