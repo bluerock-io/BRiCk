@@ -242,8 +242,7 @@ public:
 #undef CASE
         case BuiltinType::Kind::Dependent:
             if (print.templates()) {
-                // TODO: Placeholder
-                print.output() << "Tdependent";
+                print.output() << "Tauto";
             } else if (false) {
                 // We prefer to keep going with Tunsupported
                 using namespace logging;
