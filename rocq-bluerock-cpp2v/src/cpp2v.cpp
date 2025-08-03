@@ -225,7 +225,7 @@ int main(int argc, const char **argv) {
         return 0;
     }
 
-    logging::set_level(logging::UNSUPPORTED);
+    logging::set_level(logging::NONE);
     if (Verboser) {
         logging::set_level(logging::VERBOSER);
     } else if (Verbose) {

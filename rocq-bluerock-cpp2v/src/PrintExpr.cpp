@@ -1350,11 +1350,9 @@ public:
         }
         default: {
             using namespace logging;
-            fatal() << "unsupported expression "
-                       "`UnaryExprOrTypeTraitExpr` at "
-                    << expr->getSourceRange().printToString(
-                           ctxt.getSourceManager())
-                    << "\n";
+            cprint.error_prefix(logging::unsupported(), loc::of(expr))
+                << "warning: unsupported expression "
+                   "`UnaryExprOrTypeTraitExpr`\n";
             print.ctor("Eunsupported");
             print.output() << "\"UnaryExprOrTypeTraitExpr(" << expr->getKind()
                            << ")\"" << fmt::nbsp;
