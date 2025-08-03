@@ -80,8 +80,15 @@ let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_e
         (* This is matching for [nil] *)
         ()
       | _ ->
-        (* TODO: it probably makes sense for this to be a fatal error *)
-        Feedback.msg_warning Pp.(str "Duplicate symbols found!" ++ fnl () ++ Printer.pr_econstr_env env evd err ++ str ".")
+        ()
+        (* Feedback.msg_warning Pp.(str "Duplicate symbols found!") *)
+        (*
+        TODO: it probably makes sense for this to be a fatal error,
+        but for now we get false positives on the stdlib:
+
+        https://bluerocksecurity.atlassian.net/browse/FM-4691
+        *)
+        (* Feedback.msg_warning Pp.(str "Duplicate symbols found!" ++ fnl () ++ Printer.pr_econstr_env env evd err ++ str ".") *)
     in
     let cinfo = Declare.CInfo.make ~name ~typ:None () in
     let info = Declare.Info.make () in
