@@ -150,3 +150,77 @@ let rec subst : offset:int -> t -> t array -> t = fun ~offset p args ->
       if 0 <= ind && ind < Array.length args then args.(ind) else p
   | _ ->
       map_w_binders (fun offset binders -> offset + binders) fun_subst offset p
+
+let term_of_pattern initial_env sigma p =
+  let open Pattern in
+  let sigma = ref sigma in
+  let new_evar =
+    let idmap = ref Names.Id.Map.empty in
+    fun env oid ->
+    let new_evar env =
+      let (sigma', (ev_ty, _)) =
+        Evarutil.new_type_evar env !sigma Evd.UnivRigid
+      in
+      let (sigma', ev) = Evarutil.new_evar env sigma' ev_ty in
+      sigma := sigma'; ev
+    in
+    match oid with
+    | None     -> new_evar env
+    | Some(id) ->
+    match Names.Id.Map.find_opt id !idmap with
+    | Some(ev) -> ev
+    | None     ->
+    let ev = new_evar initial_env in
+    idmap := Names.Id.Map.add id ev !idmap; ev
+  in
+  let rec go env (p : constr_pattern) =
+    let binder env mk n ty p =
+      let ty = go env ty in
+      let ty_c = EConstr.to_constr ~abort_on_undefined_evars:false (!sigma) ty in
+      let n =
+        let r = Relevanceops.relevance_of_term env ty_c in
+        Context.make_annot n r
+      in
+      let body =
+        let x = Context.Rel.Declaration.LocalAssum(n, ty_c) in
+        go (Environ.push_rel x env) p
+      in
+      let n = Context.map_annot_relevance_het EConstr.ERelevance.make n in
+      mk (n, ty, body)
+    in
+    match p with
+    | PRef(r)               ->
+        let (sigma', t) = EConstr.fresh_global env !sigma r in
+        sigma := sigma'; t
+    | PVar(v)               -> EConstr.mkVar v
+    | PEvar((e, ps))        ->
+        let ts = List.map (go env) ps in
+        EConstr.mkEvar (e, SList.of_full_list ts)
+    | PRel(i)               -> EConstr.mkRel i
+    | PApp(h, ps)           ->
+        let h = go env h in
+        let ts = Array.map (go env) ps in
+        EConstr.mkApp (h, ts)
+    | PProj(p, r)           -> EConstr.mkProj (p, EConstr.ERelevance.make Sorts.Relevant, go env r)
+    | PLambda(n, ty, p)     -> binder env EConstr.mkLambda n ty p
+    | PProd(n, ty, p)       -> binder env EConstr.mkProd n ty p
+    | PLetIn(n, p1, p2, p3) ->
+        let t1 = go env p1 in
+        let mk (n, t2, t3) = EConstr.mkLetIn (n, t1, t2, t3) in
+        let p2 = match p2 with Some(p2) -> p2 | None -> PMeta(None) in
+        binder env mk n p2 p3
+    | PMeta(oid)            -> new_evar env oid
+    | PInt(i)               -> EConstr.mkInt i
+    | PFloat(f)             -> EConstr.mkFloat f
+    | PString(s)            -> EConstr.mkString s
+    | PFix(_, _)            -> assert false
+    | PCoFix(_, _)          -> assert false
+    | PSoApp(_, _)          -> assert false
+    | PSort(_)              -> assert false
+    | PIf(_, _, _)          -> assert false
+    | PCase(_, _, _, _)     -> assert false
+    | PArray(_, _, _)       -> assert false
+    | PUninstantiated(_)    -> .
+  in
+  let t = go initial_env p in
+  (!sigma, t)
