@@ -80,7 +80,7 @@ let _ =
           in
           go 0 (t.Structure.projections)
         in
-        let t = repr_of inductive (t.Structure.name) in
+        let t = of_ext val_inductive (t.Structure.name) in
         let proj_term = of_constr (EConstr.of_constr (Constr.mkConstU (proj, inst))) in
         let proj_index = of_int proj_index in
         let args = of_array of_constr (Array.map EConstr.of_constr args) in

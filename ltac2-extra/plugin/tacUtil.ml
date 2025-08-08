@@ -68,6 +68,10 @@ module Value = struct
 
   type binder = Names.Name.t EConstr.binder_annot * EConstr.types
 
+  let of_binder : binder -> valexpr = of_ext val_binder
+  let to_binder : valexpr -> binder = to_ext val_binder
+  let binder : binder repr = make_repr of_binder to_binder
+
   (** Must agree with Ltac2 type [Constr.Unsafe.RelDecl.t] *)
   let of_rel_declaration (decl : EConstr.rel_declaration) : valexpr =
     match decl with
