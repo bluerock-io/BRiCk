@@ -14,12 +14,17 @@ Require Import bluerock.iris.extra.proofmode.proofmode.
 (**
 Overview:
 
+- [Hint Extern] to case split goals
+
 - Tactic [solve_as_frac] for solving [AsFractional]
 
 - [FractionalN], [AsFractionalN], [AgreeF1], [LaterAgreeF1] notation to save typing
 
 - Some properties of fractional predicates
 *)
+
+#[global] Hint Extern 100 (Fractional (fun a => match ?x with _ => _ end)) =>
+  destruct x : typeclass_instances.
 
 Ltac solve_as_frac := solve [intros; exact: Build_AsFractional].
 
