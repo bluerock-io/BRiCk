@@ -87,6 +87,8 @@ Notation post_with_binder f := [with_binder post_with f] (only parsing).
 Notation add_with_dummy f := (add_with f _ DummyValue) (only parsing).
 Notation post_with_dummy f := (post_with f _ DummyValue) (only parsing).
 
+Notation "'\spec@{' ty } X" := (X%pre_spec : ty%type).
+
 Notation "'\with' x .. y X" :=
   (add_with_binder  (fun x => .. (add_with_binder  (fun y => X%pre_spec) ) ..) ) (only parsing).
 Notation "'\with' x .. y X" :=

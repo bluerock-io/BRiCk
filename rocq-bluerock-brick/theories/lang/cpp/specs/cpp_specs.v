@@ -34,8 +34,8 @@ Notation WithPrePost PROP := (WpSpec PROP ptr ptr) (only parsing).
   {| classy.add_arg p := classy.add_arg (Vint p)
    ; classy.add_args p := classy.add_args (List.map Vint p) |}.
 
-Notation "'\this' this X" := (fun this : ptr => X%pre_spec)
-  (at level 10, this ident, X at level 200, only parsing).
+Notation "'\spec' X" := (\spec@{WpSpec mpredI _ _} X).
+Notation "'\this' this X" := (fun this : ptr => X%pre_spec).
 
 Export classy.
 Export bluerock.lang.cpp.specs.wp_spec_compat.
