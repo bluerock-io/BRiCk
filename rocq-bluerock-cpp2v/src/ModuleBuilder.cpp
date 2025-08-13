@@ -28,6 +28,38 @@ static void unsupported_decl(raw_ostream &os, const Decl *decl,
 
 using Flags = ::Module::Flags;
 
+bool EvaluateRequiresClause(const clang::FunctionDecl *FD,
+                            clang::Sema &SemaRef) {
+    auto with_template_args =
+        [&](ArrayRef<clang::TemplateArgument> TemplateArgs) {
+            // 3. Location for diagnostics
+            clang::SourceLocation Loc = FD->getLocation();
+
+            // 4. Use CheckInstantiatedFunctionTemplateConstraints to
+            // evaluate the constraints
+            ConstraintSatisfaction Satisfaction;
+            bool Satisfied =
+                !SemaRef.CheckInstantiatedFunctionTemplateConstraints(
+                    Loc, // Location for diagnostics
+                    const_cast<clang::FunctionDecl *>(
+                        FD),       // The function declaration
+                    TemplateArgs,  // Template arguments
+                    Satisfaction); // Will contain unsatisfied constraints
+
+            return Satisfied && Satisfaction.IsSatisfied;
+        };
+
+    clang::TemplateArgumentList *TemplateArgsPtr = nullptr;
+    if (auto *FTSI = dyn_cast<clang::FunctionTemplateSpecializationInfo>(
+            FD->getTemplateSpecializationInfo())) {
+        return with_template_args(FTSI->TemplateArguments->asArray());
+    } else {
+        // You might need to build template arguments from context
+        // This is more complex and depends on your situation
+        return true;
+    }
+}
+
 class BuildModule : public ConstDeclVisitorArgs<BuildModule, void, Flags> {
 private:
     using Visitor = ConstDeclVisitorArgs<BuildModule, void, Flags>;
@@ -38,6 +70,7 @@ private:
     SpecCollector &specs_;
     clang::ASTContext *const context_;
     std::set<int64_t> visited_;
+    clang::Sema *sema_;
 
     const ASTContext &getContext() const { return *context_; }
 
@@ -67,7 +100,7 @@ public:
                 clang::ASTContext *context, SpecCollector &specs,
                 clang::CompilerInstance *ci)
         : module_(m), filter_(filter), templates_(templates), specs_(specs),
-          context_(context) {}
+          context_(context), sema_(&ci->getSema()) {}
 
     void Visit(const Decl *d, Flags flags) {
         if (visited_.find(d->getID()) == visited_.end()) {
@@ -199,6 +232,9 @@ public:
             llvm::errs() << ' ' << (void *)decl->getCanonicalDecl() << "\n";
 #endif
         };
+
+        if (not EvaluateRequiresClause(decl, *sema_))
+            return;
 
         using namespace comment;
         auto defn = decl->getDefinition();
