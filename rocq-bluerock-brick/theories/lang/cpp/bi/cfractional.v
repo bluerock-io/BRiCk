@@ -41,6 +41,8 @@ Class CFractional {PROP : bi} (P : cQp.t -> PROP) : Prop :=
   cfractional q1 q2 : P (q1 + q2)%cQp -|- P q1 ** P q2.
 #[global] Hint Mode CFractional + ! : typeclass_instances.
 #[global] Arguments CFractional {_} _%_I : simpl never, assert.
+#[global] Hint Extern 100 (CFractional (fun a => match ?x with _ => _ end)) =>
+  destruct x : typeclass_instances.
 
 (**
 [CFractionalN] states that predicate [P] taking a const/mutable
