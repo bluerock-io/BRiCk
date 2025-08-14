@@ -82,6 +82,10 @@ Reserved Notation "'\post' post"
 Reserved Notation "'\exact' wpp"
   (at level 10, wpp at level 200).
 
+(** Member Functions *)
+Reserved Notation "'\this' this wpp"
+  (at level 10, this ident, wpp at level 200).
+
 (** Arguments *)
 Reserved Notation "'\args' ls X"
   (at level 10, X at level 200, right associativity,
@@ -98,3 +102,7 @@ Reserved Notation "'\arg' nm v X"
 Reserved Notation "'\arg{' x .. y } nm v X"
   (at level 10, nm at level 0, v at level 0, x binder, y binder, X at level 200, right associativity,
    format "'[v' '\arg{' x  ..  y '}'  nm  v  '//' X ']'").
+
+(** Type Ascriptions *)
+Reserved Notation "'\spec' wpp" (at level 10, wpp at level 200).
+Reserved Notation "'\spec@{' type } wpp" (at level 10, wpp at level 200, type at level 200).
