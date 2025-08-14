@@ -84,7 +84,7 @@ Reserved Notation "'\exact' wpp"
 
 (** Member Functions *)
 Reserved Notation "'\this' this wpp"
-  (at level 10, this ident, wpp at level 200, only parsing).
+  (at level 10, this ident, wpp at level 200).
 
 (** Arguments *)
 Reserved Notation "'\args' ls X"
