@@ -899,7 +899,7 @@ Definition array_type : exprtype -> option exprtype :=
 (**
 [class_name t] returns the name of the class that this type refers to
 *)
-Definition class_name (t : type) : option name' :=
+Definition class_name (t : type) : option name :=
   match drop_qualifiers t with
   | Tnamed gn => Some gn
   | _ => None
@@ -919,7 +919,7 @@ Definition is_arithmetic (ty : type) : bool :=
   end.
 
 (* [as_function ty] returns the [function_type'] if [ty] is a function type. *)
-Definition as_function (ty : functype) : option function_type' :=
+Definition as_function (ty : functype) : option function_type :=
   match ty with
   | Tfunction ft => Some ft
   | _ => None
@@ -927,7 +927,7 @@ Definition as_function (ty : functype) : option function_type' :=
 
 (* extracts the parameter information from a function type *)
 Definition args_for (ft : function_type)
-  : list decltype' * function_arity :=
+  : list decltype * function_arity :=
   (ft.(ft_params), ft.(ft_arity)).
 
 (**

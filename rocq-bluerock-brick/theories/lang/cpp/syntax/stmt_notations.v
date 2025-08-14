@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2019-2023 BlueRock Security, Inc.
+ * Copyright (c) 2019-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -19,8 +19,8 @@ Module Export StmtNotationsInterface.
   Declare Scope CPP_stmt_scope.
   Delimit Scope CPP_stmt_scope with cpp_stmt.
 
-  Bind Scope CPP_stmt_scope with Stmt'.
-  Bind Scope CPP_stmt_scope with VarDecl'.
+  Bind Scope CPP_stmt_scope with Stmt.
+  Bind Scope CPP_stmt_scope with VarDecl.
 
   (* Injection from [constr] in case we're printing a subterm we don't recognize *)
   Notation "'{?:' s '};'"
