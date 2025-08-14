@@ -332,11 +332,11 @@ Module cast_style.
 End cast_style.
 
 (** ** Structured names *)
-Inductive name' : Set :=
-| Ninst (c : name') (_ : list temp_arg')
-| Nglobal (c : atomic_name_ type')	(* <<::c>> *)
-| Ndependent (t : type') (* <<typename t>> *)
-| Nscoped (n : name') (c : atomic_name_ type')	(* <<n::c>> *)
+Inductive name : Set :=
+| Ninst (c : name) (_ : list temp_arg)
+| Nglobal (c : atomic_name_ type)	(* <<::c>> *)
+| Ndependent (t : type) (* <<typename t>> *)
+| Nscoped (n : name) (c : atomic_name_ type)	(* <<n::c>> *)
 | Nunsupported (_ : PrimString.string)
 
 (** Template arguments
@@ -348,11 +348,11 @@ Inductive name' : Set :=
       We can enforce this if we want in the future.
     - <<T>> for <<T>> of template type would be represented as [Atemplate T]
  *)
-with temp_arg' : Set :=
-| Atype (_ : type')
-| Avalue (_ : Expr')
-| Apack (_ : list temp_arg') (* See <https://en.cppreference.com/w/cpp/language/pack> *)
-| Atemplate (_ : name')
+with temp_arg : Set :=
+| Atype (_ : type)
+| Avalue (_ : Expr)
+| Apack (_ : list temp_arg) (* See <https://en.cppreference.com/w/cpp/language/pack> *)
+| Atemplate (_ : name)
 | Aunsupported (_ : PrimString.string)
 
 (** ** Types *)
@@ -364,40 +364,40 @@ do things this way for consistency, and to keep the components of
 substitutions small.
 *)
 
-with type' : Set :=
+with type : Set :=
 | Tparam (_ : ident)
 | Tresult_param (_ : ident)
-| Tresult_global (on : name')
-| Tresult_unop (_ : RUnOp) (_ : type')
-| Tresult_binop (_ : RBinOp) (_ _ : type')
-| Tresult_call (on : name') (_ : list type')
-| Tresult_member_call (on : name') (_ : type') (_ : list type')
-| Tresult_parenlist (_ :type') (_ : list type')
-| Tresult_member (_ : type') (_ : name')
+| Tresult_global (on : name)
+| Tresult_unop (_ : RUnOp) (_ : type)
+| Tresult_binop (_ : RBinOp) (_ _ : type)
+| Tresult_call (on : name) (_ : list type)
+| Tresult_member_call (on : name) (_ : type) (_ : list type)
+| Tresult_parenlist (_ :type) (_ : list type)
+| Tresult_member (_ : type) (_ : name)
 
-| Tptr (t : type')
-| Tref (t : type')
-| Trv_ref (t : type')
+| Tptr (t : type)
+| Tref (t : type)
+| Trv_ref (t : type)
 | Tnum (sz : int_rank.t) (sgn : signed)
 | Tchar_ (_ : char_type.t)
 | Tvoid
-| Tarray (t : type') (n : N)
-| Tincomplete_array (t : type')
-| Tvariable_array (t : type') (e : Expr')
-| Tnamed (gn : name')
-| Tenum (gn : name')
-| Tfunction (t : function_type_ type')
+| Tarray (t : type) (n : N)
+| Tincomplete_array (t : type)
+| Tvariable_array (t : type) (e : Expr)
+| Tnamed (gn : name)
+| Tenum (gn : name)
+| Tfunction (t : function_type_ type)
 | Tbool
-| Tmember_pointer (gn : (* classname' *)type') (t : type')
+| Tmember_pointer (gn : (* classname *)type) (t : type)
 | Tfloat_ (_ : float_type.t)
-| Tqualified (q : type_qualifiers) (t : type')
+| Tqualified (q : type_qualifiers) (t : type)
 | Tnullptr
 | Tarch (osz : option bitsize) (name : PrimString.string)
-| Tdecltype (_ : Expr')
+| Tdecltype (_ : Expr)
   (* ^^ this is <<decltype(e)>> when <<e>> is an expression, including a parenthesized expression.
      (2) in <https://en.cppreference.com/w/cpp/language/decltype>
    *)
-| Texprtype (_ : Expr')
+| Texprtype (_ : Expr)
   (* ^^ this is <<decltype(e)>> when <<e>> is a variable reference
      (1) in <https://en.cppreference.com/w/cpp/language/decltype>
    *)
@@ -409,21 +409,21 @@ NOTE: We need both unresolved operators and unresolved calls because
 operators like <<a = b>> use a different evaluation order than calls
 like <<operator=(a, b)>>.
 *)
-with Expr' : Set :=
+with Expr : Set :=
 | Eparam (_ : ident)
-| Eunresolved_global (_ : name')
-| Eunresolved_unop (_ : RUnOp) (e : Expr')
-| Eunresolved_binop (_ : RBinOp) (l r : Expr')
-| Eunresolved_call (on : name') (_ : list Expr')
-| Eunresolved_member_call (on : name') (_ : Expr') (_ : list Expr')
+| Eunresolved_global (_ : name)
+| Eunresolved_unop (_ : RUnOp) (e : Expr)
+| Eunresolved_binop (_ : RBinOp) (l r : Expr)
+| Eunresolved_call (on : name) (_ : list Expr)
+| Eunresolved_member_call (on : name) (_ : Expr) (_ : list Expr)
 (**
 <<Eunresolved_parenlist (Some T) [arg1;…;argN]>> is the initializer
 for an uninstantiated direct initializer list declaration <<T
 var(arg1,…,argN)>> with dependent type <<T>>. Making the type optional
 simplifies cpp2v---we set it from context in ../mparser.v.
 *)
-| Eunresolved_parenlist (_ : option type') (_ : list Expr')
-| Eunresolved_member (_ : Expr') (_ : name')
+| Eunresolved_parenlist (_ : option type) (_ : list Expr)
+| Eunresolved_member (_ : Expr) (_ : name)
 
 (**
 NOTE: We might need to support template parameters as object names in
@@ -431,9 +431,9 @@ a few constructors (by carrying <<Expr ≈ Eparam + Eglobal>> instead of
 <<name>>).
 *)
 
-| Evar (_ : localname) (_ : type')
-| Eenum_const (gn : name') (_ : ident)
-| Eglobal (on : name') (_ : type')
+| Evar (_ : localname) (_ : type)
+| Eenum_const (gn : name) (_ : ident)
+| Eglobal (on : name) (_ : type)
 (**
 [Eglobal_member gn t] represents <<&gn>> where <<gn>>
 is a non-static member of a class, e.g. a field or method.
@@ -441,62 +441,62 @@ We distinguish this from [Eaddrof (Eglobal gn)] because,
 when [gn] refers to a member, <<&gn>> is not a well-formed
 program because, in part, C++ has no type for references to members.
 *)
-| Eglobal_member (gn : name') (ty : type')
+| Eglobal_member (gn : name) (ty : type)
 
-| Echar (c : N) (t : type')
-| Estring (s : literal_string.t) (t : type')
-| Eint (n : Z) (t : type')
+| Echar (c : N) (t : type)
+| Estring (s : literal_string.t) (t : type)
+| Eint (n : Z) (t : type)
 | Ebool (b : bool)
-| Eunop (op : UnOp) (e : Expr') (t : type')
-| Ebinop (op : BinOp) (e1 e2 : Expr') (t : type')
-| Ederef (e : Expr') (t : type')
-| Eaddrof (e : Expr')
-| Eassign (e1 e2 : Expr') (t : type')
-| Eassign_op (op : BinOp) (e1 e2 : Expr') (t : type')
-| Epreinc (e : Expr') (t : type')
-| Epostinc (e : Expr') (t : type')
-| Epredec (e : Expr') (t : type')
-| Epostdec (e : Expr') (t : type')
-| Eseqand (e1 e2 : Expr')
-| Eseqor (e1 e2 : Expr')
-| Ecomma (e1 e2 : Expr')
-| Ecall (f : Expr') (es : list Expr')
-| Eexplicit_cast (c : cast_style.t) (_ : type') (e : Expr')
-| Ecast (c : Cast') (e : Expr')
+| Eunop (op : UnOp) (e : Expr) (t : type)
+| Ebinop (op : BinOp) (e1 e2 : Expr) (t : type)
+| Ederef (e : Expr) (t : type)
+| Eaddrof (e : Expr)
+| Eassign (e1 e2 : Expr) (t : type)
+| Eassign_op (op : BinOp) (e1 e2 : Expr) (t : type)
+| Epreinc (e : Expr) (t : type)
+| Epostinc (e : Expr) (t : type)
+| Epredec (e : Expr) (t : type)
+| Epostdec (e : Expr) (t : type)
+| Eseqand (e1 e2 : Expr)
+| Eseqor (e1 e2 : Expr)
+| Ecomma (e1 e2 : Expr)
+| Ecall (f : Expr) (es : list Expr)
+| Eexplicit_cast (c : cast_style.t) (_ : type) (e : Expr)
+| Ecast (c : Cast) (e : Expr)
   (* TODO: this use of [Cast_] should really use [classname] as its first argument, but
      we can not use that without a [match] which Coq rejects as not being strictly positive.
      GM: the only way I see to solve this problem is to make [lang] and index rather than
        a parameter. Doing that would allow for two different constructors for [Ecast]
    *)
-| Emember (arrow : bool) (obj : Expr') (f : atomic_name_ type') (mut : bool) (t : type')
-| Emember_ignore (arrow : bool) (obj : Expr') (res : Expr')
-| Emember_call (arrow : bool) (method : MethodRef_ name' type' Expr') (obj : Expr') (args : list Expr')
-| Eoperator_call (_ : OverloadableOperator) (_ : operator_impl.t name' type') (_ : list Expr')
-| Esubscript (e1 : Expr') (e2 : Expr') (t : type')
-| Esizeof (_ : type' + Expr') (t : type')
-| Ealignof (_ : type' + Expr') (t : type')
+| Emember (arrow : bool) (obj : Expr) (f : atomic_name_ type) (mut : bool) (t : type)
+| Emember_ignore (arrow : bool) (obj : Expr) (res : Expr)
+| Emember_call (arrow : bool) (method : MethodRef_ name type Expr) (obj : Expr) (args : list Expr)
+| Eoperator_call (_ : OverloadableOperator) (_ : operator_impl.t name type) (_ : list Expr)
+| Esubscript (e1 : Expr) (e2 : Expr) (t : type)
+| Esizeof (_ : type + Expr) (t : type)
+| Ealignof (_ : type + Expr) (t : type)
 (**
 NOTE: [Eoffsetof] carries a type instead of a name to support
 dependent types.
 Should be [gn : classname]
 *)
-| Eoffsetof (gn : type') (_ : ident) (t : type')
-| Econstructor (on : name') (args : list Expr') (t : type')
-| Elambda (_ : name') (captures : list Expr')
-| Eimplicit (e : Expr')
-| Eimplicit_init (t : type')
-| Eif (e1 e2 e3 : Expr') (t : type')
-| Eif2  (n : N) (common cond thn els : Expr') (_ : type')
-| Ethis (t : type')
+| Eoffsetof (gn : type) (_ : ident) (t : type)
+| Econstructor (on : name) (args : list Expr) (t : type)
+| Elambda (_ : name) (captures : list Expr)
+| Eimplicit (e : Expr)
+| Eimplicit_init (t : type)
+| Eif (e1 e2 e3 : Expr) (t : type)
+| Eif2  (n : N) (common cond thn els : Expr) (_ : type)
+| Ethis (t : type)
 | Enull
-| Einitlist (args : list Expr') (default : option Expr') (t : type')
-| Einitlist_union (_ : atomic_name_ type') (_ : option Expr') (t : type')
+| Einitlist (args : list Expr) (default : option Expr) (t : type)
+| Einitlist_union (_ : atomic_name_ type) (_ : option Expr) (t : type)
 
-| Enew (new_fn : name' * type') (new_args : list Expr') (pass_align : new_form)
-  (alloc_ty : type') (array_size : option Expr') (init : option Expr')
-| Edelete (is_array : bool) (del_fn : name') (arg : Expr') (deleted_type : type')
-| Eandclean (e : Expr')
-| Ematerialize_temp (e : Expr') (vc : ValCat)
+| Enew (new_fn : name * type) (new_args : list Expr) (pass_align : new_form)
+  (alloc_ty : type) (array_size : option Expr) (init : option Expr)
+| Edelete (is_array : bool) (del_fn : name) (arg : Expr) (deleted_type : type)
+| Eandclean (e : Expr)
+| Ematerialize_temp (e : Expr) (vc : ValCat)
   (* ^^ [Ematerialize_temp] is can be an lvalue in the following program:
      <<
      int x[10];
@@ -504,9 +504,9 @@ Should be [gn : classname]
      >>
      (this is true at least in c++11)
    *)
-| Eatomic (op : AtomicOp) (args : list Expr') (t : type')
-| Estmt (_ : Stmt') (_ : type')
-| Eva_arg (e : Expr') (t : type')
+| Eatomic (op : AtomicOp) (args : list Expr) (t : type)
+| Estmt (_ : Stmt) (_ : type)
+| Eva_arg (e : Expr) (t : type)
   (**
   TODO: We may have to adjust cpp2v: Either [Eva_arg] should carry a
   decltype, or [valcat_of] in cpp2v-core and [decltype.of_expr] here
@@ -517,80 +517,80 @@ Should be [gn : classname]
   Docs for <<__builtin_va_arg>>.
   https://clang.llvm.org/docs/LanguageExtensions.html#builtin-functions
   *)
-| Epseudo_destructor (is_arrow : bool) (t : type') (e : Expr')
-| Earrayloop_init (oname : N) (src : Expr') (level : N) (length : N) (init : Expr') (t : type')
-| Earrayloop_index (level : N) (t : type')
-| Eopaque_ref (name : N) (t : type')
-| Eunsupported (s : PrimString.string) (t : type')
-with Stmt' : Set :=
-| Sseq    (_ : list Stmt')
-| Sdecl   (_ : list VarDecl')
+| Epseudo_destructor (is_arrow : bool) (t : type) (e : Expr)
+| Earrayloop_init (oname : N) (src : Expr) (level : N) (length : N) (init : Expr) (t : type)
+| Earrayloop_index (level : N) (t : type)
+| Eopaque_ref (name : N) (t : type)
+| Eunsupported (s : PrimString.string) (t : type)
+with Stmt : Set :=
+| Sseq    (_ : list Stmt)
+| Sdecl   (_ : list VarDecl)
 
-| Sif     (_ : option VarDecl') (_ : Expr') (_ _ : Stmt')
-| Sif_consteval (_ _ : Stmt')
+| Sif     (_ : option VarDecl) (_ : Expr) (_ _ : Stmt)
+| Sif_consteval (_ _ : Stmt)
 
-| Swhile  (_ : option VarDecl') (_ : Expr') (_ : Stmt')
-| Sfor    (_ : option Stmt') (_ : option Expr') (_ : option Expr') (_ : Stmt')
-| Sdo     (_ : Stmt') (_ : Expr')
+| Swhile  (_ : option VarDecl) (_ : Expr) (_ : Stmt)
+| Sfor    (_ : option Stmt) (_ : option Expr) (_ : option Expr) (_ : Stmt)
+| Sdo     (_ : Stmt) (_ : Expr)
 
-| Sswitch (_ : option VarDecl') (_ : Expr') (_ : Stmt')
+| Sswitch (_ : option VarDecl) (_ : Expr) (_ : Stmt)
 | Scase   (_ : SwitchBranch)
 | Sdefault
 
 | Sbreak
 | Scontinue
 
-| Sreturn (_ : option Expr')
+| Sreturn (_ : option Expr)
 
-| Sexpr   (_ : Expr')
+| Sexpr   (_ : Expr)
 
-| Sattr (_ : list ident) (_ : Stmt')
+| Sattr (_ : list ident) (_ : Stmt)
 
 | Sasm (_ : PrimString.string) (volatile : bool)
-       (inputs : list (ident * Expr'))
-       (outputs : list (ident * Expr'))
+       (inputs : list (ident * Expr))
+       (outputs : list (ident * Expr))
        (clobbers : list ident)
 
-| Slabeled (_ : ident) (_ : Stmt')
+| Slabeled (_ : ident) (_ : Stmt)
 | Sgoto (_ : ident)
 | Sunsupported (_ : PrimString.string)
-with VarDecl' : Set :=
-| Dvar (name : localname) (_ : type') (init : option Expr')
-| Ddecompose (_ : Expr') (anon_var : ident) (_ : list BindingDecl')
+with VarDecl : Set :=
+| Dvar (name : localname) (_ : type) (init : option Expr)
+| Ddecompose (_ : Expr) (anon_var : ident) (_ : list BindingDecl)
   (* initialization of a function-local [static]. See https://eel.is/c++draft/stmt.dcl#3 *)
-| Dinit (thread_safe : bool) (name : name') (_ : type') (init : option Expr')
-with BindingDecl' : Set :=
-| Bvar (name : localname) (_ : type') (init : Expr')
-| Bbind (name : localname) (_ : type') (init : Expr')
+| Dinit (thread_safe : bool) (name : name) (_ : type) (init : option Expr)
+with BindingDecl : Set :=
+| Bvar (name : localname) (_ : type) (init : Expr)
+| Bbind (name : localname) (_ : type) (init : Expr)
 (** ** Casts *)
-with Cast' : Set :=
-| Cdependent (_ : type')
-| Cbitcast (_ : type')
-| Clvaluebitcast	(_ : type') (** TODO (FM-3431): Drop this constructor? *)
+with Cast : Set :=
+| Cdependent (_ : type)
+| Cbitcast (_ : type)
+| Clvaluebitcast	(_ : type) (** TODO (FM-3431): Drop this constructor? *)
 | Cl2r
-| Cl2r_bitcast (_ : type')
-| Cnoop (_ : type')
+| Cl2r_bitcast (_ : type)
+| Cnoop (_ : type)
 | Carray2ptr
 | Cfun2ptr
-| Cint2ptr (_ : type')
-| Cptr2int (_ : type')
+| Cint2ptr (_ : type)
+| Cptr2int (_ : type)
 | Cptr2bool
-| Cintegral (_ : type')
+| Cintegral (_ : type)
 | Cint2bool
-| Cfloat2int (_ : type')
-| Cint2float (_ : type')
-| Cfloat (_ : type') (* conversion between floating point types *)
-| Cnull2ptr (_ : type')
-| Cnull2memberptr (_ : type')
-| Cbuiltin2fun (_ : type') (* OPTIMIZABLE? *)
+| Cfloat2int (_ : type)
+| Cint2float (_ : type)
+| Cfloat (_ : type) (* conversion between floating point types *)
+| Cnull2ptr (_ : type)
+| Cnull2memberptr (_ : type)
+| Cbuiltin2fun (_ : type) (* OPTIMIZABLE? *)
 | C2void
 
   (* These are just annotations on the underlying expression *)
-| Cctor (_ : type')
+| Cctor (_ : type)
 | Cuser (* this is an annotation, the actual member call is the child node *)
-| Cdynamic     (to : type')
-| Cderived2base (path : list type') (END : type')
-| Cbase2derived (path : list type') (END : type')
+| Cdynamic     (to : type)
+| Cderived2base (path : list type) (END : type)
+| Cbase2derived (path : list type) (END : type)
 (* If the sub-expression has type <START> then the arguments of
    [Cderived2base] and [Cbase2derived] contain the path between
    <START> and <END> from derived class to base class.
@@ -606,38 +606,38 @@ with Cast' : Set :=
      A cast from <<A>> to <<D>> will be [Cbase2derived ["C";"B"] "D"].
      - <<A>> comes from the type of the sub-expression.
  *)
-| Cunsupported (_ : bs) (_ : type')
+| Cunsupported (_ : bs) (_ : type)
 .
-#[global] Arguments Cast' : clear implicits.
-#[global] Arguments name' : clear implicits.
-#[global] Arguments temp_arg' : clear implicits.
-#[global] Arguments type' : clear implicits.
-#[global] Arguments Expr' : clear implicits.
-#[global] Arguments VarDecl' : clear implicits.
-#[global] Arguments BindingDecl' : clear implicits.
-#[global] Arguments Stmt' : clear implicits.
+#[global] Arguments Cast : clear implicits.
+#[global] Arguments name : clear implicits.
+#[global] Arguments temp_arg : clear implicits.
+#[global] Arguments type : clear implicits.
+#[global] Arguments Expr : clear implicits.
+#[global] Arguments VarDecl : clear implicits.
+#[global] Arguments BindingDecl : clear implicits.
+#[global] Arguments Stmt : clear implicits.
 
-#[global] Instance type_inhabited : Inhabited type'.
+#[global] Instance type_inhabited : Inhabited type.
 Proof. solve_inhabited. Qed.
-#[global] Instance Expr_inhabited : Inhabited Expr'.
+#[global] Instance Expr_inhabited : Inhabited Expr.
 Proof. solve_inhabited. Qed.
-#[global] Instance name_inhabited : Inhabited name'.
+#[global] Instance name_inhabited : Inhabited name.
 Proof. apply populate, Nglobal, inhabitant. Qed.
-#[global] Instance temp_arg_inhabited : Inhabited temp_arg'.
+#[global] Instance temp_arg_inhabited : Inhabited temp_arg.
 Proof. apply populate, Atype, inhabitant. Qed.
-#[global] Instance VarDecl_inhabited : Inhabited VarDecl'.
+#[global] Instance VarDecl_inhabited : Inhabited VarDecl.
 Proof. solve_inhabited. Qed.
-#[global] Instance BindingDecl_inhabited : Inhabited BindingDecl'.
+#[global] Instance BindingDecl_inhabited : Inhabited BindingDecl.
 Proof. solve_inhabited. Qed.
-#[global] Instance Stmt_inhabited : Inhabited Stmt'.
+#[global] Instance Stmt_inhabited : Inhabited Stmt.
 Proof. apply populate, Sseq, nil. Qed.
-#[global] Instance Cast_inhabited : Inhabited Cast'.
+#[global] Instance Cast_inhabited : Inhabited Cast.
 Proof. apply populate, C2void. Qed.
 
 Module Cast.
   Definition existsb
-    (T : type' -> bool)
-    (c : Cast') : bool :=
+    (T : type -> bool)
+    (c : Cast) : bool :=
     match c with
     | Cdependent t
     | Cbitcast t
@@ -669,65 +669,31 @@ Module Cast.
 
 End Cast.
 
-Definition is_implicit (e : Expr') : bool :=
+Definition is_implicit (e : Expr) : bool :=
   if e is Eimplicit _ then true else false.
 
-Definition globname' := name'.	(** Type names *)
-Definition obj_name' := name'.	(** Function, data names *)
+Definition globname := name.	(** Type names *)
+Definition obj_name := name.	(** Function, data names *)
 
-Definition exprtype' := type'.	(** An expression's non-reference type *)
-Definition decltype' := type'.	(** Types as used in declarations (≈ ValCat × exprtype) *)
-Definition functype' := type'.	(** Must be [Tfunction] *)
+Definition exprtype := type.	(** An expression's non-reference type *)
+Definition decltype := type.	(** Types as used in declarations (≈ ValCat × exprtype) *)
+Definition functype := type.	(** Must be [Tfunction] *)
 
 Notation Nenum_const gn id := (Nscoped gn (Nid id)) (only parsing).
 
 (** ** Notations
     We aim to set up all of the types so that they look uniform.
     The convention can be viewed with the type [Expr].
-    - [Expr'] is the syntax that is parametric in the [lang.t]
-    - [Notation Expr := Expr']
-    - [Notation MExpr := Expr']
+    - [Expr] is the syntax that is parametric in the [lang.t]
+    - [Notation Expr := Expr]
+    - [Notation MExpr := Expr]
     When types are not immediately parametric in [lang.t], we
     give them names with an <<_>>, for example, see [Cast_].
  *)
-Notation operator_impl' := (operator_impl.t obj_name' type').
-Notation MethodRef' := (MethodRef_ obj_name' functype' Expr').
-Notation function_type' := (function_type_ decltype').
-Notation temp_param := (temp_param_ type').
-Notation atomic_name' := (atomic_name_ type').
-
-
-(*
-Module Import LangNotations.
-
-  (**
-  We cannot use these definitions in our notations _and_ preserve
-  those notations after hitting terms with, e.g., <<eval compute>>.
-  *)
-  #[local] Notation decltype := type (only parsing).
-  #[local] Notation exprtype := type (only parsing).
-  #[local] Notation obj_name := name (only parsing).
-  #[local] Notation globname := name (only parsing).
-
-  (* in core *)
-  Notation operator_impl := (operator_impl.t obj_name type).
-  Notation MethodRef := (MethodRef' obj_name type Expr).
-
-  Notation function_type := (function_type' decltype).
-  Notation function_name := (function_name' type).
-  Notation atomic_name := (atomic_name' type Expr).
-(*
-  Notation tpreinst := (tpreinst' decltype Expr).
-  Notation tinst := (tinst' decltype Expr).
-
-  Notation FunctionBody := (FunctionBody' obj_name decltype Expr).
-  Notation Func := (Func' obj_name decltype Expr).
-  Notation GlobalInit := (GlobalInit' Expr).
-  Notation GlobalInitializer := (GlobalInitializer' obj_name decltype Expr).
-  Notation InitializerBlock := (InitializerBlock' obj_name decltype Expr).
-*)
-End LangNotations.
-*)
+Notation operator_impl' := (operator_impl.t obj_name type).
+Notation MethodRef' := (MethodRef_ obj_name functype Expr).
+Notation function_type := (function_type_ decltype).
+Notation temp_param := (temp_param_ type).
 
 (**
 In certain places, C++ requires a class name,
@@ -738,32 +704,17 @@ template<typename T>
 struct Foo : T { };
 >>
 *)
-Notation classname' := name' (only parsing).
+Notation classname := name (only parsing).
 
 (** ** C++ with structured names *)
-Notation name := name'.
-Notation globname := globname'.
-Notation obj_name := obj_name'.
-Notation type := type'.
-Notation exprtype := exprtype'.
-Notation decltype := decltype'.
-Notation functype := functype'.
-Notation classname := classname' (only parsing).
-Notation Cast := Cast'.
 Notation operator_impl := operator_impl'.
 Notation MethodRef := MethodRef'.
-Notation Expr := Expr'.
-Notation function_type := function_type'.
-Notation VarDecl := VarDecl'.
-Notation BindingDecl := BindingDecl'.
 (*Notation temp_param := temp_param.
 Notation Stemp_arg := temp_arg. *)
-Notation Stmt := Stmt'.
-Notation temp_arg := temp_arg'.
-Notation atomic_name := atomic_name'.
+Notation atomic_name := (atomic_name_ type).
 
 Module field_name.
-  Definition t := atomic_name'.
+  Definition t := atomic_name.
   Definition Id : ident -> t := Nid.
   Definition Anon : _ -> t := Nanon.
   Definition CaptureVar : ident -> t := Nid.
@@ -779,7 +730,7 @@ Proof. rewrite /field_name.t. refine _. Defined.
 #[global] Hint Opaque field_name.t : typeclass_instances.
 *)
 
-Notation field' := name' (only parsing).
+Notation field' := name (only parsing).
 Notation field := field' (only parsing).
 Notation Field' := Nscoped (only parsing).
 Notation Field := Field' (only parsing).
@@ -793,13 +744,13 @@ Definition f_name (t : field) : atomic_name :=
   | Nscoped _ n => n
   | _ => Nunsupported_atomic "not a field"
   end.
-#[global] Bind Scope cpp_name_scope with name'.
-#[global] Bind Scope cpp_name_scope with globname'.
-#[global] Bind Scope cpp_name_scope with obj_name'.
-#[global] Bind Scope cpp_name_scope with classname'.
-#[global] Bind Scope cpp_type_scope with exprtype'.
-#[global] Bind Scope cpp_type_scope with decltype'.
-#[global] Bind Scope cpp_type_scope with functype'.
+#[global] Bind Scope cpp_name_scope with name.
+#[global] Bind Scope cpp_name_scope with globname.
+#[global] Bind Scope cpp_name_scope with obj_name.
+#[global] Bind Scope cpp_name_scope with classname.
+#[global] Bind Scope cpp_type_scope with exprtype.
+#[global] Bind Scope cpp_type_scope with decltype.
+#[global] Bind Scope cpp_type_scope with functype.
 
 Definition Ndependent' (t : type) : classname :=
   match t with

@@ -9,8 +9,8 @@ Require Import bluerock.prelude.bytestring.
 
 Set Primitive Projections.
 
-Export core(Stmt'(..)).
-Export core(VarDecl'(..)).
+Export core(Stmt(..)).
+Export core(VarDecl(..)).
 
 Notation Stmt := Stmt.
 Notation MStmt := Stmt (only parsing).
