@@ -1,5 +1,5 @@
 (*
- * Copyright (c) 2020-2023 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
@@ -196,6 +196,9 @@ Section observe.
 
   Lemma observe_intro_only_provable (Q : Prop) (P : PROP) : (P ⊢ ⌜ Q ⌝) → Observe [| Q |] P.
   Proof. by rewrite /Observe persistently_only_provable =>->. Qed.
+
+  Lemma observe_intro_only_provable_simple (Q : Prop)  (P : PROP) : Q -> Observe [| Q |] P.
+  Proof. rewrite /Observe=>?. auto. Qed.
 
   Lemma observe_intro Q P `{!Persistent Q} : (P ⊢ P ∗ Q) → Observe Q P.
   Proof. rewrite/Observe {1}(persistent Q)=>->. iIntros "[_ $]". Qed.
@@ -616,3 +619,5 @@ Section observable_theory.
   Qed.
 
 End observable_theory.
+
+#[global] Hint Resolve observe_intro_only_provable_simple : core.
