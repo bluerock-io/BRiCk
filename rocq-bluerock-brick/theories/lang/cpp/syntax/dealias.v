@@ -102,3 +102,9 @@ Succeed Example _1 :
 Succeed Example _1 :
   let tu := empty_tu Little in
   trace.runO (resolveN tu "test(int&& &&)") = Some ("test(int&&)"%cpp_name) := eq_refl.
+Succeed Example _1 :
+  let tu := empty_tu Little in
+  trace.runO (resolveN tu "test(const int)") = Some ("test(int)"%cpp_name) := eq_refl.
+Succeed Example _1 :
+  let tu := empty_tu Little in
+  trace.runO (resolveN tu "test(volatile int, const int&)") = Some ("test(int, const int&)"%cpp_name) := eq_refl.
