@@ -91,14 +91,14 @@ Section resolve.
 End resolve.
 
 Succeed Example _1 :
-  let tu := empty_tu Big in
+  let tu := empty_tu Little in
   trace.runO (resolveN tu "test(int& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
-  let tu := empty_tu Big in
+  let tu := empty_tu Little in
   trace.runO (resolveN tu "test(int&& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
-  let tu := empty_tu Big in
+  let tu := empty_tu Little in
   trace.runO (resolveN tu "test(int& &&)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
-  let tu := empty_tu Big in
+  let tu := empty_tu Little in
   trace.runO (resolveN tu "test(int&& &&)") = Some ("test(int&&)"%cpp_name) := eq_refl.
