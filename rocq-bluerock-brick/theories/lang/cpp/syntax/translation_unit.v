@@ -302,7 +302,7 @@ Definition resolve_type (tu : translation_unit) (nm : name) : option decltype :=
   in
   canonicalize find tu nm.
 
-(** Resolves all of the aliaes in a value name. *)
+(** Resolves all of the aliases in a value name. *)
 Definition resolve_value (tu : translation_unit) (nm : name) : option name :=
   let find n :=
     match tu.(symbols) !! n with
