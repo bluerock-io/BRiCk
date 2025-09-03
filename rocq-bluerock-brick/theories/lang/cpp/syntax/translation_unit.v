@@ -267,14 +267,14 @@ Record translation_unit : Type := makeTranslationUnit {
   types             : type_table;
   namespace_aliases : alias_table.t;
   initializer       : InitializerBlock;
-  byte_order        : endian;
+  byte_order        : endian; (* NOTE: this is "runtime" information *)
 }.
 #[only(lens)] derive translation_unit.
 
 Definition empty_tu (e : endian) : translation_unit :=
   makeTranslationUnit ∅ ∅ ∅ [] e.
 #[global] Instance : Empty translation_unit :=
-  empty_tu Little. (* << selected by a fair coin flip *)
+  empty_tu Little.
 
 #[local]
 Definition canonicalize {T} (find : name -> option T) (tu : translation_unit) (nm : name) : option T :=
