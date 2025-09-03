@@ -17,7 +17,7 @@ cpp.prog source flags "" prog cpp:{{
 Require Import bluerock.lang.cpp.syntax.dealias.
 
 Notation TEST input output :=
-  (eq_refl : trace.runO (resolveN source input%cpp_name) = Some output%cpp_name).
+  (eq_refl : trace.runO (resolveValue source input%cpp_name) = Some output%cpp_name).
 
 Succeed Example _1 := TEST "test(int)" "test(int)".
 Succeed Example _1 := TEST "test(Tr)" "test(int&)".
