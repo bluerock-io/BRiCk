@@ -45,7 +45,7 @@ Module internal.
 
     Definition handle_Tnamed (_ : name) (traverse : unit -> M name) : M type :=
       (fun nm => match translation_unit.resolve_type tu nm with
-              | None => Tnamed nm
+              | None => Tnamed nm (* this is the best approximation we can make, alternatively, we can fail *)
               | Some t => t
               end) <$> traverse ().
     Definition handle_Tref (_ : type) (traverse : unit -> M type) : M type :=
@@ -69,14 +69,20 @@ Section resolve.
     f (internal.handle_type tu) handle_expr_traverse
   ) (only parsing).
 
-  Definition resolveN := USE traverseN.
   Definition resolveT := USE traverseT.
   Definition resolveE := USE traverseE.
   Definition resolveTA := USE traverseTA.
   Definition resolveS := USE traverseS.
   Definition resolveVD := USE traverseD.
 
-  (** Resolve the name of a value in a translation unit.
+  #[local] Definition resolveN := USE traverseN.
+
+
+  (** Resolve a type name in a translation unit. *)
+  Definition resolveTN (n : name) : M type :=
+    resolveT $ Tnamed n.
+
+  (** Resolve the name of a **value** in a translation unit.
       This uses the information in the alias table to attempt to resolve the symbol.
       If the symbol is not found, then the dealiased symbol is returned but namespace
       aliases are not resolved, because there is no way to know where the (unfound)
@@ -92,19 +98,19 @@ End resolve.
 
 Succeed Example _1 :
   let tu := empty_tu Little in
-  trace.runO (resolveN tu "test(int& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
+  trace.runO (resolveValue tu "test(int& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
   let tu := empty_tu Little in
-  trace.runO (resolveN tu "test(int&& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
+  trace.runO (resolveValue tu "test(int&& &)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
   let tu := empty_tu Little in
-  trace.runO (resolveN tu "test(int& &&)") = Some ("test(int&)"%cpp_name) := eq_refl.
+  trace.runO (resolveValue tu "test(int& &&)") = Some ("test(int&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
   let tu := empty_tu Little in
-  trace.runO (resolveN tu "test(int&& &&)") = Some ("test(int&&)"%cpp_name) := eq_refl.
+  trace.runO (resolveValue tu "test(int&& &&)") = Some ("test(int&&)"%cpp_name) := eq_refl.
 Succeed Example _1 :
   let tu := empty_tu Little in
-  trace.runO (resolveN tu "test(const int)") = Some ("test(int)"%cpp_name) := eq_refl.
+  trace.runO (resolveValue tu "test(const int)") = Some ("test(int)"%cpp_name) := eq_refl.
 Succeed Example _1 :
   let tu := empty_tu Little in
-  trace.runO (resolveN tu "test(volatile int, const int&)") = Some ("test(int, const int&)"%cpp_name) := eq_refl.
+  trace.runO (resolveValue tu "test(volatile int, const int&)") = Some ("test(int, const int&)"%cpp_name) := eq_refl.
