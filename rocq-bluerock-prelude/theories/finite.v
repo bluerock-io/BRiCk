@@ -962,7 +962,7 @@ Module Type finite_bits_aux (BT : finite_bitmask_type_intf).
     apply bool_decide_ext. set_solver.
   Qed.
 
-  Lemma to_of_bits `{!Inj eq eq BT.to_bit} mask :
+  Lemma to_of_bits mask :
     to_bits (of_bits mask) = N.land mask_top mask.
   Proof.
     apply N.bits_inj_iff => i.
