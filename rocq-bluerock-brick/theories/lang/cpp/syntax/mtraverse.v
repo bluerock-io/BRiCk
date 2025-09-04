@@ -8,6 +8,7 @@ Require Import bluerock.lang.cpp.syntax.prelude.
 Require Import bluerock.lang.cpp.syntax.core.
 Require Export bluerock.lang.cpp.syntax.handler.
 Require Import bluerock.lang.cpp.syntax.decl.
+Require bluerock.lang.cpp.syntax.types.
 Require Import bluerock.lang.cpp.syntax.translation_unit.
 
 Import UPoly.
@@ -138,11 +139,17 @@ Module MTraverse.
     #[local] Notation ET := (hE.(handle_expr_type)) (only parsing).
 
     Fixpoint traverseN (n : name) : F name :=
+      let traverse_an :=
+        (* qualifiers are dropped from the arguments to functions, e.g. the name
+           of a function with prototype <<int foo(const int)>> is simply <<foo(int)>>.
+         *)
+        atomic_name.traverse (fun t => types.drop_qualifiers <$> traverseT t)
+      in
       match n with
       | Ninst n xs => Ninst <$> traverseN n <*> traverse (T:=eta list) traverseTA xs
-      | Nglobal c => Nglobal <$> atomic_name.traverse traverseT c
+      | Nglobal c => Nglobal <$> traverse_an c
       | Ndependent t => Ndependent' <$> traverseT t
-      | Nscoped n c => Nscoped <$> traverseN n <*> atomic_name.traverse traverseT c
+      | Nscoped n c => Nscoped <$> traverseN n <*> traverse_an c
       | Nunsupported msg => mret $ Nunsupported msg
       end
 
@@ -183,7 +190,11 @@ Module MTraverse.
       | Tincomplete_array t => Tincomplete_array <$> traverseT t
       | Tvariable_array t e => Tvariable_array <$> traverseT t <*> traverseE e
       | Tenum gn => Tenum <$> traverseN gn
-      | Tfunction ft => Tfunction <$> function_type.traverse traverseT ft
+      | Tfunction ft =>
+          (* function types do not include leading qualifiers on types, e.g. the type
+             <<(const int) -> int>> is the same as the type <<(int) -> int>>.
+           *)
+          Tfunction <$> function_type.traverse (fun t => types.drop_qualifiers <$> traverseT t) ft
       | Tbool => mret Tbool
       | Tmember_pointer gn t => Tmember_pointer <$> traverseT gn <*> traverseT t
       | Tfloat_ t => mret $ Tfloat_ t

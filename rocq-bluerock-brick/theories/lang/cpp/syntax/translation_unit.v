@@ -267,14 +267,14 @@ Record translation_unit : Type := makeTranslationUnit {
   types             : type_table;
   namespace_aliases : alias_table.t;
   initializer       : InitializerBlock;
-  byte_order        : endian;
+  byte_order        : endian; (* NOTE: this is "runtime" information *)
 }.
 #[only(lens)] derive translation_unit.
 
 Definition empty_tu (e : endian) : translation_unit :=
   makeTranslationUnit ∅ ∅ ∅ [] e.
 #[global] Instance : Empty translation_unit :=
-  empty_tu Little. (* << selected by a fair coin flip *)
+  empty_tu Little.
 
 #[local]
 Definition canonicalize {T} (find : name -> option T) (tu : translation_unit) (nm : name) : option T :=
@@ -302,7 +302,11 @@ Definition resolve_type (tu : translation_unit) (nm : name) : option decltype :=
   in
   canonicalize find tu nm.
 
-(** Resolves all of the aliaes in a value name. *)
+(** Resolves all of the aliases in a value name.
+    TODO: This needs to be extended to search for <<enum>> constants.
+    There is some complexity to this because <<enum>> constants in names will be
+    replaced by their values.
+ *)
 Definition resolve_value (tu : translation_unit) (nm : name) : option name :=
   let find n :=
     match tu.(symbols) !! n with
