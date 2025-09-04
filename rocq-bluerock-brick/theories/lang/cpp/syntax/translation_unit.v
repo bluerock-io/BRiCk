@@ -302,7 +302,11 @@ Definition resolve_type (tu : translation_unit) (nm : name) : option decltype :=
   in
   canonicalize find tu nm.
 
-(** Resolves all of the aliases in a value name. *)
+(** Resolves all of the aliases in a value name.
+    TODO: This needs to be extended to search for <<enum>> constants.
+    There is some complexity to this because <<enum>> constants in names will be
+    replaced by their values.
+ *)
 Definition resolve_value (tu : translation_unit) (nm : name) : option name :=
   let find n :=
     match tu.(symbols) !! n with
