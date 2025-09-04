@@ -1,5 +1,5 @@
 Require Import bluerock.lang.cpp.parser.plugin.cpp2v.
-cpp.prog source flags "" prog cpp:{{
+cpp.prog source prog cpp:{{
   using Tr = int&;
   using Trr = int&&;
   using Tr_r = Tr&;
