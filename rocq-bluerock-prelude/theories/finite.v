@@ -653,6 +653,13 @@ Module Type finite_bitmask_type_mixin (Import F : finite_type) (Import B : bitma
   Proof. by rewrite to_bitmask_setbit. Qed.
   Lemma setbit_is_alt b n : setbit b n = setbit_alt b n.
   Proof. by rewrite /setbit N.setbit_spec' comm_L. Qed.
+  Lemma setbit_not_0 b n : setbit b n ≠ 0.
+  Proof.
+    rewrite /setbit => Eq0.
+    assert (Eqt : N.testbit (N.setbit n (to_bit b)) (to_bit b) = true).
+    { apply N.setbit_iff. by left. }
+    by rewrite Eq0 N.bits_0 in Eqt.
+  Qed.
 
   Lemma testbit_setbit (x y : t) (mask : N) :
     testbit (setbit x mask) y =
@@ -748,7 +755,7 @@ Module Type finite_bits_aux (BT : finite_bitmask_type_intf).
   [to_bits] and [of_bits] implement a bitset encoding of [t] into N, given
   the encoding [to_bit : BT.t -> N].
 
-  [to_of_bits] and [of_to_bits] show they're inverses, assuming
+  [to_of_bits] and [of_to_bits] show they're inverses, the latter assuming
   [Inj eq eq BT.to_bit].
   *)
   Definition of_bits (mask : N) : t := list_to_set $ BT.to_list mask.
@@ -831,6 +838,39 @@ Module Type finite_bits_aux (BT : finite_bitmask_type_intf).
     by rewrite -BT.setbit_is_alt setbit_in_idemp.
   Qed.
 
+  Lemma to_bits_non_empty xs : xs ≠ ∅ ↔ to_bits xs ≠ 0.
+  Proof.
+    induction xs as [|??? IHxs] using set_ind_L. { by rewrite to_bits_empty. }
+    rewrite to_bits_union_singleton -BT.setbit_is_alt.
+    split => ?; [|set_solver]. apply BT.setbit_not_0.
+  Qed.
+
+  Lemma to_bits_testbit xs x :
+    BT.testbit (to_bits xs) x
+    -> ∃ y, y ∈ xs ∧ BT.to_bit x = BT.to_bit y.
+  Proof.
+    induction xs as [|y ?? IHxs] using set_ind_L.
+    { by rewrite to_bits_empty BT.testbit_0. }
+    rewrite to_bits_union_singleton BT.testbit_lor orb_True.
+    intros [EQy|EQX].
+    - rewrite BT.testbit_to_bitmask Is_true_eq bool_decide_eq_true in EQy.
+      exists y. set_solver.
+    - destruct (IHxs EQX) as (y' & ? & ?).
+      exists y'. set_solver.
+  Qed.
+
+  Lemma to_bits_testbit_elem_of x xs :
+    x ∈ xs -> BT.testbit (to_bits xs) x.
+  Proof.
+    induction xs as [|y ?? IHxs] using set_ind_L.
+    { by rewrite to_bits_empty BT.testbit_0. }
+    rewrite to_bits_union_singleton BT.testbit_lor orb_True.
+    rewrite elem_of_union elem_of_singleton.
+    intros [->|EQX].
+    - left. apply Is_true_eq, BT.testbit_to_bitmask_eq.
+    - right. by apply IHxs.
+  Qed.
+
   Lemma to_bits_union xs ys :
     to_bits (xs ∪ ys) = N.lor (to_bits xs) (to_bits ys).
   Proof.
@@ -873,6 +913,87 @@ Module Type finite_bits_aux (BT : finite_bitmask_type_intf).
     rewrite [_ ∩ X]intersection_comm_L IHxs N.land_lor_distr_l.
     rewrite to_bits_intersection_singleton. f_equal. by rewrite N.land_comm.
   Qed.
+
+
+  (* ys is partial surjective on xs, if ys contains any element x in xs
+  that has the same bit encoding as an element y in ys. *)
+  Definition partial_surjective (xs ys : t) : Prop :=
+    ∀ x y, x ∈ xs -> y ∈ ys -> BT.to_bit x = BT.to_bit y -> x ∈ ys.
+
+  Lemma of_bits_partial_surjective xs n :
+    partial_surjective xs (of_bits n).
+  Proof.
+    rewrite /partial_surjective => x y.
+    rewrite !elem_of_of_bits => Inxs Inn EQb.
+    by rewrite /BT.testbit EQb.
+  Qed.
+
+  Lemma top_partial_surjective xs : partial_surjective xs ⊤.
+  Proof. rewrite /partial_surjective. intros. by apply elem_of_top. Qed.
+
+  (* Stronger version of [to_bits_intersection]. *)
+  Lemma to_bits_intersection_partial_surjective xs ys :
+    partial_surjective xs ys ->
+    to_bits (xs ∩ ys) = N.land (to_bits xs) (to_bits ys).
+  Proof.
+    rewrite /partial_surjective.
+    induction xs as [|??? IHxs] using set_ind_L.
+    { by rewrite intersection_empty_l_L to_bits_empty N.land_0_l. }
+    intros INJ.
+    rewrite intersection_comm_L intersection_union_l_L 2!to_bits_union.
+    rewrite [_ ∩ X]intersection_comm_L IHxs; last first.
+    { set_solver. }
+    rewrite N.land_lor_distr_l.
+    rewrite to_bits_singleton.
+    case (decide (x ∈ ys)) => INys.
+    - rewrite (_ : ys ∩ {[x]} = {[x]}); last set_solver+INys.
+
+      have EQT := BT.testbit_land (BT.to_bitmask x) (to_bits ys) x.
+      rewrite BT.testbit_to_bitmask_eq left_id_L in EQT.
+
+      destruct (N_land_bit (BT.to_bit x) (to_bits ys)) as [EQb|EQ0]; last first.
+      { rewrite -/(BT.to_bitmask x) N.land_comm in EQ0.
+        rewrite EQ0 BT.testbit_0 in EQT.
+        symmetry in EQT.
+        apply to_bits_testbit_elem_of, Is_true_eq in INys.
+        by rewrite EQT in INys. }
+      rewrite -/(BT.to_bitmask x) N.land_comm in EQb.
+      by rewrite EQb to_bits_singleton.
+
+    - rewrite (_: ys ∩ {[x]} = ∅); last set_solver+INys.
+      rewrite to_bits_empty N.lor_0_l.
+
+      destruct (N_land_bit (BT.to_bit x) (to_bits ys)) as [EQb|EQ0]; last first.
+      { rewrite -/(BT.to_bitmask x) N.land_comm in EQ0.
+        by rewrite EQ0 N.lor_0_l. }
+      exfalso.
+      rewrite N.land_comm -/(BT.to_bitmask x) in EQb.
+
+      have EQT := BT.testbit_land (BT.to_bitmask x) (to_bits ys) x.
+      rewrite EQb BT.testbit_to_bitmask_eq left_id_L in EQT.
+      symmetry in EQT.
+      apply Is_true_eq, to_bits_testbit in EQT as (y & INy & EQy).
+      apply INys, (INJ x y ltac:(set_solver-) INy EQy).
+  Qed.
+
+  Lemma of_to_bits_superseteq_singleton x :
+    {[x]} ⊆ of_bits (to_bits {[x]}).
+  Proof.
+    set_unfold=> ?->.
+    rewrite to_bits_singleton BT.testbit_to_bitmask bool_decide_true //.
+  Qed.
+
+  Lemma of_to_bits_superseteq xs :
+    xs ⊆ of_bits (to_bits xs).
+  Proof.
+    induction xs as [|??? IHxs] using set_ind_L.
+    - set_solver.
+    - rewrite to_bits_union of_bits_or.
+      apply union_mono; [|done]. apply of_to_bits_superseteq_singleton.
+  Qed.
+
+  Lemma of_to_bits_top : of_bits (to_bits ⊤) = ⊤.
+  Proof. apply (anti_symm (⊆)); [set_solver|apply of_to_bits_superseteq]. Qed.
 
   (* TODO move [setbit], and these lemmas, with [BT.testbit]. *)
   Section BT_to_bit_inj.
@@ -922,17 +1043,36 @@ Module Type finite_bits_aux (BT : finite_bitmask_type_intf).
   Lemma masked_opt_empty n : masked_opt n ∅ = None.
   Proof. by rewrite /masked_opt masked_empty. Qed.
 
+  Lemma masked_opt_Some_subseteq n xs xs' :
+    masked_opt n xs = Some xs' -> xs' ⊆ xs.
+  Proof.
+    rewrite /masked_opt.
+    case (decide (masked n xs = ∅)) => EQE.
+    { rewrite option_guard_False //. naive_solver. }
+    rewrite option_guard_True //.
+    intros; simplify_eq.
+    rewrite /masked. apply intersection_subseteq_l.
+  Qed.
+
   (* Warning: prefer [BT.all_bits] if available, that's simpler to reason about. *)
   Definition mask_top : N := to_bits ⊤.
 
-  Lemma masked_top `{Hinj : !Inj eq eq BT.to_bit} rights :
+  Lemma masked_top rights :
     masked mask_top rights = rights.
-  Proof. rewrite /masked /mask_top of_to_bits. set_solver. Qed.
+  Proof. rewrite /masked /mask_top of_to_bits_top. set_solver. Qed.
 
-  Lemma masked_opt_top `{Hinj : !Inj eq eq BT.to_bit}
+  Lemma masked_opt_top
     rights (Hrights : rights ≠ ∅) :
     masked_opt mask_top rights = Some rights.
   Proof. by rewrite /masked_opt masked_top option_guard_True. Qed.
+
+  Lemma mask_top_land_to_bits xs :
+    mask_top `land` to_bits xs = to_bits xs.
+  Proof.
+    rewrite N.land_comm -to_bits_intersection_partial_surjective.
+    - by rewrite right_id_L.
+    - apply top_partial_surjective.
+  Qed.
 
   Lemma elem_of_masked mask r rs :
     r ∈ rs → r ∈ of_bits mask → r ∈ masked mask rs.
@@ -1069,10 +1209,6 @@ Module Type simple_finite_bits_aux (BT : simple_finite_bitmask_type_intf).
     }
     by intros (x & Hdec%finite_decode_N_lt).
   Qed.
-
-  Lemma mask_top_land_to_bits x :
-    mask_top `land` to_bits x = to_bits x.
-  Proof. by rewrite -to_bits_intersection left_id_L. Qed.
 
   Lemma land_mask_idemp {mask_n r} :
     mask_n = mask_top `land` mask_n →
