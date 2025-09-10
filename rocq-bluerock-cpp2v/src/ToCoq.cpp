@@ -88,13 +88,16 @@ sortAliasList(const ::Module::AliasSet &al) {
     std::set<std::pair<std::string, ::Module::AliasEntry>> sorted;
     for (auto i : al) {
         if (not i.first) {
-            sorted.insert(std::make_pair("", i));
+            sorted.insert(std::pair<std::string, ::Module::AliasEntry>("", i));
         } else {
-            sorted.insert(
-                std::make_pair(i.first->getQualifiedNameAsString(), i));
+            sorted.insert(std::pair<std::string, ::Module::AliasEntry>(
+                i.first->getQualifiedNameAsString(), i));
         }
     }
-    return std::list<::Module::AliasEntry>(sorted.begin(), sorted.end());
+    std::list<::Module::AliasEntry> result;
+    for (auto i : sorted)
+        result.push_front(i.second);
+    return result;
 }
 
 void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
@@ -189,7 +192,7 @@ void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
             for (auto decl : mod.definitions()) {
                 printDecl(decl, print, cprint);
             }
-            for (auto &[from, to] : ::Module::sortAliasList(mod.aliases())) {
+            for (auto &[from, to] : sortAliasList(mod.aliases())) {
                 if (from) {
                     guard::ctor _{print, "Dusing_namespace"};
                     cprint.printName(print, *from) << fmt::nbsp;
