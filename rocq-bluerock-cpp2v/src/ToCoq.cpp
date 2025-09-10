@@ -83,6 +83,20 @@ void ToCoqConsumer::HandleTranslationUnit(clang::ASTContext &Context) {
     }
 }
 
+static std::list<::Module::AliasEntry>
+sortAliasList(const ::Module::AliasSet &al) {
+    std::set<std::pair<std::string, ::Module::AliasEntry>> sorted;
+    for (auto i : al) {
+        if (not i.first) {
+            sorted.insert(std::make_pair("", i));
+        } else {
+            sorted.insert(
+                std::make_pair(i.first->getQualifiedNameAsString(), i));
+        }
+    }
+    return std::list<::Module::AliasEntry>(sorted.begin(), sorted.end());
+}
+
 void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
                                 clang::TranslationUnitDecl *decl,
                                 bool sharing) {
@@ -175,7 +189,7 @@ void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
             for (auto decl : mod.definitions()) {
                 printDecl(decl, print, cprint);
             }
-            for (auto &[from, to] : mod.aliases()) {
+            for (auto &[from, to] : ::Module::sortAliasList(mod.aliases())) {
                 if (from) {
                     guard::ctor _{print, "Dusing_namespace"};
                     cprint.printName(print, *from) << fmt::nbsp;
