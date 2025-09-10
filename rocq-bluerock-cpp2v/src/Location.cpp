@@ -112,6 +112,8 @@ SourceLocation Loc::getLoc() const {
         return u.tal->getSourceRange().getBegin();
     case Kind::Location:
         return SourceLocation::getFromRawEncoding(u.location);
+    default:
+        always_assert(false && "Unknown location type");
     }
 }
 
