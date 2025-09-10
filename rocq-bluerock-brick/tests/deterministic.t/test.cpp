@@ -17,3 +17,8 @@ namespace NS {
 namespace NS2 {
   namespace X = X::Y;
 }
+
+using namespace NS;
+using namespace X;
+using namespace X::Y;
+using namespace NS2;
