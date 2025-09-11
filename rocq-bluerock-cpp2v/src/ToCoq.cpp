@@ -85,18 +85,21 @@ void ToCoqConsumer::HandleTranslationUnit(clang::ASTContext &Context) {
 
 static std::list<::Module::AliasEntry>
 sortAliasList(const ::Module::AliasSet &al) {
-    std::set<std::pair<std::string, ::Module::AliasEntry>> sorted;
+    std::set<std::tuple<std::string, std::string, ::Module::AliasEntry>> sorted;
+    auto into_string = [](const clang::NamedDecl *d) -> std::string {
+        if (not d)
+            return "";
+        return d->getQualifiedNameAsString();
+    };
+
     for (auto i : al) {
-        if (not i.first) {
-            sorted.insert(std::pair<std::string, ::Module::AliasEntry>("", i));
-        } else {
-            sorted.insert(std::pair<std::string, ::Module::AliasEntry>(
-                i.first->getQualifiedNameAsString(), i));
-        }
+        sorted.insert(
+            std::tuple<std::string, std::string, ::Module::AliasEntry>(
+                into_string(i.first), into_string(i.second), i));
     }
     std::list<::Module::AliasEntry> result;
     for (auto i : sorted)
-        result.push_front(i.second);
+        result.push_front(std::move(std::get<2>(i)));
     return result;
 }
 
