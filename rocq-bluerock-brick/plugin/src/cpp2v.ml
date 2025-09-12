@@ -141,53 +141,55 @@ let cpp_command_prog name flags prog =
     temp_cpp ::
     "--" :: flags
   in
-  let streams =
-    Unix.open_process_args_full "cpp2v" (Array.of_list flags) (Unix.environment ())
-  in
-  let stdin , stdout , stderr = streams in
+  match Unix.open_process_args_full "cpp2v" (Array.of_list flags) (Unix.environment ()) with
+  | exception Unix.Unix_error (err, _, _) ->
+    CErrors.user_err Pp.(str "Running command `cpp2v` exited with error: " ++ str (Unix.error_message err))
 
-  (* Read all output *)
-  let rec read_all channel buffer =
-    try
-      let line = input_line channel in
-      Buffer.add_string buffer line;
-      Buffer.add_char buffer '\n';
-      read_all channel buffer
-    with End_of_file -> buffer
-  in
+  | streams ->
+    let stdin , stdout , stderr = streams in
 
-  (* Capture stdout and stderr *)
-  let stderr_buffer = Buffer.create 4096 |> read_all stderr in
-  let msg_text (warn_err : string) (cpp2v_stderr : string) =
-    Pp.(
-      str "Invoking cpp2v " ++ str warn_err ++ fnl() ++
-      str cpp2v_stderr ++ fnl() ++
-      str "cpp2v command line:" ++ fnl() ++ str "  " ++ prlist_with_sep (fun () -> str " ") str flags)
-  in
-  let process_status = Unix.close_process_full streams in
-  let success =
-    match process_status with
-    | WEXITED 0 -> true
-    | _ -> false
-  in
-  if not success then
-    if Buffer.length stderr_buffer = 0 then
-      CErrors.user_err Pp.(msg_text "failed with no error message!" "")
-    else
-      CErrors.user_err Pp.(msg_text "failed with the following warnings/errors!" (Buffer.contents stderr_buffer))
-  else if Buffer.length stderr_buffer > 0 then
-    Feedback.msg_warning Pp.(msg_text "produced the following warnings!" (Buffer.contents stderr_buffer));
+    (* Read all output *)
+    let rec read_all channel buffer =
+      try
+        let line = input_line channel in
+        Buffer.add_string buffer line;
+        Buffer.add_char buffer '\n';
+        read_all channel buffer
+      with End_of_file -> buffer
+    in
 
-  (* this might have problems with coq-lsp if the required file has its own requires *)
-  let current_state = Vernacstate.freeze_full_state () in
-  let _new_state =
-    Vernacinterp.interp ~intern:Vernacinterp.fs_intern ~st:current_state
-      (CAst.make Vernacexpr.{ control = [] ;
-                              attrs = [] ;
-                              expr = VernacSynterp (VernacLoad (false (* not verbose *),
-                                                                temp_v (* filename *)))  })
-  in
-  ()
+    (* Capture stdout and stderr *)
+    let stderr_buffer = Buffer.create 4096 |> read_all stderr in
+    let msg_text (warn_err : string) (cpp2v_stderr : string) =
+      Pp.(
+        str "Invoking cpp2v " ++ str warn_err ++ fnl() ++
+        str cpp2v_stderr ++ fnl() ++
+        str "cpp2v command line:" ++ fnl() ++ str "  " ++ prlist_with_sep (fun () -> str " ") str flags)
+    in
+    let process_status = Unix.close_process_full streams in
+    let success =
+      match process_status with
+      | WEXITED 0 -> true
+      | _ -> false
+    in
+    if not success then
+      if Buffer.length stderr_buffer = 0 then
+        CErrors.user_err Pp.(msg_text "failed with no error message!" "")
+      else
+        CErrors.user_err Pp.(msg_text "failed with the following warnings/errors!" (Buffer.contents stderr_buffer))
+    else if Buffer.length stderr_buffer > 0 then
+      Feedback.msg_warning Pp.(msg_text "produced the following warnings!" (Buffer.contents stderr_buffer));
+
+    (* this might have problems with coq-lsp if the required file has its own requires *)
+    let current_state = Vernacstate.freeze_full_state () in
+    let _new_state =
+      Vernacinterp.interp ~intern:Vernacinterp.fs_intern ~st:current_state
+        (CAst.make Vernacexpr.{ control = [] ;
+                                attrs = [] ;
+                                expr = VernacSynterp (VernacLoad (false (* not verbose *),
+                                                                  temp_v (* filename *)))  })
+    in
+    ()
 
 (*
    If we need to avoid using <<Load>>, e.g. to suport coq-lsp, then we can use
