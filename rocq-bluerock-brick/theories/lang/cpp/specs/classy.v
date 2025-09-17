@@ -59,6 +59,21 @@ Section with_prop.
   Definition let_pre_spec {T : Type} (x : T) : T := x.
   Definition exact_spec {T : Type} (x : T) : T := x.
 
+  (** Add all of the binders in a telescope.
+      
+      This should **not** be used on opaque (or variable)
+      telescopes because it will block reduction.
+      In this case, use a regular `\with` binding and qualify 
+      the telescope with `tele_arg`.
+   *)
+  Fixpoint add_withT `{!SpecGen} (t : telescopes.tele) :
+    telescopes.tele_fun t spec_car -> PrimString.string -> dummy_prop -> spec_car :=
+    match t return telescopes.tele_fun t spec_car -> PrimString.string -> dummy_prop -> spec_car with
+    | telescopes.TeleO => fun spec _ _ => spec
+    | telescopes.TeleS f => fun spec n d =>
+      add_with (fun x => add_withT (f x) (spec x) n d) n DummyValue
+    end.
+
 End with_prop.
 #[global] Hint Mode SpecGen - ! : typeclass_instances.
 #[global] Hint Mode WithArg ! - : typeclass_instances.
@@ -86,6 +101,8 @@ Notation add_with_binder f := [with_binder add_with f] (only parsing).
 Notation post_with_binder f := [with_binder post_with f] (only parsing).
 Notation add_with_dummy f := (add_with f _ DummyValue) (only parsing).
 Notation post_with_dummy f := (post_with f _ DummyValue) (only parsing).
+Notation add_withT_binder t f := [with_binder (add_withT t) f] (only parsing).
+Notation add_withT_dummy t f := (add_withT t f _ DummyValue) (only parsing).
 
 Notation "'\spec@{' ty } X" := (X%pre_spec : ty%type) (only parsing).
 
@@ -93,6 +110,11 @@ Notation "'\with' x .. y X" :=
   (add_with_binder  (fun x => .. (add_with_binder  (fun y => X%pre_spec) ) ..) ) (only parsing).
 Notation "'\with' x .. y X" :=
   (add_with_dummy (fun x => .. (add_with_dummy (fun y => X%pre_spec)) ..)) (only printing).
+
+Notation "'\withT' ts <- t X" :=
+  (add_withT_binder t (fun ts => X%pre_spec) ) (only parsing).
+Notation "'\withT' ts <- t X" :=
+  (add_withT_dummy t (fun ts => X%pre_spec) ) (only printing).
 
 Notation "'\prepost' pp X" := (add_prepost pp%I X%pre_spec).
 
