@@ -59,6 +59,13 @@ Section with_prop.
   Definition let_pre_spec {T : Type} (x : T) : T := x.
   Definition exact_spec {T : Type} (x : T) : T := x.
 
+  (** Add all of the binders in a telescope.
+      
+      This should **not** be used on opaque (or variable)
+      telescopes because it will block reduction.
+      In this case, use a regular `\with` binding and qualify 
+      the telescope with `tele_arg`.
+   *)
   Fixpoint add_withT `{!SpecGen} (t : telescopes.tele) :
     telescopes.tele_fun t spec_car -> PrimString.string -> dummy_prop -> spec_car :=
     match t return telescopes.tele_fun t spec_car -> PrimString.string -> dummy_prop -> spec_car with
