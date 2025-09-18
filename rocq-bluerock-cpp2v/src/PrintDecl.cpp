@@ -227,18 +227,15 @@ template <typename T> struct DeclPrinter {
             }
         };
         auto printDeclWith = [&]() {
-            if (auto declctx = dyn_cast<DeclContext>(&decl)) {
-                auto cp = cprint.withDeclContext(declctx);
-                if (auto msg = invalid(box, ctxt)) {
-                    guard::ctor _(print, "Dunsupported");
-                    cp.printName(print, decl) << fmt::nbsp;
-                    print.str(msg);
-                    return true;
-                } else {
-                    return printDecl(cp);
-                }
-            } else
-                return printDecl(cprint);
+            auto cp = cprint.withDecl(&decl);
+            if (auto msg = invalid(box, ctxt)) {
+                guard::ctor _(print, "Dunsupported");
+                cp.printName(print, decl) << fmt::nbsp;
+                print.str(msg);
+                return true;
+            } else {
+                return printDecl(cp);
+            }
         };
         return printDeclWith() || printSpecialization(print, decl, cprint);
     }

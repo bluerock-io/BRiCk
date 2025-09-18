@@ -92,11 +92,11 @@ private:
     clang::ASTContext *context_;
     clang::MangleContext *mangleContext_;
     const Trace::Mask trace_;
-    const clang::DeclContext *decl_{nullptr};
+    const clang::Decl *decl_{nullptr};
     const bool comment_{false};
     const bool typedefs_;
 
-    ClangPrinter(const ClangPrinter &from, const clang::DeclContext *decl)
+    ClangPrinter(const ClangPrinter &from, const clang::Decl *decl)
         : compiler_(from.compiler_), context_(from.context_),
           mangleContext_(from.mangleContext_), trace_(from.trace_), decl_{decl},
           comment_{from.comment_}, typedefs_{from.typedefs_} {}
@@ -116,9 +116,6 @@ public:
       argument names and for diagnostics (e.g., an approximate
       source location for type-related warnings).
       */
-    ClangPrinter withDeclContext(const clang::DeclContext *d) const {
-        return {*this, d};
-    }
     ClangPrinter withDecl(const clang::Decl *decl) const;
 
 private:
@@ -225,10 +222,16 @@ public:
                               llvm::ArrayRef<clang::TemplateArgumentLoc>);
 
     // TODO: Adjust and use in the structured name printer
-    fmt::Formatter &printTypeTemplateParam(CoqPrinter &, unsigned depth,
-                                           unsigned index, loc::loc);
-    fmt::Formatter &printNonTypeTemplateParam(CoqPrinter &, unsigned depth,
-                                              unsigned index, loc::loc);
+    fmt::Formatter &printTemplateParam(CoqPrinter &, unsigned depth,
+                                       unsigned index, bool is_type, loc::loc);
+    fmt::Formatter &printTypeTemplateParam(CoqPrinter &print, unsigned depth,
+                                           unsigned index, loc::loc loc) {
+        return printTemplateParam(print, depth, index, true, loc);
+    }
+    fmt::Formatter &printNonTypeTemplateParam(CoqPrinter &print, unsigned depth,
+                                              unsigned index, loc::loc loc) {
+        return printTemplateParam(print, depth, index, false, loc);
+    }
 
     // Types
 

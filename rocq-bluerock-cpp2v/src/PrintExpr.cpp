@@ -131,10 +131,7 @@ fmt::Formatter &ClangPrinter::printValueDeclExpr(CoqPrinter &print,
         }
     } else {
         print.ctor("Eglobal", false);
-        if (auto dc = dyn_cast<DeclContext>(decl))
-            withDeclContext(dc).printName(print, *decl);
-        else
-            printName(print, *decl);
+        withDecl(decl).printName(print, *decl);
     }
     print.output() << fmt::nbsp;
     if (auto bd = dyn_cast<BindingDecl>(decl)) {
