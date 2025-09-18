@@ -12,6 +12,7 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/StmtVisitor.h"
 #include "clang/AST/Type.h"
+#include <clang/AST/ASTContext.h>
 
 using namespace clang;
 
@@ -22,6 +23,17 @@ private:
 
 public:
     static PrintStmt printer;
+
+    void Visit(const Stmt *stmt, CoqPrinter &print, ClangPrinter &cprint,
+               ASTContext &ctxt) {
+        if (stmt == nullptr) [[unlikely]] {
+            guard::ctor _{print, "Sunsupported"};
+            print.str("empty statement");
+            return;
+        }
+        ConstStmtVisitor<PrintStmt, void, CoqPrinter &, ClangPrinter &,
+                         ASTContext &>::Visit(stmt, print, cprint, ctxt);
+    }
 
     void VisitStmt(const Stmt *stmt, CoqPrinter &print, ClangPrinter &cprint,
                    ASTContext &ctxt) {

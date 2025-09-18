@@ -17,6 +17,7 @@
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/TargetInfo.h"
 #include <bit>
+#include <clang/AST/DependenceFlags.h>
 #include <clang/Basic/Version.inc>
 
 using namespace clang;
@@ -295,7 +296,10 @@ public:
     }
 
     void Visit(const Expr *expr) {
-        if (expr->containsErrors()) {
+        if (expr == nullptr) [[unlikely]] {
+            guard::ctor _{print, "Eunsupported"};
+            print.str("empty expression (nullptr)");
+        } else if (expr->containsErrors()) {
             auto loc = loc::of(expr);
             print.ctor("Eerror", false);
             std::string coqmsg;
@@ -1576,6 +1580,12 @@ public:
     }
 
     void VisitConceptSpecializationExpr(const ConceptSpecializationExpr *expr) {
+        if (expr->getDependence() && print.templates()) {
+            print.ctor("Eunsupported");
+            print.str("potentially dependent concept specialization");
+            done(expr);
+            return;
+        }
         print.ctor("Econcept_specialization");
 #if CLANG_VERSION_MAJOR <= 17
         auto cr = static_cast<const ConceptReference *>(expr);
