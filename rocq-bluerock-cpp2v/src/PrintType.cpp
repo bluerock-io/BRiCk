@@ -16,7 +16,6 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/Type.h"
 #include <Formatter.hpp>
-#include <iostream>
 
 using namespace clang;
 using namespace fmt;

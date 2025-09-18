@@ -15,8 +15,6 @@
 #include "clang/AST/StmtVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Builtins.h"
-#include "clang/Basic/TargetInfo.h"
-#include <bit>
 #include <clang/AST/DependenceFlags.h>
 #include <clang/Basic/Version.inc>
 

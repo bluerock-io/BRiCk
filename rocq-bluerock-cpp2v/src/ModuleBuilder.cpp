@@ -8,12 +8,10 @@
 #include "CommentScanner.hpp"
 #include "DeclVisitorWithArgs.h"
 #include "Filter.hpp"
-#include "Formatter.hpp"
 #include "FromClang.hpp"
 #include "Location.hpp"
 #include "Logging.hpp"
 #include "SpecCollector.hpp"
-#include "clang/Basic/Builtins.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 #include <set>
