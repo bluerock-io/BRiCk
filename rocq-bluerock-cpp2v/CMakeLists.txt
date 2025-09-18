@@ -72,7 +72,6 @@ add_llvm_library(tocoq
   src/PrintLocalDecl.cpp
   src/ModuleBuilder.cpp
   src/CommentScanner.cpp
-  src/SpecWriter.cpp
   src/NotationWriter.cpp
   src/Formatter.cpp
   src/Logging.cpp
