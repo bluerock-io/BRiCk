@@ -49,15 +49,16 @@ bool EvaluateRequiresClause(const clang::FunctionDecl *FD,
             return Satisfied && Satisfaction.IsSatisfied;
         };
 
-    clang::TemplateArgumentList *TemplateArgsPtr = nullptr;
-    if (auto *FTSI = dyn_cast<clang::FunctionTemplateSpecializationInfo>(
-            FD->getTemplateSpecializationInfo())) {
-        return with_template_args(FTSI->TemplateArguments->asArray());
-    } else {
-        // You might need to build template arguments from context
-        // This is more complex and depends on your situation
-        return true;
+    auto specialization_info = FD->getTemplateSpecializationInfo();
+    if (specialization_info != nullptr) {
+        if (auto *FTSI = dyn_cast<clang::FunctionTemplateSpecializationInfo>(
+                specialization_info)) {
+            return with_template_args(FTSI->TemplateArguments->asArray());
+        }
     }
+    // You might need to build template arguments from context
+    // This is more complex and depends on your situation
+    return true;
 }
 
 class BuildModule : public ConstDeclVisitorArgs<BuildModule, void, Flags> {

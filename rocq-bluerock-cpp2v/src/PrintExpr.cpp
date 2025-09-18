@@ -714,7 +714,10 @@ public:
         // because we (and C++) distinguish between member calls
         // and function calls, we need to desugar this to a method
         // if the called function is a method.
-        if (auto method = dyn_cast<CXXMethodDecl>(callee)) {
+        if (callee == nullptr) {
+            print.ctor("Eunsupported");
+            print.str("unsupported operator call (nullptr)");
+        } else if (auto method = dyn_cast<CXXMethodDecl>(callee)) {
             always_assert(!method->isStatic() &&
                           "operator overloads can not be static");
             print.ctor("Eoperator_member_call");
@@ -750,8 +753,8 @@ public:
             print.list(expr->arguments(),
                        [&](auto i) { cprint.printExpr(print, i, names); });
         } else {
-            logging::unsupported() << "unsupported operator call";
-            logging::die();
+            print.ctor("Eunsupported");
+            print.str("unsupported operator call");
         }
 
         done(expr, Done::NONE);
@@ -1571,9 +1574,15 @@ public:
 
     void VisitTypeTraitExpr(const TypeTraitExpr *expr) {
         // note: i should record the fact that this is a type trait expression
-        print.ctor("Ebool");
-        print.boolean(expr->getValue());
-        print.end_ctor();
+        if (expr->isInstantiationDependent()) {
+            print.ctor("Eunsupported");
+            print.str("dependent type trait expr");
+            done(expr);
+        } else {
+            print.ctor("Ebool");
+            print.boolean(expr->getValue());
+            print.end_ctor();
+        }
     }
 
     void VisitConceptSpecializationExpr(const ConceptSpecializationExpr *expr) {
