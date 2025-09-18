@@ -1,0 +1,2 @@
+# For _CoqProject generation, gather-coq-paths.py
+sexpdata==1.0.2
