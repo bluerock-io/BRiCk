@@ -107,6 +107,12 @@ public:
 
     void VisitCXXForRangeStmt(const CXXForRangeStmt *stmt, CoqPrinter &print,
                               ClangPrinter &cprint, ASTContext &) {
+        if (not(stmt->getRangeStmt() && stmt->getBeginStmt() &&
+                stmt->getEndStmt())) {
+            guard::ctor _{print, "Sunsupported"};
+            print.str("dependent for-each loop");
+            return;
+        }
         print.ctor("Sforeach");
         cprint.printStmt(print, stmt->getRangeStmt());
         print.output() << fmt::nbsp;
