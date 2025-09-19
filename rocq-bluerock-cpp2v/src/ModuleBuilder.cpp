@@ -135,7 +135,11 @@ public:
     }
 
     void VisitStaticAssertDecl(const StaticAssertDecl *decl, Flags) {
-        module_.add_assert(*decl);
+        // NOTE: This might need some more work because of declarations that
+        // have requires clauses; however, these should be in dependent
+        // contexts.
+        if (not decl->getDeclContext()->isDependentContext())
+            module_.add_assert(*decl);
     }
 
     void VisitTranslationUnitDecl(const TranslationUnitDecl *decl,
