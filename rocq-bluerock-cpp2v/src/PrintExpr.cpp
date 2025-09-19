@@ -23,11 +23,9 @@ using namespace fmt;
 
 enum Done : unsigned {
     NONE = 0,
-    V = 1,
-    T = 2,
-    O = 4,
-    VT = V | T,
-    DT = 8,
+    T = 1,
+    O = 2,
+    DT = 4,
 };
 
 fmt::Formatter &ClangPrinter::printOverloadableOperator(
@@ -242,10 +240,6 @@ private:
         if (want == Done::DT) {
             printDeclType(expr);
         } else {
-            if (want & Done::V) {
-                print.output() << fmt::nbsp;
-                cprint.printValCat(print, expr);
-            }
             if (want & Done::T) {
                 print.output() << fmt::nbsp;
                 cprint.printQualType(print, expr->getType(), loc::of(expr));
@@ -1489,9 +1483,9 @@ public:
             return unsupported_expr(expr, "scope-extruded temporary");
         }
 
-        print.ctor("Ematerialize_temp");
-        cprint.printExpr(print, expr->getSubExpr(), names);
-        done(expr, Done::V);
+        guard::ctor _{print, "Ematerialize_temp"};
+        cprint.printExpr(print, expr->getSubExpr(), names) << fmt::nbsp;
+        cprint.printValCat(print, expr);
     }
 
     void VisitCXXBindTemporaryExpr(const CXXBindTemporaryExpr *expr) {
