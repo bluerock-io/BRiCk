@@ -38,6 +38,11 @@ void test() {
 }
 
 
+auto foo() { return 0; }
+
+template<typename T>
+auto bar(T& t) { return t; }
+
 /* This tests overlaps between names and constrained names
 template<typename T>
 struct D {
