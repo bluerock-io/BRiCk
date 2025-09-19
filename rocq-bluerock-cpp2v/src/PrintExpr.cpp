@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 BlueRock Security, Inc.
+ * Copyright (c) 2020-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source
  * License. See the LICENSE-BedRock file in the repository root for details.
  */
@@ -294,6 +294,7 @@ public:
         if (expr == nullptr) [[unlikely]] {
             guard::ctor _{print, "Eunsupported"};
             print.str("empty expression (nullptr)");
+            guard::ctor _{print, "Tnullptr"};
         } else if (expr->containsErrors()) {
             auto loc = loc::of(expr);
             print.ctor("Eerror", false);
@@ -715,10 +716,11 @@ public:
         if (callee == nullptr) {
             print.ctor("Eunsupported");
             print.str("unsupported operator call (nullptr)");
+            done(expr, Done::DT);
         } else if (auto method = dyn_cast<CXXMethodDecl>(callee)) {
             always_assert(!method->isStatic() &&
                           "operator overloads can not be static");
-            print.ctor("Eoperator_member_call");
+            guard::ctor _{print, "Eoperator_member_call"};
             cprint.printOverloadableOperator(print, expr->getOperator(),
                                              loc::of(expr))
                 << fmt::nbsp;
@@ -739,7 +741,7 @@ public:
                 [&](auto i) { cprint.printExpr(print, i, names); });
 
         } else if (auto function = dyn_cast<FunctionDecl>(callee)) {
-            print.ctor("Eoperator_call");
+            guard::ctor _{print, "Eoperator_call"};
             cprint.printOverloadableOperator(print, expr->getOperator(),
                                              loc::of(expr))
                 << fmt::nbsp;
@@ -753,9 +755,8 @@ public:
         } else {
             print.ctor("Eunsupported");
             print.str("unsupported operator call");
+            done(expr, Done::DT);
         }
-
-        done(expr, Done::NONE);
     }
 
     void printCast(const CastExpr *ce) {
