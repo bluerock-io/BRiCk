@@ -170,7 +170,12 @@ public:
     void VisitDeducedType(const DeducedType *type, CoqPrinter &print,
                           ClangPrinter &cprint) {
         if (type->isDeduced()) {
-            cprint.printQualType(print, type->getDeducedType(), loc::of(type));
+            auto ty = type->getDeducedType();
+            if (ty.isNull()) {
+                print.output() << "Tauto";
+            } else {
+                cprint.printQualType(print, ty, loc::of(type));
+            }
         } else {
             unsupported_type(print, cprint, type);
         }
@@ -327,7 +332,12 @@ public:
 
     void VisitElaboratedType(const ElaboratedType *type, CoqPrinter &print,
                              ClangPrinter &cprint) {
-        cprint.printQualType(print, type->getNamedType(), loc::of(type));
+        if (type->getNamedType().isNull()) {
+            guard::ctor _{print, "Tunsupported"};
+            print.str("elaborated type w/ null");
+        } else {
+            cprint.printQualType(print, type->getNamedType(), loc::of(type));
+        }
     }
 
     void VisitConstantArrayType(const ConstantArrayType *type,

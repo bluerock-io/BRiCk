@@ -16,6 +16,7 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/Builtins.h"
 #include <clang/AST/DependenceFlags.h>
+#include <clang/AST/Expr.h>
 #include <clang/Basic/Version.inc>
 
 using namespace clang;
@@ -197,6 +198,9 @@ struct PrintDependentName : public ConstStmtVisitor<PrintDependentName, void> {
 
         print.output() << "(Nunsupported \"VisitUnresolvedMemberExpr\")";
     }
+    void VisitDeclRefExpr(const DeclRefExpr *expr) {
+        cprint.printName(print, *expr->getDecl());
+    }
 
     void VisitExpr(const Expr *expr) {
         llvm::errs() << "PrintDependentName(" << expr->getStmtClassName()
@@ -224,14 +228,17 @@ private:
     OpaqueNames &names;
 
     fmt::Formatter &printDeclType(const Expr *expr) {
+        auto ty = expr->getType();
+        if (ty.isNull())
+            return print.output() << "Tauto";
         if (expr->isLValue()) {
             guard::ctor _(print, "Tref", false);
-            cprint.printQualType(print, expr->getType(), loc::of(expr));
+            cprint.printQualType(print, ty, loc::of(expr));
         } else if (expr->isXValue()) {
             guard::ctor _(print, "Trv_ref", false);
-            cprint.printQualType(print, expr->getType(), loc::of(expr));
+            cprint.printQualType(print, ty, loc::of(expr));
         } else {
-            cprint.printQualType(print, expr->getType(), loc::of(expr));
+            cprint.printQualType(print, ty, loc::of(expr));
         }
         return print.output();
     }
@@ -241,6 +248,8 @@ private:
             printDeclType(expr);
         } else {
             if (want & Done::T) {
+                if (expr->getType().isNull())
+                    return print.output() << "Tauto";
                 print.output() << fmt::nbsp;
                 cprint.printQualType(print, expr->getType(), loc::of(expr));
             }
@@ -1440,25 +1449,32 @@ public:
     }
 
     void VisitCXXDeleteExpr(const CXXDeleteExpr *expr) {
-        print.ctor("Edelete");
-        print.output() << fmt::BOOL(expr->isArrayForm()) << fmt::nbsp;
+        if (expr->getOperatorDelete()) {
+            print.ctor("Edelete");
+            print.output() << fmt::BOOL(expr->isArrayForm()) << fmt::nbsp;
 
-        if (auto op = expr->getOperatorDelete()) {
-            cprint.printName(print, *op);
+            if (auto op = expr->getOperatorDelete()) {
+                cprint.printName(print, *op);
+            } else {
+                logging::fatal() << "missing [delete] operator\n";
+                logging::die();
+            }
+            print.output() << fmt::nbsp;
+
+            cprint.printExpr(print, expr->getArgument(), names);
+
+            print.output() << fmt::nbsp;
+
+            cprint.printQualType(print, expr->getDestroyedType(),
+                                 loc::of(expr));
+
+            // no need to print the type information on [delete]
+            print.end_ctor();
         } else {
-            logging::fatal() << "missing [delete] operator\n";
-            logging::die();
+            guard::ctor _{print, "Eunresolved_delete"};
+            print.output() << fmt::BOOL(expr->isArrayForm()) << fmt::nbsp;
+            cprint.printExpr(print, expr->getArgument(), names);
         }
-        print.output() << fmt::nbsp;
-
-        cprint.printExpr(print, expr->getArgument(), names);
-
-        print.output() << fmt::nbsp;
-
-        cprint.printQualType(print, expr->getDestroyedType(), loc::of(expr));
-
-        // no need to print the type information on [delete]
-        print.end_ctor();
     }
 
     void VisitExprWithCleanups(const ExprWithCleanups *expr) {
