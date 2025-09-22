@@ -135,6 +135,8 @@ Definition flip2 {A B C D} (f : A -> B -> C -> D) (b : B) (c : C) (a : A) : D :=
 Lemma dec_stable_iff `{Decision P} : ¬ ¬ P ↔ P.
 Proof. split. apply dec_stable. tauto. Qed.
 
+#[global] Arguments stdpp.base.difference : simpl nomatch.
+
 (** ** Monads *)
 (**
 We put most notation in [stdpp_scope] (open by default).
