@@ -37,7 +37,10 @@ let strip_braces loc str =
   if str.[0] = '\123' then strip_each '\123' loc str 1
   else if str.[0] = '(' then strip_each '(' loc str 1
   else if str.[0] = '[' then strip_each '[' loc str 1
-  else loc , str 
+  else loc , str
+
+let any_attribute : Attributes.vernac_flags Attributes.attribute =
+  Attributes.make_attribute (fun x -> [],x)
 }
 
 ARGUMENT EXTEND cpp_string PRINTED BY { pr_cpp_string }
@@ -57,11 +60,11 @@ ARGUMENT EXTEND cpp_flags TYPED AS string option PRINTED BY { pr_cpp_flags }
 END
 
 VERNAC COMMAND EXTEND Cpp CLASSIFIED AS SIDEFF
-| [ "cpp.prog" ident(name) "abi" constr(abi) "defns" constr_list(defns) ] ->
-  { Cpp2v.cpp_command name abi defns }
+| #[ atts = Cpp2v.attributes ] [ "cpp.prog" ident(name) "abi" constr(abi) "defns" constr_list(defns) ] ->
+  { Cpp2v.cpp_command atts name abi defns }
 END
 
 VERNAC COMMAND EXTEND CppProg CLASSIFIED AS SIDEFF
-| [ "cpp.prog" ident(name) cpp_flags(flags) "prog" cpp_string(prog) ] ->
-  { Cpp2v.cpp_command_prog name flags prog }
+| #[ atts = Cpp2v.attributes ] [ "cpp.prog" ident(name) cpp_flags(flags) "prog" cpp_string(prog) ] ->
+  { Cpp2v.cpp_command_prog atts name flags prog }
 END

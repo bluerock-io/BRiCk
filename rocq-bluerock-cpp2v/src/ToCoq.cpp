@@ -179,6 +179,10 @@ void ToCoqConsumer::toCoqModule(clang::ASTContext *ctxt,
                     << "Require Import bluerock.lang.cpp.parser.plugin.cpp2v."
                     << fmt::line;
             }
+            if (attributes_.has_value()) {
+                print.output()
+                    << "#[" << attributes_.value() << "]" << fmt::line;
+            }
             print.output() << "cpp.prog " << interactive_.value_or("source")
                            << fmt::indent << fmt::line;
             if (ctxt->getTargetInfo().isBigEndian()) {
