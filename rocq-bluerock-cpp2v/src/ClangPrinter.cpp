@@ -132,8 +132,8 @@ fmt::Formatter &ClangPrinter::printTemplateParam(CoqPrinter &print,
                                                  unsigned depth, unsigned index,
                                                  bool is_type, loc::loc loc) {
     if (trace(Trace::Name)) {
-        trace("printTemplateParam", loc);
-        llvm::errs() << "depth=" << depth << " index=" << index << "\n";
+        trace("printTemplateParam", loc)
+            << " depth=" << depth << " index=" << index << "\n";
     }
 
     auto process = [&](const TemplateParameterList *list) {

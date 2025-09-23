@@ -701,6 +701,10 @@ static fmt::Formatter &printAtomicName(const DeclContext &ctx, const Decl &decl,
         return print.str(what);
     };
 
+    // finds the duplicate index for a name. For example, the clang AST
+    // sometimes ends up with multiple variables with the same name, e.g. due to
+    // template parameter pack expansion. This logic aims to find which index we
+    // want.
     auto duplicate_index = [&](const NamedDecl &nd) -> unsigned {
         if (auto dc = decl.getParentFunctionOrMethod()) {
             auto body = dyn_cast<FunctionDecl>(dc)->getBody();
@@ -728,8 +732,8 @@ static fmt::Formatter &printAtomicName(const DeclContext &ctx, const Decl &decl,
             } finder{&nd};
             finder.TraverseStmt(body);
             if (finder.result < 0) {
-                // llvm::errs() << "\ntarget = " << nd.getNameAsString() <<
-                // "\n"; body->dump();
+                // TODO: figure out what is wrong in the above code that we
+                // can see a reference to a name that is not in scope.
                 logging::verbose() << "Failed to find target "
                                    << nd.getNameAsString() << " in ";
                 body->dump(logging::verbose(), ctx.getParentASTContext());
