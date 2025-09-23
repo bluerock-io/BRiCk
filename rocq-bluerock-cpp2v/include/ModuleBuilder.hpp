@@ -8,7 +8,6 @@
 #include <clang/AST/Decl.h>
 #include <clang/AST/DeclCXX.h>
 #include <list>
-#include <map>
 #include <set>
 #include <utility>
 

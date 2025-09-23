@@ -173,6 +173,7 @@ Module MTraverse.
       | Tresult_member_call on o ts => hT.(handle_Tresult_member_call) on o ts (fun _ => traverseN on) (fun _ => traverseT o) (fun _ => traverseT <$> ts)
       | Tresult_parenlist t ts => hT.(handle_Tresult_parenlist) t ts (fun _ => traverseT t) (fun _ => traverseT <$> ts)
       | Tresult_member o f => hT.(handle_Tresult_member) o f (fun _ => traverseT o) (fun _ => traverseN f)
+      | Tauto => mret Tauto
       | Tnamed gn => hT.(handle_Tnamed) gn (fun _ => traverseN gn)
       | Tref t => hT.(handle_Tref) t (fun _ => traverseT t)
       | Trv_ref t => hT.(handle_Trv_ref) t (fun _ => traverseT t)

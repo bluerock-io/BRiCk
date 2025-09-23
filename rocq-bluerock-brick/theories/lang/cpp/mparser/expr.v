@@ -58,6 +58,8 @@ Module BinOp.
   Definition is_unresolved (t : Mtype) : bool :=
     match drop_qualifiers (drop_reference t) with
     | Tdecltype _
+    | Texprtype _
+    | Tauto
     | Tresult_param _
     | Tparam _
     | Tresult_binop _ _ _

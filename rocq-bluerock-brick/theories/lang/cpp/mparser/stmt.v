@@ -14,7 +14,7 @@ Require Import bluerock.lang.cpp.syntax.typing.
   match e with
   | Eunresolved_parenlist None es => Eunresolved_parenlist (Some t) es
   (**
-  TODO: The same treatment for other direct initiailization
+  TODO: The same treatment for other direct initialization
   expressions.
   *)
   | _ => e

@@ -94,7 +94,8 @@ Fixpoint size_of (resolve : genv) (t : type) : option N :=
   | Tresult_parenlist _ _
   | Tresult_member _ _
   | Tresult_call _ _
-  | Tresult_member_call _ _ _ => None
+  | Tresult_member_call _ _ _
+  | Tauto => None
   end%N.
 
 (* [size_of] result can overflow: *)

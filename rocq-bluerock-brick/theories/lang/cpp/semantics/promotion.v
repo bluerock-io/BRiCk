@@ -184,6 +184,7 @@ Definition promote_integral {σ : genv} (tu : translation_unit) (ty : type) : op
   | Tresult_binop _ _ _
   | Tdecltype _ (* ?? *)
   | Texprtype _ (* ?? *)
+  | Tauto
   | Tresult_call _ _ => None
   end.
 

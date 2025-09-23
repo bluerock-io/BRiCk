@@ -52,6 +52,10 @@ Proof.
   induction ty; simpl; intros; eauto.
 Qed.
 
+Lemma qual_norm'_Tqualified {A} (f : _ -> _ -> A) cv cv' ty :
+  qual_norm' f cv (Tqualified cv' ty) = qual_norm' f (merge_tq cv cv') ty.
+Proof. done. Qed.
+
 Definition decompose_type : type -> type_qualifiers * type :=
   qual_norm (fun q t => (q, t)).
 #[global] Hint Opaque decompose_type : typeclass_instances.
@@ -449,6 +453,7 @@ Fixpoint erase_qualifiers (t : type) : type :=
   | Tresult_unop _ _ | Tresult_binop _ _ _ | Tresult_call _ _ | Tresult_member_call _ _ _
   | Tresult_parenlist _ _
   | Tresult_member _ _
+  | Tauto
   | Tdecltype _ => t (* TODO: it isn't clear what [erase_qualifiers] means on meta types *)
   | Texprtype _ => t (* TODO: it isn't clear what [erase_qualifiers] means on meta types *)
   end.
@@ -830,6 +835,7 @@ Fixpoint normalize_type' (cv : type_qualifiers) (t : type) : type :=
   | Tresult_unop _ _ | Tresult_binop _ _ _ | Tresult_call _ _ | Tresult_member_call _ _ _
   | Tresult_parenlist _ _
   | Tresult_member _ _
+  | Tauto
   | Tdecltype _ => tqualified cv t
   | Texprtype _ => tqualified cv t
   end.

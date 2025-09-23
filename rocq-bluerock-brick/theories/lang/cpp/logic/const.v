@@ -144,6 +144,7 @@ Section defs.
       | Tresult_member _ _
       | Tdecltype _
       | Texprtype _
+      | Tauto
       | Tresult_parenlist _ _ => False
       end%I.
 

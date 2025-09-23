@@ -227,18 +227,15 @@ template <typename T> struct DeclPrinter {
             }
         };
         auto printDeclWith = [&]() {
-            if (auto declctx = dyn_cast<DeclContext>(&decl)) {
-                auto cp = cprint.withDeclContext(declctx);
-                if (auto msg = invalid(box, ctxt)) {
-                    guard::ctor _(print, "Dunsupported");
-                    cp.printName(print, decl) << fmt::nbsp;
-                    print.str(msg);
-                    return true;
-                } else {
-                    return printDecl(cp);
-                }
-            } else
-                return printDecl(cprint);
+            auto cp = cprint.withDecl(&decl);
+            if (auto msg = invalid(box, ctxt)) {
+                guard::ctor _(print, "Dunsupported");
+                cp.printName(print, decl) << fmt::nbsp;
+                print.str(msg);
+                return true;
+            } else {
+                return printDecl(cp);
+            }
         };
         return printDeclWith() || printSpecialization(print, decl, cprint);
     }
@@ -304,18 +301,22 @@ static fmt::Formatter &printClassName(CoqPrinter &print, const RecordDecl *decl,
 
 static fmt::Formatter &printClassName(CoqPrinter &print, const Type &type,
                                       ClangPrinter &cprint, loc::loc loc) {
-    if (auto decl = type.getAsCXXRecordDecl())
+    if (auto decl = type.getAsCXXRecordDecl()) {
         return printClassName(print, *decl, cprint);
-    else
-        fatal(cprint, loc, "class name type not a record type");
+    } else {
+        guard::ctor _{print, "Nunsupported"};
+        return print.output()
+               << "\"printClassName: " << type.getTypeClassName() << "\"";
+    }
 }
 
 static fmt::Formatter &printClassName(CoqPrinter &print, const Type *type,
                                       ClangPrinter &cprint, loc::loc loc) {
-    if (type)
+    if (type) {
         return printClassName(print, *type, cprint, loc);
-    else
+    } else {
         fatal(cprint, loc, "null class name type");
+    }
 }
 static fmt::Formatter &printClassName(CoqPrinter &print, QualType type,
                                       ClangPrinter &cprint, loc::loc loc) {
@@ -709,6 +710,7 @@ static fmt::Formatter &printInitPath(const CXXConstructorDecl &decl,
         guard::ctor _(print, "InitField", false);
         return cprint.printFieldName(print, *fd, loc::of(decl));
     } else if (init.isBaseInitializer()) {
+        // TODO: [getBaseClass] might return
         guard::ctor _(print, "@InitBase", false);
         return printClassName(print, init.getBaseClass(), cprint,
                               loc::of(decl));

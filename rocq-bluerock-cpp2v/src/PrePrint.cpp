@@ -6,7 +6,6 @@
 #include "TypeVisitorWithArgs.h"
 #include "clang/AST/StmtVisitor.h"
 #include <Assert.hpp>
-#include <map>
 
 using namespace clang;
 

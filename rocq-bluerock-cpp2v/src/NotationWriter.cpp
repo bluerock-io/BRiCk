@@ -4,18 +4,14 @@
  * License. See the LICENSE-BedRock file in the repository root for details.
  */
 #include "ClangPrinter.hpp"
-#include "CommentScanner.hpp"
 #include "CoqPrinter.hpp"
-#include "DeclVisitorWithArgs.h"
-#include "Filter.hpp"
 #include "Formatter.hpp"
 #include "Logging.hpp"
 #include "ModuleBuilder.hpp"
 #include "SpecCollector.hpp"
-#include "clang/Basic/FileManager.h"
-#include "clang/Basic/SourceManager.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/Basic/Version.inc"
-#include <algorithm>
 
 // TODO this should be replaced by something else.
 bool print_path(llvm::raw_string_ostream &print, const DeclContext *dc,

@@ -16,6 +16,8 @@ Require Export bluerock.lang.cpp.mparser.expr.
 Require Export bluerock.lang.cpp.mparser.stmt.
 Require Export bluerock.lang.cpp.mparser.tu.
 
+Export translation_unit.
+
 Include ParserName.
 Include ParserType.
 Include ParserExpr.

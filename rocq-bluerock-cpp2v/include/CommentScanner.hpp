@@ -9,9 +9,8 @@
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/StringRef.h"
 
-using namespace clang;
-
 namespace comment {
+using namespace clang;
 using namespace llvm;
 
 class CommentScanner {

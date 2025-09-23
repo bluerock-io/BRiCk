@@ -7,6 +7,7 @@
 Require Import bluerock.prelude.base.
 Require Import bluerock.lang.cpp.syntax.core.
 Require Import bluerock.lang.cpp.syntax.translation_unit.
+Require Import bluerock.lang.cpp.syntax.templates.
 
 Module check.
 Section with_monad.
@@ -47,6 +48,16 @@ Section with_monad.
       end.
   End temp_arg.
 
+  Section temp_param.
+    Context (name : name -> M) (type : type -> M) (expr : Expr -> M).
+    Definition temp_param  (a : temp_param) : M :=
+      match a with
+      | Ptype _ => OK
+      | Pvalue _ t => type t
+      | Punsupported msg => FAIL msg
+      end.
+  End temp_param.
+
   Fixpoint name (n : name) : M :=
     match n with
     | Ninst n ii => name n <+> lst (temp_arg name type expr) ii
@@ -68,6 +79,7 @@ Section with_monad.
     | Tresult_member_call nm t ts => name nm <+> type t <+> lst type ts
     | Tresult_parenlist t ts => type t <+> lst type ts
     | Tresult_member t _ => type t
+    | Tauto => OK
     | Tptr t | Tref t | Trv_ref t | Tarray t _ | Tincomplete_array t => type t
     | Tnum _ _ | Tchar_ _ | Tvoid | Tbool | Tfloat_ _ | Tnullptr => OK
     | Tvariable_array t e => type t <+> expr e
@@ -264,5 +276,18 @@ Section with_monad.
     let gd '(nm, gd) := glob_decl gd in
     lst gd (namemap.NM.elements tu.(types)) <+>
     lst symbol (namemap.NM.elements tu.(symbols)).
+
+  Definition template_unit (mtu : Mtranslation_unit) : M :=
+    let symbol '(nm, t_obj) :=
+      lst (temp_param type) t_obj.(template_params)
+      <+> obj_value t_obj.(template_value)
+    in
+    let gd '(nm, t_gd) :=
+      lst (temp_param type) t_gd.(template_params)
+      <+> glob_decl t_gd.(template_value)
+    in
+    lst gd (namemap.NM.elements mtu.(mtypes)) <+>
+    lst symbol (namemap.NM.elements mtu.(msymbols)).
+
 End with_monad.
 End check.

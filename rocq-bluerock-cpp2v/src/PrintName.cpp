@@ -701,6 +701,10 @@ static fmt::Formatter &printAtomicName(const DeclContext &ctx, const Decl &decl,
         return print.str(what);
     };
 
+    // finds the duplicate index for a name. For example, the clang AST
+    // sometimes ends up with multiple variables with the same name, e.g. due to
+    // template parameter pack expansion. This logic aims to find which index we
+    // want.
     auto duplicate_index = [&](const NamedDecl &nd) -> unsigned {
         if (auto dc = decl.getParentFunctionOrMethod()) {
             auto body = dyn_cast<FunctionDecl>(dc)->getBody();
@@ -727,7 +731,13 @@ static fmt::Formatter &printAtomicName(const DeclContext &ctx, const Decl &decl,
                 }
             } finder{&nd};
             finder.TraverseStmt(body);
-            always_assert(finder.result >= 0);
+            if (finder.result < 0) {
+                // TODO: figure out what is wrong in the above code that we
+                // can see a reference to a name that is not in scope.
+                logging::verbose() << "Failed to find target "
+                                   << nd.getNameAsString() << " in ";
+                body->dump(logging::verbose(), ctx.getParentASTContext());
+            }
             return finder.result;
         }
         return 0;
@@ -735,13 +745,19 @@ static fmt::Formatter &printAtomicName(const DeclContext &ctx, const Decl &decl,
 
     auto ident = [&]() -> auto & {
         if (auto nd = isNamed(decl)) {
-            guard::ctor _(print, "Nid", false);
-            if (auto n = duplicate_index(*nd)) {
-                auto t = nd->getNameAsString();
-                t += "'" + std::to_string(n - 1);
-                return print.str(t);
+            auto n = duplicate_index(*nd);
+            if (n == -1) {
+                guard::ctor _{print, "Nunsupported"};
+                return print.str("failed to find identifier");
             } else {
-                return print.str(nd->getName());
+                guard::ctor _(print, "Nid", false);
+                if (n) {
+                    auto t = nd->getNameAsString();
+                    t += "'" + std::to_string(n - 1);
+                    return print.str(t);
+                } else {
+                    return print.str(nd->getName());
+                }
             }
         }
         always_assert(false && "ident for un-named term");

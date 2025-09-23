@@ -16,7 +16,6 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/Type.h"
 #include <Formatter.hpp>
-#include <iostream>
 
 using namespace clang;
 using namespace fmt;
@@ -171,7 +170,12 @@ public:
     void VisitDeducedType(const DeducedType *type, CoqPrinter &print,
                           ClangPrinter &cprint) {
         if (type->isDeduced()) {
-            cprint.printQualType(print, type->getDeducedType(), loc::of(type));
+            auto ty = type->getDeducedType();
+            if (ty.isNull()) {
+                print.output() << "Tauto";
+            } else {
+                cprint.printQualType(print, ty, loc::of(type));
+            }
         } else {
             unsupported_type(print, cprint, type);
         }
@@ -243,8 +247,7 @@ public:
 #undef CASE
         case BuiltinType::Kind::Dependent:
             if (print.templates()) {
-                // TODO: Placeholder
-                print.output() << "Tdependent";
+                print.output() << "Tauto";
             } else if (false) {
                 // We prefer to keep going with Tunsupported
                 using namespace logging;
@@ -329,7 +332,12 @@ public:
 
     void VisitElaboratedType(const ElaboratedType *type, CoqPrinter &print,
                              ClangPrinter &cprint) {
-        cprint.printQualType(print, type->getNamedType(), loc::of(type));
+        if (type->getNamedType().isNull()) {
+            guard::ctor _{print, "Tunsupported"};
+            print.str("elaborated type w/ null");
+        } else {
+            cprint.printQualType(print, type->getNamedType(), loc::of(type));
+        }
     }
 
     void VisitConstantArrayType(const ConstantArrayType *type,

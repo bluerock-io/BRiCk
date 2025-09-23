@@ -8,12 +8,10 @@
 #include "CommentScanner.hpp"
 #include "DeclVisitorWithArgs.h"
 #include "Filter.hpp"
-#include "Formatter.hpp"
 #include "FromClang.hpp"
 #include "Location.hpp"
 #include "Logging.hpp"
 #include "SpecCollector.hpp"
-#include "clang/Basic/Builtins.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 #include <set>
@@ -49,15 +47,16 @@ bool EvaluateRequiresClause(const clang::FunctionDecl *FD,
             return Satisfied && Satisfaction.IsSatisfied;
         };
 
-    clang::TemplateArgumentList *TemplateArgsPtr = nullptr;
-    if (auto *FTSI = dyn_cast<clang::FunctionTemplateSpecializationInfo>(
-            FD->getTemplateSpecializationInfo())) {
-        return with_template_args(FTSI->TemplateArguments->asArray());
-    } else {
-        // You might need to build template arguments from context
-        // This is more complex and depends on your situation
-        return true;
+    auto specialization_info = FD->getTemplateSpecializationInfo();
+    if (specialization_info != nullptr) {
+        if (auto *FTSI = dyn_cast<clang::FunctionTemplateSpecializationInfo>(
+                specialization_info)) {
+            return with_template_args(FTSI->TemplateArguments->asArray());
+        }
     }
+    // You might need to build template arguments from context
+    // This is more complex and depends on your situation
+    return true;
 }
 
 class BuildModule : public ConstDeclVisitorArgs<BuildModule, void, Flags> {
@@ -135,7 +134,11 @@ public:
     }
 
     void VisitStaticAssertDecl(const StaticAssertDecl *decl, Flags) {
-        module_.add_assert(*decl);
+        // NOTE: This might need some more work because of declarations that
+        // have requires clauses; however, these should be in dependent
+        // contexts.
+        if (not decl->getDeclContext()->isDependentContext())
+            module_.add_assert(*decl);
     }
 
     void VisitTranslationUnitDecl(const TranslationUnitDecl *decl,
