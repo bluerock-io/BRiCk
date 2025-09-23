@@ -1,11 +1,12 @@
 (*
- * Copyright (c) 2021-2024 BlueRock Security, Inc.
+ * Copyright (c) 2021-2025 BlueRock Security, Inc.
  * This software is distributed under the terms of the BedRock Open-Source License.
  * See the LICENSE-BedRock file in the repository root for details.
  *)
 
 Require Export stdpp.gmap.
 Require Export stdpp.mapset.
+
 Require Import bluerock.prelude.base.
 Require Import bluerock.prelude.fin_sets.
 Require Import bluerock.prelude.list_numbers.
@@ -61,3 +62,38 @@ Section lookup_insert.
   Proof. by case: bool_decide_reflect => [<-|?]; rewrite (lookup_insert, lookup_insert_ne). Qed.
 
 End lookup_insert.
+
+Lemma gmap_dom_empty {K V} `{Countable K} {m : gmap K V} :
+  dom m = dom (empty (A := gmap K V)) -> m = ∅.
+Proof. rewrite dom_empty_L. apply dom_empty_inv_L. Qed.
+
+Lemma gmap_dom_insert {K V} `{Countable K} {k v} {m1 m2 : gmap K V}
+  (Hm1 : m1 !! k = Some v)
+  (Hm2 : m2 !! k = None)
+  (Hdom : dom m1 = {[k]} ∪ dom m2) :
+  ∃ m1', m1 = <[k := v]> m1' ∧ m1' !! k = None ∧ dom m1' = dom m2.
+Proof.
+  exists (delete k m1).
+  have Hm1' : delete k m1 !! k = None by exact: lookup_delete.
+  have Heq : m1 = <[k:=v]> (delete k m1) by rewrite insert_delete_insert insert_id.
+  rewrite Heq dom_insert_L in Hdom. split_and! => // {Hm1 Heq}.
+  move: m1 (delete _ _) Hm1' Hm2 Hdom => _ m1.
+  move=>/not_elem_of_dom Hm1 /not_elem_of_dom Hm2.
+  rewrite !set_eq.
+  (* [set_solver] Works, but I found the faster manual proof first. *)
+  move=> + k' => /(_ k').
+  rewrite !elem_of_union elem_of_singleton.
+  naive_solver.
+Qed.
+
+Lemma gmap_dom_insert' {K V} `{Countable K} (m1 : gmap K V) {k} {m2 : gmap K V}
+  (Hm2 : m2 !! k = None)
+  (Hdom : dom m1 = {[k]} ∪ dom m2) :
+  ∃ v (m1' : gmap K V), m1 !! k = Some v ∧ m1 = <[k := v]> m1' ∧
+    m1' !! k = None ∧ dom m1' = dom m2.
+Proof.
+  destruct (m1 !! k) as [v|] eqn:Hm1.
+  { destruct (gmap_dom_insert Hm1 Hm2 Hdom) as [m1']. exists v, m1'. intuition. }
+  exfalso. move: Hm1 => /not_elem_of_dom.
+  set_solver.
+Qed.
