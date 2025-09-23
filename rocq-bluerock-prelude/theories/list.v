@@ -418,6 +418,14 @@ Section lists.
     - by move=>[i'->] /=; apply: IHxs.
   Qed.
 
+  Lemma fmap_zip_with {X Y Z W} (f : X -> Y -> Z) (g : Z -> W) (xs : list X) (ys : list Y) :
+    g <$> zip_with f xs ys = zip_with (fun x y => g (f x y)) xs ys.
+  Proof. by elim: xs ys => [|x xs +] [|y ys] //= => <-. Qed.
+
+  Lemma swap_zip {X Y} (xs : list X) (ys : list Y) :
+    zip xs ys = prod_swap <$> zip ys xs.
+  Proof. by rewrite -zip_with_flip fmap_zip_with. Qed.
+
   (** Properties of [Forall] *)
 
   (** Strengthens [mapM_fmap_Some_inv] by weakening the second premiss *)
