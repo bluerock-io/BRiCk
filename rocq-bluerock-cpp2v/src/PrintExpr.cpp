@@ -296,16 +296,15 @@ public:
     void Visit(const Expr *expr) {
         if (expr == nullptr) [[unlikely]] {
             guard::ctor _{print, "Eunsupported"};
-            print.str("empty expression (nullptr)");
-            guard::ctor _{print, "Tnullptr"};
+            print.str("empty expression (nullptr)") << " Tauto";
         } else if (expr->containsErrors()) {
             auto loc = loc::of(expr);
-            print.ctor("Eerror", false);
+            print.ctor("Eunsupported", false);
             std::string coqmsg;
             llvm::raw_string_ostream os{coqmsg};
             os << loc::describe(loc, cprint.getContext());
             print.str(coqmsg) << fmt::nbsp;
-            print.end_ctor();
+            done(expr, Done::DT);
         } else {
             ConstStmtVisitor<PrintExpr, void>::Visit(expr);
         }
