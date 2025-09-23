@@ -6,8 +6,34 @@
 open Procq.Constr
 open Stdarg
 
+type report_level =
+  | Ignore
+  | Warn
+  | Error
+
+let attributes =
+  let open Attributes in
+  let name = "duplicates" in
+  (Attributes.qualify_attribute "duplicates"
+    @@ attribute_of_list [
+        ("warn", single_key_parser ~name ~key:"warn" Warn);
+        ("error", single_key_parser ~name ~key:"error" Error);
+        ("ignore", single_key_parser ~name ~key:"ignore" Ignore);
+    ])
+
 let lib_ref t =
   Rocqlib.lib_ref ("bluerock.lang.cpp.parser.translation_unit." ^ t)
+
+let (cpp2v_category, cpp2v_warning) =
+  CWarnings.create_hybrid ~name:"cpp2v" ()
+
+let duplicate_symbols : (Environ.env * Evd.evar_map * Evd.econstr) CWarnings.msg = CWarnings.create_msg cpp2v_warning ()
+
+let duplicate_symbols_printer (env, evd, err) =
+  Pp.(str "Duplicate symbols found!" ++ fnl () ++ Printer.pr_econstr_env env evd err ++ str ".")
+
+let _ =
+  CWarnings.register_printer duplicate_symbols duplicate_symbols_printer
 
 let to_econstr t =
   match t with
@@ -29,7 +55,7 @@ let force_body (t : _ Declarations.pconstant_body) =
   | Declarations.Def d -> d
   | _ -> assert false
 
-let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_expr list) =
+let cpp_command (attrs : report_level option) name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_expr list) =
   (* Create the definition *)
   let env = Global.env() in
   let e_decl = to_econstr (lib_ref "t") in
@@ -80,7 +106,12 @@ let cpp_command name (abi : Constrexpr.constr_expr) (defns : Constrexpr.constr_e
         (* This is matching for [nil] *)
         ()
       | _ ->
-        CErrors.user_err Pp.(str "Duplicate symbols found!" ++ fnl () ++ Printer.pr_econstr_env env evd err ++ str ".")
+        begin
+        match attrs with
+        | Some Error -> CErrors.user_err @@ duplicate_symbols_printer (env, evd, err)
+        | Some Warn -> CWarnings.warn duplicate_symbols (env, evd, err)
+        | Some Ignore | None -> ()
+        end
     in
     let cinfo = Declare.CInfo.make ~name ~typ:None () in
     let info = Declare.Info.make () in
@@ -120,7 +151,7 @@ let temp_file ?(prefix="ocaml_temp_") ?(suffix=".tmp") content =
       let _ = try Sys.remove temp_file with _ -> () in
       raise e
 
-let cpp_command_prog name flags prog =
+let cpp_command_prog (attrs : report_level option) name flags prog =
   let temp_cpp , unlink = temp_file ~suffix:".cpp" prog in
   let temp_v = Filename.temp_file "_" ".v" in
   let flags =
@@ -133,13 +164,18 @@ let cpp_command_prog name flags prog =
                                str "Current working directory: " ++ str (Unix.getcwd ())) ;
         Str.split (Str.regexp "[ \n\r\x0c\t]+") flags
     in
-    "cpp2v" ::
-    "-for-interactive" :: Names.Id.to_string name ::
-    "--no-sharing" :: (* to avoid polluting the namespace. It would be better to put this in a [Module]
+    ["cpp2v";
+    "-for-interactive"; Names.Id.to_string name;
+    "--no-sharing"; (* to avoid polluting the namespace. It would be better to put this in a [Module]
                          if we are not in a [Section] *)
-    "-o" :: temp_v ::
-    temp_cpp ::
-    "--" :: flags
+    "-o"; temp_v;
+    temp_cpp] @
+    (match attrs with
+     | None -> []
+     | Some Error -> ["-attributes";"duplicates(error)"]
+     | Some Warn -> ["-attributes";"duplicates(warn)"]
+     | Some Ignore -> ["-attributes";"duplicates(ignore)"]) @
+    ("--" :: flags)
   in
   match Unix.open_process_args_full "cpp2v" (Array.of_list flags) (Unix.environment ()) with
   | exception Unix.Unix_error (err, _, _) ->

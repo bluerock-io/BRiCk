@@ -124,6 +124,10 @@ static cl::opt<std::string>
                          "directly within a process"),
                 cl::value_desc("module_name"), cl::Optional, cl::cat(Cpp2V));
 
+static cl::opt<std::string>
+    Attributes("attributes", cl::desc("Attributes to pass to the [cpp.prog]"),
+               cl::value_desc("attrs"), cl::Optional, cl::cat(Cpp2V));
+
 class ToCoqAction : public clang::ASTFrontendAction {
 public:
     virtual std::unique_ptr<clang::ASTConsumer>
@@ -143,11 +147,12 @@ public:
         if (Compiler.getDiagnostics().getNumErrors() > 0) {
             return nullptr;
         }
-        auto *result = new ToCoqConsumer(
-            &Compiler, to_opt(VFileOutput), to_opt(NamesFile),
-            to_opt(Templates), to_opt(NameTest),
-            Trace::fromBits(TraceBits.getBits()), Comment, !NoSharing,
-            CheckTypes, !NoElaborate, !NoAliases, to_opt(Interactive));
+        auto *result =
+            new ToCoqConsumer(&Compiler, to_opt(VFileOutput), to_opt(NamesFile),
+                              to_opt(Templates), to_opt(NameTest),
+                              Trace::fromBits(TraceBits.getBits()), Comment,
+                              !NoSharing, CheckTypes, !NoElaborate, !NoAliases,
+                              to_opt(Interactive), to_opt(Attributes));
         return std::unique_ptr<clang::ASTConsumer>(result);
     }
 

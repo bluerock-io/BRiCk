@@ -12,7 +12,7 @@ Compiling the Coq test file.
        : translation_unit
   source2
        : translation_unit
-  File ".<path>", line 16, characters 0-74:
+  File ".<path>", line 18, characters 0-96:
   Error:
   Invoking cpp2v failed with the following warnings/errors!
   <path>:2:26: error: void function 'identity' should not return a value
@@ -22,7 +22,7 @@ Compiling the Coq test file.
   Error while processing <path>
   
   cpp2v command line:
-    cpp2v -for-interactive buggy_source --no-sharing -o <path> <path> --
+    cpp2v -for-interactive buggy_source --no-sharing -o <path> <path> -attributes duplicates(ignore) --
   
 
 
