@@ -311,6 +311,15 @@ Section listN.
     lengthN (x :: xs) = (lengthN xs) + 1.
   Proof. rewrite N.add_1_r /lengthN/=. by case: (length xs). Qed.
 
+  Lemma lengthN_eq_0_iff_nil (xs : list A) :
+    lengthN xs = 0 <-> xs = [].
+  Proof.
+    split.
+    - case: xs => [//| x xs ].
+      rewrite lengthN_cons; lia.
+    - by move => ->; rewrite lengthN_nil.
+  Qed.
+
   Lemma lengthN_one x :
     lengthN [x] = 1.
   Proof. reflexivity. Qed.
@@ -365,6 +374,50 @@ Section listN.
       by move=>?; rewrite /= !lengthN_nil N.min_0_l.
     move=>ys; move: xs IHxs; induction ys; first done.
     by rewrite /lengthN=>xs IH; rewrite //= !Nat2N.inj_succ -N.succ_min_distr IH.
+  Qed.
+
+  Lemma length_zip_with_le {B C} {f : A -> B -> C} (xs : list A) (ys : list B)
+    (Hlen : (length xs <= length ys)%nat) :
+    length (zip_with f xs ys) = length xs.
+  Proof.
+    elim: xs ys Hlen => [|x xs IH] - [|y ys] //= Hlen.
+    - lia.
+    - by move: Hlen => /le_S_n /IH ->.
+  Qed.
+
+  Lemma lengthN_zip_with_le {B C} {f : A -> B -> C} (xs : list A) (ys : list B)
+    (Hlen : (lengthN xs <= lengthN ys)%N) :
+    lengthN (zip_with f xs ys) = lengthN xs.
+  Proof.
+    move: Hlen; rewrite /lengthN => /N_of_nat_le_mono ?.
+    by rewrite length_zip_with_le.
+  Qed.
+
+  Lemma zip_with_app_if_length_eq {B C} {f : A -> B -> C} (xs xs' : list A) (ys ys' : list B)
+    (Hlen : length xs = length ys) :
+    zip_with f (xs ++ xs') (ys ++ ys') = zip_with f xs ys ++ zip_with f xs' ys'.
+  Proof.
+    move: Hlen => /inj_iff.
+    by elim: xs ys
+        => [| x xs IH] - [| y ys ] //= [=] /IH ->.
+  Qed.
+
+  Lemma zip_with_app_if_lengthN_eq {B C} {f : A -> B -> C} (xs xs' : list A) (ys ys' : list B)
+    (Hlen : lengthN xs = lengthN ys) :
+    zip_with f (xs ++ xs') (ys ++ ys') = zip_with f xs ys ++ zip_with f xs' ys'.
+  Proof.
+    move: Hlen; rewrite /lengthN => /(inj _ _ _).
+    apply zip_with_app_if_length_eq.
+  Qed.
+
+  Lemma eq_singleton_if_lengthN_eq_one (xs : list A) :
+    lengthN xs = 1%N <-> ∃ x, xs = [x].
+  Proof.
+    split.
+    - case: xs => [|x xs]; rewrite (lengthN_nil,lengthN_cons) //.
+      rewrite N.add_1_r -[1%N]/(0 + 1)%N N.add_1_r inj_iff.
+      rewrite lengthN_eq_0_iff_nil => ->; by eexists.
+    - by move => [x ->]; rewrite lengthN_one.
   Qed.
 
   Lemma resizeN_spec l n x :

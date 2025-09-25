@@ -30,3 +30,4 @@ Require Export bluerock.prelude.propset.
 
 Require Export bluerock.prelude.sets.
 Require Export bluerock.prelude.relations.
+Require Export bluerock.prelude.under_rel_proper.
