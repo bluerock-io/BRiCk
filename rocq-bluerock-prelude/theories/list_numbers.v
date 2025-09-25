@@ -838,6 +838,16 @@ Section listN.
     lookupN 0 xs = head xs.
   Proof. by case: xs. Qed.
 
+  Lemma dropN_S xs (n : N) v:
+    xs !! n = Some v ->
+    dropN n xs = v :: dropN (N.succ n) xs.
+  Proof.
+    elim: xs n v => [// | x xs IHxs].
+    elim /N.peano_ind => [|n IHn] v.
+    { by rewrite dropN_zero lookupN_head /= dropN_one => -[->]. }
+    rewrite lookupN_cons_Nsucc !dropN_cons_succ'. exact: IHxs.
+  Qed.
+
   Lemma lookupN_tail xs i :
     lookupN i (tail xs) = lookupN (i + 1) xs.
   Proof. rewrite -!lookupN_fold N.add_1_r N2Nat.inj_succ. by apply: lookup_tail. Qed.
