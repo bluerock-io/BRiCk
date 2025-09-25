@@ -497,6 +497,10 @@ Section listN.
     dropN (i + 1) (x :: xs) = dropN i xs.
   Proof. by rewrite -dropN_dropN dropN_one. Qed.
 
+  Lemma dropN_cons_succ' x xs i :
+    dropN (N.succ i) (x :: xs) = dropN i xs.
+  Proof. by rewrite -N.add_1_r dropN_cons_succ. Qed.
+
   Lemma dropN_app n xs1 xs2 :
     dropN n (xs1 ++ xs2) = dropN n xs1 ++ dropN (n - lengthN xs1) xs2.
   Proof.
@@ -566,9 +570,13 @@ Section listN.
     by apply: take_ge.
   Qed.
 
+  Lemma takeN_singleton' x i :
+    takeN (N.succ i) [x] = [x].
+  Proof. rewrite takeN_lengthN // lengthN_one. lia. Qed.
+
   Lemma takeN_singleton x i :
     takeN (i + 1) [x] = [x].
-  Proof. rewrite takeN_lengthN// lengthN_one. lia. Qed.
+  Proof. by rewrite N.add_1_r takeN_singleton'. Qed.
 
   Lemma takeN_app n xs1 xs2 :
     takeN n (xs1 ++ xs2) = takeN n xs1 ++ takeN (n - lengthN xs1) xs2.
@@ -583,6 +591,10 @@ Section listN.
   Lemma takeN_cons_succ x xs i :
     takeN (i + 1) (x :: xs) = x :: takeN i xs.
   Proof. by rewrite -/([x] ++ xs) takeN_app lengthN_one takeN_singleton/= N.add_sub. Qed.
+
+  Lemma takeN_cons_succ' x xs i :
+    takeN (N.succ i) (x :: xs) = x :: takeN i xs.
+  Proof. by rewrite -N.add_1_r takeN_cons_succ. Qed.
 
   (** Analog to [take_S_r] using [N.succ n]. *)
   Lemma takeN_S_r' x xs n :
@@ -825,6 +837,16 @@ Section listN.
   Lemma lookupN_head xs :
     lookupN 0 xs = head xs.
   Proof. by case: xs. Qed.
+
+  Lemma dropN_S xs (n : N) v:
+    xs !! n = Some v ->
+    dropN n xs = v :: dropN (N.succ n) xs.
+  Proof.
+    elim: xs n v => [// | x xs IHxs].
+    elim /N.peano_ind => [|n IHn] v.
+    { by rewrite dropN_zero lookupN_head /= dropN_one => -[->]. }
+    rewrite lookupN_cons_Nsucc !dropN_cons_succ'. exact: IHxs.
+  Qed.
 
   Lemma lookupN_tail xs i :
     lookupN i (tail xs) = lookupN (i + 1) xs.

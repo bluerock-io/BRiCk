@@ -48,6 +48,14 @@ Definition _fst {A B} : A * B -l> A :=
   {| view := fst; over f p := (f p.1, p.2) |}.
 Definition _snd {A B} : A * B -l> B :=
   {| view := snd; over f p := (p.1, f p.2) |}.
+Definition _prod {A B C D} (_l1 : A -l> C) (_l2 : B -l> D) : (A * B) -l> (C * D) :=
+  Build_Lens (λ '(a, b), (a .^ _l1, b .^ _l2)) $
+    (λ f '(a, b),
+    let c := a .^ _l1 in
+    let d := b .^ _l2 in
+    let '(c', d') := f (a .^ _l1, b .^ _l2) in
+    (a &: _l1 .= c', b &: _l2 .= d')).
+
 Definition _const {A B} (b : B) : A ~l> B := Build_Lens (const b) (λ _ a, a).
 (* For this lens to be lawful, it suffices that [get] and [set] are inverses on the
 image of [l.(set)] i*)
@@ -218,3 +226,16 @@ Section _constr.
     { apply: constr_set_set. }
   Qed.
 End _constr.
+
+Lemma _prod_lens_laws {A B C D} (_l1 : A -l> C) (_l2 : B -l> D) :
+  LensLaws' eq eq _l1 ->
+  LensLaws' eq eq _l2 ->
+  LensLaws' eq eq (_prod _l1 _l2).
+Proof.
+  intros L1 L2; split; intros; simpl;
+    repeat case_match; simplify_eq/= => //.
+  { by rewrite !(view_over L1, view_over L2). }
+  { by rewrite !(view_set L1, view_set L2). }
+  { by rewrite !(set_view L1, set_view L2). }
+  { by rewrite !(set_set L1, set_set L2). }
+Qed.

@@ -1229,3 +1229,15 @@ End finite_bits.
 Module simple_finite_bits (BT : simple_finite_bitmask_type_intf).
   Include simple_finite_bits_aux BT.
 End simple_finite_bits.
+
+#[program]
+Definition enum_empty_dec T `{Finite T} :
+  (T * (enum T <> [])) + ((T -> False) * (enum T = [])) :=
+  let Ht : ∀ x : T, x ∈ enum T := elem_of_enum in
+  let xs := enum T in
+  match xs as xs0 return (∀ x : T, x ∈ xs0) -> (T * (xs0 ≠ []) + ((T → False) * (xs0 = []))) with
+  | [] => λ Ht, inr ((λ x, _ (Ht x)), eq_refl)
+  | x :: xs => λ _, inl (x, _)
+  end Ht.
+Next Obligation. set_solver. Qed.
+Next Obligation. done. Qed.
