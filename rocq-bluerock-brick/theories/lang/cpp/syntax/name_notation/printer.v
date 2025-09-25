@@ -268,6 +268,7 @@ Section with_lang.
         end
     | Ebool b => mret $ if b then "true" else "false"
     | Enull => mret "nullptr"
+    | Eparam b => mret $ "`" ++ b
     | _ => mfail
     end.
 

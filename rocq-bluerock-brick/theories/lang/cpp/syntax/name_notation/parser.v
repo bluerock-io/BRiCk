@@ -639,13 +639,14 @@ Module internal.
                  (const (Ebool false) <$> keyword "false");
                  (const Enull <$> keyword "nullptr")]
       in
+      let param := (fun _ => Eparam) <$> exact "`" <*> ident in
       let global :=
         (* NOTE: there is no way to get the type of the global here.
            To make this work, we need to remove this information from
            the expression. *)
         Eglobal <$> parse_name () <*> mfail
       in
-      int_literal <|> char_literal <|> simple_literal <|> global.
+      int_literal <|> char_literal <|> simple_literal <|> param <|> global.
     End body.
 
     Fixpoint parse_type (fuel : nat) :=
@@ -826,5 +827,7 @@ Module Type TESTS.
                  (Ndependent (Tnamed (Nscoped (Ninst (Nglobal (Nid "foo")) [Atype Tint]) (Nid "type")))) := eq_refl.
   Succeed Example _0 : TEST "::f(#::foo)" (Nglobal $ Nfunction function_qualifiers.N "f" [Tenum $ Nglobal $ Nid "foo"]) := eq_refl.
   Succeed Example _0 : TEST "Msg<int& &&>" (Ninst (Nglobal (Nid "Msg")) [Atype (Trv_ref (Tref Tint))]) := eq_refl.
+
+  Succeed Example _0 : TEST "Msg<`name>" (Ninst (Nglobal (Nid "Msg")) [Avalue (Eparam "name")]) := eq_refl.
 
 End TESTS.
