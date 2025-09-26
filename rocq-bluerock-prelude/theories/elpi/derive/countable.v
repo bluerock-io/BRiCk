@@ -77,7 +77,7 @@ Elpi File derive.countable.elpi lp:{{
     to-positive CtorList S Ty RTy Match :-
       coq.build-match S Ty (rty RTy) (to-positive-branch CtorList) Match.
 
-    pred mk-countable i:list term, i:string, i:gref, i:gref, o:constant.
+    func mk-countable list term, string, gref, gref -> constant.
     mk-countable Ctors Name VariantGR OrigGR C :- std.do![
       bluerock.elpi-list->list Ctors CtorList,
       std.assert-ok! (coq.elaborate-skeleton CtorList _ ECtorList) "[mk-countable] failed to elaborate ctors",
@@ -112,10 +112,10 @@ Elpi File derive.countable.elpi lp:{{
 Elpi Accumulate derive File derive.countable.elpi.
 Elpi Accumulate derive lp:{{
   namespace derive.countable {
-    pred main i:gref, i:string, o:list prop.
-    main TyGR Prefix Clauses :- std.do! [
+    func main gref, string -> list prop.
+    main TyGR Prefix Clauses :-
       bluerock.get-indt TyGR VariantI,
-      derive-original-gref TyGR OrigGR,
+      derive-original-gref TyGR OrigGR, !,
       coq.env.indt VariantI _ _ _ _ Ctors _,
       std.map Ctors (c\ c'\ c' = global (indc c)) CTerms,
       CountableName is Prefix ^ "countable",
@@ -123,11 +123,10 @@ Elpi Accumulate derive lp:{{
       Clauses = [countable-done TyGR, countable TyGR (const C)],
       std.forall Clauses (x\
         coq.elpi.accumulate _ "derive.stdpp.countable.db" (clause _ _ x)
-      ),
-    ].
+      ).
     main _ _ _ :- usage.
 
-    pred usage.
+    func usage.
     usage :- coq.error
 "Usage: #[only(countable)] derive T
 where T is an inductive or a definition that unfolds to an inductive.

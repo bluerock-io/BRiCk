@@ -51,7 +51,7 @@ Elpi File derive.finite_type.elpi lp:{{
       @global! => coq.TC.declare-instance (const Cfin) 0,
     ].
 
-    pred mk-simple-finite i:string, i:gref, i:gref.
+    func mk-simple-finite string, gref, gref.
     mk-simple-finite TypeName TyGR OrigGR :- std.do! [
       mk-finite-prelim TypeName TyGR OrigGR,
       coq.env.include-module-type {coq.locate-module-type "finite_type_mixin"} coq.inline.default,
@@ -90,7 +90,7 @@ Elpi Accumulate derive.finite_type.db File bluerock.typeclass.elpi.
 
 #[synterp] Elpi Accumulate derive lp:{{
   namespace derive.finite_type {
-    pred main i:string, i:string, i:bool, o:list prop.
+    func main string, string, bool -> list prop.
     main TypeName _ UseToN CL :- std.do! [
       coq.env.begin-module TypeName none,
       if (UseToN is tt)
@@ -110,10 +110,10 @@ Elpi Accumulate derive.finite_type.db File bluerock.typeclass.elpi.
 Elpi Accumulate derive Db derive.finite_type.db.
 Elpi Accumulate derive lp:{{
   namespace derive.finite_type {
-    pred main i:gref, i:string, i:bool, o:list prop.
-    main TyGR _Prefix UseToN Clauses :- std.do! [
+    func main gref, string, bool -> list prop.
+    main TyGR _Prefix UseToN Clauses :-
       coq.gref->id TyGR TypeName,
-      derive-original-gref TyGR OrigGR,
+      derive-original-gref TyGR OrigGR, !,
       if (UseToN is tt)
          (std.do! [
            derive.finite_type.to-N (global TyGR) ToN,
@@ -123,11 +123,10 @@ Elpi Accumulate derive lp:{{
       Clauses = [finite-type-done OrigGR],
       std.forall Clauses (x\
         coq.elpi.accumulate _ "derive.finite_type.db" (clause _ _ x)
-      ),
-    ].
+      ).
     main _ _ _ _ :- usage.
 
-    pred usage.
+    func usage.
     usage :- coq.error
 "Usage: #[only(finite_type)] derive T
 where T is an inductive or a definition that unfolds to an inductive.

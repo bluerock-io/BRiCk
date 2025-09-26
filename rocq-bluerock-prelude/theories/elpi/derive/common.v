@@ -19,7 +19,7 @@ Elpi Accumulate derive lp:{{/*(*/
   unfold-constants OrigGR Prefix HasSynterp GR D :-
     P = derive-original-gref GR OrigGR,
     derivation GR Prefix HasSynterp (derive Name Do Done),
-    D = (derive Name (cl\ P => Do cl) (P => Done)).
+    D = (derive Name (cl\ P => Do cl, !) (P => Done)).
   unfold-constants OrigGR Prefix HasSynterp (const C) D :-
     coq.env.const C (some (global C')) _,
     unfold-constants OrigGR Prefix HasSynterp C' D.
